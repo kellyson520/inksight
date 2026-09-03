@@ -14,6 +14,7 @@ from .stats import router as stats_router
 from .uploads import router as uploads_router
 from .user import router as user_router
 from .voice import router as voice_router
+from .open import router as open_router
 
 api_routers = [
     render_router,
@@ -31,6 +32,7 @@ api_routers = [
     locations_router,
     uploads_router,
     voice_router,
+    open_router,
 ]
 
 page_routers = [pages_router]

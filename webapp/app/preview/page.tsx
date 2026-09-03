@@ -133,12 +133,15 @@ export default function ExperiencePage() {
   const lastObjectUrlRef = useRef<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
-  const [modal, setModal] = useState<null | { type: "quote" | "weather" | "memo" | "countdown" | "habit" | "lifebar" | "calendar" | "timetable"; modeId: string }>(null);
+  const [modal, setModal] = useState<null | { type: "quote" | "weather" | "memo" | "countdown" | "habit" | "lifebar" | "calendar" | "timetable" | "rss"; modeId: string }>(null);
   const [_imageUploadLoading, setImageUploadLoading] = useState(false);
   const [quoteDraft, setQuoteDraft] = useState("");
   const [authorDraft, setAuthorDraft] = useState("");
   const [weatherDraftLocation, setWeatherDraftLocation] = useState<LocationValue>({ city: "杭州" });
   const [memoDraft, setMemoDraft] = useState<{ title1: string; text1: string; title2: string; text2: string; title3: string; text3: string }>({ title1: "", text1: "", title2: "", text2: "", title3: "" , text3: "" });
+  const [rssFeedUrl, setRssFeedUrl] = useState("https://kellson.dpdns.org:81/playno1/av");
+  const [rssItemIndex, setRssItemIndex] = useState(0);
+  const [rssShowImage, setRssShowImage] = useState(true);
   const [calendarReminders, setCalendarReminders] = useState<Record<string, string>>({});
   const [timetableData, setTimetableData] = useState<TimetableData>({
     style: "weekly",
@@ -307,6 +310,10 @@ export default function ExperiencePage() {
       }
       if (targetMode === "TIMETABLE") {
         setModal({ type: "timetable", modeId: targetMode });
+        return;
+      }
+      if (targetMode === "RSS") {
+        setModal({ type: "rss", modeId: targetMode });
         return;
       }
     }
@@ -487,6 +494,11 @@ export default function ExperiencePage() {
     if (modeId === "TIMETABLE") {
       setPreviewMode(modeId);
       setModal({ type: "timetable", modeId });
+      return;
+    }
+    if (modeId === "RSS") {
+      setPreviewMode(modeId);
+      setModal({ type: "rss", modeId });
       return;
     }
 
@@ -846,6 +858,8 @@ export default function ExperiencePage() {
                   ? locale === "zh" ? "日历提醒" : "Calendar Reminders"
                   : modal.type === "timetable"
                   ? locale === "zh" ? "课程表设置" : "Timetable Settings"
+                  : modal.type === "rss"
+                  ? locale === "zh" ? "RSS 订阅设置" : "RSS Feed Settings"
                   : locale === "zh" ? "人生进度条" : "Life Progress"}
               </div>
               <button className="text-ink-light hover:text-ink" onClick={() => setModal(null)}>
@@ -1281,6 +1295,96 @@ export default function ExperiencePage() {
                       variant="outline"
                     >
                       {locale === "zh" ? "预览课程表" : "Preview Timetable"}
+                    </Button>
+                  </div>
+                </>
+              ) : modal.type === "rss" ? (
+                <>
+                  <div className="text-xs text-ink-light mb-2">
+                    {locale === "zh"
+                      ? "输入任意 RSS/Atom 订阅源链接，或选用预设示例源进行图文仿真渲染。"
+                      : "Enter an RSS/Atom feed URL or select a preset feed to simulate e-ink rendering."}
+                  </div>
+                  <div className="space-y-2.5">
+                    <div>
+                      <label className="text-xs font-medium text-ink block mb-1">
+                        {locale === "zh" ? "订阅源地址 (Feed URL)" : "Feed URL"}
+                      </label>
+                      <input
+                        value={rssFeedUrl}
+                        onChange={(e) => setRssFeedUrl(e.target.value)}
+                        placeholder="https://example.com/feed.xml"
+                        className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white font-mono"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRssFeedUrl("https://kellson.dpdns.org:81/playno1/av")}
+                        className="text-[11px] px-2 py-0.5 rounded bg-ink/5 hover:bg-ink/10 text-ink-light"
+                      >
+                        {locale === "zh" ? "测试源 1: 玩乐达人" : "Test Feed: PlayNo1"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRssFeedUrl("https://feeds.feedburner.com/zhihu-daily")}
+                        className="text-[11px] px-2 py-0.5 rounded bg-ink/5 hover:bg-ink/10 text-ink-light"
+                      >
+                        {locale === "zh" ? "测试源 2: 知乎日报" : "Test Feed: Zhihu"}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="text-xs font-medium text-ink block mb-1">
+                          {locale === "zh" ? "文章序号 (0 为最新)" : "Article Index (0 is newest)"}
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={30}
+                          value={rssItemIndex}
+                          onChange={(e) => setRssItemIndex(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pt-5">
+                        <input
+                          type="checkbox"
+                          id="rss-show-img"
+                          checked={rssShowImage}
+                          onChange={(e) => setRssShowImage(e.target.checked)}
+                          className="w-4 h-4 rounded border-ink/20"
+                        />
+                        <label htmlFor="rss-show-img" className="text-xs text-ink cursor-pointer select-none">
+                          {locale === "zh" ? "提取并渲染配图" : "Render Cover Image"}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-3">
+                    <Button
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview(modal.modeId);
+                      }}
+                      disabled={previewLoading}
+                      variant="outline"
+                    >
+                      {locale === "zh" ? "使用默认设置" : "Use Default"}
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview(modal.modeId, {
+                          feed_url: rssFeedUrl.trim(),
+                          item_index: rssItemIndex,
+                          show_image: rssShowImage,
+                        });
+                      }}
+                      disabled={previewLoading}
+                      variant="outline"
+                    >
+                      {locale === "zh" ? "预览 RSS" : "Preview RSS"}
                     </Button>
                   </div>
                 </>

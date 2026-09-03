@@ -477,7 +477,7 @@ def _collect_image_fields(blocks: Any, fields: set):
         block = blocks
         if block.get("type") == "image":
             fields.add(block.get("field", "image_url"))
-        for child_key in ("children", "left", "right", "item"):
+        for child_key in ("children", "left", "right", "item", "conditions"):
             children = block.get(child_key)
             if isinstance(children, (list, dict)):
                 _collect_image_fields(children, fields)
@@ -577,7 +577,8 @@ async def _prefetch_images(content: dict, mode_def: dict) -> dict:
     if not image_fields:
         return content
 
-    async with httpx.AsyncClient(timeout=12.0, follow_redirects=True) as client:
+    # verify=False 支持自签名证书或特定私有镜像代理源
+    async with httpx.AsyncClient(timeout=12.0, verify=False, follow_redirects=True) as client:
         for field_name in image_fields:
             url = content.get(field_name)
             if url and isinstance(url, str) and url.startswith("http"):
@@ -1583,6 +1584,48 @@ async def _generate_computed_content(mode_def: dict, content_cfg: dict, fallback
             "current_day": current_day,
             "current_period": current_period,
         }
+
+    if provider == "rss":
+        from .rss_parser import fetch_and_parse_rss, get_rss_item_content
+        config = kwargs.get("config") or {}
+        mode_settings = config.get("mode_settings") or {}
+        mode_overrides = config.get("mode_overrides") or {}
+        rss_override = mode_overrides.get("RSS") or {}
+
+        feed_url = ""
+        item_index = 0
+        show_image = True
+
+        # 优先级：mode_overrides > mode_settings > content_cfg > 默认
+        if isinstance(rss_override, dict):
+            feed_url = rss_override.get("feed_url") or rss_override.get("url") or ""
+            if "item_index" in rss_override:
+                try:
+                    item_index = int(rss_override["item_index"])
+                except (ValueError, TypeError):
+                    pass
+            if "show_image" in rss_override:
+                show_image = bool(rss_override["show_image"])
+
+        if not feed_url and isinstance(mode_settings, dict):
+            feed_url = mode_settings.get("feed_url") or mode_settings.get("url") or ""
+            if "item_index" in mode_settings:
+                try:
+                    item_index = int(mode_settings["item_index"])
+                except (ValueError, TypeError):
+                    pass
+            if "show_image" in mode_settings:
+                show_image = bool(mode_settings["show_image"])
+
+        if not feed_url:
+            feed_url = content_cfg.get("feed_url") or "https://kellson.dpdns.org:81/playno1/av"
+
+        parsed = await fetch_and_parse_rss(feed_url)
+        content_item = get_rss_item_content(parsed, index=item_index)
+        if not show_image:
+            content_item["image_url"] = ""
+            content_item["has_image"] = False
+        return content_item
 
     return dict(fallback)
 

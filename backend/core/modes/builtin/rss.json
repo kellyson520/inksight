@@ -1,0 +1,250 @@
+{
+  "mode_id": "RSS",
+  "display_name": "RSS订阅",
+  "icon": "rss",
+  "cacheable": true,
+  "description": "订阅任意RSS/Atom博客或资讯，在墨水屏上展示精选摘要与图片",
+  "settings_schema": [
+    {
+      "key": "feed_url",
+      "label": "RSS链接",
+      "type": "text",
+      "default": "https://kellson.dpdns.org:81/playno1/av"
+    },
+    {
+      "key": "item_index",
+      "label": "文章索引",
+      "type": "number",
+      "default": 0,
+      "min": 0,
+      "max": 50
+    },
+    {
+      "key": "show_image",
+      "label": "显示配图",
+      "type": "boolean",
+      "default": true
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "rss",
+    "fallback": {
+      "feed_title": "InkSight 订阅精选",
+      "title": "平静连接生活，探索更多开放可能",
+      "summary": "通过 RSS 订阅、Webhook 开放接口与自定义数据源，将您的墨水屏变成属于自己的桌面信息中心。",
+      "author": "InkSight Team",
+      "date": "2026-09-04",
+      "image_url": "",
+      "has_image": false,
+      "total_items": 1,
+      "current_index": 1
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "title",
+        "font": "noto_serif_bold",
+        "font_size": 22,
+        "line_height": 28,
+        "align": "left",
+        "margin_x": 16,
+        "max_lines": 2
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "conditional",
+        "field": "has_image",
+        "conditions": [
+          {
+            "op": "eq",
+            "value": true,
+            "children": [
+              {
+                "type": "image",
+                "field": "image_url",
+                "width": 368,
+                "height": 130,
+                "fit": "cover",
+                "photo_enhance": true,
+                "margin_bottom": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "field": "summary",
+        "font": "noto_serif_regular",
+        "font_size": 13,
+        "line_height": 19,
+        "align": "left",
+        "margin_x": 16,
+        "max_lines": 4
+      }
+    ],
+    "footer": {
+      "label": "{feed_title}",
+      "attribution_template": "{date}"
+    }
+  },
+  "layout_overrides": {
+    "296x128": {
+      "body": [
+        {
+          "type": "spacer",
+          "height": 2
+        },
+        {
+          "type": "text",
+          "field": "title",
+          "font": "noto_serif_bold",
+          "font_size": 14,
+          "line_height": 17,
+          "align": "left",
+          "margin_x": 8,
+          "max_lines": 2
+        },
+        {
+          "type": "spacer",
+          "height": 3
+        },
+        {
+          "type": "text",
+          "field": "summary",
+          "font": "noto_serif_regular",
+          "font_size": 10,
+          "line_height": 13,
+          "align": "left",
+          "margin_x": 8,
+          "max_lines": 3
+        }
+      ],
+      "footer": {
+        "label": "{feed_title}",
+        "height": 18
+      }
+    },
+    "648x480": {
+      "body": [
+        {
+          "type": "spacer",
+          "height": 10
+        },
+        {
+          "type": "text",
+          "field": "title",
+          "font": "noto_serif_bold",
+          "font_size": 28,
+          "line_height": 36,
+          "align": "left",
+          "margin_x": 24,
+          "max_lines": 2
+        },
+        {
+          "type": "spacer",
+          "height": 8
+        },
+        {
+          "type": "conditional",
+          "field": "has_image",
+          "conditions": [
+            {
+              "op": "eq",
+              "value": true,
+              "children": [
+                {
+                  "type": "image",
+                  "field": "image_url",
+                  "width": 600,
+                  "height": 220,
+                  "fit": "cover",
+                  "photo_enhance": true,
+                  "margin_bottom": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "field": "summary",
+          "font": "noto_serif_regular",
+          "font_size": 16,
+          "line_height": 24,
+          "align": "left",
+          "margin_x": 24,
+          "max_lines": 5
+        }
+      ]
+    },
+    "800x480": {
+      "body": [
+        {
+          "type": "spacer",
+          "height": 12
+        },
+        {
+          "type": "text",
+          "field": "title",
+          "font": "noto_serif_bold",
+          "font_size": 32,
+          "line_height": 40,
+          "align": "left",
+          "margin_x": 32,
+          "max_lines": 2
+        },
+        {
+          "type": "spacer",
+          "height": 10
+        },
+        {
+          "type": "conditional",
+          "field": "has_image",
+          "conditions": [
+            {
+              "op": "eq",
+              "value": true,
+              "children": [
+                {
+                  "type": "image",
+                  "field": "image_url",
+                  "width": 736,
+                  "height": 230,
+                  "fit": "cover",
+                  "photo_enhance": true,
+                  "margin_bottom": 12
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "field": "summary",
+          "font": "noto_serif_regular",
+          "font_size": 18,
+          "line_height": 26,
+          "align": "left",
+          "margin_x": 32,
+          "max_lines": 5
+        }
+      ]
+    }
+  }
+}

@@ -186,6 +186,12 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         en=CatalogText(name="Moyu Hot List", tip="Timeline hot list across the web"),
     ),
     CatalogItem(
+        mode_id="RSS",
+        category="more",
+        zh=CatalogText(name="RSS订阅", tip="订阅任意博客、新闻或专栏，展示精选图文"),
+        en=CatalogText(name="RSS Feed", tip="Subscribe to blogs or news with summary and cover image"),
+    ),
+    CatalogItem(
         mode_id="MY_ADAPTIVE",
         category="custom",
         zh=CatalogText(name="相框", tip="上传本地照片（至多6张），循环播放"),

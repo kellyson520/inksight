@@ -1,0 +1,106 @@
+{
+  "mode_id": "RSS",
+  "display_name": "RSS Feed",
+  "icon": "rss",
+  "cacheable": true,
+  "description": "Subscribe to any RSS/Atom blog or feed, rendered with summary and image",
+  "settings_schema": [
+    {
+      "key": "feed_url",
+      "label": "RSS Feed URL",
+      "type": "text",
+      "default": "https://kellson.dpdns.org:81/playno1/av"
+    },
+    {
+      "key": "item_index",
+      "label": "Article Index",
+      "type": "number",
+      "default": 0,
+      "min": 0,
+      "max": 50
+    },
+    {
+      "key": "show_image",
+      "label": "Show Image",
+      "type": "boolean",
+      "default": true
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "rss",
+    "fallback": {
+      "feed_title": "InkSight Highlights",
+      "title": "Calm connection and open exploration",
+      "summary": "Turn your e-ink desk companion into a personal information surface via RSS feeds, open APIs, and custom sources.",
+      "author": "InkSight Team",
+      "date": "2026-09-04",
+      "image_url": "",
+      "has_image": false,
+      "total_items": 1,
+      "current_index": 1
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "title",
+        "font": "noto_serif_bold",
+        "font_size": 22,
+        "line_height": 28,
+        "align": "left",
+        "margin_x": 16,
+        "max_lines": 2
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "conditional",
+        "field": "has_image",
+        "conditions": [
+          {
+            "op": "eq",
+            "value": true,
+            "children": [
+              {
+                "type": "image",
+                "field": "image_url",
+                "width": 368,
+                "height": 130,
+                "fit": "cover",
+                "photo_enhance": true,
+                "margin_bottom": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "field": "summary",
+        "font": "noto_serif_regular",
+        "font_size": 13,
+        "line_height": 19,
+        "align": "left",
+        "margin_x": 16,
+        "max_lines": 4
+      }
+    ],
+    "footer": {
+      "label": "{feed_title}",
+      "attribution_template": "{date}"
+    }
+  }
+}
