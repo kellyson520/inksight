@@ -133,7 +133,7 @@ export default function ExperiencePage() {
   const lastObjectUrlRef = useRef<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
-  const [modal, setModal] = useState<null | { type: "quote" | "weather" | "memo" | "countdown" | "habit" | "lifebar" | "calendar" | "timetable" | "rss"; modeId: string }>(null);
+  const [modal, setModal] = useState<null | { type: "quote" | "weather" | "memo" | "countdown" | "habit" | "lifebar" | "calendar" | "timetable" | "rss" | "crypto"; modeId: string }>(null);
   const [_imageUploadLoading, setImageUploadLoading] = useState(false);
   const [quoteDraft, setQuoteDraft] = useState("");
   const [authorDraft, setAuthorDraft] = useState("");
@@ -142,6 +142,7 @@ export default function ExperiencePage() {
   const [rssFeedUrl, setRssFeedUrl] = useState("https://kellson.dpdns.org:81/playno1/av");
   const [rssItemIndex, setRssItemIndex] = useState(0);
   const [rssShowImage, setRssShowImage] = useState(true);
+  const [cryptoSymbol, setCryptoSymbol] = useState("BTC");
   const [calendarReminders, setCalendarReminders] = useState<Record<string, string>>({});
   const [timetableData, setTimetableData] = useState<TimetableData>({
     style: "weekly",
@@ -314,6 +315,10 @@ export default function ExperiencePage() {
       }
       if (targetMode === "RSS") {
         setModal({ type: "rss", modeId: targetMode });
+        return;
+      }
+      if (targetMode === "CRYPTO") {
+        setModal({ type: "crypto", modeId: targetMode });
         return;
       }
     }
@@ -499,6 +504,11 @@ export default function ExperiencePage() {
     if (modeId === "RSS") {
       setPreviewMode(modeId);
       setModal({ type: "rss", modeId });
+      return;
+    }
+    if (modeId === "CRYPTO") {
+      setPreviewMode(modeId);
+      setModal({ type: "crypto", modeId });
       return;
     }
 
@@ -860,6 +870,8 @@ export default function ExperiencePage() {
                   ? locale === "zh" ? "课程表设置" : "Timetable Settings"
                   : modal.type === "rss"
                   ? locale === "zh" ? "RSS 订阅设置" : "RSS Feed Settings"
+                  : modal.type === "crypto"
+                  ? locale === "zh" ? "资产行情设置" : "Crypto Ticker Settings"
                   : locale === "zh" ? "人生进度条" : "Life Progress"}
               </div>
               <button className="text-ink-light hover:text-ink" onClick={() => setModal(null)}>
@@ -1385,6 +1397,67 @@ export default function ExperiencePage() {
                       variant="outline"
                     >
                       {locale === "zh" ? "预览 RSS" : "Preview RSS"}
+                    </Button>
+                  </div>
+                </>
+              ) : modal.type === "crypto" ? (
+                <>
+                  <div className="text-xs text-ink-light mb-2">
+                    {locale === "zh"
+                      ? "选择或输入要监控的加密货币资产代码，支持 BTC, ETH, SOL, DOGE 等。"
+                      : "Select or enter a cryptocurrency symbol to monitor (BTC, ETH, SOL, DOGE, etc.)."}
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-ink block mb-1">
+                        {locale === "zh" ? "资产代码" : "Asset Symbol"}
+                      </label>
+                      <input
+                        value={cryptoSymbol}
+                        onChange={(e) => setCryptoSymbol(e.target.value.toUpperCase())}
+                        placeholder="BTC"
+                        className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white uppercase font-mono"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {["BTC", "ETH", "SOL", "BNB", "DOGE", "XRP"].map((sym) => (
+                        <button
+                          key={sym}
+                          type="button"
+                          onClick={() => setCryptoSymbol(sym)}
+                          className={`text-xs px-2.5 py-1 rounded border transition-colors ${
+                            cryptoSymbol === sym
+                              ? "bg-ink text-white border-ink"
+                              : "bg-ink/5 border-ink/10 text-ink hover:bg-ink/10"
+                          }`}
+                        >
+                          {sym}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-3">
+                    <Button
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview(modal.modeId);
+                      }}
+                      disabled={previewLoading}
+                      variant="outline"
+                    >
+                      {locale === "zh" ? "使用默认 BTC" : "Default (BTC)"}
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview(modal.modeId, {
+                          symbol: cryptoSymbol.trim() || "BTC",
+                        });
+                      }}
+                      disabled={previewLoading}
+                      variant="outline"
+                    >
+                      {locale === "zh" ? "预览行情" : "Preview Ticker"}
                     </Button>
                   </div>
                 </>

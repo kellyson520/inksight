@@ -192,6 +192,12 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         en=CatalogText(name="RSS Feed", tip="Subscribe to blogs or news with summary and cover image"),
     ),
     CatalogItem(
+        mode_id="CRYPTO",
+        category="more",
+        zh=CatalogText(name="资产行情", tip="实时追踪主流加密资产与价格涨跌幅"),
+        en=CatalogText(name="Crypto Ticker", tip="Live cryptocurrency price and 24h change"),
+    ),
+    CatalogItem(
         mode_id="MY_ADAPTIVE",
         category="custom",
         zh=CatalogText(name="相框", tip="上传本地照片（至多6张），循环播放"),
