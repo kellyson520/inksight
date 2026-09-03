@@ -532,12 +532,39 @@ def _build_daily_dedup_hint(entries: list[dict], language: str) -> str:
         return (
             "\nAvoid repeating these recent DAILY outputs. Do not reuse the same quote, the same book, "
             "or a very similar tip/theme:\n- "
-            + "\n- ".join(lines[:4])
+            + "\n- ".join(lines[:8])
         )
     return (
         "\n请避免与这些最近的 DAILY 内容重复，不要复用相同或相近的语录、书籍、tip 或时令表达：\n- "
-        + "\n- ".join(lines[:4])
+        + "\n- ".join(lines[:8])
     )
+
+
+def _build_word_dedup_hint(words: list[str], language: str) -> str:
+    if not words:
+        return ""
+    sample = words[:15]
+    if language == "en":
+        return "\nDo not choose any of these recently featured words: " + ", ".join(sample)
+    return "\n请避免选择以下最近已学过的单词，请推荐全新的单词：" + "、".join(sample)
+
+
+def _build_quote_dedup_hint(quotes: list[str], language: str) -> str:
+    if not quotes:
+        return ""
+    clean_quotes = [q[:60] for q in quotes if q][:6]
+    if language == "en":
+        return "\nAvoid repeating these recent quotes or themes:\n- " + "\n- ".join(clean_quotes)
+    return "\n请避免与以下近期语录或相近观点重复，输出全新、不同视角的语录：\n- " + "\n- ".join(clean_quotes)
+
+
+def _build_thisday_dedup_hint(events: list[str], language: str) -> str:
+    if not events:
+        return ""
+    clean_events = [e[:60] for e in events if e][:8]
+    if language == "en":
+        return "\nAvoid choosing these recently featured historical events:\n- " + "\n- ".join(clean_events)
+    return "\n请避免选择以下近期已展示过的历史事件，选择历史上同日发生的不同事件：\n- " + "\n- ".join(clean_events)
 
 
 async def _prefetch_images(content: dict, mode_def: dict) -> dict:
@@ -797,23 +824,48 @@ async def generate_json_mode_content(
     mode_id = mode_def.get("mode_id", "CUSTOM")
     logger.info(f"[JSONContent] Generating content for {mode_id} via {provider}/{model}")
 
-    # Load recent content hashes for dedup
+    # Load recent content hashes and field values for dedup
     recent_hashes: list[str] = []
+    recent_quotes: list[str] = []
+    recent_words: list[str] = []
+    recent_events: list[str] = []
     dedup_hint = ""
     first_attempt_hint = ""
     if mac and ctype in ("llm", "llm_json") and not DISABLE_DEDUP:
         try:
-            from .stats_store import get_content_history, get_recent_content_hashes, get_recent_content_summaries
+            from .stats_store import (
+                get_content_history,
+                get_recent_content_hashes,
+                get_recent_content_summaries,
+                get_recent_content_field_values,
+            )
             recent_hashes = await get_recent_content_hashes(mac, mode_id, limit=20)
-            summaries = await get_recent_content_summaries(mac, mode_id, limit=3)
+            summaries = await get_recent_content_summaries(mac, mode_id, limit=10)
             if summaries:
                 if language == "en":
-                    dedup_hint = "\nAvoid repeating these recent topics: " + "; ".join(summaries)
+                    dedup_hint = "\nAvoid repeating these recent topics: " + "; ".join(summaries[:6])
                 else:
-                    dedup_hint = "\n请避免与以下近期内容重复：" + "；".join(summaries)
+                    dedup_hint = "\n请避免与以下近期内容重复：" + "；".join(summaries[:6])
+
             if mode_id == "DAILY":
-                recent_entries = await get_content_history(mac, limit=4, mode=mode_id)
+                recent_entries = await get_content_history(mac, limit=8, mode=mode_id)
                 first_attempt_hint = _build_daily_dedup_hint(recent_entries, language)
+                recent_quotes = [
+                    str(e.get("content", {}).get("quote", "") or "").strip()
+                    for e in recent_entries
+                    if isinstance(e, dict) and isinstance(e.get("content"), dict) and e.get("content", {}).get("quote")
+                ]
+            elif mode_id == "WORD_OF_THE_DAY":
+                recent_words = await get_recent_content_field_values(mac, mode_id, ("word",), limit=30)
+                first_attempt_hint = _build_word_dedup_hint(recent_words, language)
+            elif mode_id == "THISDAY":
+                recent_events = await get_recent_content_field_values(mac, mode_id, ("event_title", "year"), limit=20)
+                first_attempt_hint = _build_thisday_dedup_hint(recent_events, language)
+            elif mode_id in ("MY_QUOTE", "STOIC", "ROAST"):
+                recent_quotes = await get_recent_content_field_values(mac, mode_id, ("quote",), limit=20)
+                first_attempt_hint = _build_quote_dedup_hint(recent_quotes, language)
+            elif dedup_hint:
+                first_attempt_hint = dedup_hint
         except (OSError, TypeError, ValueError):
             logger.warning("[JSONContent] Failed to load dedup context for %s:%s", mac, mode_id, exc_info=True)
 
@@ -821,8 +873,16 @@ async def generate_json_mode_content(
         prompt = base_prompt
         if first_attempt_hint:
             prompt += first_attempt_hint
-        if attempt > 0 and dedup_hint:
-            prompt += dedup_hint
+        if attempt > 0:
+            if dedup_hint and dedup_hint not in prompt:
+                prompt += dedup_hint
+            retry_note = (
+                "\nImportant: The previous attempt generated duplicate or very similar content. "
+                "Generate completely different, fresh, and creative output!"
+                if language == "en"
+                else "\n特别注意：上一轮生成了重复或高度相似的内容，请务必生成截然不同、全新视角的内容！"
+            )
+            prompt += retry_note
 
         llm_ok = False
         api_key_invalid = False
@@ -901,10 +961,40 @@ async def generate_json_mode_content(
             fb["_llm_ok"] = llm_ok
             return fb
 
+        is_duplicate = False
         content_hash = _compute_content_hash(result)
-        if content_hash not in recent_hashes:
+        if content_hash in recent_hashes:
+            is_duplicate = True
+            logger.info(f"[JSONContent] Hash collision for {mode_id}")
+
+        if not is_duplicate:
+            if recent_words and (mode_id == "WORD_OF_THE_DAY" or "word" in result):
+                res_word = str(result.get("word") or "").strip().lower()
+                if res_word and any(res_word == rw.strip().lower() for rw in recent_words):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Word duplicate detected for {mode_id}: {res_word}")
+
+            if not is_duplicate and recent_events and (mode_id == "THISDAY" or "event_title" in result):
+                res_title = str(result.get("event_title") or "").strip()
+                res_year = str(result.get("year") or "").strip()
+                if res_title and any(res_title in re or re in res_title for re in recent_events):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Event duplicate detected for {mode_id}: {res_title}")
+                elif res_year and any(res_year == re for re in recent_events):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Event year collision detected for {mode_id}: {res_year}")
+
+            if not is_duplicate and recent_quotes and (mode_id in ("DAILY", "MY_QUOTE", "STOIC", "ROAST") or "quote" in result):
+                res_quote = str(result.get("quote") or "").strip()
+                if res_quote and any(res_quote in rq or rq in res_quote for rq in recent_quotes):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Quote duplicate detected for {mode_id}: {res_quote[:30]}")
+
+        if not is_duplicate:
             break
-        logger.info(f"[JSONContent] Dedup retry {attempt + 1} for {mode_id} (hash collision)")
+
+        temperature = min(1.0, temperature + 0.1)
+        logger.info(f"[JSONContent] Dedup retry {attempt + 1} for {mode_id}")
 
     result = _apply_post_process(result, content_cfg)
     result = await _prefetch_images(result, mode_def)

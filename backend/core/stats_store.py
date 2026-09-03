@@ -452,36 +452,74 @@ async def get_favorites(mac: str, limit: int = 30) -> list[dict]:
 
 async def get_recent_content_hashes(mac: str, mode_id: str, limit: int = 20) -> list[str]:
     """Get recent content hashes for deduplication."""
-    db = await get_main_db()
-    cursor = await db.execute(
-        """SELECT content_hash FROM content_history
-           WHERE mac = ? AND mode_id = ? AND content_hash != ''
-           ORDER BY created_at DESC LIMIT ?""",
-        (mac, mode_id, limit),
-    )
-    return [row[0] for row in await cursor.fetchall()]
+    try:
+        db = await get_main_db()
+        cursor = await db.execute(
+            """SELECT content_hash FROM content_history
+               WHERE mac = ? AND mode_id = ? AND content_hash != ''
+               ORDER BY created_at DESC LIMIT ?""",
+            (mac, mode_id, limit),
+        )
+        return [row[0] for row in await cursor.fetchall()]
+    except Exception as exc:
+        logger.warning("[Stats] Failed to query recent content hashes for %s:%s: %s", mac, mode_id, exc)
+        return []
 
 
-async def get_recent_content_summaries(mac: str, mode_id: str, limit: int = 3) -> list[str]:
+async def get_recent_content_summaries(mac: str, mode_id: str, limit: int = 10) -> list[str]:
     """Get short summaries of recent content for LLM dedup hints."""
-    db = await get_main_db()
-    cursor = await db.execute(
-        """SELECT content FROM content_history
-           WHERE mac = ? AND mode_id = ?
-           ORDER BY created_at DESC LIMIT ?""",
-        (mac, mode_id, limit),
-    )
-    summaries = []
-    for row in await cursor.fetchall():
-        try:
-            data = json.loads(row[0]) if row[0] else {}
-            for key in ("quote", "question", "challenge", "body", "word", "event_title", "name_cn", "text"):
-                if key in data and data[key]:
-                    summaries.append(str(data[key])[:80])
-                    break
-        except (json.JSONDecodeError, TypeError) as exc:
-            logger.warning("[Stats] Failed to parse content summary JSON for %s:%s", mac, mode_id, exc_info=True)
-    return summaries
+    try:
+        db = await get_main_db()
+        cursor = await db.execute(
+            """SELECT content FROM content_history
+               WHERE mac = ? AND mode_id = ?
+               ORDER BY created_at DESC LIMIT ?""",
+            (mac, mode_id, limit),
+        )
+        summaries = []
+        for row in await cursor.fetchall():
+            try:
+                data = json.loads(row[0]) if row[0] else {}
+                for key in ("quote", "question", "challenge", "body", "word", "event_title", "name_cn", "text"):
+                    if key in data and data[key]:
+                        summaries.append(str(data[key])[:80])
+                        break
+            except (json.JSONDecodeError, TypeError) as exc:
+                logger.warning("[Stats] Failed to parse content summary JSON for %s:%s", mac, mode_id, exc_info=True)
+        return summaries
+    except Exception as exc:
+        logger.warning("[Stats] Failed to query recent content summaries for %s:%s: %s", mac, mode_id, exc)
+        return []
+
+
+async def get_recent_content_field_values(
+    mac: str, mode_id: str, field_names: tuple[str, ...], limit: int = 30
+) -> list[str]:
+    """Get recent values for specific fields (e.g. quote, word, event_title) to prevent repetition."""
+    try:
+        db = await get_main_db()
+        cursor = await db.execute(
+            """SELECT content FROM content_history
+               WHERE mac = ? AND mode_id = ?
+               ORDER BY created_at DESC LIMIT ?""",
+            (mac, mode_id, limit),
+        )
+        values = []
+        seen = set()
+        for row in await cursor.fetchall():
+            try:
+                data = json.loads(row[0]) if row[0] else {}
+                for field in field_names:
+                    val = str(data.get(field, "") or "").strip()
+                    if val and val.lower() not in seen:
+                        seen.add(val.lower())
+                        values.append(val)
+            except (json.JSONDecodeError, TypeError):
+                continue
+        return values
+    except Exception as exc:
+        logger.warning("[Stats] Failed to query recent content fields for %s:%s: %s", mac, mode_id, exc)
+        return []
 
 
 async def check_habit(mac: str, habit_name: str, date: Optional[str] = None):

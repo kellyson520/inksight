@@ -19,7 +19,39 @@
       "phonetic": "/ˌser.ənˈdɪp.ə.ti/",
       "definition": "意外发现美好事物的能力",
       "example": "Traveling is full of serendipity."
-    }
+    },
+    "fallback_pool": [
+      {
+        "word": "Serendipity",
+        "phonetic": "/ˌser.ənˈdɪp.ə.ti/",
+        "definition": "意外发现美好事物的能力",
+        "example": "Traveling is full of serendipity."
+      },
+      {
+        "word": "Ephemeral",
+        "phonetic": "/ɪˈfem.ər.əl/",
+        "definition": "短暂的，转瞬即逝的",
+        "example": "Fame in the digital age is ephemeral."
+      },
+      {
+        "word": "Petrichor",
+        "phonetic": "/ˈpet.rɪ.kɔːr/",
+        "definition": "雨后泥土散发出的清香",
+        "example": "I love the petrichor after spring rain."
+      },
+      {
+        "word": "Resilience",
+        "phonetic": "/rɪˈzɪl.jəns/",
+        "definition": "韧性，快速恢复的能力",
+        "example": "She showed great resilience in hardship."
+      },
+      {
+        "word": "Luminescence",
+        "phonetic": "/ˌluː.mɪˈnes.əns/",
+        "definition": "发光，冷光现象",
+        "example": "The luminescence of fireflies lit the path."
+      }
+    ]
   },
   "layout": {
     "status_bar": { "line_width": 1 },

@@ -626,3 +626,108 @@ async def test_almanac_api_uses_cache_db_across_calls(tmp_path):
             assert mock_tip.await_count == 1
     finally:
         await db_mod.close_all()
+
+
+@pytest.mark.asyncio
+async def test_word_of_the_day_dedup_and_hint():
+    mode_def = {
+        "mode_id": "WORD_OF_THE_DAY",
+        "content": {
+            "type": "llm_json",
+            "prompt_template": "word prompt {context}",
+            "output_schema": {
+                "word": {"default": "Serendipity"},
+                "phonetic": {"default": "/ˌser.ənˈdɪp.ə.ti/"},
+                "definition": {"default": "意外发现美好事物的能力"},
+                "example": {"default": "Traveling is full of serendipity."},
+            },
+            "fallback": {
+                "word": "Serendipity",
+                "phonetic": "/ˌser.ənˈdɪp.ə.ti/",
+                "definition": "意外发现美好事物的能力",
+                "example": "Traveling is full of serendipity.",
+            },
+        },
+        "layout": {"body": []},
+    }
+
+    with (
+        patch("core.json_content._call_llm", new_callable=AsyncMock) as mock_llm,
+        patch("core.stats_store.get_recent_content_hashes", new_callable=AsyncMock) as mock_hashes,
+        patch("core.stats_store.get_recent_content_field_values", new_callable=AsyncMock) as mock_fields,
+    ):
+        mock_hashes.return_value = []
+        mock_fields.return_value = ["Serendipity", "Ephemeral"]
+        # First call returns duplicate word "serendipity", second call returns new word "petrichor"
+        mock_llm.side_effect = [
+            '{"word": "Serendipity", "phonetic": "/ˌser.ənˈdɪp.ə.ti/", "definition": "美好发现", "example": "A"}',
+            '{"word": "Petrichor", "phonetic": "/ˈpɛtrɪkɔːr/", "definition": "雨后泥土芳香", "example": "B"}',
+        ]
+
+        result = await generate_json_mode_content(
+            mode_def,
+            date_str="2026-09-03",
+            weather_str="晴 20°C",
+            language="zh",
+            mac="11:22:33:44:55:66",
+        )
+
+        assert mock_llm.await_count == 2
+        assert result["word"] == "Petrichor"
+        first_call_prompt = mock_llm.await_args_list[0].args[2]
+        assert "请避免选择以下最近已学过的单词" in first_call_prompt
+        assert "Serendipity" in first_call_prompt
+
+
+@pytest.mark.asyncio
+async def test_thisday_dedup_and_hint():
+    mode_def = {
+        "mode_id": "THISDAY",
+        "content": {
+            "type": "llm_json",
+            "prompt_template": "history prompt {context}",
+            "output_schema": {
+                "year": {"default": "1969"},
+                "event_title": {"default": "人类首次登月"},
+                "event_desc": {"default": "登月描述"},
+                "years_ago": {"default": "57年前"},
+                "significance": {"default": "里程碑"},
+            },
+            "fallback": {
+                "year": "1969",
+                "event_title": "人类首次登月",
+                "event_desc": "登月描述",
+                "years_ago": "57年前",
+                "significance": "里程碑",
+            },
+        },
+        "layout": {"body": []},
+    }
+
+    with (
+        patch("core.json_content._call_llm", new_callable=AsyncMock) as mock_llm,
+        patch("core.stats_store.get_recent_content_hashes", new_callable=AsyncMock) as mock_hashes,
+        patch("core.stats_store.get_recent_content_field_values", new_callable=AsyncMock) as mock_fields,
+    ):
+        mock_hashes.return_value = []
+        mock_fields.return_value = ["人类首次登月", "1969"]
+        # First returns duplicate title, second returns new event
+        mock_llm.side_effect = [
+            '{"year": "1969", "event_title": "人类首次登月", "event_desc": "重现登月", "years_ago": "57年前", "significance": "意义"}',
+            '{"year": "1945", "event_title": "抗日战争胜利纪念", "event_desc": "反法西斯胜利", "years_ago": "81年前", "significance": "和平"}',
+        ]
+
+        result = await generate_json_mode_content(
+            mode_def,
+            date_str="2026-09-03",
+            weather_str="晴 20°C",
+            language="zh",
+            mac="11:22:33:44:55:66",
+        )
+
+        assert mock_llm.await_count == 2
+        assert result["event_title"] == "抗日战争胜利纪念"
+        first_call_prompt = mock_llm.await_args_list[0].args[2]
+        assert "请避免选择以下近期已展示过的历史事件" in first_call_prompt
+        assert "人类首次登月" in first_call_prompt
+

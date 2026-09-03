@@ -36,7 +36,37 @@
       "event_desc": "Apollo 11 astronauts became the first humans to walk on the Moon.",
       "years_ago": "57 years ago",
       "significance": "Humanity's greatest leap beyond Earth."
-    }
+    },
+    "fallback_pool": [
+      {
+        "year": "1969",
+        "event_title": "Moon Landing",
+        "event_desc": "Apollo 11 astronauts became the first humans to walk on the Moon.",
+        "years_ago": "57 years ago",
+        "significance": "Humanity's greatest leap beyond Earth."
+      },
+      {
+        "year": "1888",
+        "event_title": "Kodak Camera",
+        "event_desc": "George Eastman patented the roll-film camera, bringing photography to all.",
+        "years_ago": "138 years ago",
+        "significance": "Democratized visual storytelling."
+      },
+      {
+        "year": "1928",
+        "event_title": "Penicillin Discovered",
+        "event_desc": "Alexander Fleming observed antibacterial properties in Penicillium mold.",
+        "years_ago": "98 years ago",
+        "significance": "The dawn of modern antibiotics."
+      },
+      {
+        "year": "1977",
+        "event_title": "Voyager 1 Launch",
+        "event_desc": "Voyager 1 launched to explore the outer reaches of the Solar System.",
+        "years_ago": "49 years ago",
+        "significance": "Humankind's emissary to interstellar space."
+      }
+    ]
   },
   "layout": {
     "layout_engine": "component_tree",

@@ -190,22 +190,23 @@ async def get_thisday_state(mac: str) -> tuple[int, int, int]:
     index = row[0] or 0
     count = row[1] or 0
     updated_at: str = row[2] or ""
-    # 用 updated_at 日期哈希来判断是否跨天
-    date_hash = hash(updated_at[:10]) if updated_at else 0
-    return index, count, date_hash
+    # 用 updated_at 的 YYYY-MM-DD 字符串作为当前日期戳
+    saved_date_str = updated_at[:10] if updated_at else ""
+    return index, count, saved_date_str
 
 
 async def set_thisday_state(mac: str, index: int, count: int) -> None:
     """写入 THISDAY 的 index 和 count，并更新 static_updated_at。"""
     await _ensure_device_state_row(mac)
     db = await get_main_db()
+    today_str = date.today().isoformat()
     await db.execute(
         """
         UPDATE device_state
-        SET static_thisday_index = ?, static_thisday_count = ?, static_updated_at = datetime('now')
+        SET static_thisday_index = ?, static_thisday_count = ?, static_updated_at = ?
         WHERE mac = ?
         """,
-        (index, count, mac.upper()),
+        (index, count, today_str, mac.upper()),
     )
     await db.commit()
 
@@ -332,13 +333,13 @@ async def fetch_thisday_record(month: int, day: int, mac: str) -> Optional[dict]
         return None
 
     today = date.today()
-    today_hash = hash(f"{today.month}-{today.day}")
+    today_str = today.isoformat()
 
     # 读取设备的当前索引
-    saved_index, saved_count, saved_date_hash = await get_thisday_state(mac)
+    saved_index, saved_count, saved_date_str = await get_thisday_state(mac)
 
     # 跨天重置索引（每天第一次访问时）
-    if today_hash != saved_date_hash:
+    if today_str != saved_date_str:
         saved_index = 0
         saved_count = len(rows)
 

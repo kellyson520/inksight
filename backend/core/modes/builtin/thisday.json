@@ -21,7 +21,44 @@
       "event_desc": "阿波罗11号宇航员阿姆斯特朗踏上月球表面，说出了那句著名的话。",
       "years_ago": "57年前",
       "significance": "人类太空探索的里程碑"
-    }
+    },
+    "fallback_pool": [
+      {
+        "year": "1969",
+        "event_title": "人类首次登月",
+        "event_desc": "阿波罗11号宇航员阿姆斯特朗踏上月球表面，迈出人类的一大步。",
+        "years_ago": "57年前",
+        "significance": "人类太空探索的里程碑"
+      },
+      {
+        "year": "1888",
+        "event_title": "柯达相机诞生",
+        "event_desc": "乔治·伊士曼为卷轴胶卷相机注册专利，让摄影走入普通人的生活。",
+        "years_ago": "138年前",
+        "significance": "开启大众影像记录时代"
+      },
+      {
+        "year": "1928",
+        "event_title": "青霉素被发现",
+        "event_desc": "亚历山大·弗莱明偶然发现青霉菌分泌物能抑制细菌生长。",
+        "years_ago": "98年前",
+        "significance": "现代抗生素医疗的开端"
+      },
+      {
+        "year": "1977",
+        "event_title": "旅行者1号发射",
+        "event_desc": "旅行者1号太空探测器升空，开启飞往太阳系边缘的壮丽旅途。",
+        "years_ago": "49年前",
+        "significance": "飞出太阳系的人类使者"
+      },
+      {
+        "year": "1905",
+        "event_title": "爱因斯坦发表相对论",
+        "event_desc": "爱因斯坦发表狭义相对论论文，彻底改变了人类的时空观。",
+        "years_ago": "121年前",
+        "significance": "现代物理学最重要的基石之一"
+      }
+    ]
   },
   "layout": {
     "layout_engine": "component_tree",

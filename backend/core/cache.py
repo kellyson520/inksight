@@ -444,8 +444,14 @@ class ContentCache:
             logger.info(f"[CACHE] Rendering {mac}:{persona} (pre-fetched weather)...")
             img, _content = await generate_and_render(
                 persona, config, date_ctx, weather, battery_pct,
-                screen_w=screen_w, screen_h=screen_h, colors=colors,
+                screen_w=screen_w, screen_h=screen_h, mac=mac, colors=colors,
             )
+            if mac and _content and isinstance(_content, dict):
+                try:
+                    from .stats_store import save_render_content
+                    await save_render_content(mac, persona, _content)
+                except Exception as exc:
+                    logger.warning(f"[CACHE] Failed to save render content for {mac}:{persona}: {exc}")
             logger.info(f"[CACHE] ✓ {mac}:{persona}")
             return persona, img
         except (OSError, RuntimeError, TypeError, ValueError) as e:
@@ -483,8 +489,14 @@ class ContentCache:
 
             img, _content = await generate_and_render(
                 persona, config, date_ctx, weather, battery_pct,
-                screen_w=screen_w, screen_h=screen_h, colors=colors,
+                screen_w=screen_w, screen_h=screen_h, mac=mac, colors=colors,
             )
+            if mac and _content and isinstance(_content, dict):
+                try:
+                    from .stats_store import save_render_content
+                    await save_render_content(mac, persona, _content)
+                except Exception as exc:
+                    logger.warning(f"[CACHE] Failed to save render content for {mac}:{persona}: {exc}")
 
             await self.set(mac, persona, img, screen_w, screen_h)
             logger.info(f"[CACHE] ✓ {mac}:{persona}")

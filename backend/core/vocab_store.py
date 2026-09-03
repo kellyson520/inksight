@@ -214,6 +214,45 @@ async def handle_vocab_event(mac: str, action: str, config: dict[str, Any] | Non
 
 
 async def get_vocab_content(mac: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
+    # 对于 Preview 模式（无 MAC 地址或虚拟 MAC），提供随机卡片展示，避免每次都显示同一个固定单词
+    is_preview = not mac or mac.upper() in ("PREVIEW", "N/A", "")
+    if is_preview:
+        deck_id, daily_limit, _ = resolve_vocab_settings(config)
+        db = await get_main_db()
+        cursor = await db.execute(
+            """
+            SELECT id, deck_id, word, phonetic, definition, example, difficulty
+            FROM vocab_items WHERE deck_id = ?
+            ORDER BY RANDOM() LIMIT 1
+            """,
+            (deck_id,),
+        )
+        row = await cursor.fetchone()
+        item = _item_from_row(row) if row else None
+        if not item:
+            # 尝试任何词库中的词
+            cursor = await db.execute(
+                """
+                SELECT id, deck_id, word, phonetic, definition, example, difficulty
+                FROM vocab_items ORDER BY RANDOM() LIMIT 1
+                """
+            )
+            row = await cursor.fetchone()
+            item = _item_from_row(row) if row else None
+
+        if item:
+            return {
+                "state": "back",
+                "word": item["word"],
+                "phonetic": item.get("phonetic") or "",
+                "definition": item["definition"],
+                "example": item.get("example") or "",
+                "progress": f"1/{daily_limit}",
+                "rating_label": "记住",
+                "rating_cursor": 2,
+                "rating_hint": "短按切换评分，长按提交",
+            }
+
     session = await ensure_vocab_session(mac, config)
     item = session.get("item")
     reviewed = int(session.get("reviewed_count") or 0)
