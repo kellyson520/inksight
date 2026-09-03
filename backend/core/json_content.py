@@ -667,6 +667,7 @@ async def generate_json_mode_content(
     screen_h: int = 300,
     api_key: str = "",
     image_api_key: str = "",
+    use_preload: bool = False,
 ) -> dict:
     """Generate content for a JSON-defined mode.
 
@@ -718,6 +719,7 @@ async def generate_json_mode_content(
         mac=mac,
         api_key=api_key,
         image_api_key=image_api_key,
+        use_preload=use_preload,
     )
 
     # If override explicitly provides content fields, short-circuit LLM for llm_json.
@@ -822,8 +824,28 @@ async def generate_json_mode_content(
         else:
             base_prompt += "\n注意：内容将显示在极小屏幕上（296×128像素），所有文字请尽量简短。"
 
-    mode_id = mode_def.get("mode_id", "CUSTOM")
-    logger.info(f"[JSONContent] Generating content for {mode_id} via {provider}/{model}")
+    mode_id = mode_def.get("mode_id", "CUSTOM").upper()
+
+    # 离线多天预存池消费逻辑：当未显式传入覆盖内容且显式允许使用预存时，优先从预存池中平滑滚动获取
+    # 支持 THISDAY（按当天的 YYYY-MM-DD 精准匹配与多轮循环）以及 DAILY / MY_QUOTE / STOIC / WORD_OF_THE_DAY
+    if use_preload and ctype in ("llm", "llm_json") and not override:
+        try:
+            from datetime import date as _date_mod
+            from .preload_store import get_next_preload_item
+            target_date = date_str[:10] if (date_str and len(date_str) >= 10) else _date_mod.today().isoformat()
+            preload_target_date = target_date if mode_id == "THISDAY" else ""
+            preload_item = await get_next_preload_item(mode_id, mac=mac or "", target_date=preload_target_date)
+            if preload_item:
+                logger.info(f"[JSONContent] Served {mode_id} from preload store (date={preload_target_date or 'ALL'}, mac={mac})")
+                preload_item = _apply_post_process(preload_item, content_cfg)
+                preload_item = await _prefetch_images(preload_item, mode_def)
+                preload_item["_llm_used"] = False
+                preload_item["_llm_ok"] = True
+                return preload_item
+        except Exception as exc:
+            logger.warning(f"[JSONContent] Preload lookup failed for {mode_id}: {exc}")
+
+    provider = llm_provider or DEFAULT_LLM_PROVIDER
 
     # Load recent content hashes and field values for dedup
     recent_hashes: list[str] = []
@@ -1796,13 +1818,17 @@ async def _generate_composite_content(mode_def: dict, content_cfg: dict, fallbac
                 "mode_id": mode_def.get("mode_id", "COMPOSITE"),
                 "content": resolved_step,
             }
-            part = await generate_json_mode_content(step_mode_def, **kwargs)
+            step_kwargs = dict(kwargs)
+            step_kwargs["mode_def"] = step_mode_def
+            part = await generate_json_mode_content(**step_kwargs)
             if isinstance(part, dict):
                 # 检查这个 step 是否使用了 LLM
                 if part.get("_llm_used"):
                     any_llm_used = True
                     if not part.get("_llm_ok", True):
                         any_llm_failed = True
+                if part.get("_from_preload"):
+                    result["_from_preload"] = True
                 # 移除内部标记，避免污染最终结果
                 part_clean = {k: v for k, v in part.items() if not k.startswith("_")}
                 result.update(part_clean)
@@ -1822,6 +1848,8 @@ async def _generate_composite_content(mode_def: dict, content_cfg: dict, fallbac
     
     merged = dict(fallback)
     merged.update(result)
+    if result.get("_from_preload"):
+        merged["_from_preload"] = True
     
     # 设置 LLM 使用标记
     if any_llm_used:

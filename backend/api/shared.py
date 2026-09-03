@@ -111,10 +111,14 @@ async def lifespan(app):
     from core.cache import init_cache_db
     from core.db import close_all
     from core.static_store import init_static_tables, migrate_device_state_columns
+    from core.preload_store import init_preload_db
+    from core.preload_seeder import seed_preload_pool
 
     await init_cache_db()
     await init_static_tables()
     await migrate_device_state_columns()
+    await init_preload_db()
+    await seed_preload_pool()
 
     yield
 

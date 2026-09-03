@@ -282,6 +282,7 @@ async def _generate_content_for_persona(
             screen_h=screen_h,
             api_key=device_api_key,
             image_api_key=device_image_api_key,
+            use_preload=cfg.get("use_preload", True),
         )
 
     # Builtin Python mode - use specialized content functions
