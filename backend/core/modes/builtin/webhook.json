@@ -1,0 +1,113 @@
+{
+  "mode_id": "WEBHOOK",
+  "display_name": "开放数据卡片",
+  "icon": "layout-dashboard",
+  "cacheable": false,
+  "description": "接收第三方系统 (Home Assistant, 自建监控脚本, 传感器等) 通过 HTTP POST 投递的自定义数据卡片",
+  "settings_schema": [
+    {
+      "key": "title",
+      "label": "卡片标题",
+      "type": "text",
+      "default": "家庭环境与能耗",
+      "placeholder": "输入仪表盘标题"
+    },
+    {
+      "key": "primary_metric",
+      "label": "核心大字指标",
+      "type": "text",
+      "default": "23.6°C",
+      "placeholder": "如 23.6°C 或 99.8%"
+    },
+    {
+      "key": "primary_label",
+      "label": "核心指标副标",
+      "type": "text",
+      "default": "室内舒适温度",
+      "placeholder": "如 室内温度"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "webhook",
+    "fallback": {
+      "title": "环境监控与能耗",
+      "primary_metric": "23.6°C",
+      "primary_label": "室内舒适温度",
+      "status_tag": "优良",
+      "item_1_label": "空气湿度",
+      "item_1_value": "48% 舒适",
+      "item_2_label": "PM2.5 质量",
+      "item_2_value": "12 μg/m³",
+      "item_3_label": "今日用电量",
+      "item_3_value": "4.2 kWh",
+      "timestamp": "12:00"
+    }
+  },
+  "layout": {
+    "body_align": "center",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 8
+      },
+      {
+        "type": "text",
+        "field": "title",
+        "font": "noto_serif_bold",
+        "font_size": 20,
+        "align": "center"
+      },
+      {
+        "type": "spacer",
+        "height": 8
+      },
+      {
+        "type": "text",
+        "field": "primary_metric",
+        "font": "noto_serif_bold",
+        "font_size": 44,
+        "line_height": 50,
+        "align": "center"
+      },
+      {
+        "type": "text",
+        "field": "primary_label",
+        "font": "noto_serif_regular",
+        "font_size": 13,
+        "align": "center"
+      },
+      {
+        "type": "spacer",
+        "height": 10
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 8
+      },
+      {
+        "type": "key_value",
+        "items": [
+          { "label": "空气湿度", "field": "item_1_value" },
+          { "label": "空气质量", "field": "item_2_value" },
+          { "label": "耗电情况", "field": "item_3_value" }
+        ],
+        "font_size": 13,
+        "align": "center"
+      }
+    ],
+    "footer": {
+      "label": "开放 Webhook 数据",
+      "attribution_template": "更新于 {timestamp}"
+    }
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "mode_id": "HOTLIST",
+  "display_name": "Hot Topics",
+  "icon": "flame",
+  "cacheable": true,
+  "description": "Aggregated daily hot trends from GitHub, Zhihu, Weibo, and Bilibili",
+  "settings_schema": [
+    {
+      "key": "platform",
+      "label": "Trending Platform",
+      "type": "select",
+      "default": "github",
+      "options": [
+        { "value": "github", "label": "GitHub Trending" },
+        { "value": "zhihu", "label": "Zhihu Hot Topics" },
+        { "value": "weibo", "label": "Weibo Hot Search" },
+        { "value": "bilibili", "label": "Bilibili Trends" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "github",
+    "fallback": {
+      "platform_title": "GitHub Trending",
+      "update_time": "Realtime",
+      "item_1": "1. vllm: High-throughput LLM serving engine",
+      "item_2": "2. excalidraw: Virtual whiteboard for sketching",
+      "item_3": "3. inksight: Smart E-Ink desktop companion",
+      "item_4": "4. fastapi: Modern high-performance web framework",
+      "item_5": "5. home-assistant: Open source home automation"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "text",
+        "field": "platform_title",
+        "font": "noto_serif_bold",
+        "font_size": 20,
+        "line_height": 24,
+        "align": "center"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_1",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_2",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_3",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_4",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_5",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      }
+    ],
+    "footer": {
+      "label": "Trending Hotlist",
+      "attribution_template": "Updated at {update_time}"
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "mode_id": "WEBHOOK",
+  "display_name": "Webhook Card",
+  "icon": "layout-dashboard",
+  "cacheable": false,
+  "description": "Receive and render custom structured dashboard data from Home Assistant or external scripts",
+  "settings_schema": [
+    {
+      "key": "title",
+      "label": "Card Title",
+      "type": "text",
+      "default": "Home Environment",
+      "placeholder": "Enter card title"
+    },
+    {
+      "key": "primary_metric",
+      "label": "Primary Metric",
+      "type": "text",
+      "default": "23.6°C",
+      "placeholder": "e.g. 23.6°C or 99.8%"
+    },
+    {
+      "key": "primary_label",
+      "label": "Metric Subtitle",
+      "type": "text",
+      "default": "Indoor Temperature",
+      "placeholder": "e.g. Temperature"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "webhook",
+    "fallback": {
+      "title": "Home Environment",
+      "primary_metric": "23.6°C",
+      "primary_label": "Indoor Temperature",
+      "status_tag": "Good",
+      "item_1_label": "Humidity",
+      "item_1_value": "48% Comfortable",
+      "item_2_label": "Air Quality",
+      "item_2_value": "12 μg/m³",
+      "item_3_label": "Energy Used",
+      "item_3_value": "4.2 kWh",
+      "timestamp": "12:00"
+    }
+  },
+  "layout": {
+    "body_align": "center",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 8
+      },
+      {
+        "type": "text",
+        "field": "title",
+        "font": "noto_serif_bold",
+        "font_size": 20,
+        "align": "center"
+      },
+      {
+        "type": "spacer",
+        "height": 8
+      },
+      {
+        "type": "text",
+        "field": "primary_metric",
+        "font": "noto_serif_bold",
+        "font_size": 44,
+        "line_height": 50,
+        "align": "center"
+      },
+      {
+        "type": "text",
+        "field": "primary_label",
+        "font": "noto_serif_regular",
+        "font_size": 13,
+        "align": "center"
+      },
+      {
+        "type": "spacer",
+        "height": 10
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 8
+      },
+      {
+        "type": "key_value",
+        "items": [
+          { "label": "Humidity", "field": "item_1_value" },
+          { "label": "Air Quality", "field": "item_2_value" },
+          { "label": "Energy Used", "field": "item_3_value" }
+        ],
+        "font_size": 13,
+        "align": "center"
+      }
+    ],
+    "footer": {
+      "label": "Open Webhook",
+      "attribution_template": "Updated at {timestamp}"
+    }
+  }
+}

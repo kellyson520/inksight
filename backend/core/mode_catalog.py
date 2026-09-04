@@ -198,6 +198,18 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         en=CatalogText(name="Crypto Ticker", tip="Live cryptocurrency price and 24h change"),
     ),
     CatalogItem(
+        mode_id="HOTLIST",
+        category="more",
+        zh=CatalogText(name="全网热点", tip="实时知乎、微博、B站、GitHub 聚合热榜"),
+        en=CatalogText(name="Hot Topics", tip="Daily trending hotlist from Zhihu, Weibo, GitHub"),
+    ),
+    CatalogItem(
+        mode_id="WEBHOOK",
+        category="custom",
+        zh=CatalogText(name="开放数据卡片", tip="接收智能家居、监控脚本推送的自定义指标卡片"),
+        en=CatalogText(name="Webhook Card", tip="Custom structured dashboard card via HTTP POST"),
+    ),
+    CatalogItem(
         mode_id="MY_ADAPTIVE",
         category="custom",
         zh=CatalogText(name="相框", tip="上传本地照片（至多6张），循环播放"),

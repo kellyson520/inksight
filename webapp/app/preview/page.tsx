@@ -133,7 +133,7 @@ export default function ExperiencePage() {
   const lastObjectUrlRef = useRef<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
-  const [modal, setModal] = useState<null | { type: "quote" | "weather" | "memo" | "countdown" | "habit" | "lifebar" | "calendar" | "timetable" | "rss" | "crypto"; modeId: string }>(null);
+  const [modal, setModal] = useState<null | { type: "quote" | "weather" | "memo" | "countdown" | "habit" | "lifebar" | "calendar" | "timetable" | "rss" | "crypto" | "hotlist" | "webhook"; modeId: string }>(null);
   const [_imageUploadLoading, setImageUploadLoading] = useState(false);
   const [quoteDraft, setQuoteDraft] = useState("");
   const [authorDraft, setAuthorDraft] = useState("");
@@ -143,6 +143,15 @@ export default function ExperiencePage() {
   const [rssItemIndex, setRssItemIndex] = useState(0);
   const [rssShowImage, setRssShowImage] = useState(true);
   const [cryptoSymbol, setCryptoSymbol] = useState("BTC");
+  const [hotlistPlatform, setHotlistPlatform] = useState("zhihu");
+  const [webhookDraft, setWebhookDraft] = useState({
+    title: "家庭环境与能耗",
+    primary_metric: "24.5°C",
+    primary_label: "舒适客厅温度",
+    item_1_value: "52% 湿度适宜",
+    item_2_value: "14 μg/m³ 优",
+    item_3_value: "3.8 kWh 用电正常",
+  });
   const [calendarReminders, setCalendarReminders] = useState<Record<string, string>>({});
   const [timetableData, setTimetableData] = useState<TimetableData>({
     style: "weekly",
@@ -319,6 +328,14 @@ export default function ExperiencePage() {
       }
       if (targetMode === "CRYPTO") {
         setModal({ type: "crypto", modeId: targetMode });
+        return;
+      }
+      if (targetMode === "HOTLIST") {
+        setModal({ type: "hotlist", modeId: targetMode });
+        return;
+      }
+      if (targetMode === "WEBHOOK") {
+        setModal({ type: "webhook", modeId: targetMode });
         return;
       }
     }
@@ -509,6 +526,16 @@ export default function ExperiencePage() {
     if (modeId === "CRYPTO") {
       setPreviewMode(modeId);
       setModal({ type: "crypto", modeId });
+      return;
+    }
+    if (modeId === "HOTLIST") {
+      setPreviewMode(modeId);
+      setModal({ type: "hotlist", modeId });
+      return;
+    }
+    if (modeId === "WEBHOOK") {
+      setPreviewMode(modeId);
+      setModal({ type: "webhook", modeId });
       return;
     }
 
@@ -872,6 +899,10 @@ export default function ExperiencePage() {
                   ? locale === "zh" ? "RSS 订阅设置" : "RSS Feed Settings"
                   : modal.type === "crypto"
                   ? locale === "zh" ? "资产行情设置" : "Crypto Ticker Settings"
+                  : modal.type === "hotlist"
+                  ? locale === "zh" ? "全网热点设置" : "Hot Topics Settings"
+                  : modal.type === "webhook"
+                  ? locale === "zh" ? "开放数据卡片模拟" : "Webhook Card Simulator"
                   : locale === "zh" ? "人生进度条" : "Life Progress"}
               </div>
               <button className="text-ink-light hover:text-ink" onClick={() => setModal(null)}>
@@ -1458,6 +1489,162 @@ export default function ExperiencePage() {
                       variant="outline"
                     >
                       {locale === "zh" ? "预览行情" : "Preview Ticker"}
+                    </Button>
+                  </div>
+                </>
+              ) : modal.type === "hotlist" ? (
+                <>
+                  <div className="text-xs text-ink-light mb-2">
+                    {locale === "zh"
+                      ? "选择要聚合展示的热榜平台，系统会自动抓取 Top 5 热门话题并在墨水屏优雅排版。"
+                      : "Select a trending platform to fetch and render top 5 hot topics on e-ink."}
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: "zhihu", label: "知乎热榜" },
+                        { id: "weibo", label: "微博热搜" },
+                        { id: "bilibili", label: "B站热门" },
+                        { id: "github", label: "GitHub Trending" },
+                      ].map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setHotlistPlatform(p.id)}
+                          className={`text-xs px-3 py-1.5 rounded border transition-colors ${
+                            hotlistPlatform === p.id
+                              ? "bg-ink text-white border-ink font-medium"
+                              : "bg-ink/5 border-ink/10 text-ink hover:bg-ink/10"
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-3">
+                    <Button
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview(modal.modeId);
+                      }}
+                      disabled={previewLoading}
+                      variant="outline"
+                    >
+                      {locale === "zh" ? "使用默认榜单" : "Default Hotlist"}
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview(modal.modeId, {
+                          platform: hotlistPlatform,
+                        });
+                      }}
+                      disabled={previewLoading}
+                      variant="outline"
+                    >
+                      {locale === "zh" ? "预览热榜" : "Preview Hotlist"}
+                    </Button>
+                  </div>
+                </>
+              ) : modal.type === "webhook" ? (
+                <>
+                  <div className="text-xs text-ink-light mb-2">
+                    {locale === "zh"
+                      ? "模拟外部系统（智能家居/服务器监控/自建脚本）通过 POST /api/open/device/{mac}/data 推送的卡片数据。"
+                      : "Simulate custom dashboard data pushed via POST /api/open/device/{mac}/data."}
+                  </div>
+                  <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+                    <div>
+                      <label className="text-xs font-medium text-ink block mb-0.5">
+                        {locale === "zh" ? "卡片主标题" : "Card Title"}
+                      </label>
+                      <input
+                        value={webhookDraft.title}
+                        onChange={(e) => setWebhookDraft({ ...webhookDraft, title: e.target.value })}
+                        className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-ink block mb-0.5">
+                          {locale === "zh" ? "核心大字数值" : "Primary Metric"}
+                        </label>
+                        <input
+                          value={webhookDraft.primary_metric}
+                          onChange={(e) => setWebhookDraft({ ...webhookDraft, primary_metric: e.target.value })}
+                          className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-ink block mb-0.5">
+                          {locale === "zh" ? "数值说明" : "Metric Label"}
+                        </label>
+                        <input
+                          value={webhookDraft.primary_label}
+                          onChange={(e) => setWebhookDraft({ ...webhookDraft, primary_label: e.target.value })}
+                          className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-ink block mb-0.5">
+                        {locale === "zh" ? "指标明细 1" : "Item 1"}
+                      </label>
+                      <input
+                        value={webhookDraft.item_1_value}
+                        onChange={(e) => setWebhookDraft({ ...webhookDraft, item_1_value: e.target.value })}
+                        className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-ink block mb-0.5">
+                        {locale === "zh" ? "指标明细 2" : "Item 2"}
+                      </label>
+                      <input
+                        value={webhookDraft.item_2_value}
+                        onChange={(e) => setWebhookDraft({ ...webhookDraft, item_2_value: e.target.value })}
+                        className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-ink block mb-0.5">
+                        {locale === "zh" ? "指标明细 3" : "Item 3"}
+                      </label>
+                      <input
+                        value={webhookDraft.item_3_value}
+                        onChange={(e) => setWebhookDraft({ ...webhookDraft, item_3_value: e.target.value })}
+                        className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-3">
+                    <Button
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview(modal.modeId);
+                      }}
+                      disabled={previewLoading}
+                      variant="outline"
+                    >
+                      {locale === "zh" ? "使用默认数据" : "Default Data"}
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview(modal.modeId, {
+                          title: webhookDraft.title.trim(),
+                          primary_metric: webhookDraft.primary_metric.trim(),
+                          primary_label: webhookDraft.primary_label.trim(),
+                          item_1_value: webhookDraft.item_1_value.trim(),
+                          item_2_value: webhookDraft.item_2_value.trim(),
+                          item_3_value: webhookDraft.item_3_value.trim(),
+                        });
+                      }}
+                      disabled={previewLoading}
+                      variant="outline"
+                    >
+                      {locale === "zh" ? "预览卡片" : "Preview Card"}
                     </Button>
                   </div>
                 </>

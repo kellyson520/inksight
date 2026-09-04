@@ -36,6 +36,18 @@ class OpenRssPayload(BaseModel):
     show_image: Optional[bool] = Field(default=True, description="是否展示配图")
 
 
+class OpenDataPayload(BaseModel):
+    title: Optional[str] = Field(default=None, description="卡片主标题")
+    primary_metric: Optional[str] = Field(default=None, description="核心大字数值 (如 25.4°C / 98%)")
+    primary_label: Optional[str] = Field(default=None, description="核心数值说明副标")
+    status_tag: Optional[str] = Field(default=None, description="状态标签 (如 优良 / 正常)")
+    item_1_value: Optional[str] = Field(default=None, description="指标项 1 数值/文本")
+    item_2_value: Optional[str] = Field(default=None, description="指标项 2 数值/文本")
+    item_3_value: Optional[str] = Field(default=None, description="指标项 3 数值/文本")
+    timestamp: Optional[str] = Field(default=None, description="时间戳 (缺省自动填当前时间)")
+    raw_data: Optional[dict[str, Any]] = Field(default=None, description="透传任意结构化键值")
+
+
 @router.post("/device/{mac}/text")
 async def push_device_text(mac: str, payload: OpenTextPayload):
     """
@@ -134,3 +146,59 @@ async def inspect_rss(feed_url: str):
         "total_items": len(parsed.get("items", [])),
         "sample_item": sample,
     }
+
+
+@router.post("/device/{mac}/data")
+async def push_device_data(mac: str, payload: OpenDataPayload):
+    """
+    通用开放 Webhook 数据卡片接收端点：
+    允许外部系统（Home Assistant、自建运维监控、个人跑步记录、IoT设备）
+    向指定 InkSight 墨水屏推送自定义结构化数据看板。
+    """
+    clean_mac = mac.strip().upper()
+    cfg = await get_active_config(clean_mac)
+    if not cfg:
+        cfg = {"mac": clean_mac}
+
+    mode_overrides = cfg.get("mode_overrides") or {}
+    if not isinstance(mode_overrides, dict):
+        mode_overrides = {}
+
+    webhook_data = dict(mode_overrides.get("WEBHOOK") or {})
+    
+    # 填充字段
+    if payload.raw_data and isinstance(payload.raw_data, dict):
+        webhook_data.update(payload.raw_data)
+    if payload.title is not None:
+        webhook_data["title"] = payload.title
+    if payload.primary_metric is not None:
+        webhook_data["primary_metric"] = payload.primary_metric
+    if payload.primary_label is not None:
+        webhook_data["primary_label"] = payload.primary_label
+    if payload.status_tag is not None:
+        webhook_data["status_tag"] = payload.status_tag
+    if payload.item_1_value is not None:
+        webhook_data["item_1_value"] = payload.item_1_value
+    if payload.item_2_value is not None:
+        webhook_data["item_2_value"] = payload.item_2_value
+    if payload.item_3_value is not None:
+        webhook_data["item_3_value"] = payload.item_3_value
+    if payload.timestamp is not None:
+        webhook_data["timestamp"] = payload.timestamp
+
+    mode_overrides["WEBHOOK"] = webhook_data
+    cfg["mode_overrides"] = mode_overrides
+    cfg["current_mode"] = "WEBHOOK"
+    await save_config(clean_mac, cfg)
+
+    logger.info("[OpenAPI] Pushed custom webhook data to device %s: %s", clean_mac, webhook_data.get("title"))
+    return {
+        "code": 0,
+        "message": f"Device {clean_mac} webhook data updated.",
+        "data": {
+            "mac": clean_mac,
+            "mode": "WEBHOOK",
+            "card_title": webhook_data.get("title"),
+        }
+    }
+

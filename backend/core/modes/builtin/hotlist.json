@@ -1,0 +1,129 @@
+{
+  "mode_id": "HOTLIST",
+  "display_name": "全网热点",
+  "icon": "flame",
+  "cacheable": true,
+  "description": "实时聚合知乎热榜、微博热搜、B站热门、GitHub Trending 等平台精选要闻",
+  "settings_schema": [
+    {
+      "key": "platform",
+      "label": "热榜平台",
+      "type": "select",
+      "default": "zhihu",
+      "options": [
+        { "value": "zhihu", "label": "知乎热榜" },
+        { "value": "weibo", "label": "微博热搜" },
+        { "value": "bilibili", "label": "B站热门" },
+        { "value": "github", "label": "GitHub Trending" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "zhihu",
+    "fallback": {
+      "platform_title": "知乎今日热榜",
+      "update_time": "实时",
+      "item_1": "1. 科学家在常温超导与量子计算领域取得新进展",
+      "item_2": "2. 人工智能如何重塑个人生产力与工作流？",
+      "item_3": "3. 航天探测器传回太阳系边缘高精图像",
+      "item_4": "4. 保持身心健康、提高深度专注力的实用习惯",
+      "item_5": "5. 近期值得深度阅读的书籍与纪录片推荐"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "text",
+        "field": "platform_title",
+        "font": "noto_serif_bold",
+        "font_size": 20,
+        "line_height": 24,
+        "align": "center"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_1",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_2",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_3",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_4",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "text",
+        "field": "item_5",
+        "font": "noto_serif_regular",
+        "font_size": 14,
+        "line_height": 20,
+        "align": "left"
+      }
+    ],
+    "footer": {
+      "label": "实时热榜",
+      "attribution_template": "更新于 {update_time}"
+    }
+  }
+}
