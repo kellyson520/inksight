@@ -63,23 +63,13 @@
     "body_align": "top",
     "body": [
       {
-        "type": "header_banner",
-        "style": "inverted",
-        "bg_color": "{theme_color}",
-        "title": "EMERGENCY DISASTER ALERT",
-        "badge": "{level} ALERT",
-        "right_text": "TOP PRIORITY",
-        "height": 28,
-        "margin_bottom": 6
-      },
-      {
         "type": "disaster_hero",
         "hazard_template": "{hazard_key}",
         "type_name_template": "{type_name}",
         "level_template": "{level}",
-        "icon_size": 60,
-        "title_font_size": 18,
-        "margin_bottom": 6
+        "icon_size": 64,
+        "title_font_size": 20,
+        "margin_bottom": 8
       },
       {
         "type": "text",
