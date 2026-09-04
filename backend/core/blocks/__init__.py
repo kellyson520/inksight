@@ -21,6 +21,8 @@ from . import layout as _layout_module
 from . import components as _components_module
 from . import charts as _charts_module
 from . import grids as _grids_module
+from . import decorations as _decorations_module
+from . import gauges as _gauges_module
 
 from .grids import slice_calendar_rows_around_day
 

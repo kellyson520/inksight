@@ -80,6 +80,32 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
         margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
         return max_width, h + margin_bottom
 
+    elif btype == "status_pill":
+        text = str(ctx.get_field(block.get("field", "")) if block.get("field") else block.get("text", ""))
+        text = ctx.resolve(text)
+        font_size = int(block.get("font_size", 10) * ctx.scale)
+        font = load_font("noto_serif_regular", font_size)
+        bbox = font.getbbox(text)
+        tw = bbox[2] - bbox[0]
+        th = max(bbox[3] - bbox[1], font_size)
+        dot_r = int(2.5 * ctx.scale) or 2
+        pad_x = int(block.get("padding_x", 6) * ctx.scale)
+        pad_y = int(block.get("padding_y", 2) * ctx.scale)
+        dot_gap = int(4 * ctx.scale)
+        w = pad_x * 2 + dot_r * 2 + dot_gap + tw
+        h = th + pad_y * 2
+        return w, h
+
+    elif btype == "divider_ornament":
+        margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, int(10 * ctx.scale) + margin_bottom
+
+    elif btype == "progress_ring":
+        size = int(block.get("size", 64) * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
+        extra = int(14 * ctx.scale) if block.get("label") else 0
+        return size, size + extra + margin_bottom
+
     else:
         measure_img = Image.new("1", (max(1, max_width), 100), EINK_BG)
         mc = RenderContext(
