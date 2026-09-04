@@ -15,9 +15,17 @@ logger = logging.getLogger(__name__)
 BLOCK_RENDERERS: dict[str, Callable[[RenderContext, dict], None]] = {}
 
 
-def register_block(btype: str, fn: Callable[[RenderContext, dict], None]) -> None:
-    """注册一种 Block 渲染器。"""
-    BLOCK_RENDERERS[btype] = fn
+def register_block(btype: str, fn: Callable[[RenderContext, dict], None] | None = None):
+    """注册一种 Block 渲染器。支持函数调用与装饰器两种模式。"""
+    if fn is not None:
+        BLOCK_RENDERERS[btype] = fn
+        return fn
+
+    def decorator(func: Callable[[RenderContext, dict], None]):
+        BLOCK_RENDERERS[btype] = func
+        return func
+
+    return decorator
 
 
 def render_block(ctx: RenderContext, block: dict) -> None:

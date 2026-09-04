@@ -173,6 +173,14 @@ async def render(
                     except (TypeError, ValueError, OSError):
                         logger.warning("[RECONNECT] Failed to evaluate reconnect policy for %s", mac, exc_info=True)
 
+        if mac and cfg and not skip_cache_for_this_render:
+            try:
+                from core.disaster_service import check_device_disaster_alert
+                if await check_device_disaster_alert(mac, cfg):
+                    skip_cache_for_this_render = True
+            except Exception:
+                pass
+
         img, resolved_persona, cache_hit, content_fallback, quota_exhausted, api_key_invalid, llm_mode_requires_quota, _usage_source = await build_image(
             params.v,
             mac,

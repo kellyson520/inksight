@@ -839,3 +839,84 @@ async def share_image(
     draw.text((40, h - 40), "InkSight | inco", fill=128, font=small_font)
     draw.text((w - 180, h - 40), "www.inksight.site", fill=128, font=small_font)
     return Response(content=image_to_png_bytes(img.convert("1")), media_type="image/png")
+
+
+@router.post("/device/{mac}/disaster-alert/simulate")
+async def simulate_device_disaster_alert(
+    mac: str,
+    request: Request,
+    body: Optional[dict] = None,
+    x_device_token: Optional[str] = Header(default=None),
+    ink_session: Optional[str] = Cookie(default=None),
+):
+    """为指定设备模拟/注入自然灾害预警，测试最高优先级全屏紧急画面与唤醒推送。"""
+    await ensure_web_or_device_access(request, mac, x_device_token, ink_session)
+    from core.disaster_service import simulate_disaster_alert
+    alert = simulate_disaster_alert(mac, body or {})
+    await set_pending_refresh(mac, True)
+    logger.info("[DISASTER] Simulated alert injected for %s: %s [%s]", mac, alert.get("title"), alert.get("level"))
+    return {"ok": True, "message": "Disaster alert simulated and refresh queued", "alert": alert}
+
+
+@router.delete("/device/{mac}/disaster-alert/simulate")
+async def clear_device_disaster_alert(
+    mac: str,
+    request: Request,
+    x_device_token: Optional[str] = Header(default=None),
+    ink_session: Optional[str] = Cookie(default=None),
+):
+    """清除设备的模拟自然灾害预警，恢复普通轮播与日常模式。"""
+    await ensure_web_or_device_access(request, mac, x_device_token, ink_session)
+    from core.disaster_service import clear_simulated_alert
+    clear_simulated_alert(mac)
+    await set_pending_refresh(mac, True)
+    logger.info("[DISASTER] Cleared simulated alert for %s", mac)
+    return {"ok": True, "message": "Simulated disaster alert cleared"}
+
+
+@router.post("/device/{mac}/disaster-alert/push")
+async def push_immediate_disaster_alert(
+    mac: str,
+    request: Request,
+    body: Optional[dict] = None,
+    x_device_token: Optional[str] = Header(default=None),
+    ink_session: Optional[str] = Cookie(default=None),
+):
+    """立即生成并向指定设备紧急推送灾害预警画面（最高优先级入列）。"""
+    await ensure_web_or_device_access(request, mac, x_device_token, ink_session)
+    from core.disaster_service import simulate_disaster_alert, build_disaster_alert_mode_def
+    from core.json_renderer import render_json_mode
+    from core.config import SCREEN_WIDTH, SCREEN_HEIGHT
+
+    alert = simulate_disaster_alert(mac, body or {})
+    mode_def = build_disaster_alert_mode_def(alert)
+    cfg = await get_active_config(mac, log_load=False) or {}
+    w = cfg.get("screen_width") or SCREEN_WIDTH
+    h = cfg.get("screen_height") or SCREEN_HEIGHT
+    colors = cfg.get("colors") or 3
+
+    rendered_img = render_json_mode(
+        mode_def,
+        mode_def["content"],
+        date_str=alert.get("pub_time", ""),
+        weather_str="紧急气象通报",
+        battery_pct=99,
+        screen_w=w,
+        screen_h=h,
+        colors=colors,
+    )
+
+    buf = io.BytesIO()
+    if rendered_img.mode == "P":
+        rendered_img.save(buf, format="PNG")
+    else:
+        rendered_img.convert("L").save(buf, format="PNG")
+    normalized_bytes = buf.getvalue()
+
+    async with _preview_push_queue_lock:
+        _preview_push_queue[mac] = {"image": normalized_bytes, "mode": "DISASTER_ALERT"}
+
+    await set_pending_refresh(mac, True)
+    logger.info("[DISASTER] Forced emergency alert push queued for %s", mac)
+    return {"ok": True, "message": "Emergency disaster alert pushed to device queue", "alert": alert}
+

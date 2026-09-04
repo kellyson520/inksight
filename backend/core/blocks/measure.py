@@ -106,6 +106,43 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
         extra = int(14 * ctx.scale) if block.get("label") else 0
         return size, size + extra + margin_bottom
 
+    elif btype == "header_banner":
+        h = int(block.get("height", 34) * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 8) * ctx.scale)
+        return max_width, h + margin_bottom
+
+    elif btype == "header_compact":
+        font_size = int(block.get("font_size", 14) * ctx.scale)
+        extra = int(10 * ctx.scale) if block.get("line", True) else int(4 * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, font_size + extra + margin_bottom
+
+    elif btype in ("footer_ornate", "footer_badge"):
+        return max_width, int(28 * ctx.scale)
+
+    elif btype == "disaster_banner":
+        h = int(block.get("height", 46) * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 8) * ctx.scale)
+        return max_width, h + margin_bottom
+
+    elif btype == "disaster_icon":
+        sz = int(block.get("size", 44) * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
+        return sz, sz + margin_bottom
+
+    elif btype == "corner_bracket":
+        h = int(block.get("height", 80) * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, h + margin_bottom
+
+    elif btype == "double_border":
+        h = int(block.get("height", 70) * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 8) * ctx.scale)
+        return max_width, h + margin_bottom
+
+    elif btype == "lace_border":
+        return max_width, int(14 * ctx.scale)
+
     else:
         measure_img = Image.new("1", (max(1, max_width), 100), EINK_BG)
         mc = RenderContext(

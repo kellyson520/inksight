@@ -104,6 +104,33 @@ async def generate_and_render(
     time_str = date_ctx.get("time_str", "")
     weather_str = weather["weather_str"]
     weather_code = weather.get("weather_code", -1)
+
+    # === 最高优先级自然灾害预警抢占 (Highest Priority Disaster Alert Interruption) ===
+    if (mac or (config and config.get("disaster_alert"))) and persona != "DISASTER_ALERT":
+        try:
+            from core.disaster_service import check_device_disaster_alert, build_disaster_alert_mode_def
+            active_alert = await check_device_disaster_alert(mac, config)
+            if active_alert:
+                logger.warning(
+                    "[PIPELINE] 🚨 ACTIVE DISASTER ALERT INTERRUPT for %s: %s [%s]",
+                    mac or "anon", active_alert.get("title"), active_alert.get("level")
+                )
+                alert_mode_def = build_disaster_alert_mode_def(active_alert)
+                from core.json_renderer import render_json_mode
+                alert_img = render_json_mode(
+                    alert_mode_def,
+                    alert_mode_def["content"],
+                    date_str=_format_date_str(date_ctx, DEFAULT_LANGUAGE),
+                    weather_str=weather_str,
+                    battery_pct=battery_pct,
+                    screen_w=screen_w,
+                    screen_h=screen_h,
+                    colors=colors,
+                )
+                return alert_img, alert_mode_def["content"]
+        except Exception as alert_err:
+            logger.warning("[PIPELINE] Failed checking disaster alert: %s", alert_err, exc_info=True)
+
     cfg = get_effective_mode_config(config, persona)
 
     content = await _generate_content_for_persona(
