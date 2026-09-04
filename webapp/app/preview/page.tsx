@@ -170,9 +170,18 @@ export default function ExperiencePage() {
   /**
    * 核心预览请求处理器
    */
-  const handlePreview = async (modeId?: string, override?: Record<string, unknown>) => {
+  const handlePreview = async (
+    modeId?: string,
+    override?: Record<string, unknown>,
+    colorOverride?: number,
+    sizeOverride?: { w: number; h: number },
+  ) => {
     const targetMode = modeId || previewMode;
     if (!targetMode || !authChecked) return;
+
+    const effColors = colorOverride !== undefined ? colorOverride : previewColors;
+    const effWidth = sizeOverride ? sizeOverride.w : previewWidth;
+    const effHeight = sizeOverride ? sizeOverride.h : previewHeight;
 
     setPreviewLlmStatus(null);
     setPreviewLoading(true);
@@ -182,9 +191,9 @@ export default function ExperiencePage() {
       const params = new URLSearchParams();
       params.set("persona", targetMode);
       params.set("ui_language", locale === "en" ? "en" : "zh");
-      if (previewColors > 2) params.set("colors", String(previewColors));
-      params.set("w", String(previewWidth));
-      params.set("h", String(previewHeight));
+      params.set("colors", String(effColors));
+      params.set("w", String(effWidth));
+      params.set("h", String(effHeight));
 
       const mergedOverride: Record<string, unknown> = { ...(override || {}) };
 
@@ -477,12 +486,12 @@ export default function ExperiencePage() {
             locale={locale}
             onColorChange={(c) => {
               setPreviewColors(c);
-              handlePreview(previewMode);
+              handlePreview(previewMode, undefined, c);
             }}
             onSizeChange={(w, h) => {
               setPreviewWidth(w);
               setPreviewHeight(h);
-              handlePreview(previewMode);
+              handlePreview(previewMode, undefined, undefined, { w, h });
             }}
             onRefresh={() => handlePreview(previewMode)}
             onOpenConfig={handleOpenConfigModal}

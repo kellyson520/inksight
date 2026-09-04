@@ -639,7 +639,7 @@ async def build_image(
 
     if not mac and is_mode_cacheable and not skip_cache:
         # This is a preview request without device mac - use preview cache
-        preview_cache_key = content_cache._get_preview_cache_key(persona, screen_w, screen_h, preview_city_override, mode_override_hash, preview_ui_language)
+        preview_cache_key = content_cache._get_preview_cache_key(persona, screen_w, screen_h, preview_city_override, mode_override_hash, preview_ui_language, colors=colors)
         cached_img = await content_cache.get_preview(
             persona,
             screen_w,
@@ -647,6 +647,7 @@ async def build_image(
             city_override=preview_city_override,
             mode_override_hash=mode_override_hash,
             ui_language=preview_ui_language,
+            colors=colors,
         )
         if cached_img:
             cache_hit = True
@@ -957,6 +958,7 @@ async def build_image(
                 city_override=preview_city_override,
                 mode_override_hash=mode_override_hash,
                 ui_language=preview_ui_language,
+                colors=colors,
             )
 
     if mac:

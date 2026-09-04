@@ -90,11 +90,12 @@ class ContentCache:
         self, persona: str, screen_w: int, screen_h: int,
         city_override: Optional[str] = None, mode_override_hash: Optional[str] = None,
         ui_language: Optional[str] = None,
+        colors: int = 2,
     ) -> str:
         """Generate cache key for preview requests (no mac required)."""
         persona = (persona or "").upper()
         # Use a fixed TTL for preview cache (5 minutes by default)
-        parts = [f"preview:{persona}:{screen_w}x{screen_h}"]
+        parts = [f"preview:{persona}:{screen_w}x{screen_h}:c{colors}"]
         if city_override:
             parts.append(f"city:{city_override}")
         if mode_override_hash:
@@ -197,12 +198,13 @@ class ContentCache:
         self, persona: str, screen_w: int, screen_h: int,
         city_override: Optional[str] = None, mode_override_hash: Optional[str] = None,
         ui_language: Optional[str] = None,
+        colors: int = 2,
     ) -> Optional[Image.Image]:
         """Get cached preview image if available and not expired."""
         if DISABLE_CACHE:
             return None
         async with self._lock:
-            key = self._get_preview_cache_key(persona, screen_w, screen_h, city_override, mode_override_hash, ui_language)
+            key = self._get_preview_cache_key(persona, screen_w, screen_h, city_override, mode_override_hash, ui_language, colors=colors)
             if key in self._cache:
                 img, timestamp = self._cache[key]
                 if datetime.now() - timestamp < timedelta(minutes=self.PREVIEW_CACHE_TTL_MINUTES):
@@ -227,12 +229,13 @@ class ContentCache:
         screen_w: int, screen_h: int,
         city_override: Optional[str] = None, mode_override_hash: Optional[str] = None,
         ui_language: Optional[str] = None,
+        colors: int = 2,
     ):
         """Store preview image in cache."""
         if DISABLE_CACHE:
             return
         async with self._lock:
-            key = self._get_preview_cache_key(persona, screen_w, screen_h, city_override, mode_override_hash, ui_language)
+            key = self._get_preview_cache_key(persona, screen_w, screen_h, city_override, mode_override_hash, ui_language, colors=colors)
             img_copy = img.copy()
             self._cache[key] = (img_copy, datetime.now())
             if self._persistent_cache_available():
