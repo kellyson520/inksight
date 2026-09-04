@@ -69,6 +69,7 @@
       {
         "type": "text",
         "field": "primary_metric",
+        "color": "red",
         "font": "noto_serif_bold",
         "font_size": 44,
         "line_height": 50,

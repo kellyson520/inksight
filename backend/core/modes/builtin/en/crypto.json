@@ -84,6 +84,7 @@
       {
         "type": "text",
         "field": "change_24h",
+        "color": "red",
         "font": "noto_serif_bold",
         "font_size": 20,
         "align": "center"

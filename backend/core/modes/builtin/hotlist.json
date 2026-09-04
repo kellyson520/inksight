@@ -46,6 +46,7 @@
       {
         "type": "text",
         "field": "platform_title",
+        "color": "red",
         "font": "noto_serif_bold",
         "font_size": 20,
         "line_height": 24,
