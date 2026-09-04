@@ -45,6 +45,7 @@ interface ModeConfigModalProps {
   onClose: () => void;
   onSubmit: (modeId: string, override: Record<string, unknown>) => Promise<void>;
   initialHotlistPlatforms: string[];
+  initialHotlistStyle?: string;
   initialDisasterLevel: string;
   initialDisasterHazard: string;
   initialRssFeedUrl: string;
@@ -58,6 +59,7 @@ export function ModeConfigModal({
   onClose,
   onSubmit,
   initialHotlistPlatforms,
+  initialHotlistStyle = "dense_grid",
   initialDisasterLevel,
   initialDisasterHazard,
   initialRssFeedUrl,
@@ -118,11 +120,12 @@ export function ModeConfigModal({
           {modal.type === "hotlist" ? (
             <HotlistConfig
               initialPlatforms={initialHotlistPlatforms}
+              initialStyle={initialHotlistStyle}
               locale={locale}
               previewLoading={previewLoading}
               onClose={onClose}
-              onSubmit={async (platforms) => {
-                await onSubmit("HOTLIST", { platforms });
+              onSubmit={async (platforms, style) => {
+                await onSubmit("HOTLIST", { platforms, style });
               }}
             />
           ) : modal.type === "disaster" ? (

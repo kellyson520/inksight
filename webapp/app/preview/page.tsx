@@ -69,6 +69,7 @@ export default function ExperiencePage() {
 
   // 默认持久状态
   const [hotlistPlatforms, setHotlistPlatforms] = useState<string[]>(["zhihu", "weibo"]);
+  const [hotlistStyle, setHotlistStyle] = useState<string>("dense_grid");
   const [disasterLevel, setDisasterLevel] = useState<string>("红色");
   const [disasterHazard, setDisasterHazard] = useState<string>("暴雨");
   const [rssFeedUrl, _setRssFeedUrl] = useState("https://kellson.dpdns.org:81/playno1/av");
@@ -205,8 +206,13 @@ export default function ExperiencePage() {
 
       const mergedOverride: Record<string, unknown> = { ...(override || {}) };
 
-      if (targetMode === "HOTLIST" && !mergedOverride.platforms && !mergedOverride.platform) {
-        mergedOverride.platforms = hotlistPlatforms;
+      if (targetMode === "HOTLIST") {
+        if (!mergedOverride.platforms && !mergedOverride.platform) {
+          mergedOverride.platforms = hotlistPlatforms;
+        }
+        if (!mergedOverride.style) {
+          mergedOverride.style = hotlistStyle;
+        }
       }
       if (targetMode === "DISASTER_ALERT") {
         if (!mergedOverride.level) mergedOverride.level = disasterLevel;
@@ -313,8 +319,13 @@ export default function ExperiencePage() {
 
   // 接收配置表单提交
   const handleModalSubmit = async (modeId: string, override: Record<string, unknown>) => {
-    if (modeId === "HOTLIST" && Array.isArray(override.platforms)) {
-      setHotlistPlatforms(override.platforms as string[]);
+    if (modeId === "HOTLIST") {
+      if (Array.isArray(override.platforms)) {
+        setHotlistPlatforms(override.platforms as string[]);
+      }
+      if (override.style) {
+        setHotlistStyle(String(override.style));
+      }
     }
     if (modeId === "DISASTER_ALERT") {
       if (override.level) setDisasterLevel(String(override.level));
@@ -358,7 +369,7 @@ export default function ExperiencePage() {
   // 初始自动生成
   useEffect(() => {
     if (authChecked && catalogItems.length > 0 && !previewImageUrl && !previewLoading) {
-      handlePreview("HOTLIST", { platforms: hotlistPlatforms });
+      handlePreview("HOTLIST", { platforms: hotlistPlatforms, style: hotlistStyle });
     }
   }, [authChecked, catalogItems.length]);
 
@@ -546,6 +557,7 @@ export default function ExperiencePage() {
           onClose={() => setModal(null)}
           onSubmit={handleModalSubmit}
           initialHotlistPlatforms={hotlistPlatforms}
+          initialHotlistStyle={hotlistStyle}
           initialDisasterLevel={disasterLevel}
           initialDisasterHazard={disasterHazard}
           initialRssFeedUrl={rssFeedUrl}

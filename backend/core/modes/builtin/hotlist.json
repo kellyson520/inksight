@@ -3,7 +3,7 @@
   "display_name": "全网热点",
   "icon": "flame",
   "cacheable": true,
-  "description": "实时聚合知乎热榜、微博热搜、B站热门、GitHub Trending 等平台精选要闻",
+  "description": "实时聚合知乎、微博、B站、抖音、36氪、少数派、IT之家等平台多源热搜与精选资讯",
   "settings_schema": [
     {
       "key": "platforms",
@@ -14,8 +14,24 @@
         { "value": "zhihu", "label": "知乎热榜" },
         { "value": "weibo", "label": "微博热搜" },
         { "value": "bilibili", "label": "B站热门" },
+        { "value": "douyin", "label": "抖音热点" },
         { "value": "baidu", "label": "百度热搜" },
+        { "value": "36kr", "label": "36氪热榜" },
+        { "value": "sspai", "label": "少数派" },
+        { "value": "ithome", "label": "IT之家" },
+        { "value": "tieba", "label": "百度贴吧" },
         { "value": "github", "label": "GitHub Trending" }
+      ]
+    },
+    {
+      "key": "style",
+      "label": "排版样式",
+      "type": "select",
+      "default": "dense_grid",
+      "options": [
+        { "value": "dense_grid", "label": "双列高密度卡片看板" },
+        { "value": "editorial", "label": "杂志焦点头条精选" },
+        { "value": "classic", "label": "精致胶囊单列排行" }
       ]
     }
   ],
@@ -23,14 +39,17 @@
     "type": "computed",
     "provider": "hotlist",
     "platforms": ["zhihu", "weibo"],
+    "style": "dense_grid",
     "fallback": {
-      "platform_title": "知乎实时热榜",
+      "platform_title": "全网实时热点",
+      "style_badge": "焦点精选",
       "update_time": "实时",
-      "item_1": "1. 科学家在常温超导与量子计算领域取得新进展",
-      "item_2": "2. 人工智能如何重塑个人生产力与工作流？",
-      "item_3": "3. 航天探测器传回太阳系边缘高精图像",
-      "item_4": "4. 保持身心健康、提高深度专注力的实用习惯",
-      "item_5": "5. 近期值得深度阅读的书籍与纪录片推荐"
+      "item_1": "1. 科学家在常温超导与量子计算领域取得新突破",
+      "item_2": "2. 人工智能重塑数字生产力与前沿工作流",
+      "item_3": "3. 深空探测器传回太阳系边缘超高清影像",
+      "item_4": "4. 建立健康生活节奏与专注习惯实践指南",
+      "item_5": "5. 本周精选科技前沿观察与开源创新项目",
+      "item_6": "6. 探索新一代低功耗电子墨水屏技术前沿"
     }
   },
   "layout": {
@@ -42,11 +61,11 @@
     "body": [
       {
         "type": "spacer",
-        "height": 6
+        "height": 4
       },
       {
         "type": "flex_row",
-        "justify": "center",
+        "justify": "space_between",
         "align_items": "center",
         "gap": 8,
         "items": [
@@ -59,11 +78,11 @@
             "font_size": 13,
             "padding_x": 10,
             "padding_y": 3,
-            "radius": 6
+            "radius": 5
           },
           {
             "type": "badge",
-            "text": "焦点 TOP 5",
+            "field": "style_badge",
             "variant": "outline",
             "font_size": 11,
             "padding_x": 6,
@@ -74,7 +93,7 @@
       },
       {
         "type": "spacer",
-        "height": 6
+        "height": 4
       },
       {
         "type": "separator",
@@ -83,67 +102,14 @@
       },
       {
         "type": "spacer",
-        "height": 6
+        "height": 4
       },
       {
-        "type": "text",
-        "field": "item_1",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
-      },
-      {
-        "type": "spacer",
-        "height": 6
-      },
-      {
-        "type": "text",
-        "field": "item_2",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
-      },
-      {
-        "type": "spacer",
-        "height": 6
-      },
-      {
-        "type": "text",
-        "field": "item_3",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
-      },
-      {
-        "type": "spacer",
-        "height": 6
-      },
-      {
-        "type": "text",
-        "field": "item_4",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
-      },
-      {
-        "type": "spacer",
-        "height": 6
-      },
-      {
-        "type": "text",
-        "field": "item_5",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
+        "type": "hotlist_board"
       }
     ],
     "footer": {
-      "label": "实时资讯聚合",
+      "label": "全网热点精选",
       "attribution_template": "更新于 {update_time}"
     }
   }

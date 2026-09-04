@@ -82,8 +82,19 @@ export const HOTLIST_AVAILABLE_PLATFORMS = [
   { id: "zhihu", label: "知乎热榜", desc: "高热深度讨论" },
   { id: "weibo", label: "微博热搜", desc: "全民实时热度" },
   { id: "bilibili", label: "B站热门", desc: "热门视频与科技" },
+  { id: "douyin", label: "抖音热点", desc: "短视频全网热点" },
   { id: "baidu", label: "百度热搜", desc: "全网即时事件" },
+  { id: "36kr", label: "36氪热榜", desc: "商业科技头条" },
+  { id: "sspai", label: "少数派", desc: "数字生活与高效生产力" },
+  { id: "ithome", label: "IT之家", desc: "数码前沿快讯" },
+  { id: "tieba", label: "百度贴吧", desc: "大众兴趣圈子热议" },
   { id: "github", label: "GitHub Trending", desc: "全球开源热门趋势" },
+];
+
+export const HOTLIST_AVAILABLE_STYLES = [
+  { id: "dense_grid", label: "双列卡片看板", desc: "左右并排，高密度展示 6-8 条热点" },
+  { id: "editorial", label: "杂志焦点大卡", desc: "TOP 1 醒目大卡片 + 4条次要聚合" },
+  { id: "classic", label: "精致胶囊单列", desc: "圆角排行微标 + 热度值单列流" },
 ];
 
 export const DISASTER_LEVELS = [

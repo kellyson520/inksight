@@ -3,7 +3,7 @@
   "display_name": "Trending Feeds",
   "icon": "flame",
   "cacheable": true,
-  "description": "Live trending topics from Zhihu, Weibo, Bilibili, GitHub Trending, etc.",
+  "description": "Live trending topics from Zhihu, Weibo, Bilibili, Douyin, 36Kr, SSPAI, GitHub Trending, etc.",
   "settings_schema": [
     {
       "key": "platforms",
@@ -14,8 +14,24 @@
         { "value": "zhihu", "label": "Zhihu Trending" },
         { "value": "weibo", "label": "Weibo Hot Search" },
         { "value": "bilibili", "label": "Bilibili Hot" },
-        { "value": "baidu", "label": "Baidu Hot" },
+        { "value": "douyin", "label": "Douyin Viral" },
+        { "value": "baidu", "label": "Baidu Hot Search" },
+        { "value": "36kr", "label": "36Kr Tech" },
+        { "value": "sspai", "label": "SSPAI Prime" },
+        { "value": "ithome", "label": "ITHome Tech" },
+        { "value": "tieba", "label": "Tieba Topics" },
         { "value": "github", "label": "GitHub Trending" }
+      ]
+    },
+    {
+      "key": "style",
+      "label": "Board Style",
+      "type": "select",
+      "default": "dense_grid",
+      "options": [
+        { "value": "dense_grid", "label": "Dense Two-Column Cards" },
+        { "value": "editorial", "label": "Editorial Focus Magazine" },
+        { "value": "classic", "label": "Classic Pill Rank List" }
       ]
     }
   ],
@@ -23,14 +39,17 @@
     "type": "computed",
     "provider": "hotlist",
     "platforms": ["zhihu", "weibo"],
+    "style": "dense_grid",
     "fallback": {
-      "platform_title": "Zhihu Trending",
+      "platform_title": "Global Trending Feed",
+      "style_badge": "Curated",
       "update_time": "Live",
       "item_1": "1. Breakthroughs in room-temperature quantum computing",
       "item_2": "2. How AI is transforming daily productivity and engineering",
       "item_3": "3. Deep space probes transmit unprecedented high-res photos",
       "item_4": "4. Proven habits for deep mental focus and health",
-      "item_5": "5. Top curated books and technical documentaries this month"
+      "item_5": "5. Top curated books and technical documentaries this month",
+      "item_6": "6. Next-generation low-power e-ink display innovations"
     }
   },
   "layout": {
@@ -42,11 +61,11 @@
     "body": [
       {
         "type": "spacer",
-        "height": 6
+        "height": 4
       },
       {
         "type": "flex_row",
-        "justify": "center",
+        "justify": "space_between",
         "align_items": "center",
         "gap": 8,
         "items": [
@@ -59,11 +78,11 @@
             "font_size": 13,
             "padding_x": 10,
             "padding_y": 3,
-            "radius": 6
+            "radius": 5
           },
           {
             "type": "badge",
-            "text": "TOP 5",
+            "field": "style_badge",
             "variant": "outline",
             "font_size": 11,
             "padding_x": 6,
@@ -74,7 +93,7 @@
       },
       {
         "type": "spacer",
-        "height": 6
+        "height": 4
       },
       {
         "type": "separator",
@@ -83,67 +102,14 @@
       },
       {
         "type": "spacer",
-        "height": 6
+        "height": 4
       },
       {
-        "type": "text",
-        "field": "item_1",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
-      },
-      {
-        "type": "spacer",
-        "height": 6
-      },
-      {
-        "type": "text",
-        "field": "item_2",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
-      },
-      {
-        "type": "spacer",
-        "height": 6
-      },
-      {
-        "type": "text",
-        "field": "item_3",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
-      },
-      {
-        "type": "spacer",
-        "height": 6
-      },
-      {
-        "type": "text",
-        "field": "item_4",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
-      },
-      {
-        "type": "spacer",
-        "height": 6
-      },
-      {
-        "type": "text",
-        "field": "item_5",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "line_height": 20,
-        "align": "left"
+        "type": "hotlist_board"
       }
     ],
     "footer": {
-      "label": "Trending Aggregator",
+      "label": "Trending News Wire",
       "attribution_template": "Updated at {update_time}"
     }
   }

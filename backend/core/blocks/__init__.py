@@ -26,6 +26,7 @@ from . import gauges as _gauges_module
 from . import headers_footers as _headers_footers_module
 from . import frames as _frames_module
 from . import disaster as _disaster_module
+from . import hotlist as _hotlist_module
 
 from .grids import slice_calendar_rows_around_day
 

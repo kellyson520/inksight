@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { HOTLIST_AVAILABLE_PLATFORMS } from "../types";
+import { HOTLIST_AVAILABLE_PLATFORMS, HOTLIST_AVAILABLE_STYLES } from "../types";
 
 interface HotlistConfigProps {
   initialPlatforms: string[];
+  initialStyle?: string;
   locale: string;
   previewLoading: boolean;
   onClose: () => void;
-  onSubmit: (platforms: string[]) => Promise<void>;
+  onSubmit: (platforms: string[], style: string) => Promise<void>;
 }
 
 export function HotlistConfig({
   initialPlatforms,
+  initialStyle = "dense_grid",
   locale,
   previewLoading,
   onClose,
@@ -22,20 +24,60 @@ export function HotlistConfig({
   const [platforms, setPlatforms] = useState<string[]>(
     initialPlatforms.length > 0 ? initialPlatforms : ["zhihu", "weibo", "bilibili"]
   );
+  const [style, setStyle] = useState<string>(initialStyle);
 
   return (
     <div className="space-y-4">
       <div className="text-xs text-ink-light leading-relaxed">
         {locale === "zh"
-          ? "支持多选聚合！点击下方平台可自由组合勾选，系统将并发抓取所选平台的精选热搜并交错聚合展示于墨水屏。"
-          : "Multi-select supported! Select multiple platforms below to fetch and aggregate trending topics together."}
+          ? "支持10大主流平台多选聚合与三种现代墨水屏排版风格！系统将并发抓取所选平台的精选热搜并交错聚合呈现。"
+          : "Supports 10 mainstream platforms and 3 e-ink visual layouts with concurrent multi-source aggregation."}
       </div>
 
+      {/* Style selector */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold text-ink block">
+          {locale === "zh" ? "排版风格呈现：" : "Layout Style:"}
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {HOTLIST_AVAILABLE_STYLES.map((s) => {
+            const isSelected = style === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setStyle(s.id)}
+                className={`p-2.5 rounded-sm border text-left transition-all flex flex-col justify-between ${
+                  isSelected
+                    ? "border-ink bg-paper-dark font-medium shadow-2xs"
+                    : "border-ink/15 bg-white hover:border-ink/40"
+                }`}
+              >
+                <div>
+                  <div className="text-xs font-bold text-ink">{s.label}</div>
+                  <div className="text-[10px] text-ink-light mt-0.5">{s.desc}</div>
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <span
+                    className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
+                      isSelected ? "border-ink bg-ink text-white" : "border-ink/30"
+                    }`}
+                  >
+                    {isSelected ? "●" : ""}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Platform multiselect */}
       <div className="space-y-2">
         <label className="text-xs font-semibold text-ink block">
           {locale === "zh" ? "选择展示的热榜平台（支持多选）：" : "Select Platforms (Multi-select):"}
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
           {HOTLIST_AVAILABLE_PLATFORMS.map((p) => {
             const isSelected = platforms.includes(p.id);
             return (
@@ -57,12 +99,12 @@ export function HotlistConfig({
                     : "border-ink/15 bg-white hover:border-ink/40"
                 }`}
               >
-                <div>
-                  <div className="text-xs font-bold text-ink">{p.label}</div>
-                  <div className="text-[10px] text-ink-light">{p.desc}</div>
+                <div className="min-w-0 pr-2">
+                  <div className="text-xs font-bold text-ink truncate">{p.label}</div>
+                  <div className="text-[10px] text-ink-light truncate">{p.desc}</div>
                 </div>
                 <div
-                  className={`w-4 h-4 rounded-xs border flex items-center justify-center text-[10px] ${
+                  className={`w-4 h-4 shrink-0 rounded-xs border flex items-center justify-center text-[10px] ${
                     isSelected ? "border-ink bg-ink text-white" : "border-ink/20"
                   }`}
                 >
@@ -75,13 +117,23 @@ export function HotlistConfig({
       </div>
 
       <div className="pt-2 flex items-center justify-between border-t border-ink/10">
-        <button
-          type="button"
-          onClick={() => setPlatforms(["zhihu", "weibo", "bilibili", "baidu", "github"])}
-          className="text-xs text-ink-light hover:text-ink underline"
-        >
-          {locale === "zh" ? "全选所有平台" : "Select All"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setPlatforms(HOTLIST_AVAILABLE_PLATFORMS.map((p) => p.id))}
+            className="text-xs text-ink-light hover:text-ink underline"
+          >
+            {locale === "zh" ? "全选" : "Select All"}
+          </button>
+          <span className="text-ink/20">|</span>
+          <button
+            type="button"
+            onClick={() => setPlatforms(["zhihu", "weibo", "bilibili"])}
+            className="text-xs text-ink-light hover:text-ink underline"
+          >
+            {locale === "zh" ? "重置默认" : "Reset"}
+          </button>
+        </div>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onClose}>
@@ -91,7 +143,7 @@ export function HotlistConfig({
             size="sm"
             onClick={async () => {
               onClose();
-              await onSubmit(platforms);
+              await onSubmit(platforms, style);
             }}
             disabled={previewLoading}
             className="bg-ink text-white hover:bg-ink/90"
