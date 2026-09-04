@@ -95,11 +95,6 @@ class OriginValidationMiddleware(BaseHTTPMiddleware):
         if not origin:
             return await call_next(request)
 
-        # 内部本地服务端反向代理（如 Next.js Server-Side Proxy）直接放行
-        client_host = request.client.host if request.client else ""
-        if client_host in ("127.0.0.1", "::1", "localhost"):
-            return await call_next(request)
-
         try:
             parsed = urlsplit(origin)
         except ValueError:
