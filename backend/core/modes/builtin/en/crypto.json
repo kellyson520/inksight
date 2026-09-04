@@ -46,7 +46,7 @@
     "body": [
       {
         "type": "spacer",
-        "height": 8
+        "height": 10
       },
       {
         "type": "text",
@@ -58,7 +58,7 @@
       },
       {
         "type": "spacer",
-        "height": 2
+        "height": 4
       },
       {
         "type": "text",
@@ -69,19 +69,19 @@
       },
       {
         "type": "spacer",
-        "height": 8
+        "height": 10
       },
       {
         "type": "text",
         "field": "price",
         "font": "noto_serif_bold",
-        "font_size": 38,
-        "line_height": 42,
+        "font_size": 36,
+        "line_height": 40,
         "align": "center"
       },
       {
         "type": "spacer",
-        "height": 4
+        "height": 8
       },
       {
         "type": "text",
@@ -93,14 +93,14 @@
       },
       {
         "type": "spacer",
-        "height": 4
+        "height": 10
       },
       {
         "type": "sparkline",
         "field": "sparkline_data",
-        "height": 46,
+        "height": 42,
         "line_width": 2,
-        "margin_x": 20,
+        "margin_x": 24,
         "show_baseline": true,
         "show_endpoints": true,
         "color": "red"
