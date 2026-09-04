@@ -105,15 +105,25 @@ async def device_state(
     cfg = await get_active_config(mac, log_load=False)
     refresh_minutes = resolve_refresh_minutes_for_device_state(cfg, state)
     latest_heartbeat = await get_latest_heartbeat(mac)
-    last_seen = latest_heartbeat.get("created_at") if latest_heartbeat else None
+    heartbeat_seen = latest_heartbeat.get("created_at") if latest_heartbeat else None
+
+    # 综合心跳(heartbeat)、状态轮询(last_state_poll_at)与渲染刷新(last_refresh_at)，确定最新活跃时间 last_seen 与在线状态 is_online
+    activity_timestamps: list[datetime] = []
+    for ts_str in (heartbeat_seen, state.get("last_state_poll_at"), state.get("last_refresh_at")):
+        if isinstance(ts_str, str) and ts_str:
+            try:
+                activity_timestamps.append(datetime.fromisoformat(ts_str))
+            except ValueError:
+                pass
+
     is_online = False
-    if isinstance(last_seen, str) and last_seen:
-        try:
-            delta_seconds = (datetime.now() - datetime.fromisoformat(last_seen)).total_seconds()
-            is_online = delta_seconds <= (ONLINE_WINDOW_MINUTES * 60)
-        except ValueError:
-            logger.warning("[DEVICE] Invalid last_seen timestamp for %s: %s", mac, last_seen, exc_info=True)
-            is_online = False
+    last_seen = heartbeat_seen
+    if activity_timestamps:
+        latest_dt = max(activity_timestamps)
+        last_seen = latest_dt.isoformat()
+        delta_seconds = (datetime.now() - latest_dt).total_seconds()
+        is_online = delta_seconds <= (ONLINE_WINDOW_MINUTES * 60)
+
     state["last_seen"] = last_seen
     state["is_online"] = is_online
     state["refresh_minutes"] = refresh_minutes
@@ -130,13 +140,17 @@ async def device_state(
     if isinstance(last_poll, str) and last_poll:
         try:
             delta = (datetime.now() - datetime.fromisoformat(last_poll)).total_seconds()
-            recent_poll = delta <= 8
+            recent_poll = delta <= 25
         except ValueError:
             logger.warning("[DEVICE] Invalid last_state_poll_at for %s: %s", mac, last_poll, exc_info=True)
             recent_poll = False
 
+    cfg_always_active = bool(cfg and (cfg.get("always_active") or cfg.get("is_always_active")))
     explicit_mode = str(state.get("runtime_mode") or "").lower()
-    if explicit_mode == "active":
+    if cfg_always_active:
+        # 用户显式配置了始终保持活跃，且设备当前在线保持轮询时，为 active
+        runtime_mode = "active" if (recent_poll or is_online) else "interval"
+    elif explicit_mode == "active":
         runtime_mode = "active" if recent_poll else "interval"
     elif explicit_mode == "interval":
         runtime_mode = "interval"

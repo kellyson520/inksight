@@ -1366,6 +1366,7 @@ function ConfigPageInner() {
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Save failed");
+      await loadRuntimeMode();
       let onlineNow = isOnline;
       let refreshQueued = false;
       let latestLastSeen: string | null = lastSeen;
@@ -1430,6 +1431,7 @@ function ConfigPageInner() {
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Save failed");
+      await loadRuntimeMode();
       showToast(tr("配置已保存", "Settings saved"), "success");
       setPreviewNoCacheOnce(true);
     } catch {

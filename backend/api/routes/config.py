@@ -51,8 +51,16 @@ async def post_config(
         data.get("refresh_strategy"),
         data.get("always_active"),
     )
+    prev_config = await get_active_config(mac)
+    prev_always_active = bool(prev_config and (prev_config.get("always_active") or prev_config.get("is_always_active")))
     config_id = await save_config(mac, data)
     await set_pending_refresh(mac, True)
+    if bool(data.get("always_active")):
+        from core.config_store import update_device_state
+        await update_device_state(mac, runtime_mode="active")
+    elif prev_always_active and not bool(data.get("always_active")):
+        from core.config_store import update_device_state
+        await update_device_state(mac, runtime_mode="interval")
     if access and access.get("mode") == "user":
         await log_user_activity(
             int(access["user_id"]),

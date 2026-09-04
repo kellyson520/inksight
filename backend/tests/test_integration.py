@@ -453,6 +453,11 @@ async def test_config_save_persists_always_active_flag(client):
     assert data["always_active"] == 1
     assert data["is_always_active"] is True
 
+    # Regression: saving always_active must also sync device_state runtime_mode to active
+    state_resp = await client.get(f"/api/device/{mac}/state", headers=headers)
+    assert state_resp.status_code == 200
+    assert state_resp.json()["runtime_mode"] == "active"
+
 
 @pytest.mark.asyncio
 async def test_cors_allows_local_expo_web(client):
