@@ -22,6 +22,7 @@ import {
   type PrimaryCategory,
   MODE_PRIMARY_CATEGORY,
   CONFIGURABLE_MODES,
+  STORAGE_KEY_DEFAULT_TICKER,
 } from "@/components/preview/types";
 import { PaginatedModeSection } from "@/components/preview/mode-section";
 import { PreviewCanvas } from "@/components/preview/preview-canvas";
@@ -105,6 +106,13 @@ export default function ExperiencePage() {
     if (typeof window === "undefined") return;
     const k = localStorage.getItem("ink_user_llm_api_key") || "";
     if (k.trim()) setUserLlmApiKey(k.trim());
+
+    try {
+      const savedTicker = localStorage.getItem(STORAGE_KEY_DEFAULT_TICKER);
+      if (savedTicker && savedTicker.trim()) {
+        setCryptoSymbol(savedTicker.trim().toUpperCase());
+      }
+    } catch {}
   }, []);
 
   // 模式元数据构建
@@ -315,8 +323,11 @@ export default function ExperiencePage() {
     if ((modeId === "CRYPTO" || modeId === "MARKET") && override.symbol) {
       const sym = String(override.symbol).toUpperCase();
       setCryptoSymbol(sym);
+      try {
+        localStorage.setItem(STORAGE_KEY_DEFAULT_TICKER, sym);
+      } catch {}
       showToast(
-        locale === "zh" ? `已切换行情标的: ${sym}` : `Switched ticker symbol: ${sym}`,
+        locale === "zh" ? `已保存并切换行情标的: ${sym}` : `Saved & switched ticker: ${sym}`,
         "success"
       );
     }

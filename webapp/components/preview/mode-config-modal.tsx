@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sliders } from "lucide-react";
+import { Sliders, Star, BookmarkPlus, Check, Trash2, Plus } from "lucide-react";
 import { LocationPicker } from "@/components/config/location-picker";
 import { cleanLocationValue, type LocationValue } from "@/lib/locations";
-import { HOTLIST_AVAILABLE_PLATFORMS, DISASTER_LEVELS, DISASTER_HAZARDS, POPULAR_STOCKS, POPULAR_CRYPTOS } from "./types";
+import {
+  HOTLIST_AVAILABLE_PLATFORMS,
+  DISASTER_LEVELS,
+  DISASTER_HAZARDS,
+  POPULAR_STOCKS,
+  POPULAR_CRYPTOS,
+  SavedTickerItem,
+  STORAGE_KEY_SAVED_TICKERS,
+  STORAGE_KEY_DEFAULT_TICKER,
+  DEFAULT_USER_SAVED_TICKERS,
+} from "./types";
 
 interface ModeConfigModalProps {
   modal: {
@@ -62,8 +72,67 @@ export function ModeConfigModal({
   const [rssItemIndex, setRssItemIndex] = useState(0);
   const [rssShowImage, setRssShowImage] = useState(true);
 
-  // 7. Crypto
+  // 7. Crypto & Stocks
   const [cryptoSymbol, setCryptoSymbol] = useState(initialCryptoSymbol);
+  const [savedTickers, setSavedTickers] = useState<SavedTickerItem[]>([]);
+  const [defaultTicker, setDefaultTicker] = useState<string>("BTC");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SAVED_TICKERS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSavedTickers(parsed);
+        } else {
+          setSavedTickers(DEFAULT_USER_SAVED_TICKERS);
+        }
+      } else {
+        setSavedTickers(DEFAULT_USER_SAVED_TICKERS);
+      }
+
+      const def = localStorage.getItem(STORAGE_KEY_DEFAULT_TICKER);
+      if (def) setDefaultTicker(def);
+    } catch {
+      setSavedTickers(DEFAULT_USER_SAVED_TICKERS);
+    }
+  }, []);
+
+  const handleAddSavedTicker = (sym: string) => {
+    const clean = sym.trim().toUpperCase();
+    if (!clean) return;
+    setSavedTickers((prev) => {
+      if (prev.some((item) => item.sym === clean)) return prev;
+      const foundStock = POPULAR_STOCKS.find((s) => s.sym === clean);
+      const foundCrypto = POPULAR_CRYPTOS.find((c) => c.sym === clean);
+      const name = foundStock ? foundStock.name : foundCrypto ? foundCrypto.name : undefined;
+      const next = [...prev, { sym: clean, name, isCustom: true }];
+      try {
+        localStorage.setItem(STORAGE_KEY_SAVED_TICKERS, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleRemoveSavedTicker = (sym: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSavedTickers((prev) => {
+      const next = prev.filter((item) => item.sym !== sym);
+      try {
+        localStorage.setItem(STORAGE_KEY_SAVED_TICKERS, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleSetDefaultTicker = (sym: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const clean = sym.trim().toUpperCase();
+    setDefaultTicker(clean);
+    try {
+      localStorage.setItem(STORAGE_KEY_DEFAULT_TICKER, clean);
+    } catch {}
+  };
 
   // 8. Countdown
   const [countdownName, setCountdownName] = useState("元旦");
@@ -442,10 +511,11 @@ export function ModeConfigModal({
             <div className="space-y-4">
               <div className="text-xs text-ink-light leading-relaxed">
                 {locale === "zh"
-                  ? "支持查阅与监控全球知名股票（美股/港股）与主流加密资产！系统将拉取最新行情、24h 涨跌幅与分时趋势折线图并绘制于墨水屏。"
-                  : "Track global stocks (Apple, Tesla, NVIDIA...) and major crypto assets with 24h trend sparkline and price change on E-Ink."}
+                  ? "支持查阅与监控全球知名股票（美股/港股）与主流加密资产！支持将常用标的保存到自选列表或设为默认，方便下次一键调用。"
+                  : "Track global stocks (Apple, Tesla, NVIDIA...) and major crypto assets. Save favorite tickers or set default for quick access next time."}
               </div>
 
+              {/* 输入框与快捷加入自选 */}
               <div>
                 <label className="text-xs font-semibold text-ink block mb-1.5">
                   {locale === "zh" ? "输入股票代码或加密代号" : "Enter Stock / Crypto Symbol"}
@@ -454,23 +524,105 @@ export function ModeConfigModal({
                   <input
                     value={cryptoSymbol}
                     onChange={(e) => setCryptoSymbol(e.target.value.toUpperCase())}
-                    className="flex-1 rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white font-mono uppercase"
+                    className="flex-1 rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white font-mono uppercase font-semibold"
                     placeholder={locale === "zh" ? "例如 AAPL, TSLA, NVDA 或 BTC, ETH..." : "e.g. AAPL, TSLA, NVDA or BTC..."}
                   />
-                  {cryptoSymbol ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCryptoSymbol("")}
-                      className="text-xs text-ink-light hover:text-ink px-2"
-                    >
-                      清空
-                    </Button>
+                  {cryptoSymbol.trim() ? (
+                    <>
+                      {savedTickers.some((t) => t.sym === cryptoSymbol.trim().toUpperCase()) ? (
+                        <Button
+                          variant={defaultTicker === cryptoSymbol.trim().toUpperCase() ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleSetDefaultTicker(cryptoSymbol)}
+                          className="text-xs px-2.5 flex items-center gap-1"
+                          title={locale === "zh" ? "设为下次打开的默认标的" : "Set as default"}
+                        >
+                          <Star size={13} className={defaultTicker === cryptoSymbol.trim().toUpperCase() ? "fill-amber-400 text-amber-400" : ""} />
+                          <span>{defaultTicker === cryptoSymbol.trim().toUpperCase() ? (locale === "zh" ? "当前默认" : "Default") : (locale === "zh" ? "设为默认" : "Set Default")}</span>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddSavedTicker(cryptoSymbol)}
+                          className="text-xs px-2.5 flex items-center gap-1 bg-amber-50/50 border-amber-300 text-ink hover:bg-amber-100"
+                        >
+                          <BookmarkPlus size={13} className="text-amber-600" />
+                          <span>{locale === "zh" ? "保存到自选" : "Save Ticker"}</span>
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCryptoSymbol("")}
+                        className="text-xs text-ink-light hover:text-ink px-2"
+                      >
+                        清空
+                      </Button>
+                    </>
                   ) : null}
                 </div>
               </div>
 
-              {/* 热门全球股票专区 */}
+              {/* 1. 用户已保存的自选资产专区 */}
+              <div>
+                <div className="text-xs font-semibold text-ink mb-1.5 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Star size={13} className="text-amber-500 fill-amber-500" />
+                    <span>{locale === "zh" ? "我的常用自选标的 (已保存设置)" : "My Saved Tickers"}</span>
+                  </div>
+                  <span className="text-[11px] font-normal text-ink-light">
+                    {locale === "zh" ? "点击直接切换 · 下次自动记住" : "Click to use · Auto remembered"}
+                  </span>
+                </div>
+                {savedTickers.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5 p-2 rounded-sm border border-dashed border-ink/20 bg-paper-light">
+                    {savedTickers.map((item) => {
+                      const isSelected = cryptoSymbol === item.sym;
+                      const isDefault = defaultTicker === item.sym;
+                      return (
+                        <div
+                          key={item.sym}
+                          onClick={() => setCryptoSymbol(item.sym)}
+                          className={`group flex items-center gap-1 px-2.5 py-1 rounded-sm border text-xs cursor-pointer transition-all ${
+                            isSelected
+                              ? "bg-ink text-white border-ink shadow-xs"
+                              : "bg-white border-ink/15 text-ink hover:border-ink/50"
+                          }`}
+                        >
+                          <span className="font-mono font-bold">{item.sym}</span>
+                          {item.name ? (
+                            <span className={`text-[10px] ${isSelected ? "text-white/80" : "text-ink-light"}`}>
+                              {item.name}
+                            </span>
+                          ) : null}
+                          {isDefault ? (
+                            <Star size={10} className="fill-amber-400 text-amber-400 shrink-0" />
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={(e) => handleRemoveSavedTicker(item.sym, e)}
+                            className={`ml-1 text-[10px] p-0.5 rounded-xs transition-colors ${
+                              isSelected
+                                ? "text-white/60 hover:text-white hover:bg-white/20"
+                                : "text-ink-light hover:text-red-600 hover:bg-red-50"
+                            }`}
+                            title={locale === "zh" ? "从自选移除" : "Remove"}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-ink-light p-2 border border-dashed border-ink/20 rounded-sm bg-paper-light text-center">
+                    {locale === "zh" ? "暂无自选标的，输入代码后点击【保存到自选】即可快速收纳。" : "No saved tickers yet. Enter a symbol and click 'Save Ticker'."}
+                  </div>
+                )}
+              </div>
+
+              {/* 2. 热门全球股票专区 */}
               <div>
                 <div className="text-xs font-semibold text-ink mb-1.5 flex items-center justify-between">
                   <span>{locale === "zh" ? "热门股票标的 (美股/港股)" : "Popular Global Stocks"}</span>
@@ -502,7 +654,7 @@ export function ModeConfigModal({
                 </div>
               </div>
 
-              {/* 热门加密资产专区 */}
+              {/* 3. 热门加密资产专区 */}
               <div>
                 <div className="text-xs font-semibold text-ink mb-1.5">
                   {locale === "zh" ? "热门加密资产" : "Popular Crypto Assets"}
@@ -557,11 +709,15 @@ export function ModeConfigModal({
                     disabled={previewLoading || !cryptoSymbol.trim()}
                     onClick={async () => {
                       const targetSym = cryptoSymbol.trim().toUpperCase() || "BTC";
+                      // 自动保存到最近使用和默认存储
+                      try {
+                        localStorage.setItem(STORAGE_KEY_DEFAULT_TICKER, targetSym);
+                      } catch {}
                       onClose();
                       await onSubmit("CRYPTO", { symbol: targetSym });
                     }}
                   >
-                    应用并预览
+                    {locale === "zh" ? "保存并预览" : "Save & Preview"}
                   </Button>
                 </div>
               </div>

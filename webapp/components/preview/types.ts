@@ -120,3 +120,19 @@ export const POPULAR_CRYPTOS = [
   { sym: "BNB", name: "币安币", desc: "BNB" },
   { sym: "DOGE", name: "狗狗币", desc: "Dogecoin" },
 ];
+
+export interface SavedTickerItem {
+  sym: string;
+  name?: string;
+  isCustom?: boolean;
+}
+
+export const STORAGE_KEY_SAVED_TICKERS = "inksight_preview_saved_tickers";
+export const STORAGE_KEY_DEFAULT_TICKER = "inksight_preview_default_ticker";
+
+export const DEFAULT_USER_SAVED_TICKERS: SavedTickerItem[] = [
+  { sym: "BTC", name: "比特币" },
+  { sym: "ETH", name: "以太坊" },
+  { sym: "AAPL", name: "苹果" },
+  { sym: "NVDA", name: "英伟达" },
+];
