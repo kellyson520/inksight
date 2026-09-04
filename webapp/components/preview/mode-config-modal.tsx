@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sliders } from "lucide-react";
 import { LocationPicker } from "@/components/config/location-picker";
 import { cleanLocationValue, type LocationValue } from "@/lib/locations";
-import { HOTLIST_AVAILABLE_PLATFORMS, DISASTER_LEVELS, DISASTER_HAZARDS } from "./types";
+import { HOTLIST_AVAILABLE_PLATFORMS, DISASTER_LEVELS, DISASTER_HAZARDS, POPULAR_STOCKS, POPULAR_CRYPTOS } from "./types";
 
 interface ModeConfigModalProps {
   modal: {
@@ -118,7 +118,7 @@ export function ModeConfigModal({
                 : modal.type === "rss"
                 ? (locale === "zh" ? "RSS 订阅设置" : "RSS Settings")
                 : modal.type === "crypto"
-                ? (locale === "zh" ? "资产行情设置" : "Crypto Ticker Settings")
+                ? (locale === "zh" ? "资产与股票行情设置" : "Stock & Asset Settings")
                 : modal.type === "webhook"
                 ? (locale === "zh" ? "开放数据卡片模拟" : "Webhook Card Simulator")
                 : (locale === "zh" ? "模式参数设置" : "Mode Settings")}
@@ -438,42 +438,132 @@ export function ModeConfigModal({
               </div>
             </div>
           ) : modal.type === "crypto" ? (
-            /* 6. CRYPTO 资产行情 */
-            <div className="space-y-3">
-              <label className="text-xs font-semibold text-ink block">资产代号 (Symbol)：</label>
-              <div className="flex flex-wrap gap-2">
-                {["BTC", "ETH", "SOL", "BNB", "DOGE"].map((sym) => (
-                  <button
-                    key={sym}
-                    type="button"
-                    onClick={() => setCryptoSymbol(sym)}
-                    className={`px-3 py-1 rounded-sm border text-xs font-mono ${
-                      cryptoSymbol === sym ? "bg-ink text-white border-ink" : "bg-white border-ink/20 text-ink"
-                    }`}
-                  >
-                    {sym}
-                  </button>
-                ))}
+            /* 6. CRYPTO 资产与股票行情 */
+            <div className="space-y-4">
+              <div className="text-xs text-ink-light leading-relaxed">
+                {locale === "zh"
+                  ? "支持查阅与监控全球知名股票（美股/港股）与主流加密资产！系统将拉取最新行情、24h 涨跌幅与分时趋势折线图并绘制于墨水屏。"
+                  : "Track global stocks (Apple, Tesla, NVIDIA...) and major crypto assets with 24h trend sparkline and price change on E-Ink."}
               </div>
-              <input
-                value={cryptoSymbol}
-                onChange={(e) => setCryptoSymbol(e.target.value.toUpperCase())}
-                className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white font-mono uppercase"
-                placeholder="输入其他代号..."
-              />
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
-                <Button variant="outline" size="sm" onClick={onClose}>
-                  取消
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={async () => {
-                    onClose();
-                    await onSubmit("CRYPTO", { symbol: cryptoSymbol });
-                  }}
-                >
-                  应用并预览
-                </Button>
+
+              <div>
+                <label className="text-xs font-semibold text-ink block mb-1.5">
+                  {locale === "zh" ? "输入股票代码或加密代号" : "Enter Stock / Crypto Symbol"}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    value={cryptoSymbol}
+                    onChange={(e) => setCryptoSymbol(e.target.value.toUpperCase())}
+                    className="flex-1 rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white font-mono uppercase"
+                    placeholder={locale === "zh" ? "例如 AAPL, TSLA, NVDA 或 BTC, ETH..." : "e.g. AAPL, TSLA, NVDA or BTC..."}
+                  />
+                  {cryptoSymbol ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCryptoSymbol("")}
+                      className="text-xs text-ink-light hover:text-ink px-2"
+                    >
+                      清空
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* 热门全球股票专区 */}
+              <div>
+                <div className="text-xs font-semibold text-ink mb-1.5 flex items-center justify-between">
+                  <span>{locale === "zh" ? "热门股票标的 (美股/港股)" : "Popular Global Stocks"}</span>
+                  <span className="text-[11px] font-normal text-ink-light">
+                    {locale === "zh" ? "点击一键选择" : "Click to select"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {POPULAR_STOCKS.map((stk) => {
+                    const isSelected = cryptoSymbol === stk.sym;
+                    return (
+                      <button
+                        key={stk.sym}
+                        type="button"
+                        onClick={() => setCryptoSymbol(stk.sym)}
+                        className={`px-2.5 py-1.5 rounded-sm border text-left transition-all ${
+                          isSelected
+                            ? "bg-ink text-white border-ink shadow-xs"
+                            : "bg-paper-light border-ink/15 text-ink hover:border-ink/50 hover:bg-white"
+                        }`}
+                      >
+                        <div className="text-xs font-bold font-mono leading-tight">{stk.sym}</div>
+                        <div className={`text-[10px] truncate ${isSelected ? "text-white/80" : "text-ink-light"}`}>
+                          {locale === "zh" ? stk.name : stk.desc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 热门加密资产专区 */}
+              <div>
+                <div className="text-xs font-semibold text-ink mb-1.5">
+                  {locale === "zh" ? "热门加密资产" : "Popular Crypto Assets"}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {POPULAR_CRYPTOS.map((c) => {
+                    const isSelected = cryptoSymbol === c.sym;
+                    return (
+                      <button
+                        key={c.sym}
+                        type="button"
+                        onClick={() => setCryptoSymbol(c.sym)}
+                        className={`px-3 py-1 rounded-sm border text-xs font-mono transition-all ${
+                          isSelected
+                            ? "bg-ink text-white border-ink shadow-xs"
+                            : "bg-paper-light border-ink/15 text-ink hover:border-ink/50 hover:bg-white"
+                        }`}
+                      >
+                        <span className="font-bold">{c.sym}</span>
+                        {locale === "zh" ? <span className="ml-1 text-[11px] opacity-75">{c.name}</span> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-3 flex items-center justify-between gap-2 border-t border-ink/10">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCryptoSymbol("AAPL")}
+                    className="text-xs text-ink-light"
+                  >
+                    {locale === "zh" ? "股票示例 (AAPL)" : "Stock Demo"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCryptoSymbol("BTC")}
+                    className="text-xs text-ink-light"
+                  >
+                    {locale === "zh" ? "默认 (BTC)" : "Default (BTC)"}
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={onClose}>
+                    取消
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={previewLoading || !cryptoSymbol.trim()}
+                    onClick={async () => {
+                      const targetSym = cryptoSymbol.trim().toUpperCase() || "BTC";
+                      onClose();
+                      await onSubmit("CRYPTO", { symbol: targetSym });
+                    }}
+                  >
+                    应用并预览
+                  </Button>
+                </div>
               </div>
             </div>
           ) : modal.type === "quote" ? (

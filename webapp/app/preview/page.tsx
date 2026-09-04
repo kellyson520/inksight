@@ -71,7 +71,7 @@ export default function ExperiencePage() {
   const [disasterLevel, setDisasterLevel] = useState<string>("红色");
   const [disasterHazard, setDisasterHazard] = useState<string>("暴雨");
   const [rssFeedUrl, _setRssFeedUrl] = useState("https://kellson.dpdns.org:81/playno1/av");
-  const [cryptoSymbol, _setCryptoSymbol] = useState("BTC");
+  const [cryptoSymbol, setCryptoSymbol] = useState("BTC");
 
   // 自定义模式与邀请码弹窗状态
   const [showCustomModeModal, setShowCustomModeModal] = useState(false);
@@ -204,6 +204,9 @@ export default function ExperiencePage() {
         if (!mergedOverride.level) mergedOverride.level = disasterLevel;
         if (!mergedOverride.hazard) mergedOverride.hazard = disasterHazard;
       }
+      if ((targetMode === "CRYPTO" || targetMode === "MARKET") && !mergedOverride.symbol) {
+        mergedOverride.symbol = cryptoSymbol;
+      }
 
       if (Object.keys(mergedOverride).length > 0) {
         params.set("mode_override", JSON.stringify(mergedOverride));
@@ -308,6 +311,14 @@ export default function ExperiencePage() {
     if (modeId === "DISASTER_ALERT") {
       if (override.level) setDisasterLevel(String(override.level));
       if (override.hazard) setDisasterHazard(String(override.hazard));
+    }
+    if ((modeId === "CRYPTO" || modeId === "MARKET") && override.symbol) {
+      const sym = String(override.symbol).toUpperCase();
+      setCryptoSymbol(sym);
+      showToast(
+        locale === "zh" ? `已切换行情标的: ${sym}` : `Switched ticker symbol: ${sym}`,
+        "success"
+      );
     }
     await handlePreview(modeId, override);
   };

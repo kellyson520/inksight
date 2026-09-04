@@ -48,6 +48,7 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   MOYU: "news",
   RSS: "news",
   CRYPTO: "news",
+  MARKET: "news",
   THISDAY: "news",
   BIAS: "news",
   DISASTER_ALERT: "news",
@@ -66,6 +67,7 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   TIMETABLE: "timetable",
   RSS: "rss",
   CRYPTO: "crypto",
+  MARKET: "crypto",
   WEBHOOK: "webhook",
   MY_ADAPTIVE: "adaptive",
 };
@@ -98,4 +100,23 @@ export const DISASTER_HAZARDS = [
   { id: "冰雹", label: "冰雹" },
   { id: "沙尘暴", label: "沙尘暴" },
   { id: "大雾", label: "大雾 / 雾霾" },
+];
+
+export const POPULAR_STOCKS = [
+  { sym: "AAPL", name: "苹果", desc: "Apple Inc." },
+  { sym: "TSLA", name: "特斯拉", desc: "Tesla Inc." },
+  { sym: "NVDA", name: "英伟达", desc: "NVIDIA Corp." },
+  { sym: "MSFT", name: "微软", desc: "Microsoft" },
+  { sym: "GOOGL", name: "谷歌", desc: "Alphabet" },
+  { sym: "AMZN", name: "亚马逊", desc: "Amazon" },
+  { sym: "META", name: "Meta", desc: "Meta Platforms" },
+  { sym: "BABA", name: "阿里巴巴", desc: "Alibaba Group" },
+];
+
+export const POPULAR_CRYPTOS = [
+  { sym: "BTC", name: "比特币", desc: "Bitcoin" },
+  { sym: "ETH", name: "以太坊", desc: "Ethereum" },
+  { sym: "SOL", name: "Solana", desc: "Solana" },
+  { sym: "BNB", name: "币安币", desc: "BNB" },
+  { sym: "DOGE", name: "狗狗币", desc: "Dogecoin" },
 ];
