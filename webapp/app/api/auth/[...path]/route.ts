@@ -13,6 +13,10 @@ async function forward(req: NextRequest, { params }: { params: Promise<{ path: s
       headers.set(key, val);
     }
   });
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+  const proto = req.headers.get("x-forwarded-proto") || req.nextUrl.protocol.replace(":", "") || "https";
+  if (host) headers.set("x-forwarded-host", host);
+  if (proto) headers.set("x-forwarded-proto", proto);
 
   const body = req.method !== "GET" && req.method !== "HEAD" ? await req.arrayBuffer() : undefined;
 

@@ -95,6 +95,11 @@ class OriginValidationMiddleware(BaseHTTPMiddleware):
         if not origin:
             return await call_next(request)
 
+        # 内部本地服务端反向代理（如 Next.js Server-Side Proxy）直接放行
+        client_host = request.client.host if request.client else ""
+        if client_host in ("127.0.0.1", "::1", "localhost"):
+            return await call_next(request)
+
         try:
             parsed = urlsplit(origin)
         except ValueError:
@@ -109,6 +114,12 @@ class OriginValidationMiddleware(BaseHTTPMiddleware):
         same_origin = f"{forwarded_proto.lower()}://{forwarded_host.lower()}" if forwarded_host else ""
         if normalized == same_origin:
             return await call_next(request)
+
+        # 容忍代理场景下的端口与协议变换（只要主机名匹配同源）
+        if forwarded_host:
+            clean_fwd_host = forwarded_host.split(":")[0].lower()
+            if parsed.hostname and parsed.hostname.lower() == clean_fwd_host:
+                return await call_next(request)
 
         if normalized in self.allow_origins:
             return await call_next(request)
