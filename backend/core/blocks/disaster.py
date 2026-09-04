@@ -409,10 +409,12 @@ def render_disaster_level_badge(ctx: RenderContext, block: dict) -> None:
 
 @register_block("disaster_hero")
 def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
-    """灾害核心区域：
-    1. 顶部：当前预警级别徽章（放在图标上面，醒目居中）
-    2. 中部：放大矢量灾害大图标
-    3. 下部：灾害标题【XX红色预警】（居中，绝不重叠）
+    """灾害核心视觉区：
+    - 图标居左（放大矢量图标）
+    - 右侧上下串行排列：
+        Line 1: [ 红色预警 · I级 特别严重 ] 级别胶囊徽章
+        Line 2: 【暴雨红色预警】 粗体主标题
+    - 左右垂直居中对齐，留白充裕，层级清晰
     """
     hazard = str(block.get("hazard") or ctx.resolve(block.get("hazard_template") or "") or "rainstorm")
     type_name = str(block.get("type_name") or ctx.resolve(block.get("type_name_template") or "") or "气象灾害")
@@ -423,9 +425,9 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     fg_col = ctx.resolve_color({"color": block.get("color", "black")})
     acc_col = ctx.color_index("red") if (is_red and ctx.colors >= 3) else EINK_FG
 
-    # ─────────────────────────────────────────────────────────────
-    # 1. 顶部：当前生效级别指示徽章（放置在图标正上方）
-    # ─────────────────────────────────────────────────────────────
+    margin_x = int(block.get("margin_x", 14) * ctx.scale)
+
+    # 1. 级别徽章文本与尺寸计算
     if "红" in level:
         badge_text = "红色预警 · I级 特别严重"
         badge_red = True
@@ -448,34 +450,12 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     bw = bb[2] - bb[0]
     bh = max(badge_font_size, bb[3] - bb[1])
 
-    pad_x = int(10 * ctx.scale)
-    pad_y = int(3 * ctx.scale)
+    pad_x = int(8 * ctx.scale)
+    pad_y = int(2 * ctx.scale)
     badge_w = bw + pad_x * 2
     badge_h = bh + pad_y * 2
-    badge_x = ctx.x_offset + (ctx.available_width - badge_w) // 2
 
-    bg_color = ctx.color_index("red") if (badge_red and ctx.colors >= 3) else EINK_FG
-    _draw_rounded_rect(ctx.draw, [(badge_x, ctx.y), (badge_x + badge_w, ctx.y + badge_h)], radius=int(3 * ctx.scale), fill=bg_color)
-    ctx.draw.text((badge_x + pad_x, ctx.y + pad_y), badge_text, fill=EINK_BG, font=badge_font)
-
-    ctx.y += badge_h + int(8 * ctx.scale)
-
-    # ─────────────────────────────────────────────────────────────
-    # 2. 中部：放大矢量灾害大图标（位于徽章下方）
-    # ─────────────────────────────────────────────────────────────
-    raw_icon_size = block.get("icon_size", 56)
-    icon_size = max(34, int(raw_icon_size * ctx.scale))
-    if ctx.screen_h <= 160:
-        icon_size = 32
-
-    icon_cx = ctx.x_offset + ctx.available_width // 2
-    icon_cy = ctx.y + icon_size // 2
-    draw_disaster_vector_icon(ctx.draw, hazard, icon_cx, icon_cy, size=icon_size, color=fg_col, accent_color=acc_col)
-    ctx.y += icon_size + int(8 * ctx.scale)
-
-    # ─────────────────────────────────────────────────────────────
-    # 3. 下部：居中灾害名称【暴雨红色预警】（位于图标下方，绝不重叠）
-    # ─────────────────────────────────────────────────────────────
+    # 2. 标题文本与尺寸计算
     if clean_level and clean_level not in type_name:
         title_text = f"【{type_name}{clean_level}预警】"
     elif "预警" not in type_name:
@@ -483,15 +463,51 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     else:
         title_text = f"【{type_name}】"
 
-    title_font_size = int(block.get("title_font_size", 18) * ctx.scale)
+    title_font_size = int(block.get("title_font_size", 19) * ctx.scale)
     title_font = load_font("noto_serif_bold", title_font_size)
     tb = safe_font_bbox(title_font, title_text)
     tw = tb[2] - tb[0]
     th = max(title_font_size, tb[3] - tb[1])
-    title_x = ctx.x_offset + (ctx.available_width - tw) // 2
-    ctx.draw.text((title_x, ctx.y), title_text, fill=EINK_FG, font=title_font)
 
-    ctx.y += th + int(block.get("margin_bottom", 8) * ctx.scale)
+    # 3. 左侧矢量图标尺寸
+    raw_icon_size = block.get("icon_size", 54)
+    icon_size = max(34, int(raw_icon_size * ctx.scale))
+    if ctx.screen_h <= 160:
+        icon_size = 32
+
+    # 右侧双行串行总高度
+    gap_between_lines = int(5 * ctx.scale)
+    right_text_total_h = badge_h + gap_between_lines + th
+
+    # 整体高度取左图标与右侧文本二者最大值
+    hero_total_h = max(icon_size, right_text_total_h)
+    start_y = ctx.y
+
+    # 绘制左侧图标（水平靠左，垂直居中）
+    icon_left = ctx.x_offset + margin_x
+    icon_cx = icon_left + icon_size // 2
+    icon_cy = start_y + hero_total_h // 2
+    draw_disaster_vector_icon(ctx.draw, hazard, icon_cx, icon_cy, size=icon_size, color=fg_col, accent_color=acc_col)
+
+    # 绘制右侧双行串行内容（左对齐，与左侧图标保持 12px 间隙）
+    right_x = icon_left + icon_size + int(12 * ctx.scale)
+    right_start_y = start_y + max(0, (hero_total_h - right_text_total_h) // 2)
+
+    # Line 1: [ 红色预警 · I级 特别严重 ] 胶囊徽章
+    bg_color = ctx.color_index("red") if (badge_red and ctx.colors >= 3) else EINK_FG
+    _draw_rounded_rect(
+        ctx.draw,
+        [(right_x, right_start_y), (right_x + badge_w, right_start_y + badge_h)],
+        radius=int(3 * ctx.scale),
+        fill=bg_color,
+    )
+    ctx.draw.text((right_x + pad_x, right_start_y + pad_y), badge_text, fill=EINK_BG, font=badge_font)
+
+    # Line 2: 【暴雨红色预警】 主标题
+    title_y = right_start_y + badge_h + gap_between_lines
+    ctx.draw.text((right_x - int(4 * ctx.scale), title_y), title_text, fill=EINK_FG, font=title_font)
+
+    ctx.y = start_y + hero_total_h + int(block.get("margin_bottom", 8) * ctx.scale)
 
 
 @register_block("disaster_publisher_bar")
