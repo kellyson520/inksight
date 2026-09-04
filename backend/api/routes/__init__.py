@@ -15,6 +15,8 @@ from .uploads import router as uploads_router
 from .user import router as user_router
 from .voice import router as voice_router
 from .open import router as open_router
+from .market import router as market_router
+from .hotlist import router as hotlist_router
 
 api_routers = [
     render_router,
@@ -33,6 +35,8 @@ api_routers = [
     uploads_router,
     voice_router,
     open_router,
+    market_router,
+    hotlist_router,
 ]
 
 page_routers = [pages_router]

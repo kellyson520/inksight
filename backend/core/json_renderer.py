@@ -2569,6 +2569,24 @@ def _measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tupl
         w = icon_size + 4 + (bbox[2] - bbox[0])
         h = max(icon_size, font_size + 6)
         return w, h
+    elif btype == "spacer":
+        return max_width, int(block.get("height", 8) * ctx.scale)
+    elif btype == "separator":
+        return max_width, int(block.get("margin_bottom", 6) * ctx.scale) + 2
+    elif btype == "grid":
+        items = block.get("items", [])
+        cols = max(1, int(block.get("columns", 2)))
+        gap_y = int(block.get("gap_y", block.get("gap", 6)) * ctx.scale)
+        font_size = int(block.get("font_size", 11) * ctx.scale)
+        val_size = int(block.get("value_size", 13) * ctx.scale)
+        row_count = (len(items) + cols - 1) // cols if items else 1
+        row_h = font_size + val_size + 8
+        margin_bottom = int(block.get("margin_bottom", 8) * ctx.scale)
+        return max_width, row_count * (row_h + gap_y) + margin_bottom
+    elif btype == "segmented_row":
+        h = int(block.get("height", 6) * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, h + margin_bottom
     else:
         measure_img = Image.new("1", (max(1, max_width), 100), EINK_BG)
         mc = RenderContext(

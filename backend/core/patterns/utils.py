@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+from functools import lru_cache
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 
@@ -169,6 +170,8 @@ def _load_bitmap_font(font_name: str, size: int) -> ImageFont.ImageFont | None:
     if size > _bitmap_max_request_size:
         return None
     for rel in _bitmap_candidates(font_name, size):
+        if rel in _bitmap_warned:
+            continue
         path = os.path.join(BITMAP_DIR, rel)
         if not os.path.exists(path):
             continue
@@ -183,14 +186,13 @@ def _load_bitmap_font(font_name: str, size: int) -> ImageFont.ImageFont | None:
                 continue
             return ft
         except Exception:
-            if rel not in _bitmap_warned:
-                _bitmap_warned.add(rel)
-                logger.warning(f"[FONT] Failed to load bitmap font: {path}", exc_info=True)
+            _bitmap_warned.add(rel)
     return None
 
 
+@lru_cache(maxsize=128)
 def load_font(font_key: str, size: int, force_truetype: bool = False) -> ImageFont.ImageFont:
-    """从配置加载字体"""
+    """从配置加载字体（带 LRU 高速缓存）"""
     font_name = FONTS.get(font_key)
     if not font_name:
         # Fallback to CJK font if default font key not found
@@ -225,8 +227,9 @@ def load_font(font_key: str, size: int, force_truetype: bool = False) -> ImageFo
     return ImageFont.load_default()
 
 
+@lru_cache(maxsize=128)
 def load_font_by_name(name: str, size: int, force_truetype: bool = False) -> ImageFont.ImageFont:
-    """直接通过文件名加载字体（兼容旧代码）"""
+    """直接通过文件名加载字体（带 LRU 高速缓存）"""
     if _force_bitmap and not force_truetype:
         bitmap_font = _load_bitmap_font(name, size)
         if bitmap_font is not None:
