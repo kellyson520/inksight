@@ -27,6 +27,25 @@ def pytest_sessionstart(session):
     subprocess.run([sys.executable, str(script)], cwd=BACKEND_ROOT, check=True)
 
 
+def pytest_sessionfinish(session, exitstatus):
+    """Clean up any open database connections when pytest completes."""
+    try:
+        import asyncio
+        from core.db import close_all
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(close_all())
+            else:
+                loop.run_until_complete(close_all())
+        except Exception:
+            pass
+    except Exception:
+        pass
+    import os
+    os._exit(exitstatus)
+
+
 @pytest.fixture
 def sample_config():
     """A typical device configuration dict."""

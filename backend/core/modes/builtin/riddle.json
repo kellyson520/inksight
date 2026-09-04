@@ -19,7 +19,39 @@
       "question": "两个胖子（打一城市名）",
       "hint": "想想体重",
       "answer": "合肥"
-    }
+    },
+    "fallback_pool": [
+      {
+        "category": "谜语",
+        "question": "两个胖子（打一城市名）",
+        "hint": "想想体重",
+        "answer": "合肥"
+      },
+      {
+        "category": "脑筋急转弯",
+        "question": "什么东西越洗越脏，不洗反而干净？",
+        "hint": "生活常见液体",
+        "answer": "水"
+      },
+      {
+        "category": "冷知识",
+        "question": "北极熊的皮肤实际上是什么颜色的？",
+        "hint": "不是白色的哦",
+        "answer": "黑色（毛发透明）"
+      },
+      {
+        "category": "谜语",
+        "question": "有时落在山腰，有时挂在树梢。有时像个圆盘，有时像把弯刀（打一天体）",
+        "hint": "夜空主角",
+        "answer": "月亮"
+      },
+      {
+        "category": "脑筋急转弯",
+        "question": "什么门永远关不上？",
+        "hint": "运动场上常见",
+        "answer": "球门"
+      }
+    ]
   },
   "layout": {
     "layout_engine": "component_tree",

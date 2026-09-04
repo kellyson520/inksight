@@ -184,6 +184,7 @@ export default function ExperiencePage() {
     override?: Record<string, unknown>,
     colorOverride?: number,
     sizeOverride?: { w: number; h: number },
+    forceRefresh?: boolean,
   ) => {
     const targetMode = modeId || previewMode;
     if (!targetMode || !authChecked) return;
@@ -203,6 +204,10 @@ export default function ExperiencePage() {
       params.set("colors", String(effColors));
       params.set("w", String(effWidth));
       params.set("h", String(effHeight));
+      if (forceRefresh) {
+        params.set("no_cache", "1");
+        params.set("_t", String(Date.now()));
+      }
 
       const mergedOverride: Record<string, unknown> = { ...(override || {}) };
 
@@ -292,9 +297,10 @@ export default function ExperiencePage() {
   };
 
   /**
-   * 点击模式卡片：即点即显
+   * 点击模式卡片：即点即显（若重复点击当前模式，则触发强制刷新换一换）
    */
   const handleModeCardClick = async (modeId: string) => {
+    const isSameMode = modeId === previewMode;
     setPreviewMode(modeId);
     setPreviewModeNameOverride(null);
 
@@ -303,7 +309,7 @@ export default function ExperiencePage() {
       return;
     }
 
-    await handlePreview(modeId);
+    await handlePreview(modeId, undefined, undefined, undefined, isSameMode);
   };
 
   /**
@@ -526,7 +532,7 @@ export default function ExperiencePage() {
               setPreviewHeight(h);
               handlePreview(previewMode, undefined, undefined, { w, h });
             }}
-            onRefresh={() => handlePreview(previewMode)}
+            onRefresh={() => handlePreview(previewMode, undefined, undefined, undefined, true)}
             onOpenConfig={handleOpenConfigModal}
           />
         </div>

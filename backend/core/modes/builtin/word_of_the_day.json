@@ -50,6 +50,48 @@
         "phonetic": "/ˌluː.mɪˈnes.əns/",
         "definition": "发光，冷光现象",
         "example": "The luminescence of fireflies lit the path."
+      },
+      {
+        "word": "Sonder",
+        "phonetic": "/ˈsɒn.dər/",
+        "definition": "每个人都有同样复杂的生命",
+        "example": "He felt a sudden wave of sonder in the crowd."
+      },
+      {
+        "word": "Mellifluous",
+        "phonetic": "/meˈlɪf.lu.əs/",
+        "definition": "声音甜美圆润、悦耳动听",
+        "example": "Her mellifluous voice soothed the room."
+      },
+      {
+        "word": "Halcyon",
+        "phonetic": "/ˈhæl.si.ən/",
+        "definition": "宁静祥和的黄金岁月",
+        "example": "They recalled the halcyon days of youth."
+      },
+      {
+        "word": "Aurora",
+        "phonetic": "/ɔːˈrɔː.rə/",
+        "definition": "极光、晨曦与新希望",
+        "example": "An aurora danced across the night sky."
+      },
+      {
+        "word": "Solitude",
+        "phonetic": "/ˈsɒl.ɪ.tʃuːd/",
+        "definition": "享受内心的清静自处",
+        "example": "He found deep peace in quiet solitude."
+      },
+      {
+        "word": "Eloquence",
+        "phonetic": "/ˈel.ə.kwəns/",
+        "definition": "雄辩口才与动人的表达",
+        "example": "He spoke with timeless clarity and eloquence."
+      },
+      {
+        "word": "Zenith",
+        "phonetic": "/ˈzen.ɪθ/",
+        "definition": "顶峰、顶点与荣耀时刻",
+        "example": "The sun reached its zenith at high noon."
       }
     ]
   },

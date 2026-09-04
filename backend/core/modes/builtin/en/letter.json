@@ -37,7 +37,30 @@
       "body": "The fog rolled in again last night. I kept the light burning, as I always do, though I wonder sometimes who still sails these waters.",
       "closing": "With steady light",
       "postscript": "The crooked-wing gull says hello."
-    }
+    },
+    "fallback_pool": [
+      {
+        "sender": "A lighthouse keeper, 1847",
+        "greeting": "Dear stranger on the shore",
+        "body": "The fog rolled in again last night. I kept the light burning, as I always do, though I wonder sometimes who still sails these waters.",
+        "closing": "With steady light",
+        "postscript": "The crooked-wing gull says hello."
+      },
+      {
+        "sender": "A night train traveler",
+        "greeting": "To my fellow passenger",
+        "body": "Outside the window, small town streetlights flash by like distant golden fireflies. Time feels pleasantly suspended between where we were and where we are going.",
+        "closing": "Wishing you restful journey",
+        "postscript": "P.S. Savor the quiet night."
+      },
+      {
+        "sender": "An old bookshop keeper",
+        "greeting": "To an avid reader",
+        "body": "This afternoon I found a pressed ginkgo leaf inside an old volume of poetry from thirty years ago. Some gentle thoughts truly transcend the passing seasons.",
+        "closing": "May you find unexpected joy",
+        "postscript": "P.S. Keep turning the page."
+      }
+    ]
   },
   "layout": {
     "status_bar": {

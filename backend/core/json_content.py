@@ -853,9 +853,12 @@ async def generate_json_mode_content(
     recent_quotes: list[str] = []
     recent_words: list[str] = []
     recent_events: list[str] = []
+    recent_questions: list[str] = []
+    recent_letters: list[str] = []
     dedup_hint = ""
     first_attempt_hint = ""
-    if mac and ctype in ("llm", "llm_json") and not DISABLE_DEDUP:
+    dedup_mac = mac or "DEFAULT"
+    if ctype in ("llm", "llm_json") and not DISABLE_DEDUP:
         try:
             from .stats_store import (
                 get_content_history,
@@ -863,8 +866,8 @@ async def generate_json_mode_content(
                 get_recent_content_summaries,
                 get_recent_content_field_values,
             )
-            recent_hashes = await get_recent_content_hashes(mac, mode_id, limit=20)
-            summaries = await get_recent_content_summaries(mac, mode_id, limit=10)
+            recent_hashes = await get_recent_content_hashes(dedup_mac, mode_id, limit=20)
+            summaries = await get_recent_content_summaries(dedup_mac, mode_id, limit=10)
             if summaries:
                 if language == "en":
                     dedup_hint = "\nAvoid repeating these recent topics: " + "; ".join(summaries[:6])
@@ -872,7 +875,7 @@ async def generate_json_mode_content(
                     dedup_hint = "\n请避免与以下近期内容重复：" + "；".join(summaries[:6])
 
             if mode_id == "DAILY":
-                recent_entries = await get_content_history(mac, limit=8, mode=mode_id)
+                recent_entries = await get_content_history(dedup_mac, limit=8, mode=mode_id)
                 first_attempt_hint = _build_daily_dedup_hint(recent_entries, language)
                 recent_quotes = [
                     str(e.get("content", {}).get("quote", "") or "").strip()
@@ -880,18 +883,26 @@ async def generate_json_mode_content(
                     if isinstance(e, dict) and isinstance(e.get("content"), dict) and e.get("content", {}).get("quote")
                 ]
             elif mode_id == "WORD_OF_THE_DAY":
-                recent_words = await get_recent_content_field_values(mac, mode_id, ("word",), limit=30)
+                recent_words = await get_recent_content_field_values(dedup_mac, mode_id, ("word",), limit=30)
                 first_attempt_hint = _build_word_dedup_hint(recent_words, language)
             elif mode_id == "THISDAY":
-                recent_events = await get_recent_content_field_values(mac, mode_id, ("event_title", "year"), limit=20)
+                recent_events = await get_recent_content_field_values(dedup_mac, mode_id, ("event_title", "year"), limit=20)
                 first_attempt_hint = _build_thisday_dedup_hint(recent_events, language)
             elif mode_id in ("MY_QUOTE", "STOIC", "ROAST"):
-                recent_quotes = await get_recent_content_field_values(mac, mode_id, ("quote",), limit=20)
+                recent_quotes = await get_recent_content_field_values(dedup_mac, mode_id, ("quote",), limit=20)
                 first_attempt_hint = _build_quote_dedup_hint(recent_quotes, language)
+            elif mode_id in ("RIDDLE", "QUESTION"):
+                recent_questions = await get_recent_content_field_values(dedup_mac, mode_id, ("question",), limit=20)
+                if recent_questions:
+                    first_attempt_hint = "\n请绝对避免出以下近期出过的谜题/问题：" + "；".join(recent_questions[:6])
+            elif mode_id == "LETTER":
+                recent_letters = await get_recent_content_field_values(dedup_mac, mode_id, ("sender", "body"), limit=15)
+                if recent_letters:
+                    first_attempt_hint = "\n请更换全新寄信人身份与情境，避免类似设定：" + "；".join(recent_letters[:4])
             elif dedup_hint:
                 first_attempt_hint = dedup_hint
         except (OSError, TypeError, ValueError):
-            logger.warning("[JSONContent] Failed to load dedup context for %s:%s", mac, mode_id, exc_info=True)
+            logger.warning("[JSONContent] Failed to load dedup context for %s:%s", dedup_mac, mode_id, exc_info=True)
 
     for attempt in range(1 + DEDUP_MAX_RETRIES):
         prompt = base_prompt
@@ -930,12 +941,16 @@ async def generate_json_mode_content(
                 return _apply_post_process(result, content_cfg)
             # 检查是否是 API key 缺失或无效错误（401/403 等），用于给上游返回更明确的 api_key_invalid 标记
             if isinstance(e, LLMKeyMissingError):
-                api_key_invalid = True
+                # 仅当用户配置的 API Key 报错（如包含“您配置的 API key”）或传入自定义 key 时，才向上层暴露 api_key_invalid 阻断
+                # 若仅为系统未配置默认环境变量 key，则平滑降级走预存池或精选兜底，确保预览和设备可用
+                if "您配置的 API key" in str(e) or bool(api_key and not api_key.startswith("sk-your-")):
+                    api_key_invalid = True
                 logger.warning(f"[JSONContent] API key missing or invalid for {mode_id}: {e}")
             elif isinstance(e, HTTPStatusError):
                 status_code = e.response.status_code if hasattr(e, "response") and e.response else None
                 if status_code in (401, 403):
-                    api_key_invalid = True
+                    if bool(api_key and not api_key.startswith("sk-your-")):
+                        api_key_invalid = True
                     logger.warning(f"[JSONContent] API key invalid or expired for {mode_id}: HTTP {status_code}")
             elif isinstance(e, OpenAIError):
                 # OpenAI/兼容 SDK 的错误可能包含状态码或错误码信息
@@ -951,9 +966,30 @@ async def generate_json_mode_content(
                     or "api key" in error_message
                     or "apikey" in error_message
                 ):
-                    api_key_invalid = True
+                    if bool(api_key and not api_key.startswith("sk-your-")):
+                        api_key_invalid = True
                     logger.warning(f"[JSONContent] API key invalid or expired for {mode_id}: {e}")
+
+            # 优先从离线预存池获取一条高质量内容，如果池中有数据则平滑滚动使用
+            try:
+                from .preload_store import get_next_preload_item
+                preload_target = date_str[:10] if (date_str and len(date_str) >= 10 and mode_id == "THISDAY") else ""
+                preload_item = await get_next_preload_item(mode_id, mac=mac or "", target_date=preload_target)
+                if preload_item:
+                    preload_item = _apply_post_process(preload_item, content_cfg)
+                    preload_item = await _prefetch_images(preload_item, mode_def)
+                    preload_item["_is_fallback"] = True
+                    preload_item["_used_fallback"] = True
+                    preload_item["_llm_used"] = True
+                    preload_item["_llm_ok"] = False
+                    if api_key_invalid:
+                        preload_item["_api_key_invalid"] = True
+                    return preload_item
+            except Exception as _p_exc:
+                logger.debug(f"[JSONContent] Fallback preload lookup failed for {mode_id}: {_p_exc}")
+
             fb = dict(fallback)
+            fb = _apply_post_process(fb, content_cfg)
             # 标记为使用兜底内容，便于前端/统计判断
             fb["_is_fallback"] = True
             fb["_used_fallback"] = True
@@ -1014,6 +1050,22 @@ async def generate_json_mode_content(
                     is_duplicate = True
                     logger.info(f"[JSONContent] Quote duplicate detected for {mode_id}: {res_quote[:30]}")
 
+            if not is_duplicate and recent_questions and (mode_id in ("RIDDLE", "QUESTION") or "question" in result):
+                res_q = str(result.get("question") or "").strip()
+                if res_q and any(res_q in rq or rq in res_q for rq in recent_questions):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Question duplicate detected for {mode_id}: {res_q[:30]}")
+
+            if not is_duplicate and recent_letters and (mode_id == "LETTER" or "sender" in result or "body" in result):
+                res_sender = str(result.get("sender") or "").strip()
+                res_body = str(result.get("body") or "").strip()
+                if res_sender and any(res_sender in rl or rl in res_sender for rl in recent_letters):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Letter sender duplicate detected for {mode_id}: {res_sender}")
+                elif res_body and any(res_body[:20] in rl for rl in recent_letters):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Letter body duplicate detected for {mode_id}")
+
         if not is_duplicate:
             break
 
@@ -1025,6 +1077,15 @@ async def generate_json_mode_content(
     # Mark LLM status for downstream billing/observability.
     result["_llm_used"] = True
     result["_llm_ok"] = True
+
+    # 动态将大模型生成的优质非重复内容沉淀入离线池，构建自生长的丰富内容库
+    try:
+        from .preload_store import add_preload_item
+        target_d = date_str[:10] if (date_str and len(date_str) >= 10 and mode_id == "THISDAY") else ""
+        await add_preload_item(mode_id, result, target_date=target_d, quality_score=95)
+    except Exception as _seed_exc:
+        logger.debug(f"[JSONContent] Failed to dynamically save preload item for {mode_id}: {_seed_exc}")
+
     return result
 
 
