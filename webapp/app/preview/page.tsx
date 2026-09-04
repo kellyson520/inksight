@@ -368,9 +368,9 @@ export default function ExperiencePage() {
             <div className="flex items-center gap-1.5 overflow-x-auto">
               {[
                 { id: "all", label: locale === "zh" ? "全部模式" : "All Modes", icon: Layers },
-                { id: "life", label: locale === "zh" ? "🌿 生活日常" : "🌿 Life", icon: Heart },
-                { id: "productivity", label: locale === "zh" ? "⚡ 效率工作" : "⚡ Productivity", icon: Briefcase },
-                { id: "news", label: locale === "zh" ? "📰 资讯热点" : "📰 News & Alerts", icon: Newspaper },
+                { id: "life", label: locale === "zh" ? "生活日常" : "Life", icon: Heart },
+                { id: "productivity", label: locale === "zh" ? "效率工作" : "Productivity", icon: Briefcase },
+                { id: "news", label: locale === "zh" ? "资讯热点" : "News & Alerts", icon: Newspaper },
               ].map((tab) => {
                 const isActive = primaryTab === tab.id;
                 return (

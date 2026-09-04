@@ -30,9 +30,36 @@ def test_registered_new_blocks_exist():
         "disaster_icon",
         "disaster_banner",
         "disaster_advice_box",
+        "disaster_hero",
+        "disaster_publisher_bar",
     ]
     for b in new_blocks:
         assert b in BLOCK_RENDERERS, f"Block {b} must be registered in BLOCK_RENDERERS"
+
+
+def test_render_disaster_hero_and_publisher_bar():
+    img = Image.new("P", (400, 300), 1)
+    img.putpalette(EINK_4COLOR_PALETTE)
+    draw = ImageDraw.Draw(img)
+    ctx = RenderContext(
+        draw=draw,
+        img=img,
+        screen_w=400,
+        screen_h=300,
+        colors=3,
+        x_offset=0,
+        y=10,
+        available_width=400,
+        footer_height=24,
+        content={"level": "红色", "type_name": "暴雨", "sender": "国家气象中心", "pub_time": "14:00"},
+    )
+    # 渲染 hero: 大图标与居中标题
+    render_block(ctx, {"type": "disaster_hero", "hazard": "rainstorm", "type_name": "暴雨", "level": "红色", "icon_size": 60})
+    assert ctx.y > 60
+
+    # 渲染 publisher_bar: 最下层发布单位
+    render_block(ctx, {"type": "disaster_publisher_bar", "sender": "国家气象中心", "time": "14:00"})
+    assert ctx.y >= 260
 
 
 def test_render_all_12_disaster_icons():

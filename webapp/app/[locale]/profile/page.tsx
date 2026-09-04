@@ -544,8 +544,8 @@ export default function ProfilePage() {
                 <div className="p-3 rounded-sm border border-ink/20 bg-paper-dark">
                   <p className="text-xs text-ink-light">
                     {tr(
-                      "💡 在此模式下，设备渲染将不消耗平台的免费额度，使用您自己的 API Key 进行调用。",
-                      "💡 In this mode, device rendering will not consume platform free quota, using your own API Key for calls."
+                      "在此模式下，设备渲染将不消耗平台的免费额度，使用您自己的 API Key 进行调用。",
+                      "In this mode, device rendering will not consume platform free quota, using your own API Key for calls."
                     )}
                 </p>
                 </div>

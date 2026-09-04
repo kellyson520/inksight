@@ -3,7 +3,7 @@
   "display_name": "Disaster Alert",
   "icon": "alert-triangle",
   "cacheable": false,
-  "description": "Emergency 4-tier disaster warning notifications",
+  "description": "National Emergency Disaster & Weather Warning Broadcast",
   "settings_schema": [
     {
       "key": "level",
@@ -11,7 +11,7 @@
       "type": "select",
       "default": "红色",
       "options": [
-        { "value": "红色", "label": "Red Alert (Level I Special Severe)" },
+        { "value": "红色", "label": "Red Alert (Level I Most Severe)" },
         { "value": "橙色", "label": "Orange Alert (Level II Severe)" },
         { "value": "黄色", "label": "Yellow Alert (Level III Moderate)" },
         { "value": "蓝色", "label": "Blue Alert (Level IV Minor)" }
@@ -19,22 +19,22 @@
     },
     {
       "key": "hazard",
-      "label": "Disaster Type",
+      "label": "Hazard Type",
       "type": "select",
       "default": "暴雨",
       "options": [
-        { "value": "暴雨", "label": "Rainstorm / Flooding" },
+        { "value": "暴雨", "label": "Rainstorm / Flood" },
         { "value": "台风", "label": "Typhoon / Gale" },
         { "value": "暴雪", "label": "Blizzard / Ice" },
-        { "value": "大风", "label": "Gale / Strong Wind" },
-        { "value": "高温", "label": "Extreme Heat" },
+        { "value": "大风", "label": "Strong Wind" },
+        { "value": "高温", "label": "Heatwave" },
         { "value": "寒潮", "label": "Cold Wave" },
         { "value": "地震", "label": "Earthquake" },
         { "value": "森林火险", "label": "Wildfire" },
         { "value": "海啸", "label": "Tsunami" },
-        { "value": "冰雹", "label": "Hail" },
+        { "value": "冰雹", "label": "Hailstorm" },
         { "value": "沙尘暴", "label": "Sandstorm" },
-        { "value": "大雾", "label": "Heavy Fog" }
+        { "value": "大雾", "label": "Dense Fog" }
       ]
     }
   ],
@@ -47,14 +47,14 @@
       "level": "红色",
       "type_name": "暴雨",
       "hazard_key": "rainstorm",
-      "title": "【Rainstorm Red Warning】",
-      "sender": "National Disaster Defense Center",
+      "title": "【暴雨预警】",
+      "sender": "National Disaster Prevention Center",
       "pub_time": "12:00",
-      "text": "Emergency warning active. Stop outdoor activities and seek safe shelter!",
+      "text": "Severe rainstorm warning active. Please take emergency precautions immediately.",
       "advice": [
-        "Stay indoors away from windows and low-lying flooded areas.",
-        "Disconnect electric power in flood-prone basements.",
-        "Avoid underpasses, bridges and underground facilities."
+        "Stay indoors and avoid underground passages or culverts.",
+        "Disconnect outdoor vulnerable power sources in low areas.",
+        "Be alert to mountain torrents and geological hazards."
       ],
       "theme_color": "red"
     }
@@ -66,58 +66,45 @@
         "type": "header_banner",
         "style": "inverted",
         "bg_color": "{theme_color}",
-        "title": "EMERGENCY ALERT",
-        "badge": "{level} Alert",
-        "right_text": "HIGHEST PRIORITY",
-        "height": 32,
+        "title": "EMERGENCY DISASTER ALERT",
+        "badge": "{level} ALERT",
+        "right_text": "TOP PRIORITY",
+        "height": 28,
         "margin_bottom": 6
       },
       {
-        "type": "disaster_banner",
-        "level_template": "{level}",
-        "hazard_template": "{type_name}",
-        "sender_template": "{sender}",
-        "time_template": "{pub_time}",
-        "height": 44,
-        "margin_bottom": 5
-      },
-      {
-        "type": "disaster_level_meter",
-        "level_template": "{level}",
-        "height": 20,
-        "margin_bottom": 6
-      },
-      {
-        "type": "disaster_icon",
+        "type": "disaster_hero",
         "hazard_template": "{hazard_key}",
-        "size": 42,
-        "align": "center",
-        "color": "black",
-        "accent_color": "{theme_color}",
+        "type_name_template": "{type_name}",
+        "level_template": "{level}",
+        "icon_size": 60,
+        "title_font_size": 18,
         "margin_bottom": 6
       },
       {
         "type": "text",
         "field": "text",
-        "font": "noto_serif_regular",
-        "font_size": 12,
-        "line_height": 17,
+        "font": "inter_regular",
+        "font_size": 11,
+        "line_height": 16,
         "align": "left",
-        "margin_x": 14,
-        "max_lines": 3,
+        "margin_x": 12,
+        "max_lines": 2,
         "margin_bottom": 6
       },
       {
         "type": "disaster_advice_box",
-        "title": "Safety Guidelines",
+        "title": "Safety Precaution Guidelines",
         "items_field": "advice",
         "margin_x": 12,
-        "margin_bottom": 4
+        "margin_bottom": 6
+      },
+      {
+        "type": "disaster_publisher_bar",
+        "sender_template": "{sender}",
+        "time_template": "{pub_time}",
+        "margin_x": 12
       }
-    ],
-    "footer": {
-      "label": "Disaster Emergency Broadcast",
-      "attribution_template": "{pub_time}"
-    }
+    ]
   }
 }

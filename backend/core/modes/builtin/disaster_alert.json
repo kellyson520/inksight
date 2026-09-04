@@ -3,7 +3,7 @@
   "display_name": "自然灾害预警",
   "icon": "alert-triangle",
   "cacheable": false,
-  "description": "国家四级突发气象与自然灾害预警最高优先级通报",
+  "description": "国家突发气象与自然灾害预警最高优先级通报",
   "settings_schema": [
     {
       "key": "level",
@@ -47,14 +47,14 @@
       "level": "红色",
       "type_name": "暴雨",
       "hazard_key": "rainstorm",
-      "title": "【暴雨红色预警】",
-      "sender": "国家气象防灾中心",
+      "title": "【暴雨预警】",
+      "sender": "国家气象防灾指挥中心",
       "pub_time": "12:00",
-      "text": "特大暴雨红色预警生效中，请停止户外活动并避险！",
+      "text": "特大暴雨预警信号生效中，请做好应急防范与避险！",
       "advice": [
-        "地势低洼居民区做好防涝排涝准备，切断低洼室外电源。",
-        "行人和车辆避开涵洞、立交桥下等积水路段。",
-        "山区居民注意防范山洪、滑坡和泥石流地质灾害。"
+        "地势低洼居民区做好防涝排涝准备，切断室外危险电源。",
+        "行人和车辆避开涵洞、立交桥下等严重积水路段。",
+        "山区居民密切防范山洪、滑坡及泥石流等次生灾害。"
       ],
       "theme_color": "red"
     }
@@ -69,42 +69,27 @@
         "title": "自然灾害紧急通报",
         "badge": "{level}预警",
         "right_text": "HIGHEST PRIORITY",
-        "height": 32,
+        "height": 28,
         "margin_bottom": 6
       },
       {
-        "type": "disaster_banner",
-        "level_template": "{level}",
-        "hazard_template": "{type_name}",
-        "sender_template": "{sender}",
-        "time_template": "{pub_time}",
-        "height": 44,
-        "margin_bottom": 5
-      },
-      {
-        "type": "disaster_level_meter",
-        "level_template": "{level}",
-        "height": 20,
-        "margin_bottom": 6
-      },
-      {
-        "type": "disaster_icon",
+        "type": "disaster_hero",
         "hazard_template": "{hazard_key}",
-        "size": 42,
-        "align": "center",
-        "color": "black",
-        "accent_color": "{theme_color}",
+        "type_name_template": "{type_name}",
+        "level_template": "{level}",
+        "icon_size": 60,
+        "title_font_size": 18,
         "margin_bottom": 6
       },
       {
         "type": "text",
         "field": "text",
         "font": "noto_serif_regular",
-        "font_size": 12,
-        "line_height": 17,
+        "font_size": 11,
+        "line_height": 16,
         "align": "left",
-        "margin_x": 14,
-        "max_lines": 3,
+        "margin_x": 12,
+        "max_lines": 2,
         "margin_bottom": 6
       },
       {
@@ -112,12 +97,14 @@
         "title": "防灾避险关键指引",
         "items_field": "advice",
         "margin_x": 12,
-        "margin_bottom": 4
+        "margin_bottom": 6
+      },
+      {
+        "type": "disaster_publisher_bar",
+        "sender_template": "{sender}",
+        "time_template": "{pub_time}",
+        "margin_x": 12
       }
-    ],
-    "footer": {
-      "label": "防灾应急特别广播",
-      "attribution_template": "{pub_time}"
-    }
+    ]
   }
 }

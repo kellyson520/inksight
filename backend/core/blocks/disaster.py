@@ -406,3 +406,105 @@ def render_disaster_level_badge(ctx: RenderContext, block: dict) -> None:
 
     ctx.y = y0 + total_h + int(block.get("margin_bottom", 6) * ctx.scale)
 
+
+@register_block("disaster_hero")
+def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
+    """灾害大图标与居中当前等级标题区。
+    - 图标放大展示
+    - 居中显示当前灾害【XX预警】
+    - 仅展示当前生效级别，不显示全部四级
+    """
+    hazard = str(block.get("hazard") or ctx.resolve(block.get("hazard_template") or "") or "rainstorm")
+    type_name = str(block.get("type_name") or ctx.resolve(block.get("type_name_template") or "") or "气象灾害")
+    level = str(block.get("level") or ctx.resolve(block.get("level_template") or "") or "黄色")
+
+    raw_icon_size = block.get("icon_size", 58)
+    icon_size = max(36, int(raw_icon_size * ctx.scale))
+    if ctx.screen_h <= 160:
+        icon_size = 36
+
+    fg_col = ctx.resolve_color({"color": block.get("color", "black")})
+    is_red = any(k in level for k in ("红", "RED", "橙", "ORANGE", "i级", "ii级"))
+    acc_col = ctx.color_index("red") if (is_red and ctx.colors >= 3) else EINK_FG
+
+    # 1. 居中大图标
+    icon_cx = ctx.x_offset + ctx.available_width // 2
+    icon_cy = ctx.y + icon_size // 2
+    draw_disaster_vector_icon(ctx.draw, hazard, icon_cx, icon_cy, size=icon_size, color=fg_col, accent_color=acc_col)
+    ctx.y += icon_size + int(4 * ctx.scale)
+
+    # 2. 居中标题：【暴雨预警】
+    title_text = f"【{type_name}预警】"
+    title_font_size = int(block.get("title_font_size", 18) * ctx.scale)
+    title_font = load_font("noto_serif_bold", title_font_size)
+    tb = safe_font_bbox(title_font, title_text)
+    tw, th = tb[2] - tb[0], tb[3] - tb[1]
+    title_x = ctx.x_offset + (ctx.available_width - tw) // 2
+    ctx.draw.text((title_x, ctx.y), title_text, fill=EINK_FG, font=title_font)
+    ctx.y += th + int(4 * ctx.scale)
+
+    # 3. 居中当前生效等级指示徽章（仅显示当前级别，不显示全部四级）
+    if "红" in level:
+        badge_text = "红色预警 · I级 特别严重"
+        badge_red = True
+    elif "橙" in level:
+        badge_text = "橙色预警 · II级 严重"
+        badge_red = True
+    elif "黄" in level:
+        badge_text = "黄色预警 · III级 较重"
+        badge_red = False
+    elif "蓝" in level:
+        badge_text = "蓝色预警 · IV级 一般"
+        badge_red = False
+    else:
+        badge_text = f"{level}预警"
+        badge_red = False
+
+    badge_font = load_font("noto_serif_bold", max(9, int(10 * ctx.scale)))
+    bb = safe_font_bbox(badge_font, badge_text)
+    bw, bh = bb[2] - bb[0], bb[3] - bb[1]
+
+    pad_x = int(10 * ctx.scale)
+    pad_y = int(2 * ctx.scale)
+    badge_w = bw + pad_x * 2
+    badge_h = bh + pad_y * 2
+    badge_x = ctx.x_offset + (ctx.available_width - badge_w) // 2
+
+    bg_color = ctx.color_index("red") if (badge_red and ctx.colors >= 3) else EINK_FG
+    _draw_rounded_rect(ctx.draw, [(badge_x, ctx.y), (badge_x + badge_w, ctx.y + badge_h)], radius=int(3 * ctx.scale), fill=bg_color)
+    ctx.draw.text((badge_x + pad_x, ctx.y + pad_y - 1), badge_text, fill=EINK_BG, font=badge_font)
+
+    ctx.y += badge_h + int(block.get("margin_bottom", 6) * ctx.scale)
+
+
+@register_block("disaster_publisher_bar")
+def render_disaster_publisher_bar(ctx: RenderContext, block: dict) -> None:
+    """发布单位与发布时间，位于最下层。"""
+    sender = str(block.get("sender") or ctx.resolve(block.get("sender_template") or "") or "国家突发事件预警信息发布中心")
+    pub_time = str(block.get("time") or ctx.resolve(block.get("time_template") or "") or "")
+    margin_x = int(block.get("margin_x", 12) * ctx.scale)
+
+    bar_h = int(18 * ctx.scale)
+    # 保证在最下层：若有空余高度则自动推至底部
+    bottom_y = ctx.footer_top - bar_h - 2 if ctx.footer_top > 0 else (ctx.screen_h - bar_h - 4)
+    if bottom_y > ctx.y:
+        ctx.y = bottom_y
+
+    x0 = ctx.x_offset + margin_x
+    x1 = ctx.x_offset + ctx.available_width - margin_x
+
+    ctx.draw.line([(x0, ctx.y), (x1, ctx.y)], fill=EINK_FG, width=1)
+    ctx.y += int(3 * ctx.scale)
+
+    font = load_font("noto_serif_regular", max(8, int(9 * ctx.scale)))
+    left_str = f"发布单位：{sender}"
+    right_str = f"发布时间：{pub_time}" if pub_time else ""
+
+    ctx.draw.text((x0, ctx.y), left_str, fill=EINK_FG, font=font)
+    if right_str:
+        rb = safe_font_bbox(font, right_str)
+        rw = rb[2] - rb[0]
+        ctx.draw.text((x1 - rw, ctx.y), right_str, fill=EINK_FG, font=font)
+
+    ctx.y += bar_h
+
