@@ -284,3 +284,125 @@ def render_disaster_advice_box(ctx: RenderContext, block: dict) -> None:
     # 绘制立柱全高
     ctx.draw.rectangle([(x0, y_start), (x0 + bar_w, cur_y)], fill=bar_color)
     ctx.y = cur_y + int(block.get("margin_bottom", 8) * ctx.scale)
+
+
+@register_block("disaster_level_meter")
+def render_disaster_level_meter(ctx: RenderContext, block: dict) -> None:
+    """国家标准四级预警刻度指示条：[ 蓝 IV | 黄 III | 橙 II | 红 I ]。
+
+    指示条横向等分排列四级，高亮当前激活级别并附带指示三角。
+    """
+    raw_level = str(block.get("level") or ctx.resolve(block.get("level_template") or "") or "黄色").strip().lower()
+
+    # 确定激活索引 0:蓝, 1:黄, 2:橙, 3:红
+    if "红" in raw_level or "red" in raw_level or "i级" in raw_level:
+        active_idx = 3
+    elif "橙" in raw_level or "orange" in raw_level or "ii级" in raw_level:
+        active_idx = 2
+    elif "黄" in raw_level or "yellow" in raw_level or "iii级" in raw_level:
+        active_idx = 1
+    elif "蓝" in raw_level or "blue" in raw_level or "iv级" in raw_level:
+        active_idx = 0
+    else:
+        active_idx = 1
+
+    margin_x = int(block.get("margin_x", 12) * ctx.scale)
+    avail_w = ctx.available_width - margin_x * 2
+    x_start = ctx.x_offset + margin_x
+    y_start = ctx.y
+    meter_h = int(block.get("height", 24) * ctx.scale)
+    y_end = y_start + meter_h
+
+    # 四级定义：标签 + 级别
+    segments = [
+        ("蓝 IV", "一般"),
+        ("黄 III", "较重"),
+        ("橙 II", "严重"),
+        ("红 I", "特重"),
+    ]
+    seg_w = avail_w // 4
+    seg_font = load_font("noto_serif_bold", int(11 * ctx.scale))
+
+    for idx, (title, sub) in enumerate(segments):
+        sx0 = x_start + idx * seg_w
+        sx1 = sx0 + seg_w - int(2 * ctx.scale)
+        is_active = (idx == active_idx)
+
+        if is_active:
+            # 激活状态：红色/橙色使用红底反白，黄色/蓝色使用黑底反白
+            if idx >= 2 and ctx.colors >= 3:
+                bg = ctx.color_index("red")
+            else:
+                bg = EINK_FG
+            _draw_rounded_rect(ctx.draw, [(sx0, y_start), (sx1, y_end)], radius=int(3 * ctx.scale), fill=bg)
+            text_col = EINK_BG
+        else:
+            # 未激活：细线边框 + 背景留白
+            _draw_rounded_rect(ctx.draw, [(sx0, y_start), (sx1, y_end)], radius=int(3 * ctx.scale), outline=EINK_FG, width=1)
+            text_col = EINK_FG
+
+        # 绘制文本居中
+        tb = safe_font_bbox(seg_font, title)
+        tw, th = tb[2] - tb[0], tb[3] - tb[1]
+        ctx.draw.text((sx0 + (seg_w - tw) // 2, y_start + (meter_h - th) // 2 - 1), title, fill=text_col, font=seg_font)
+
+        # 在激活项上方或下方绘制小三角形指示标 ▲
+        if is_active:
+            tri_cx = sx0 + seg_w // 2 - 1
+            tri_y = y_end + int(2 * ctx.scale)
+            tri_sz = int(3 * ctx.scale)
+            ctx.draw.polygon([
+                (tri_cx, tri_y),
+                (tri_cx - tri_sz, tri_y + tri_sz * 2),
+                (tri_cx + tri_sz, tri_y + tri_sz * 2),
+            ], fill=ctx.color_index("red") if (idx >= 2 and ctx.colors >= 3) else EINK_FG)
+
+    ctx.y = y_end + int(block.get("margin_bottom", 10) * ctx.scale)
+
+
+@register_block("disaster_level_badge")
+def render_disaster_level_badge(ctx: RenderContext, block: dict) -> None:
+    """独立预警级别徽章，支持同时输出预警颜色、罗马数字及严重度。"""
+    raw_level = str(block.get("level") or ctx.resolve(block.get("level_template") or "") or "黄色")
+    align = block.get("align", "left")
+
+    if "红" in raw_level:
+        badge_text = "红色预警 · I级 特别严重"
+        is_red = True
+    elif "橙" in raw_level:
+        badge_text = "橙色预警 · II级 严重"
+        is_red = True
+    elif "黄" in raw_level:
+        badge_text = "黄色预警 · III级 较重"
+        is_red = False
+    elif "蓝" in raw_level:
+        badge_text = "蓝色预警 · IV级 一般"
+        is_red = False
+    else:
+        badge_text = f"{raw_level}预警"
+        is_red = False
+
+    font = load_font("noto_serif_bold", int(11 * ctx.scale))
+    bb = safe_font_bbox(font, badge_text)
+    bw, bh = bb[2] - bb[0], bb[3] - bb[1]
+
+    pad_x = int(8 * ctx.scale)
+    pad_y = int(3 * ctx.scale)
+    total_w = bw + pad_x * 2
+    total_h = bh + pad_y * 2
+
+    margin_x = int(block.get("margin_x", 12) * ctx.scale)
+    if align == "center":
+        x0 = ctx.x_offset + (ctx.available_width - total_w) // 2
+    elif align == "right":
+        x0 = ctx.x_offset + ctx.available_width - margin_x - total_w
+    else:
+        x0 = ctx.x_offset + margin_x
+    y0 = ctx.y
+
+    bg_color = ctx.color_index("red") if (is_red and ctx.colors >= 3) else EINK_FG
+    _draw_rounded_rect(ctx.draw, [(x0, y0), (x0 + total_w, y0 + total_h)], radius=int(3 * ctx.scale), fill=bg_color)
+    ctx.draw.text((x0 + pad_x, y0 + pad_y - 1), badge_text, fill=EINK_BG, font=font)
+
+    ctx.y = y0 + total_h + int(block.get("margin_bottom", 6) * ctx.scale)
+

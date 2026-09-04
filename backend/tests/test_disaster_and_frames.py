@@ -185,3 +185,63 @@ async def test_disaster_alert_api_endpoints():
 
     from core.db import close_all
     await close_all()
+
+
+def test_national_standard_warning_levels_hierarchy():
+    from core.disaster_service import normalize_warning_level, STANDARD_WARNING_LEVELS
+
+    # 1. 红色预警 (I级 / 特别严重)
+    score1, meta1 = normalize_warning_level("红色")
+    assert score1 == 1
+    assert meta1["roman"] == "I级"
+    assert meta1["severity_desc"] == "特别严重"
+
+    # 2. 橙色预警 (II级 / 严重)
+    score2, meta2 = normalize_warning_level("橙色预警")
+    assert score2 == 2
+    assert meta2["roman"] == "II级"
+    assert meta2["severity_desc"] == "严重"
+
+    # 3. 黄色预警 (III级 / 较重)
+    score3, meta3 = normalize_warning_level("黄色")
+    assert score3 == 3
+    assert meta3["roman"] == "III级"
+    assert meta3["severity_desc"] == "较重"
+
+    # 4. 蓝色预警 (IV级 / 一般)
+    score4, meta4 = normalize_warning_level("蓝色预警[IV级]")
+    assert score4 == 4
+    assert meta4["roman"] == "IV级"
+    assert meta4["severity_desc"] == "一般"
+
+
+def test_render_disaster_level_meter_all_levels():
+    from core.json_renderer import render_json_mode
+
+    levels = ["蓝色", "黄色", "橙色", "红色"]
+    for lvl in levels:
+        alert_dict = {
+            "level": lvl,
+            "type_name": "暴雨",
+            "hazard_key": "rainstorm",
+            "sender": "北京市气象台",
+            "pub_time": "2026-09-04 17:00",
+            "text": f"北京市发布暴雨{lvl}预警信号，请注意防范。",
+        }
+        mode_def = build_disaster_alert_mode_def(alert_dict)
+        img = render_json_mode(
+            mode_def,
+            mode_def["content"],
+            date_str="2026-09-04",
+            weather_str="暴雨",
+            battery_pct=90,
+            screen_w=400,
+            screen_h=300,
+            colors=3,
+        )
+        assert img.size == (400, 300)
+        rep = analyze_image_layout(img)
+        assert rep["content_blocks_count"] >= 3
+        for g in rep["gaps"]:
+            assert g["status"] != "OVERLAP_COLLISION"
+

@@ -125,6 +125,14 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
         margin_bottom = int(block.get("margin_bottom", 8) * ctx.scale)
         return max_width, h + margin_bottom
 
+    elif btype == "disaster_level_meter":
+        h = int(block.get("height", 24) * ctx.scale)
+        margin_bottom = int(block.get("margin_bottom", 10) * ctx.scale)
+        return max_width, h + margin_bottom
+
+    elif btype == "disaster_level_badge":
+        return max_width, int(22 * ctx.scale)
+
     elif btype == "disaster_icon":
         sz = int(block.get("size", 44) * ctx.scale)
         margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)

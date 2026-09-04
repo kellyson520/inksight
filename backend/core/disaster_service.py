@@ -35,15 +35,88 @@ _SIMULATED_ALERTS: dict[str, dict[str, Any]] = {}
 LEVEL_SEVERITY: dict[str, int] = {
     "red": 1,
     "红色": 1,
+    "i": 1,
+    "i级": 1,
     "orange": 2,
     "橙色": 2,
+    "ii": 2,
+    "ii级": 2,
     "yellow": 3,
     "黄色": 3,
+    "iii": 3,
+    "iii级": 3,
     "blue": 4,
     "蓝色": 4,
+    "iv": 4,
+    "iv级": 4,
     "white": 5,
     "白色": 5,
 }
+
+# 国家气象防灾减灾标准四级预警体系规范
+STANDARD_WARNING_LEVELS: dict[int, dict[str, str]] = {
+    1: {
+        "name": "红色预警",
+        "short_name": "红色",
+        "roman": "I级",
+        "severity_desc": "特别严重",
+        "urgency_label": "全社会最高警戒",
+        "eink_color": "red",
+    },
+    2: {
+        "name": "橙色预警",
+        "short_name": "橙色",
+        "roman": "II级",
+        "severity_desc": "严重",
+        "urgency_label": "紧急防御防范",
+        "eink_color": "red",
+    },
+    3: {
+        "name": "黄色预警",
+        "short_name": "黄色",
+        "roman": "III级",
+        "severity_desc": "较重",
+        "urgency_label": "密切防范准备",
+        "eink_color": "black",
+    },
+    4: {
+        "name": "蓝色预警",
+        "short_name": "蓝色",
+        "roman": "IV级",
+        "severity_desc": "一般",
+        "urgency_label": "注意防灾避险",
+        "eink_color": "black",
+    },
+}
+
+
+def normalize_warning_level(level_raw: str) -> tuple[int, dict[str, str]]:
+    """规范化预警等级，返回标准 (等级代码 1~4, 等级元数据字典)。"""
+    raw_str = (level_raw or "黄色").strip().lower()
+
+    # 1. 优先按国家标准颜色字符判断
+    if "红" in raw_str or "red" in raw_str:
+        score = 1
+    elif "橙" in raw_str or "orange" in raw_str:
+        score = 2
+    elif "黄" in raw_str or "yellow" in raw_str:
+        score = 3
+    elif "蓝" in raw_str or "blue" in raw_str:
+        score = 4
+    # 2. 罗马数字级别判断 (按长度降序，防止 'i' 误伤 'iv')
+    elif "iv" in raw_str:
+        score = 4
+    elif "iii" in raw_str:
+        score = 3
+    elif "ii" in raw_str:
+        score = 2
+    elif "i" in raw_str:
+        score = 1
+    else:
+        score = 3
+
+    meta = STANDARD_WARNING_LEVELS.get(score, STANDARD_WARNING_LEVELS[3])
+    return score, meta
 
 # 灾害名称 -> 图标映射
 HAZARD_NAME_TO_KEY: dict[str, str] = {
@@ -277,7 +350,13 @@ def build_disaster_alert_mode_def(alert: dict[str, Any]) -> dict[str, Any]:
                     "hazard": hazard,
                     "sender": sender,
                     "time": pub_time,
-                    "height": 46,
+                    "height": 44,
+                    "margin_bottom": 5,
+                },
+                {
+                    "type": "disaster_level_meter",
+                    "level": lvl,
+                    "height": 20,
                     "margin_bottom": 6,
                 },
                 {
