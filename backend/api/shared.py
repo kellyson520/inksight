@@ -220,16 +220,21 @@ async def ensure_web_or_device_access(
     return {"mode": "user", **membership}
 
 
-FIRMWARE_CHIP_FAMILY = "ESP32-C3"
-FIRMWARE_RELEASE_CACHE_TTL = int(os.getenv("FIRMWARE_RELEASE_CACHE_TTL", "120"))
-GITHUB_OWNER = os.getenv("GITHUB_OWNER", "datascale-ai")
-GITHUB_REPO = os.getenv("GITHUB_REPO", "inksight")
-GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases"
-_firmware_release_cache = {
-    "expires_at": 0.0,
-    "payload": None,
-}
-_firmware_release_cache_lock = asyncio.Lock()
+# 固件分发与版本基础设施（已下沉至 core.firmware_service，保留别名向后兼容）
+from core.firmware_service import (
+    FIRMWARE_CHIP_FAMILY,
+    FIRMWARE_RELEASE_CACHE_TTL,
+    GITHUB_OWNER,
+    GITHUB_REPO,
+    GITHUB_RELEASES_API,
+    build_firmware_manifest,
+    chip_family_from_asset_name,
+    expand_firmware_release_assets,
+    load_firmware_releases,
+    pick_firmware_asset,
+    validate_firmware_url,
+)
+
 _preview_push_queue: dict[str, dict] = {}
 _preview_push_queue_lock = asyncio.Lock()
 
@@ -332,6 +337,48 @@ async def resolve_mode(
         return await choose_persona_from_config(config)
 
     return random.choice(["STOIC", "ROAST", "ZEN", "DAILY"])
+
+
+def apply_preview_overrides(
+    config: Optional[dict],
+    persona: str,
+    *,
+    city_override: Optional[str] = None,
+    mode_override: Optional[dict] = None,
+    memo_text: Optional[str] = None,
+    memo_settings: Optional[dict] = None,
+) -> dict:
+    """下沉并统一模式预览的动态参数与便签配置覆盖。"""
+    cfg = copy.deepcopy(config or {})
+    mode_overrides = dict(cfg.get("mode_overrides") or {})
+    current_override = dict(mode_overrides.get(persona) or {})
+
+    if city_override:
+        cfg["city"] = city_override
+        current_override["city"] = city_override
+
+    if isinstance(mode_override, dict) and mode_override:
+        current_override.update(mode_override)
+
+    if persona == "MEMO":
+        m_text = current_override.get("memo_text")
+        if isinstance(m_text, str) and m_text.strip():
+            cfg["memo_text"] = m_text.strip()
+            cfg["memoText"] = m_text.strip()
+        if isinstance(memo_text, str) and memo_text.strip():
+            clean_m = memo_text.strip()
+            current_override["memo_text"] = clean_m
+            cfg["memo_text"] = clean_m
+            cfg["memoText"] = clean_m
+        if isinstance(memo_settings, dict) and memo_settings:
+            ms = dict(current_override.get("mode_settings") or {})
+            ms.update(memo_settings)
+            current_override["mode_settings"] = ms
+
+    mode_overrides[persona] = current_override
+    cfg["mode_overrides"] = mode_overrides
+    cfg["modeOverrides"] = mode_overrides
+    return cfg
 
 
 async def build_image(
@@ -581,37 +628,14 @@ async def build_image(
         logger.debug("[QUOTA] Using current_user_id=%s for Web preview", current_user_id)
 
     if preview_city_override or preview_mode_override or preview_memo_text or preview_memo_settings:
-        config = copy.deepcopy(config or {})
-        mode_overrides = dict(config.get("mode_overrides") or {})
-        current_mode_override = dict(mode_overrides.get(persona) or {})
-        if preview_city_override:
-            config["city"] = preview_city_override
-            current_mode_override["city"] = preview_city_override
-        if isinstance(preview_mode_override, dict) and preview_mode_override:
-            current_mode_override.update(preview_mode_override)
-        mode_overrides[persona] = current_mode_override
-        config["mode_overrides"] = mode_overrides
-        config["modeOverrides"] = mode_overrides
-        if persona == "MEMO":
-            memo_text = current_mode_override.get("memo_text")
-            if isinstance(memo_text, str) and memo_text.strip():
-                config["memo_text"] = memo_text.strip()
-                config["memoText"] = memo_text.strip()
-            if isinstance(preview_memo_text, str) and preview_memo_text.strip():
-                memo_clean = preview_memo_text.strip()
-                current_mode_override["memo_text"] = memo_clean
-                mode_overrides[persona] = current_mode_override
-                config["mode_overrides"] = mode_overrides
-                config["modeOverrides"] = mode_overrides
-                config["memo_text"] = memo_clean
-                config["memoText"] = memo_clean
-            if isinstance(preview_memo_settings, dict) and preview_memo_settings:
-                ms = dict(current_mode_override.get("mode_settings") or {})
-                ms.update(preview_memo_settings)
-                current_mode_override["mode_settings"] = ms
-                mode_overrides[persona] = current_mode_override
-                config["mode_overrides"] = mode_overrides
-                config["modeOverrides"] = mode_overrides
+        config = apply_preview_overrides(
+            config,
+            persona,
+            city_override=preview_city_override,
+            mode_override=preview_mode_override,
+            memo_text=preview_memo_text,
+            memo_settings=preview_memo_settings,
+        )
 
     # 无设备预览（/preview 等）：按页面站点语言（中/英）决定 mode_language。
     # 设备配置页预览（有 mac）：沿用 configs 中保存的 mode_language，不被 ui_language 覆盖。
@@ -1085,150 +1109,6 @@ def resolve_refresh_minutes_for_device_state(config: Optional[dict], state: Opti
 def reconnect_threshold_seconds(refresh_minutes: int) -> int:
     base_seconds = max(1, int(refresh_minutes)) * 60
     return max(base_seconds + 30, int(base_seconds * 1.5))
-
-
-def build_firmware_manifest(version: str, download_url: str, chip_family: str = FIRMWARE_CHIP_FAMILY) -> dict:
-    return {
-        "name": "InkSight",
-        "version": version,
-        "builds": [
-            {
-                "chipFamily": chip_family,
-                "parts": [{"path": download_url, "offset": 0}],
-            }
-        ],
-    }
-
-
-def chip_family_from_asset_name(asset_name: str) -> str:
-    name = (asset_name or "").lower()
-    if "_s3" in name or "esp32s3" in name or "esp32-s3" in name:
-        return "ESP32-S3"
-    if "wroom32e" in name or "_esp32" in name:
-        return "ESP32"
-    if "_c3" in name or "esp32c3" in name:
-        return "ESP32-C3"
-    return FIRMWARE_CHIP_FAMILY
-
-
-def pick_firmware_asset(assets: list[dict]) -> Optional[dict]:
-    preferred = [
-        asset
-        for asset in assets
-        if asset.get("name", "").endswith(".bin")
-        and "inksight-firmware-" in asset.get("name", "")
-    ]
-    if preferred:
-        return preferred[0]
-    fallback = [asset for asset in assets if asset.get("name", "").endswith(".bin")]
-    return fallback[0] if fallback else None
-
-
-def expand_firmware_release_assets(release: dict) -> list[dict]:
-    tag_name = release.get("tag_name", "")
-    version = tag_name.lstrip("v") if tag_name else "unknown"
-    published_at = release.get("published_at")
-    items = []
-    for asset in release.get("assets", []):
-        asset_name = asset.get("name", "")
-        if not asset_name.endswith(".bin"):
-            continue
-        download_url = asset.get("browser_download_url")
-        if not download_url:
-            continue
-        chip_family = chip_family_from_asset_name(asset_name)
-        items.append(
-            {
-                "version": version,
-                "tag": tag_name,
-                "published_at": published_at,
-                "download_url": download_url,
-                "size_bytes": asset.get("size"),
-                "chip_family": chip_family,
-                "asset_name": asset_name,
-                "manifest": build_firmware_manifest(version, download_url, chip_family),
-            }
-        )
-    preferred = [item for item in items if "inksight-firmware-" in item["asset_name"]]
-    return preferred or items
-
-
-async def load_firmware_releases(force_refresh: bool = False) -> dict:
-    now = time.time()
-    async with _firmware_release_cache_lock:
-        if (
-            not force_refresh
-            and _firmware_release_cache["payload"] is not None
-            and _firmware_release_cache["expires_at"] > now
-        ):
-            cached_payload = dict(_firmware_release_cache["payload"])
-            cached_payload["cached"] = True
-            return cached_payload
-
-        headers = {
-            "Accept": "application/vnd.github+json",
-            "User-Agent": "inksight-firmware-api",
-        }
-        github_token = os.getenv("GITHUB_TOKEN")
-        if github_token:
-            headers["Authorization"] = f"Bearer {github_token}"
-
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(GITHUB_RELEASES_API, headers=headers)
-        if resp.status_code >= 400:
-            message = f"GitHub releases API error: {resp.status_code}"
-            try:
-                details = resp.json().get("message")
-                if details:
-                    message = f"{message} - {details}"
-            except (ValueError, TypeError, json.JSONDecodeError):
-                logger.warning("[FIRMWARE] Failed to parse GitHub error payload", exc_info=True)
-            raise RuntimeError(message)
-
-        releases = []
-        for release in resp.json():
-            if release.get("draft"):
-                continue
-            releases.extend(expand_firmware_release_assets(release))
-
-        payload = {
-            "source": "github_releases",
-            "repo": f"{GITHUB_OWNER}/{GITHUB_REPO}",
-            "cached": False,
-            "count": len(releases),
-            "releases": releases,
-        }
-        _firmware_release_cache["payload"] = payload
-        _firmware_release_cache["expires_at"] = now + FIRMWARE_RELEASE_CACHE_TTL
-        return payload
-
-
-async def validate_firmware_url(url: str) -> dict:
-    parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"}:
-        raise ValueError("firmware URL must start with http:// or https://")
-    if not parsed.netloc:
-        raise ValueError("firmware URL host is missing")
-    if not parsed.path.lower().endswith(".bin"):
-        raise ValueError("firmware URL should point to a .bin file")
-
-    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-        try:
-            resp = await client.head(url)
-        except httpx.HTTPError:
-            logger.warning("[FIRMWARE] HEAD failed for %s, falling back to ranged GET", url, exc_info=True)
-            resp = await client.get(url, headers={"Range": "bytes=0-0"})
-    if resp.status_code >= 400:
-        raise RuntimeError(f"firmware URL is not reachable: {resp.status_code}")
-
-    return {
-        "ok": True,
-        "reachable": True,
-        "status_code": resp.status_code,
-        "final_url": str(resp.url),
-        "content_type": resp.headers.get("content-type"),
-        "content_length": resp.headers.get("content-length"),
-    }
 
 
 def normalize_pushed_preview(image_bytes: bytes, *, width: int, height: int) -> bytes:
