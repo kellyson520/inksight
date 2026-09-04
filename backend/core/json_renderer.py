@@ -1518,14 +1518,14 @@ def _render_text(ctx: RenderContext, block: dict) -> None:
 
     start_y = ctx.y
     rendered_lines = 0
-    last_line_h = font_size
+    last_line_bottom = font_size
     for line in lines:
         line_y = start_y + rendered_lines * line_height
         if line_y >= ctx.footer_top - 10:
             break
         bbox = font.getbbox(line)
         lw = bbox[2] - bbox[0]
-        last_line_h = max(1, bbox[3] - bbox[1])
+        last_line_bottom = max(1, bbox[3])
         if align == "center":
             x = ctx.x_offset + (ctx.available_width - lw) // 2
         elif align == "right":
@@ -1535,9 +1535,7 @@ def _render_text(ctx: RenderContext, block: dict) -> None:
         ctx.draw.text((x, line_y), line, fill=ctx.resolve_color(block), font=font)
         rendered_lines += 1
     if rendered_lines:
-        used_h = (rendered_lines - 1) * line_height + last_line_h
-        if block.get("reserve_line_height"):
-            used_h = max(used_h, rendered_lines * line_height)
+        used_h = max(rendered_lines * line_height, (rendered_lines - 1) * line_height + last_line_bottom)
         min_height = block.get("min_height")
         if min_height is not None:
             used_h = max(used_h, int(min_height * ctx.scale))
