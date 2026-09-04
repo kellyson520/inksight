@@ -30,8 +30,8 @@ export function HotlistConfig({
     <div className="space-y-4">
       <div className="text-xs text-ink-light leading-relaxed">
         {locale === "zh"
-          ? "支持10大主流平台多选聚合与三种现代墨水屏排版风格！系统将并发抓取所选平台的精选热搜并交错聚合呈现。"
-          : "Supports 10 mainstream platforms and 3 e-ink visual layouts with concurrent multi-source aggregation."}
+          ? "支持网易云音乐、豆瓣电影、抖音、微信、知乎、微博、B站、36氪等 13 大主流平台多选聚合与三种排版风格！系统将并发抓取并结构化呈现。"
+          : "Supports 13 mainstream platforms (NetEase, Douban, Douyin, WeChat, Zhihu, etc.) and 3 e-ink visual layouts with concurrent aggregation."}
       </div>
 
       {/* Style selector */}

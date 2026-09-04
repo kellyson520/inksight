@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { authHeaders, fetchCurrentUser, onAuthChanged } from "@/lib/auth";
 import { localeFromPathname, withLocalePath } from "@/lib/i18n";
+import { ModeConfigModal } from "@/components/preview/mode-config-modal";
+import { CONFIGURABLE_MODES } from "@/components/preview/types";
 import {
   buildLocationValue,
   cleanLocationValue,
@@ -800,6 +802,10 @@ function ConfigPageInner() {
   const [adaptiveUploading2, setAdaptiveUploading2] = useState(false);
 
   // 参数弹窗（与 /preview 页面保持一致）
+  const [activeConfigModal, setActiveConfigModal] = useState<null | {
+    type: string;
+    modeId: string;
+  }>(null);
   const [paramModal, setParamModal] = useState<ParamModalState | null>(null);
   const [quoteDraft, setQuoteDraft] = useState("");
   const [authorDraft, setAuthorDraft] = useState("");
@@ -1741,6 +1747,32 @@ function ConfigPageInner() {
       if (consumeNoCacheOnce) setPreviewNoCacheOnce(false);
     }
   }, [buildPreviewParams, formatPreviewUsageText, isEn, mac, replacePreviewImg, showToast, tr]);
+
+  const handleOpenModeConfig = useCallback((mId: string) => {
+    const norm = (mId || "").toUpperCase();
+    const cfgType = CONFIGURABLE_MODES[norm];
+    if (cfgType) {
+      setActiveConfigModal({ type: cfgType, modeId: norm });
+    } else if (requiresParamModal(norm)) {
+      openParamModal(norm, "apply");
+    } else {
+      showToast(tr("该模式无额外参数可调", "This mode has no additional parameters"), "info");
+    }
+  }, [requiresParamModal, openParamModal, tr, showToast]);
+
+  const handleModeConfigSubmit = useCallback(async (modeId: string, override: Record<string, unknown>) => {
+    const norm = (modeId || "").toUpperCase();
+    updateModeOverride(norm, override as ModeOverride);
+    setSelectedModes((prev) => {
+      const next = new Set(prev);
+      next.add(norm);
+      return next;
+    });
+    setActiveConfigModal(null);
+    showToast(tr("已更新模式参数配置并加入轮播", "Mode parameters updated and added to rotation"), "success");
+    setPreviewMode(norm);
+    await handlePreview(norm, true, override as ModeOverride);
+  }, [updateModeOverride, tr, showToast, handlePreview]);
 
   const handleRedeemInviteCode = async () => {
     if (!inviteCode.trim()) {
@@ -2737,6 +2769,7 @@ function ConfigPageInner() {
                     handleModeApply={handleModeApply}
                     handleCustomModeDelete={handleCustomModeDelete}
                     onCreateCustomMode={openCreateCustomMode}
+                    onOpenConfigModal={handleOpenModeConfig}
                     previewColors={previewColors}
                     onColorsChange={setPreviewColors}
                     previewWidth={previewWidth}
@@ -2765,19 +2798,66 @@ function ConfigPageInner() {
                     onRegenerate={() => handlePreview(previewMode, true)}
                     onApplyToScreen={handleApplyPreviewToScreen}
                     rightActions={
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleSaveCustomMode}
-                        disabled={!Boolean(customJson.trim())}
-                        className="bg-white text-ink border-ink/20 hover:bg-ink hover:text-white active:bg-ink active:text-white disabled:bg-white disabled:text-ink/50"
-                      >
-                        {tr("保存模式", "Save Mode")}
-                      </Button>
+                      <div className="flex items-center gap-1.5">
+                        {previewMode && CONFIGURABLE_MODES[previewMode.toUpperCase()] ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenModeConfig(previewMode)}
+                            className="bg-white text-ink border-ink/20 hover:bg-ink hover:text-white transition-colors flex items-center gap-1"
+                            title={tr("调节当前模式的参数（如热榜平台选择等）", "Configure mode parameters")}
+                          >
+                            <Sliders size={13} />
+                            <span>{tr("调节参数", "Settings")}</span>
+                          </Button>
+                        ) : null}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSaveCustomMode}
+                          disabled={!Boolean(customJson.trim())}
+                          className="bg-white text-ink border-ink/20 hover:bg-ink hover:text-white active:bg-ink active:text-white disabled:bg-white disabled:text-ink/50"
+                        >
+                          {tr("保存模式", "Save Mode")}
+                        </Button>
+                      </div>
                     }
                   />
                   </div>
                 </div>
+
+                {activeConfigModal ? (
+                  <ModeConfigModal
+                    modal={activeConfigModal as never}
+                    locale={locale}
+                    previewLoading={previewLoading}
+                    onClose={() => setActiveConfigModal(null)}
+                    onSubmit={handleModeConfigSubmit}
+                    initialHotlistPlatforms={
+                      (modeOverrides["HOTLIST"]?.platforms as string[]) || ["netease", "douban", "douyin", "wechat"]
+                    }
+                    initialHotlistStyle={
+                      (modeOverrides["HOTLIST"]?.style as string) || "dense_grid"
+                    }
+                    initialDisasterLevel={
+                      (modeOverrides["DISASTER_ALERT"]?.level as string) || "red"
+                    }
+                    initialDisasterHazard={
+                      (modeOverrides["DISASTER_ALERT"]?.hazard as string) || "typhoon"
+                    }
+                    initialDisasterCity={
+                      (modeOverrides["DISASTER_ALERT"]?.city as string) || (currentLocation.city || "")
+                    }
+                    initialRssFeedUrl={
+                      (modeOverrides["RSS"]?.feed_url as string) || ""
+                    }
+                    initialCryptoSymbol={
+                      (modeOverrides["CRYPTO"]?.symbol as string) ||
+                      (modeOverrides["MARKET"]?.symbol as string) ||
+                      "BTC"
+                    }
+                  />
+                ) : null}
 
                 <Dialog
                   open={editingCustomMode}

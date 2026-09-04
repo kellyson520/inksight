@@ -15,10 +15,12 @@ import {
   Search,
   Check,
   Settings,
+  Sliders,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ColorSelect } from "@/components/ui/color-select";
 import { ScreenSizeSelect } from "@/components/ui/screen-size-select";
+import { CONFIGURABLE_MODES } from "@/components/preview/types";
 
 type ModeMeta = Record<string, { name: string; tip: string }>;
 
@@ -197,6 +199,7 @@ export function ModeSelector({
           {displayedBuiltins.map((mode) => {
             const meta = modeMeta[mode] || { name: mode, tip: "" };
             const isSelected = selectedModes.has(mode);
+            const isConfigurable = Boolean(CONFIGURABLE_MODES[mode.toUpperCase()]);
 
             return (
               <div
@@ -216,11 +219,27 @@ export function ModeSelector({
                   <div>
                     <div className="flex items-center justify-between gap-1">
                       <span className="text-xs font-bold text-ink truncate">{meta.name}</span>
-                      {isSelected ? (
-                        <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.2 rounded-xs border border-emerald-300">
-                          <Check size={10} /> {tr("已加入", "Active")}
-                        </span>
-                      ) : null}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {isConfigurable && onOpenConfigModal ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenConfigModal(mode);
+                            }}
+                            className="text-[10px] text-ink/80 hover:text-ink font-sans bg-paper px-1.5 py-0.5 rounded-xs border border-ink/20 hover:border-ink flex items-center gap-0.5 transition-colors"
+                            title={tr("点击调节此模式的参数配置", "Configure mode parameters")}
+                          >
+                            <Sliders size={10} />
+                            <span>{tr("调参", "Config")}</span>
+                          </button>
+                        ) : null}
+                        {isSelected ? (
+                          <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.2 rounded-xs border border-emerald-300">
+                            <Check size={10} /> {tr("已加入", "Active")}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                     <p className="text-[11px] text-ink-light mt-1 line-clamp-2 leading-relaxed">
                       {meta.tip}
@@ -240,14 +259,15 @@ export function ModeSelector({
                   </button>
 
                   <div className="flex items-center gap-1.5">
-                    {onOpenConfigModal ? (
+                    {onOpenConfigModal && isConfigurable ? (
                       <button
                         type="button"
                         onClick={() => onOpenConfigModal(mode)}
-                        className="text-ink-light hover:text-ink p-1 rounded-sm hover:bg-paper-dark transition-colors"
-                        title={tr("配置参数", "Configure parameters")}
+                        className="px-1.5 py-0.5 rounded-sm border border-ink/25 bg-white text-ink text-[11px] font-medium hover:bg-paper-dark hover:border-ink flex items-center gap-1 transition-all"
+                        title={tr("调节此模式参数（如热榜平台、城市等）", "Configure mode parameters")}
                       >
-                        <Settings size={12} />
+                        <Sliders size={11} />
+                        <span>{tr("调节参数", "Settings")}</span>
                       </button>
                     ) : null}
                     <button

@@ -48,6 +48,7 @@ interface ModeConfigModalProps {
   initialHotlistStyle?: string;
   initialDisasterLevel: string;
   initialDisasterHazard: string;
+  initialDisasterCity?: string;
   initialRssFeedUrl: string;
   initialCryptoSymbol: string;
 }
@@ -62,6 +63,7 @@ export function ModeConfigModal({
   initialHotlistStyle = "dense_grid",
   initialDisasterLevel,
   initialDisasterHazard,
+  initialDisasterCity = "",
   initialRssFeedUrl,
   initialCryptoSymbol,
 }: ModeConfigModalProps) {
@@ -132,6 +134,7 @@ export function ModeConfigModal({
             <DisasterConfig
               initialLevel={initialDisasterLevel}
               initialHazard={initialDisasterHazard}
+              initialCity={initialDisasterCity}
               locale={locale}
               previewLoading={previewLoading}
               onClose={onClose}
