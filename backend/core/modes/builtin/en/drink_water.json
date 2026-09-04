@@ -1,0 +1,118 @@
+{
+  "mode_id": "DRINK_WATER",
+  "display_name": "Hydration Reminder",
+  "icon": "droplets",
+  "cacheable": false,
+  "description": "Desktop hydration and wellness tracker with water intake progress and break reminder",
+  "settings_schema": [
+    {
+      "key": "current_cups",
+      "label": "Cups Drank Today",
+      "type": "number",
+      "default": 5
+    },
+    {
+      "key": "target_cups",
+      "label": "Target Cups",
+      "type": "number",
+      "default": 8
+    },
+    {
+      "key": "cup_volume_ml",
+      "label": "Volume per Cup (ml)",
+      "type": "number",
+      "default": 250
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "drink_water",
+    "fallback": {
+      "water_amount": "1250 ml / 2000 ml",
+      "status_text": "Cup #5 of 8 (62%)",
+      "cup_dots": "● ● ● ● ● ○ ○ ○",
+      "progress_percent": 62,
+      "health_tip": "Look away 20 feet for 20 seconds to rest your eyes.",
+      "current_cups": 5,
+      "target_cups": 8,
+      "target_ml": 2000,
+      "current_ml": 1250
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "centered_text",
+        "field": "status_text",
+        "font": "noto_serif_regular",
+        "font_size": 13,
+        "margin_y": 2
+      },
+      {
+        "type": "big_number",
+        "field": "water_amount",
+        "font": "roboto_bold",
+        "font_size": 34,
+        "align": "center",
+        "margin_y": 4
+      },
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "centered_text",
+        "field": "cup_dots",
+        "font_size": 18,
+        "margin_y": 2
+      },
+      {
+        "type": "progress_bar",
+        "field": "progress_percent",
+        "height": 6,
+        "margin_x": 40,
+        "margin_y": 4
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 50
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 6,
+        "padding": 8,
+        "margin_x": 20,
+        "children": [
+          {
+            "type": "centered_text",
+            "field": "health_tip",
+            "font": "noto_serif_regular",
+            "font_size": 12
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "Hydration Reminder",
+      "attribution_template": "— Stay Hydrated"
+    }
+  }
+}

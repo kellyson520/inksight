@@ -30,6 +30,7 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   STORY: "life",
   MY_QUOTE: "life",
   MY_ADAPTIVE: "life",
+  DRINK_WATER: "life",
 
   // 效率 (Productivity)
   COUNTDOWN: "productivity",
@@ -41,6 +42,7 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   CHALLENGE: "productivity",
   WORD_OF_THE_DAY: "productivity",
   WEBHOOK: "productivity",
+  POMODORO: "productivity",
 
   // 资讯 (News & Alerts)
   BRIEFING: "news",
@@ -70,6 +72,8 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   MARKET: "crypto",
   WEBHOOK: "webhook",
   MY_ADAPTIVE: "adaptive",
+  POMODORO: "pomodoro",
+  DRINK_WATER: "drink_water",
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [

@@ -1,0 +1,132 @@
+{
+  "mode_id": "POMODORO",
+  "display_name": "专注番茄钟",
+  "icon": "timer",
+  "cacheable": false,
+  "description": "极简桌面心流番茄钟，大字倒计显示与专注轮次统计",
+  "settings_schema": [
+    {
+      "key": "task_name",
+      "label": "当前专注任务",
+      "type": "text",
+      "default": "深度专注工作",
+      "placeholder": "如 编写方案 / 代码重构"
+    },
+    {
+      "key": "duration_minutes",
+      "label": "番茄钟时长 (分钟)",
+      "type": "number",
+      "default": 25
+    },
+    {
+      "key": "completed_count",
+      "label": "已完成轮次",
+      "type": "number",
+      "default": 3
+    },
+    {
+      "key": "target_count",
+      "label": "目标总轮次",
+      "type": "number",
+      "default": 8
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "pomodoro",
+    "fallback": {
+      "task_name": "深度专注工作",
+      "timer_display": "25:00",
+      "cycle_text": "专注轮次 #3 / 8 (达成率 38%)",
+      "round_dots": "● ● ● ○ ○ ○ ○ ○",
+      "progress_percent": 38,
+      "motto": "全神贯注，心无旁骛",
+      "state_label": "专注进行中 · 请勿打扰",
+      "duration_minutes": 25,
+      "completed_count": 3,
+      "target_count": 8
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "state_label",
+        "font": "noto_serif_regular",
+        "font_size": 11,
+        "margin_y": 2
+      },
+      {
+        "type": "big_number",
+        "field": "timer_display",
+        "font": "roboto_bold",
+        "font_size": 52,
+        "align": "center",
+        "margin_y": 2
+      },
+      {
+        "type": "centered_text",
+        "field": "task_name",
+        "font": "noto_serif_bold",
+        "font_size": 16,
+        "margin_y": 2
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "round_dots",
+        "font_size": 14,
+        "margin_y": 2
+      },
+      {
+        "type": "progress_bar",
+        "field": "progress_percent",
+        "height": 5,
+        "margin_x": 45,
+        "margin_y": 4
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 60
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "cycle_text",
+        "font": "noto_serif_regular",
+        "font_size": 11,
+        "margin_y": 1
+      },
+      {
+        "type": "centered_text",
+        "field": "motto",
+        "font": "noto_serif_italic",
+        "font_size": 12,
+        "margin_y": 2
+      }
+    ],
+    "footer": {
+      "label": "专注番茄钟",
+      "attribution_template": "— 专注当下"
+    }
+  }
+}

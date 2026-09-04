@@ -1,0 +1,132 @@
+{
+  "mode_id": "POMODORO",
+  "display_name": "Focus Pomodoro",
+  "icon": "timer",
+  "cacheable": false,
+  "description": "Minimalist desktop pomodoro timer with countdown clock and round tracker",
+  "settings_schema": [
+    {
+      "key": "task_name",
+      "label": "Focus Task",
+      "type": "text",
+      "default": "Deep Work",
+      "placeholder": "e.g. Code Review / Writing"
+    },
+    {
+      "key": "duration_minutes",
+      "label": "Duration (min)",
+      "type": "number",
+      "default": 25
+    },
+    {
+      "key": "completed_count",
+      "label": "Completed Rounds",
+      "type": "number",
+      "default": 3
+    },
+    {
+      "key": "target_count",
+      "label": "Target Rounds",
+      "type": "number",
+      "default": 8
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "pomodoro",
+    "fallback": {
+      "task_name": "Deep Work Session",
+      "timer_display": "25:00",
+      "cycle_text": "Round #3 of 8 (38%)",
+      "round_dots": "● ● ● ○ ○ ○ ○ ○",
+      "progress_percent": 38,
+      "motto": "Focus on one thing at a time.",
+      "state_label": "IN PROGRESS · DO NOT DISTURB",
+      "duration_minutes": 25,
+      "completed_count": 3,
+      "target_count": 8
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "state_label",
+        "font": "noto_serif_regular",
+        "font_size": 11,
+        "margin_y": 2
+      },
+      {
+        "type": "big_number",
+        "field": "timer_display",
+        "font": "roboto_bold",
+        "font_size": 52,
+        "align": "center",
+        "margin_y": 2
+      },
+      {
+        "type": "centered_text",
+        "field": "task_name",
+        "font": "noto_serif_bold",
+        "font_size": 16,
+        "margin_y": 2
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "round_dots",
+        "font_size": 14,
+        "margin_y": 2
+      },
+      {
+        "type": "progress_bar",
+        "field": "progress_percent",
+        "height": 5,
+        "margin_x": 45,
+        "margin_y": 4
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 60
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "cycle_text",
+        "font": "noto_serif_regular",
+        "font_size": 11,
+        "margin_y": 1
+      },
+      {
+        "type": "centered_text",
+        "field": "motto",
+        "font": "noto_serif_italic",
+        "font_size": 12,
+        "margin_y": 2
+      }
+    ],
+    "footer": {
+      "label": "Focus Pomodoro",
+      "attribution_template": "— Deep Focus"
+    }
+  }
+}

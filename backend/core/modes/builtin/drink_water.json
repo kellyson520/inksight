@@ -1,0 +1,118 @@
+{
+  "mode_id": "DRINK_WATER",
+  "display_name": "健康补水",
+  "icon": "droplets",
+  "cacheable": false,
+  "description": "桌面久坐与健康补水伴侣，杯数统计与律动放松提醒",
+  "settings_schema": [
+    {
+      "key": "current_cups",
+      "label": "今日已喝杯数",
+      "type": "number",
+      "default": 5
+    },
+    {
+      "key": "target_cups",
+      "label": "目标饮水杯数",
+      "type": "number",
+      "default": 8
+    },
+    {
+      "key": "cup_volume_ml",
+      "label": "单杯容量 (毫升)",
+      "type": "number",
+      "default": 250
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "drink_water",
+    "fallback": {
+      "water_amount": "1250 ml / 2000 ml",
+      "status_text": "今日第 5 杯 · 达成率 62%",
+      "cup_dots": "● ● ● ● ● ○ ○ ○",
+      "progress_percent": 62,
+      "health_tip": "站立远眺 20 秒，放松眼部与肩颈肌肉",
+      "current_cups": 5,
+      "target_cups": 8,
+      "target_ml": 2000,
+      "current_ml": 1250
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "centered_text",
+        "field": "status_text",
+        "font": "noto_serif_regular",
+        "font_size": 13,
+        "margin_y": 2
+      },
+      {
+        "type": "big_number",
+        "field": "water_amount",
+        "font": "roboto_bold",
+        "font_size": 34,
+        "align": "center",
+        "margin_y": 4
+      },
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "centered_text",
+        "field": "cup_dots",
+        "font_size": 18,
+        "margin_y": 2
+      },
+      {
+        "type": "progress_bar",
+        "field": "progress_percent",
+        "height": 6,
+        "margin_x": 40,
+        "margin_y": 4
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 50
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 6,
+        "padding": 8,
+        "margin_x": 20,
+        "children": [
+          {
+            "type": "centered_text",
+            "field": "health_tip",
+            "font": "noto_serif_regular",
+            "font_size": 12
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "健康补水",
+      "attribution_template": "— 保持水润"
+    }
+  }
+}

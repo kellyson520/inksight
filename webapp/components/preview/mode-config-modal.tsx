@@ -14,6 +14,8 @@ import {
   HabitConfig,
   LifebarConfig,
   WebhookConfig,
+  PomodoroConfig,
+  DrinkWaterConfig,
 } from "./configs/lifestyle-configs";
 
 interface ModeConfigModalProps {
@@ -31,7 +33,9 @@ interface ModeConfigModalProps {
       | "crypto"
       | "hotlist"
       | "disaster"
-      | "webhook";
+      | "webhook"
+      | "pomodoro"
+      | "drink_water";
     modeId: string;
   };
   locale: string;
@@ -81,6 +85,10 @@ export function ModeConfigModal({
         return locale === "zh" ? "资产与股票行情设置" : "Stock & Asset Settings";
       case "webhook":
         return locale === "zh" ? "开放数据卡片模拟" : "Webhook Card Simulator";
+      case "pomodoro":
+        return locale === "zh" ? "专注番茄钟设置" : "Focus Pomodoro Settings";
+      case "drink_water":
+        return locale === "zh" ? "健康补水设置" : "Hydration Settings";
       default:
         return locale === "zh" ? "模式参数设置" : "Mode Settings";
     }
@@ -195,6 +203,22 @@ export function ModeConfigModal({
               onClose={onClose}
               onSubmit={async (override) => {
                 await onSubmit("WEBHOOK", override);
+              }}
+            />
+          ) : modal.type === "pomodoro" ? (
+            <PomodoroConfig
+              locale={locale}
+              onClose={onClose}
+              onSubmit={async (override) => {
+                await onSubmit("POMODORO", override);
+              }}
+            />
+          ) : modal.type === "drink_water" ? (
+            <DrinkWaterConfig
+              locale={locale}
+              onClose={onClose}
+              onSubmit={async (override) => {
+                await onSubmit("DRINK_WATER", override);
               }}
             />
           ) : (

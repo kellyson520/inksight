@@ -1320,6 +1320,106 @@ async def _generate_computed_content(mode_def: dict, content_cfg: dict, fallback
             "week_total": total,
         }
 
+    if provider == "pomodoro":
+        config = kwargs.get("config") or {}
+        lang = kwargs.get("language", "zh")
+        is_en = lang == "en"
+
+        mo = config.get("mode_overrides", {})
+        p_ov = mo.get("POMODORO", {}) if isinstance(mo, dict) else {}
+
+        task_name = str(p_ov.get("task_name") or ("Deep Focus" if is_en else "深度专注工作")).strip()
+        duration = int(p_ov.get("duration_minutes") or 25)
+        completed = int(p_ov.get("completed_count") or 3)
+        target = max(1, int(p_ov.get("target_count") or 8))
+        completed = min(completed, target)
+
+        pct = int(round((completed / target) * 100))
+        dots = " ".join(["●" if i < completed else "○" for i in range(target)])
+
+        mottos_zh = [
+            "全神贯注，心无旁骛",
+            "一次只专注一件要事",
+            "保持专注，掌控当下的心流",
+            "深呼吸，享受沉浸与创造",
+            "把精力花在最重要的地方",
+            "自律带来极致的自由",
+        ]
+        mottos_en = [
+            "Focus on one thing at a time.",
+            "Deep work produces extraordinary results.",
+            "Eliminate distractions, embrace the flow.",
+            "Stay present, breathe, and create.",
+            "Consistency over intensity.",
+        ]
+        import random
+        motto = random.choice(mottos_en if is_en else mottos_zh)
+
+        state_label = "IN PROGRESS · DO NOT DISTURB" if is_en else "专注进行中 · 请勿打扰"
+        cycle_text = f"Round #{completed} of {target} ({pct}%)" if is_en else f"专注轮次 #{completed} / {target} (达成率 {pct}%)"
+
+        return {
+            "task_name": task_name,
+            "timer_display": f"{duration:02d}:00",
+            "cycle_text": cycle_text,
+            "round_dots": dots,
+            "progress_percent": pct,
+            "motto": motto,
+            "state_label": state_label,
+            "duration_minutes": duration,
+            "completed_count": completed,
+            "target_count": target,
+        }
+
+    if provider == "drink_water":
+        config = kwargs.get("config") or {}
+        lang = kwargs.get("language", "zh")
+        is_en = lang == "en"
+
+        mo = config.get("mode_overrides", {})
+        w_ov = mo.get("DRINK_WATER", {}) if isinstance(mo, dict) else {}
+
+        current_cups = int(w_ov.get("current_cups") or 5)
+        target_cups = max(1, int(w_ov.get("target_cups") or 8))
+        cup_volume = int(w_ov.get("cup_volume_ml") or 250)
+
+        current_cups = min(current_cups, target_cups)
+        current_ml = current_cups * cup_volume
+        target_ml = target_cups * cup_volume
+        pct = int(round((current_cups / target_cups) * 100))
+
+        dots = " ".join(["●" if i < current_cups else "○" for i in range(target_cups)])
+
+        tips_zh = [
+            "站立远眺 20 秒，放松眼部与肩颈肌肉",
+            "少量多次饮水，保持充沛脑力与代谢活力",
+            "离开椅子走动 1 分钟，舒展脊柱促进血液循环",
+            "规律补水，身心更轻盈",
+        ]
+        tips_en = [
+            "Look away 20 feet for 20 seconds to rest your eyes.",
+            "Sip water steadily to keep your mind energized.",
+            "Stand up, stretch your spine, and take a deep breath.",
+            "Hydration boosts focus and productivity.",
+        ]
+        import random
+        tip = random.choice(tips_en if is_en else tips_zh)
+
+        amount_display = f"{current_ml} ml / {target_ml} ml"
+        status_text = f"Cup #{current_cups} of {target_cups} ({pct}%)" if is_en else f"今日第 {current_cups} 杯 · 达成率 {pct}%"
+
+        return {
+            "water_amount": amount_display,
+            "status_text": status_text,
+            "cup_dots": dots,
+            "progress_percent": pct,
+            "health_tip": tip,
+            "current_cups": current_cups,
+            "target_cups": target_cups,
+            "target_ml": target_ml,
+            "current_ml": current_ml,
+        }
+
     if provider == "calendar_grid":
         import calendar as cal_mod
         from zhdate import ZhDate

@@ -102,6 +102,8 @@ _BUILTIN_STATIC_ATTRIBUTIONS = {
         "TIMETABLE": "— 按表前行",
         "WEATHER": "— 阴晴有时",
         "WORD_OF_THE_DAY": "— 每日精进",
+        "POMODORO": "— 专注当下",
+        "DRINK_WATER": "— 保持水润",
     },
     "en": {
         "ARTWALL": "— Ink Art",
@@ -122,6 +124,8 @@ _BUILTIN_STATIC_ATTRIBUTIONS = {
         "TIMETABLE": "— InkSight",
         "WEATHER": "— Open-Meteo",
         "WORD_OF_THE_DAY": "— Expand Your Lexicon",
+        "POMODORO": "— Deep Focus",
+        "DRINK_WATER": "— Stay Hydrated",
     },
 }
 

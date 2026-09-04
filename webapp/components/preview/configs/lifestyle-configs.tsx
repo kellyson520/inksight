@@ -398,3 +398,174 @@ export function WebhookConfig({
     </div>
   );
 }
+
+// 8. POMODORO
+export function PomodoroConfig({
+  locale,
+  onClose,
+  onSubmit,
+}: {
+  locale: string;
+  onClose: () => void;
+  onSubmit: (override: Record<string, unknown>) => Promise<void>;
+}) {
+  const [taskName, setTaskName] = useState("深度专注工作");
+  const [durationMinutes, setDurationMinutes] = useState(25);
+  const [completedCount, setCompletedCount] = useState(3);
+  const [targetCount, setTargetCount] = useState(8);
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="text-xs text-ink font-semibold block mb-1">
+          {locale === "zh" ? "当前专注目标：" : "Focus Task:"}
+        </label>
+        <input
+          value={taskName}
+          onChange={(e) => setTaskName(e.target.value)}
+          placeholder="如 编写方案 / 算法攻坚"
+          className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs"
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="text-xs text-ink block mb-1">
+            {locale === "zh" ? "单次时长 (分)" : "Duration"}
+          </label>
+          <input
+            type="number"
+            min={5}
+            max={120}
+            value={durationMinutes}
+            onChange={(e) => setDurationMinutes(Number(e.target.value))}
+            className="w-full rounded-sm border border-ink/20 px-2 py-1 text-xs"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-ink block mb-1">
+            {locale === "zh" ? "已完成轮数" : "Completed"}
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={20}
+            value={completedCount}
+            onChange={(e) => setCompletedCount(Number(e.target.value))}
+            className="w-full rounded-sm border border-ink/20 px-2 py-1 text-xs"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-ink block mb-1">
+            {locale === "zh" ? "目标总轮数" : "Target"}
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={20}
+            value={targetCount}
+            onChange={(e) => setTargetCount(Number(e.target.value))}
+            className="w-full rounded-sm border border-ink/20 px-2 py-1 text-xs"
+          />
+        </div>
+      </div>
+      <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
+        <Button variant="outline" size="sm" onClick={onClose}>
+          取消
+        </Button>
+        <Button
+          size="sm"
+          onClick={async () => {
+            onClose();
+            await onSubmit({
+              task_name: taskName,
+              duration_minutes: durationMinutes,
+              completed_count: completedCount,
+              target_count: targetCount,
+            });
+          }}
+        >
+          应用并预览
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// 9. DRINK_WATER
+export function DrinkWaterConfig({
+  locale,
+  onClose,
+  onSubmit,
+}: {
+  locale: string;
+  onClose: () => void;
+  onSubmit: (override: Record<string, unknown>) => Promise<void>;
+}) {
+  const [currentCups, setCurrentCups] = useState(5);
+  const [targetCups, setTargetCups] = useState(8);
+  const [cupVolumeMl, setCupVolumeMl] = useState(250);
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="text-xs text-ink block mb-1">
+            {locale === "zh" ? "今日已喝杯数" : "Current Cups"}
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={30}
+            value={currentCups}
+            onChange={(e) => setCurrentCups(Number(e.target.value))}
+            className="w-full rounded-sm border border-ink/20 px-2 py-1 text-xs"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-ink block mb-1">
+            {locale === "zh" ? "目标饮水杯数" : "Target Cups"}
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={30}
+            value={targetCups}
+            onChange={(e) => setTargetCups(Number(e.target.value))}
+            className="w-full rounded-sm border border-ink/20 px-2 py-1 text-xs"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-ink block mb-1">
+            {locale === "zh" ? "单杯容量 (ml)" : "Cup (ml)"}
+          </label>
+          <input
+            type="number"
+            min={50}
+            max={1000}
+            value={cupVolumeMl}
+            onChange={(e) => setCupVolumeMl(Number(e.target.value))}
+            className="w-full rounded-sm border border-ink/20 px-2 py-1 text-xs"
+          />
+        </div>
+      </div>
+      <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
+        <Button variant="outline" size="sm" onClick={onClose}>
+          取消
+        </Button>
+        <Button
+          size="sm"
+          onClick={async () => {
+            onClose();
+            await onSubmit({
+              current_cups: currentCups,
+              target_cups: targetCups,
+              cup_volume_ml: cupVolumeMl,
+            });
+          }}
+        >
+          应用并预览
+        </Button>
+      </div>
+    </div>
+  );
+}
