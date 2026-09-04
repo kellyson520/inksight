@@ -409,12 +409,12 @@ def render_disaster_level_badge(ctx: RenderContext, block: dict) -> None:
 
 @register_block("disaster_hero")
 def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
-    """灾害核心视觉区：
-    - 图标居左（放大矢量图标）
-    - 右侧上下串行排列：
-        Line 1: [ 红色预警 · I级 特别严重 ] 级别胶囊徽章
-        Line 2: 【暴雨红色预警】 粗体主标题
-    - 左右垂直居中对齐，留白充裕，层级清晰
+    """灾害核心视觉区（经 OCR 与像素视觉校准）：
+    - 整体居中：左侧放大矢量大图标 + 右侧双行串行，作为一个整体在屏幕可用宽度内居中排布，彻底杜绝偏左/偏右
+    - 图标放大：提供更强冲击力的视觉锚点（400x300 下放大至 68px~72px）
+    - 右侧两行串行（垂直居中对齐图标）：
+        Line 1: [ 红色预警 · I级 特别严重 ] 等级胶囊徽章
+        Line 2: 【暴雨红色预警】 大字粗体主标题
     """
     hazard = str(block.get("hazard") or ctx.resolve(block.get("hazard_template") or "") or "rainstorm")
     type_name = str(block.get("type_name") or ctx.resolve(block.get("type_name_template") or "") or "气象灾害")
@@ -425,9 +425,7 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     fg_col = ctx.resolve_color({"color": block.get("color", "black")})
     acc_col = ctx.color_index("red") if (is_red and ctx.colors >= 3) else EINK_FG
 
-    margin_x = int(block.get("margin_x", 14) * ctx.scale)
-
-    # 1. 级别徽章文本与尺寸计算
+    # 1. 级别徽章文字与尺寸
     if "红" in level:
         badge_text = "红色预警 · I级 特别严重"
         badge_red = True
@@ -450,12 +448,12 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     bw = bb[2] - bb[0]
     bh = max(badge_font_size, bb[3] - bb[1])
 
-    pad_x = int(8 * ctx.scale)
-    pad_y = int(2 * ctx.scale)
+    pad_x = int(9 * ctx.scale)
+    pad_y = int(3 * ctx.scale)
     badge_w = bw + pad_x * 2
     badge_h = bh + pad_y * 2
 
-    # 2. 标题文本与尺寸计算
+    # 2. 规范主标题文字与尺寸
     if clean_level and clean_level not in type_name:
         title_text = f"【{type_name}{clean_level}预警】"
     elif "预警" not in type_name:
@@ -463,37 +461,44 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     else:
         title_text = f"【{type_name}】"
 
-    title_font_size = int(block.get("title_font_size", 19) * ctx.scale)
+    title_font_size = int(block.get("title_font_size", 20) * ctx.scale)
     title_font = load_font("noto_serif_bold", title_font_size)
     tb = safe_font_bbox(title_font, title_text)
     tw = tb[2] - tb[0]
     th = max(title_font_size, tb[3] - tb[1])
 
-    # 3. 左侧矢量图标尺寸
-    raw_icon_size = block.get("icon_size", 54)
-    icon_size = max(34, int(raw_icon_size * ctx.scale))
+    # 3. 放大矢量大图标尺寸（视觉校准）
+    raw_icon_size = block.get("icon_size", 70)
+    icon_size = max(38, int(raw_icon_size * ctx.scale))
     if ctx.screen_h <= 160:
-        icon_size = 32
+        icon_size = 36
 
-    # 右侧双行串行总高度
-    gap_between_lines = int(5 * ctx.scale)
+    # 4. 水平整体居中校准算法
+    gap_icon_text = int(16 * ctx.scale)
+    gap_between_lines = int(6 * ctx.scale)
+    right_w = max(badge_w, tw)
+    total_group_w = icon_size + gap_icon_text + right_w
+
+    # 复合模块整体在可用区域居中，确保左右边距相等对称
+    if total_group_w <= ctx.available_width:
+        group_start_x = ctx.x_offset + (ctx.available_width - total_group_w) // 2
+    else:
+        group_start_x = ctx.x_offset + int(8 * ctx.scale)
+
     right_text_total_h = badge_h + gap_between_lines + th
-
-    # 整体高度取左图标与右侧文本二者最大值
     hero_total_h = max(icon_size, right_text_total_h)
     start_y = ctx.y
 
-    # 绘制左侧图标（水平靠左，垂直居中）
-    icon_left = ctx.x_offset + margin_x
-    icon_cx = icon_left + icon_size // 2
+    # 绘制左侧放大图标（垂直居中对齐）
+    icon_cx = group_start_x + icon_size // 2
     icon_cy = start_y + hero_total_h // 2
     draw_disaster_vector_icon(ctx.draw, hazard, icon_cx, icon_cy, size=icon_size, color=fg_col, accent_color=acc_col)
 
-    # 绘制右侧双行串行内容（左对齐，与左侧图标保持 12px 间隙）
-    right_x = icon_left + icon_size + int(12 * ctx.scale)
+    # 绘制右侧串行两行（与图标保持平齐居中）
+    right_x = group_start_x + icon_size + gap_icon_text
     right_start_y = start_y + max(0, (hero_total_h - right_text_total_h) // 2)
 
-    # Line 1: [ 红色预警 · I级 特别严重 ] 胶囊徽章
+    # Line 1: 等级徽章胶囊
     bg_color = ctx.color_index("red") if (badge_red and ctx.colors >= 3) else EINK_FG
     _draw_rounded_rect(
         ctx.draw,
@@ -503,11 +508,12 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     )
     ctx.draw.text((right_x + pad_x, right_start_y + pad_y), badge_text, fill=EINK_BG, font=badge_font)
 
-    # Line 2: 【暴雨红色预警】 主标题
+    # Line 2: 灾害大字主标题
     title_y = right_start_y + badge_h + gap_between_lines
-    ctx.draw.text((right_x - int(4 * ctx.scale), title_y), title_text, fill=EINK_FG, font=title_font)
+    # 微调字间 padding 消除中文字符外框左留白，使其与上方徽章左边缘对齐
+    ctx.draw.text((right_x - int(3 * ctx.scale), title_y), title_text, fill=EINK_FG, font=title_font)
 
-    ctx.y = start_y + hero_total_h + int(block.get("margin_bottom", 8) * ctx.scale)
+    ctx.y = start_y + hero_total_h + int(block.get("margin_bottom", 10) * ctx.scale)
 
 
 @register_block("disaster_publisher_bar")

@@ -67,9 +67,9 @@
         "hazard_template": "{hazard_key}",
         "type_name_template": "{type_name}",
         "level_template": "{level}",
-        "icon_size": 64,
+        "icon_size": 70,
         "title_font_size": 20,
-        "margin_bottom": 8
+        "margin_bottom": 10
       },
       {
         "type": "text",
