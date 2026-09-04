@@ -450,8 +450,19 @@ def draw_status_bar(
 
 
 def has_cjk(text: str) -> bool:
-    """Check if text contains CJK (Chinese/Japanese/Korean) characters."""
-    return any("\u4e00" <= ch <= "\u9fff" or "\u3400" <= ch <= "\u4dbf" for ch in text)
+    """Check if text contains CJK (Chinese/Japanese/Korean) characters or CJK symbols."""
+    return any(
+        "\u4e00" <= ch <= "\u9fff"        # CJK Unified Ideographs (中日韩汉字)
+        or "\u3400" <= ch <= "\u4dbf"    # CJK Extension A
+        or "\u3040" <= ch <= "\u309f"    # Hiragana (日语平假名)
+        or "\u30a0" <= ch <= "\u30ff"    # Katakana (日语片假名)
+        or "\u31f0" <= ch <= "\u31ff"    # Katakana Phonetic Extensions
+        or "\u3000" <= ch <= "\u303f"    # CJK Symbols and Punctuation (「」『』等)
+        or "\uff00" <= ch <= "\uffef"    # Fullwidth ASCII and forms
+        or "\uac00" <= ch <= "\ud7af"    # Hangul Syllables (韩文)
+        or "\u1100" <= ch <= "\u11ff"    # Hangul Jamo
+        for ch in text
+    )
 
 
 def draw_footer(
@@ -571,22 +582,69 @@ def draw_footer(
         )
 
 
+_WRAP_TOKEN_RE = re.compile(
+    r'(https?://[^\s\u4e00-\u9fff\u3040-\u30ff\uff00-\uffef\(\)\[\]「」『』]+'
+    r'|[A-Za-z0-9_\'-]+'
+    r'|\s+'
+    r'|.)'
+)
+_NOT_LINE_START = set("，。、！？：；）)]}」』】”’…⋯—～~,.!?:;)]}")
+_NOT_LINE_END = set("（([「『“‘")
+
+
 def wrap_text(text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:
-    """文本换行"""
+    """智能文本换行：支持完整 URL 保护、中日韩标点避头尾法则与英文字词整体折行。"""
+    if not text:
+        return []
     lines = []
     for paragraph in text.split("\n"):
-        words = list(paragraph)
+        if not paragraph:
+            continue
+        tokens = [m.group(0) for m in _WRAP_TOKEN_RE.finditer(paragraph)]
         current = ""
-        for ch in words:
-            test = current + ch
-            bbox = safe_font_bbox(font, test)
-            span = bbox[2] - bbox[0]
-            if span > max_width:
+        for tok in tokens:
+            test = current + tok
+            span = safe_font_bbox(font, test)[2] - safe_font_bbox(font, test)[0]
+            if span <= max_width:
+                current = test
+            else:
+                # 避头法则：行首不允许出现结束标点，优先微悬挂或与上一字符共同下移
+                if tok in _NOT_LINE_START and current:
+                    hang_span = safe_font_bbox(font, test)[2] - safe_font_bbox(font, test)[0]
+                    if hang_span <= max_width + 12:
+                        current = test
+                        continue
+                    elif len(current) > 1:
+                        last_ch = current[-1]
+                        lines.append(current[:-1])
+                        current = last_ch + tok
+                        continue
+
+                # 避尾法则：行尾不允许单独留下前置引号/括号
+                if current and current[-1] in _NOT_LINE_END and len(current) > 1:
+                    last_ch = current[-1]
+                    lines.append(current[:-1])
+                    current = last_ch + (tok.lstrip() if tok.isspace() else tok)
+                    continue
+
                 if current:
                     lines.append(current)
-                current = ch
-            else:
-                current = test
+
+                tok_span = safe_font_bbox(font, tok)[2] - safe_font_bbox(font, tok)[0]
+                if tok_span > max_width:
+                    # 单个 Token 本身超过整行宽度 (如超长 URL) 时，按字符拆分
+                    cur_part = ""
+                    for ch in tok:
+                        test_part = cur_part + ch
+                        if safe_font_bbox(font, test_part)[2] - safe_font_bbox(font, test_part)[0] > max_width:
+                            if cur_part:
+                                lines.append(cur_part)
+                            cur_part = ch
+                        else:
+                            cur_part = test_part
+                    current = cur_part
+                else:
+                    current = tok.lstrip() if tok.isspace() else tok
         if current:
             lines.append(current)
     return lines

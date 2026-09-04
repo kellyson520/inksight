@@ -123,18 +123,38 @@ def render_text(ctx: RenderContext, block: dict) -> None:
 
     lines = wrap_text(text, font, max_w)
 
-    if max_lines and len(lines) > max_lines:
-        lines = lines[:max_lines]
-        if lines and block.get("ellipsis", True):
-            lines[-1] = lines[-1].rstrip() + "..."
-
     start_y = ctx.y
+    max_fit_y = ctx.footer_top - 4
+
+    # 预先按物理空间与 max_lines 筛选，确保字形基线及下延部绝不越过横线
+    fitted_lines = []
+    for idx, l in enumerate(lines):
+        if max_lines and idx >= max_lines:
+            break
+        line_y = start_y + idx * line_height
+        l_bbox = safe_font_bbox(font, l)
+        line_bottom = line_y + max(font_size, l_bbox[3])
+        if line_bottom > max_fit_y:
+            break
+        fitted_lines.append(l)
+
+    # 若发生截断，为最后保留行补充省略号
+    is_truncated = len(fitted_lines) < len(lines)
+    if is_truncated and fitted_lines and block.get("ellipsis", True):
+        last_l = fitted_lines[-1].rstrip()
+        if not last_l.endswith(("...", "…", "⋯")):
+            test = last_l + "..."
+            span = safe_font_bbox(font, test)[2] - safe_font_bbox(font, test)[0]
+            while span > max_w and len(last_l) > 1:
+                last_l = last_l[:-1].rstrip()
+                test = last_l + "..."
+                span = safe_font_bbox(font, test)[2] - safe_font_bbox(font, test)[0]
+            fitted_lines[-1] = test
+
     rendered_lines = 0
     last_line_bottom = font_size
-    for line in lines:
+    for line in fitted_lines:
         line_y = start_y + rendered_lines * line_height
-        if line_y >= ctx.footer_top - 10:
-            break
         bbox = font.getbbox(line)
         lw = bbox[2] - bbox[0]
         last_line_bottom = max(1, bbox[3])
@@ -203,14 +223,14 @@ def render_list(ctx: RenderContext, block: dict) -> None:
         lines = wrap_text(text, font, max_text_w)
         item_height = spacing * max(1, len(lines))
 
-        if ctx.y + item_height > ctx.footer_top:
+        if ctx.y + item_height > ctx.footer_top - 4:
             remaining = len(items) - rendered_count
-            if remaining > 0:
+            if remaining > 0 and ctx.y + int(14 * ctx.scale) < ctx.footer_top - 4:
                 more_text = f"+{remaining} more"
                 more_font = load_font(pick_cjk_font(font_key), int(11 * ctx.scale))
                 ctx.draw.text((ctx.x_offset + margin_x, ctx.y), more_text, fill=ctx.resolve_color(block), font=more_font)
             break
-        if ctx.y >= ctx.footer_top - 10:
+        if ctx.y >= ctx.footer_top - 8:
             break
 
         color = ctx.resolve_color(block)
