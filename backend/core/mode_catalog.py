@@ -204,6 +204,12 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         en=CatalogText(name="Hot Topics", tip="Daily trending hotlist from Zhihu, Weibo, GitHub"),
     ),
     CatalogItem(
+        mode_id="DISASTER_ALERT",
+        category="more",
+        zh=CatalogText(name="自然灾害预警", tip="突发气象与自然灾害四级预警最高优先级通报"),
+        en=CatalogText(name="Disaster Alert", tip="Emergency 4-tier disaster warning notifications"),
+    ),
+    CatalogItem(
         mode_id="WEBHOOK",
         category="custom",
         zh=CatalogText(name="开放数据卡片", tip="接收智能家居、监控脚本推送的自定义指标卡片"),

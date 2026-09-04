@@ -6,14 +6,15 @@
   "description": "实时聚合知乎热榜、微博热搜、B站热门、GitHub Trending 等平台精选要闻",
   "settings_schema": [
     {
-      "key": "platform",
-      "label": "热榜平台",
-      "type": "select",
-      "default": "zhihu",
+      "key": "platforms",
+      "label": "热榜平台(可多选)",
+      "type": "multiselect",
+      "default": ["zhihu", "weibo"],
       "options": [
         { "value": "zhihu", "label": "知乎热榜" },
         { "value": "weibo", "label": "微博热搜" },
         { "value": "bilibili", "label": "B站热门" },
+        { "value": "baidu", "label": "百度热搜" },
         { "value": "github", "label": "GitHub Trending" }
       ]
     }
@@ -21,7 +22,7 @@
   "content": {
     "type": "computed",
     "provider": "hotlist",
-    "platform": "zhihu",
+    "platforms": ["zhihu", "weibo"],
     "fallback": {
       "platform_title": "知乎实时热榜",
       "update_time": "实时",

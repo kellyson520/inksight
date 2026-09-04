@@ -6,6 +6,7 @@ from .rss_provider import generate_rss
 from .crypto_provider import generate_crypto
 from .webhook_provider import generate_webhook_data
 from .hotlist_provider import generate_hotlist
+from .disaster_provider import generate_disaster_alert
 
 __all__ = [
     "register_provider",
@@ -15,4 +16,5 @@ __all__ = [
     "generate_crypto",
     "generate_webhook_data",
     "generate_hotlist",
+    "generate_disaster_alert",
 ]

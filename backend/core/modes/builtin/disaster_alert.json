@@ -1,0 +1,123 @@
+{
+  "mode_id": "DISASTER_ALERT",
+  "display_name": "自然灾害预警",
+  "icon": "alert-triangle",
+  "cacheable": false,
+  "description": "国家四级突发气象与自然灾害预警最高优先级通报",
+  "settings_schema": [
+    {
+      "key": "level",
+      "label": "预警级别",
+      "type": "select",
+      "default": "红色",
+      "options": [
+        { "value": "红色", "label": "红色预警 (I级 特别严重)" },
+        { "value": "橙色", "label": "橙色预警 (II级 严重)" },
+        { "value": "黄色", "label": "黄色预警 (III级 较重)" },
+        { "value": "蓝色", "label": "蓝色预警 (IV级 一般)" }
+      ]
+    },
+    {
+      "key": "hazard",
+      "label": "灾害类型",
+      "type": "select",
+      "default": "暴雨",
+      "options": [
+        { "value": "暴雨", "label": "暴雨 / 洪涝" },
+        { "value": "台风", "label": "台风 / 强热带风暴" },
+        { "value": "暴雪", "label": "暴雪 / 道路结冰" },
+        { "value": "大风", "label": "大风 / 强对流" },
+        { "value": "高温", "label": "高温 / 酷热" },
+        { "value": "寒潮", "label": "寒潮 / 霜冻" },
+        { "value": "地震", "label": "地震 / 地质灾害" },
+        { "value": "森林火险", "label": "森林火险" },
+        { "value": "海啸", "label": "海啸" },
+        { "value": "冰雹", "label": "冰雹" },
+        { "value": "沙尘暴", "label": "沙尘暴" },
+        { "value": "大雾", "label": "大雾 / 雾霾" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "disaster_alert",
+    "level": "红色",
+    "hazard": "暴雨",
+    "fallback": {
+      "level": "红色",
+      "type_name": "暴雨",
+      "hazard_key": "rainstorm",
+      "title": "【暴雨红色预警】",
+      "sender": "国家气象防灾中心",
+      "pub_time": "12:00",
+      "text": "特大暴雨红色预警生效中，请停止户外活动并避险！",
+      "advice": [
+        "地势低洼居民区做好防涝排涝准备，切断低洼室外电源。",
+        "行人和车辆避开涵洞、立交桥下等积水路段。",
+        "山区居民注意防范山洪、滑坡和泥石流地质灾害。"
+      ],
+      "theme_color": "red"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "header_banner",
+        "style": "inverted",
+        "bg_color": "{theme_color}",
+        "title": "自然灾害紧急通报",
+        "badge": "{level}预警",
+        "right_text": "HIGHEST PRIORITY",
+        "height": 32,
+        "margin_bottom": 6
+      },
+      {
+        "type": "disaster_banner",
+        "level_template": "{level}",
+        "hazard_template": "{type_name}",
+        "sender_template": "{sender}",
+        "time_template": "{pub_time}",
+        "height": 44,
+        "margin_bottom": 5
+      },
+      {
+        "type": "disaster_level_meter",
+        "level_template": "{level}",
+        "height": 20,
+        "margin_bottom": 6
+      },
+      {
+        "type": "disaster_icon",
+        "hazard_template": "{hazard_key}",
+        "size": 42,
+        "align": "center",
+        "color": "black",
+        "accent_color": "{theme_color}",
+        "margin_bottom": 6
+      },
+      {
+        "type": "text",
+        "field": "text",
+        "font": "noto_serif_regular",
+        "font_size": 12,
+        "line_height": 17,
+        "align": "left",
+        "margin_x": 14,
+        "max_lines": 3,
+        "margin_bottom": 6
+      },
+      {
+        "type": "disaster_advice_box",
+        "title": "防灾避险关键指引",
+        "items_field": "advice",
+        "margin_x": 12,
+        "margin_bottom": 4
+      }
+    ],
+    "footer": {
+      "label": "防灾应急特别广播",
+      "attribution_template": "{pub_time}"
+    }
+  }
+}

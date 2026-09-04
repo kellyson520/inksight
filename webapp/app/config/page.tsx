@@ -475,7 +475,7 @@ interface ParamModalState {
 interface ModeSettingSchemaItem {
   key: string;
   label: string;
-  type?: "text" | "textarea" | "number" | "select" | "boolean";
+  type?: "text" | "textarea" | "number" | "select" | "multiselect" | "boolean";
   placeholder?: string;
   default?: unknown;
   min?: number;
@@ -3333,6 +3333,54 @@ function ConfigPageInner() {
                             />
                             启用
                           </label>
+                        </Field>
+                      );
+                    }
+
+                    if (valueType === "multiselect" && options.length > 0) {
+                      const selectedValues: string[] = Array.isArray(rawValue)
+                        ? rawValue.map(String)
+                        : typeof rawValue === "string"
+                        ? rawValue.split(",").map((s) => s.trim()).filter(Boolean)
+                        : Array.isArray(item.default)
+                        ? (item.default as unknown[]).map(String)
+                        : [];
+                      const toggleOption = (val: string) => {
+                        const exists = selectedValues.includes(val);
+                        let next: string[];
+                        if (exists) {
+                          next = selectedValues.filter((v) => v !== val);
+                          if (next.length === 0) next = [val];
+                        } else {
+                          next = [...selectedValues, val];
+                        }
+                        updateModeOverride(settingsMode, { [item.key]: next });
+                      };
+                      return (
+                        <Field key={key} label={item.label}>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {options.map((opt) => {
+                              const isSelected = selectedValues.includes(opt.value);
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => toggleOption(opt.value)}
+                                  className={`text-xs px-3 py-1.5 rounded-sm border transition-colors flex items-center gap-1.5 ${
+                                    isSelected
+                                      ? "bg-ink text-white border-ink font-medium shadow-sm"
+                                      : "bg-white border-ink/20 text-ink-light hover:text-ink hover:bg-paper-dark"
+                                  }`}
+                                >
+                                  <span>{isSelected ? "✓" : "+"}</span>
+                                  <span>{opt.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <p className="mt-1.5 text-[11px] text-ink-light">
+                            {isEn ? "Click to toggle options (multiple allowed)" : "点击标签即可多选或取消（支持多选）"}
+                          </p>
                         </Field>
                       );
                     }

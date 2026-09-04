@@ -1,0 +1,123 @@
+{
+  "mode_id": "DISASTER_ALERT",
+  "display_name": "Disaster Alert",
+  "icon": "alert-triangle",
+  "cacheable": false,
+  "description": "Emergency 4-tier disaster warning notifications",
+  "settings_schema": [
+    {
+      "key": "level",
+      "label": "Warning Level",
+      "type": "select",
+      "default": "红色",
+      "options": [
+        { "value": "红色", "label": "Red Alert (Level I Special Severe)" },
+        { "value": "橙色", "label": "Orange Alert (Level II Severe)" },
+        { "value": "黄色", "label": "Yellow Alert (Level III Moderate)" },
+        { "value": "蓝色", "label": "Blue Alert (Level IV Minor)" }
+      ]
+    },
+    {
+      "key": "hazard",
+      "label": "Disaster Type",
+      "type": "select",
+      "default": "暴雨",
+      "options": [
+        { "value": "暴雨", "label": "Rainstorm / Flooding" },
+        { "value": "台风", "label": "Typhoon / Gale" },
+        { "value": "暴雪", "label": "Blizzard / Ice" },
+        { "value": "大风", "label": "Gale / Strong Wind" },
+        { "value": "高温", "label": "Extreme Heat" },
+        { "value": "寒潮", "label": "Cold Wave" },
+        { "value": "地震", "label": "Earthquake" },
+        { "value": "森林火险", "label": "Wildfire" },
+        { "value": "海啸", "label": "Tsunami" },
+        { "value": "冰雹", "label": "Hail" },
+        { "value": "沙尘暴", "label": "Sandstorm" },
+        { "value": "大雾", "label": "Heavy Fog" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "disaster_alert",
+    "level": "红色",
+    "hazard": "暴雨",
+    "fallback": {
+      "level": "红色",
+      "type_name": "暴雨",
+      "hazard_key": "rainstorm",
+      "title": "【Rainstorm Red Warning】",
+      "sender": "National Disaster Defense Center",
+      "pub_time": "12:00",
+      "text": "Emergency warning active. Stop outdoor activities and seek safe shelter!",
+      "advice": [
+        "Stay indoors away from windows and low-lying flooded areas.",
+        "Disconnect electric power in flood-prone basements.",
+        "Avoid underpasses, bridges and underground facilities."
+      ],
+      "theme_color": "red"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "header_banner",
+        "style": "inverted",
+        "bg_color": "{theme_color}",
+        "title": "EMERGENCY ALERT",
+        "badge": "{level} Alert",
+        "right_text": "HIGHEST PRIORITY",
+        "height": 32,
+        "margin_bottom": 6
+      },
+      {
+        "type": "disaster_banner",
+        "level_template": "{level}",
+        "hazard_template": "{type_name}",
+        "sender_template": "{sender}",
+        "time_template": "{pub_time}",
+        "height": 44,
+        "margin_bottom": 5
+      },
+      {
+        "type": "disaster_level_meter",
+        "level_template": "{level}",
+        "height": 20,
+        "margin_bottom": 6
+      },
+      {
+        "type": "disaster_icon",
+        "hazard_template": "{hazard_key}",
+        "size": 42,
+        "align": "center",
+        "color": "black",
+        "accent_color": "{theme_color}",
+        "margin_bottom": 6
+      },
+      {
+        "type": "text",
+        "field": "text",
+        "font": "noto_serif_regular",
+        "font_size": 12,
+        "line_height": 17,
+        "align": "left",
+        "margin_x": 14,
+        "max_lines": 3,
+        "margin_bottom": 6
+      },
+      {
+        "type": "disaster_advice_box",
+        "title": "Safety Guidelines",
+        "items_field": "advice",
+        "margin_x": 12,
+        "margin_bottom": 4
+      }
+    ],
+    "footer": {
+      "label": "Disaster Emergency Broadcast",
+      "attribution_template": "{pub_time}"
+    }
+  }
+}

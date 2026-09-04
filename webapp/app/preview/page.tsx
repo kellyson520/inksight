@@ -1,13 +1,32 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { LocationPicker } from "@/components/config/location-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Eye, Loader2, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertCircle,
+  Eye,
+  Loader2,
+  Plus,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Sparkles,
+  Layers,
+  Heart,
+  Briefcase,
+  Newspaper,
+  Sliders,
+  Check,
+  Flame,
+  AlertTriangle,
+  Download,
+  Search,
+} from "lucide-react";
 import { localeFromPathname, t, withLocalePath } from "@/lib/i18n";
 import { cleanLocationValue, type LocationValue } from "@/lib/locations";
 import { authHeaders, fetchCurrentUser } from "@/lib/auth";
@@ -28,75 +47,253 @@ type ModeCatalogItem = {
   };
 };
 
-function ModeSection({
+type PrimaryCategory = "all" | "life" | "productivity" | "news";
+
+// 模式到【生活 / 效率 / 资讯】一级分类的权威映射
+const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "news"> = {
+  // 生活 (Life)
+  DAILY: "life",
+  WEATHER: "life",
+  ZEN: "life",
+  POETRY: "life",
+  ARTWALL: "life",
+  ALMANAC: "life",
+  RECIPE: "life",
+  ROAST: "life",
+  FITNESS: "life",
+  LETTER: "life",
+  RIDDLE: "life",
+  QUESTION: "life",
+  STORY: "life",
+  MY_QUOTE: "life",
+  MY_ADAPTIVE: "life",
+
+  // 效率 (Productivity)
+  COUNTDOWN: "productivity",
+  MEMO: "productivity",
+  HABIT: "productivity",
+  LIFEBAR: "productivity",
+  CALENDAR: "productivity",
+  TIMETABLE: "productivity",
+  CHALLENGE: "productivity",
+  WORD_OF_THE_DAY: "productivity",
+  WEBHOOK: "productivity",
+
+  // 资讯 (News & Alerts)
+  BRIEFING: "news",
+  HOTLIST: "news",
+  MOYU: "news",
+  RSS: "news",
+  CRYPTO: "news",
+  THISDAY: "news",
+  BIAS: "news",
+  DISASTER_ALERT: "news",
+};
+
+const CONFIGURABLE_MODES: Record<string, string> = {
+  HOTLIST: "hotlist",
+  DISASTER_ALERT: "disaster",
+  WEATHER: "weather",
+  MEMO: "memo",
+  MY_QUOTE: "quote",
+  COUNTDOWN: "countdown",
+  HABIT: "habit",
+  LIFEBAR: "lifebar",
+  CALENDAR: "calendar",
+  TIMETABLE: "timetable",
+  RSS: "rss",
+  CRYPTO: "crypto",
+  WEBHOOK: "webhook",
+  MY_ADAPTIVE: "adaptive",
+};
+
+const HOTLIST_AVAILABLE_PLATFORMS = [
+  { id: "zhihu", label: "知乎热榜", desc: "高热深度讨论" },
+  { id: "weibo", label: "微博热搜", desc: "全民实时热度" },
+  { id: "bilibili", label: "B站热门", desc: "热门视频与科技" },
+  { id: "baidu", label: "百度热搜", desc: "全网即时事件" },
+  { id: "github", label: "GitHub Trending", desc: "全球开源热门趋势" },
+];
+
+const DISASTER_LEVELS = [
+  { id: "红色", roman: "I级", label: "红色预警", desc: "特别严重 · 最高警戒", color: "text-red-600 border-red-300 bg-red-50" },
+  { id: "橙色", roman: "II级", label: "橙色预警", desc: "严重 · 紧急防范", color: "text-orange-600 border-orange-300 bg-orange-50" },
+  { id: "黄色", roman: "III级", label: "黄色预警", desc: "较重 · 密切防灾", color: "text-amber-600 border-amber-300 bg-amber-50" },
+  { id: "蓝色", roman: "IV级", label: "蓝色预警", desc: "一般 · 注意避险", color: "text-blue-600 border-blue-300 bg-blue-50" },
+];
+
+const DISASTER_HAZARDS = [
+  { id: "暴雨", label: "暴雨 / 洪涝" },
+  { id: "台风", label: "台风 / 强风暴" },
+  { id: "暴雪", label: "暴雪 / 结冰" },
+  { id: "大风", label: "大风 / 强对流" },
+  { id: "高温", label: "高温 / 酷热" },
+  { id: "寒潮", label: "寒潮 / 霜冻" },
+  { id: "地震", label: "地震 / 地质灾害" },
+  { id: "森林火险", label: "森林火险" },
+  { id: "海啸", label: "海啸" },
+  { id: "冰雹", label: "冰雹" },
+  { id: "沙尘暴", label: "沙尘暴" },
+  { id: "大雾", label: "大雾 / 雾霾" },
+];
+
+/**
+ * 分页式模式容器组件：支持上一页/下一页、页码指示、即点即显
+ */
+function PaginatedModeSection({
   title,
+  subtitle,
+  icon: Icon,
   modes,
   currentMode,
   onPreview,
-  collapsible,
+  onConfigure,
   customMeta,
   tailItem,
   locale,
+  pageSize = 8,
 }: {
   title: string;
+  subtitle?: string;
+  icon?: typeof Sparkles;
   modes: string[];
   currentMode: string;
   onPreview: (m: string) => void;
-  collapsible?: boolean;
-  customMeta?: Record<string, { name: string; tip: string }>;
-  tailItem?: React.ReactNode;
+  onConfigure: (m: string) => void;
+  customMeta?: Record<string, { name: string; tip: string; category?: string }>;
+  tailItem?: ReactNode;
   locale: string;
+  pageSize?: number;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  if (!modes.length) return null;
+  const [page, setPage] = useState(0);
+
+  // 当外部筛选变更导致页码越界时重置
+  const totalSlots = modes.length + (tailItem ? 1 : 0);
+  const totalPages = Math.max(1, Math.ceil(totalSlots / pageSize));
+
+  useEffect(() => {
+    if (page >= totalPages) {
+      setPage(0);
+    }
+  }, [page, totalPages]);
+
+  if (modes.length === 0 && !tailItem) return null;
+
+  const startIndex = page * pageSize;
+  const visibleModes = modes.slice(startIndex, startIndex + pageSize);
+  const showTailHere = tailItem && startIndex + visibleModes.length <= totalSlots && startIndex + visibleModes.length >= modes.length;
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between gap-2 mb-3 rounded-sm bg-paper-dark border border-ink/10 px-3 py-2">
-        <h4 className="text-base font-semibold text-ink">{title}</h4>
-        {collapsible ? (
-          <button
-            onClick={() => setCollapsed((v) => !v)}
-            className="text-xs text-ink-light hover:text-ink flex items-center gap-1 transition-colors"
-          >
-            {locale === "en" ? (collapsed ? "Expand" : "Collapse") : (collapsed ? "展开" : "收起")}
-          </button>
+    <div className="mb-6 rounded-sm border border-ink/10 bg-white/60 p-4 shadow-sm backdrop-blur-xs">
+      {/* 容器标题栏与翻页控制 */}
+      <div className="flex items-center justify-between gap-3 mb-3.5 pb-2 border-b border-ink/10">
+        <div className="flex items-center gap-2">
+          {Icon ? <Icon size={16} className="text-ink" /> : null}
+          <h4 className="text-sm font-semibold text-ink tracking-tight">{title}</h4>
+          <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-ink/5 text-ink-light font-mono">
+            {modes.length}
+          </span>
+          {subtitle ? <span className="text-xs text-ink-light hidden sm:inline">· {subtitle}</span> : null}
+        </div>
+
+        {/* 容器翻页切换器 */}
+        {totalPages > 1 ? (
+          <div className="flex items-center gap-1.5 text-xs text-ink-light">
+            <span className="font-mono text-[11px] mr-1">
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="p-1 rounded hover:bg-ink/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              title={locale === "zh" ? "上一页" : "Previous Page"}
+            >
+              <ChevronLeft size={15} />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="p-1 rounded hover:bg-ink/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              title={locale === "zh" ? "下一页" : "Next Page"}
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
         ) : null}
       </div>
-      {collapsed ? null : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-          {modes.map((m) => {
-            const meta = customMeta?.[m] || { name: m, tip: "" };
-            const isCurrent = currentMode === m;
-            return (
-              <div key={m} className="rounded-sm border border-ink/10 bg-white overflow-hidden">
+
+      {/* 模式卡片网格 */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5">
+        {visibleModes.map((m) => {
+          const meta = customMeta?.[m] || { name: m, tip: "" };
+          const isCurrent = currentMode === m;
+          const isConfigurable = Boolean(CONFIGURABLE_MODES[m]);
+
+          return (
+            <div
+              key={m}
+              className={`group relative rounded-sm border transition-all text-left flex flex-col justify-between overflow-hidden ${
+                isCurrent
+                  ? "border-ink bg-paper-dark shadow-sm ring-1 ring-ink"
+                  : "border-ink/15 bg-white hover:border-ink/40 hover:bg-paper-light"
+              }`}
+            >
+              {/* 卡片主体：点击即展示 */}
+              <button
+                onClick={() => onPreview(m)}
+                className="w-full p-2.5 text-left flex-1 flex flex-col justify-start"
+              >
+                <div className="flex items-center justify-between gap-1 w-full mb-1">
+                  <span className={`text-xs font-bold truncate ${isCurrent ? "text-ink" : "text-ink"}`}>
+                    {meta.name}
+                  </span>
+                  {m === "DISASTER_ALERT" ? (
+                    <span className="text-[10px] px-1 py-0.2 rounded bg-red-100 text-red-700 font-medium shrink-0">
+                      最高优
+                    </span>
+                  ) : m === "HOTLIST" ? (
+                    <span className="text-[10px] px-1 py-0.2 rounded bg-orange-100 text-orange-700 font-medium shrink-0">
+                      多源
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-[11px] text-ink-light line-clamp-2 leading-relaxed">
+                  {meta.tip || (locale === "zh" ? "点击快速预览此模式" : "Click to preview this mode")}
+                </p>
+              </button>
+
+              {/* 操作底栏 */}
+              <div className="border-t border-ink/10 bg-white/70 px-2 py-1 flex items-center justify-between gap-1">
                 <button
                   onClick={() => onPreview(m)}
-                  className={`w-full px-3 py-2 text-left transition-colors min-h-[64px] flex flex-col justify-center ${
-                    isCurrent ? "bg-ink text-white" : "hover:bg-paper-dark text-ink"
+                  className={`text-[11px] font-medium flex items-center gap-1 transition-colors ${
+                    isCurrent ? "text-ink font-semibold" : "text-ink-light hover:text-ink"
                   }`}
-                  title={meta.tip}
                 >
-                  <div className="text-sm font-semibold">{meta.name}</div>
-                  <div className={`text-[11px] mt-0.5 line-clamp-2 ${isCurrent ? "text-white/80" : "text-ink-light"}`}>
-                    {meta.tip}
-                  </div>
+                  <Eye size={13} />
+                  <span>{isCurrent ? (locale === "zh" ? "当前中" : "Active") : (locale === "zh" ? "预览" : "Preview")}</span>
                 </button>
-                <div className="border-t border-ink/10">
+
+                {isConfigurable ? (
                   <button
-                    onClick={() => onPreview(m)}
-                    className="w-full h-9 px-2 text-[11px] sm:text-xs text-ink hover:bg-ink hover:text-white transition-colors flex items-center justify-center gap-1 whitespace-nowrap"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onConfigure(m);
+                    }}
+                    className="text-[11px] text-ink-light hover:text-ink flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-ink/5 transition-colors"
+                    title={locale === "zh" ? "调整此模式参数" : "Configure parameters"}
                   >
-                    <Eye size={14} />
-                    {t(localeFromPathname(`/${locale}`), "preview.action.preview", locale === "zh" ? "预览" : "Preview")}
+                    <Sliders size={12} />
+                    <span>{locale === "zh" ? "配置" : "Options"}</span>
                   </button>
-                </div>
+                ) : null}
               </div>
-            );
-          })}
-          {tailItem ? tailItem : null}
-        </div>
-      )}
+            </div>
+          );
+        })}
+
+        {showTailHere ? tailItem : null}
+      </div>
     </div>
   );
 }
@@ -111,12 +308,17 @@ export default function ExperiencePage() {
 
   const [catalogItems, setCatalogItems] = useState<ModeCatalogItem[]>([]);
   const [modesError, setModesError] = useState<string | null>(null);
-  // do not preselect any mode
-  const [previewMode, setPreviewMode] = useState("");
-  const [previewColors, setPreviewColors] = useState(2);
+
+  // 默认启动模式（优先全网热点或天气）
+  const [previewMode, setPreviewMode] = useState("HOTLIST");
+  const [previewColors, setPreviewColors] = useState(3);
   const [previewWidth, setPreviewWidth] = useState(400);
   const [previewHeight, setPreviewHeight] = useState(300);
   const [previewModeNameOverride, setPreviewModeNameOverride] = useState<string | null>(null);
+
+  // 一级分类标签：全部 / 生活 / 效率 / 资讯
+  const [primaryTab, setPrimaryTab] = useState<PrimaryCategory>("all");
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
 
   const [city] = useState("杭州");
   const [memoText] = useState(t(locale, "preview.memo.default", "写点什么吧…"));
@@ -126,24 +328,37 @@ export default function ExperiencePage() {
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "info" } | null>(null);
 
-  // 当前预览对应的大模型调用状态提示（无 / 成功 / 失败使用兜底等）
   const [previewLlmStatus, setPreviewLlmStatus] = useState<string | null>(null);
-
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const lastObjectUrlRef = useRef<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
-  const [modal, setModal] = useState<null | { type: "quote" | "weather" | "memo" | "countdown" | "habit" | "lifebar" | "calendar" | "timetable" | "rss" | "crypto" | "hotlist" | "webhook"; modeId: string }>(null);
+  // 快捷参数调节模态窗
+  const [modal, setModal] = useState<null | {
+    type: "quote" | "weather" | "memo" | "countdown" | "habit" | "lifebar" | "calendar" | "timetable" | "rss" | "crypto" | "hotlist" | "disaster" | "webhook";
+    modeId: string;
+  }>(null);
+
   const [_imageUploadLoading, setImageUploadLoading] = useState(false);
   const [quoteDraft, setQuoteDraft] = useState("");
   const [authorDraft, setAuthorDraft] = useState("");
   const [weatherDraftLocation, setWeatherDraftLocation] = useState<LocationValue>({ city: "杭州" });
-  const [memoDraft, setMemoDraft] = useState<{ title1: string; text1: string; title2: string; text2: string; title3: string; text3: string }>({ title1: "", text1: "", title2: "", text2: "", title3: "" , text3: "" });
+  const [memoDraft, setMemoDraft] = useState<{ title1: string; text1: string; title2: string; text2: string; title3: string; text3: string }>({
+    title1: "", text1: "", title2: "", text2: "", title3: "", text3: "",
+  });
   const [rssFeedUrl, setRssFeedUrl] = useState("https://kellson.dpdns.org:81/playno1/av");
   const [rssItemIndex, setRssItemIndex] = useState(0);
   const [rssShowImage, setRssShowImage] = useState(true);
   const [cryptoSymbol, setCryptoSymbol] = useState("BTC");
-  const [hotlistPlatform, setHotlistPlatform] = useState("zhihu");
+
+  // 全网热点平台多选状态（支持多选聚合！）
+  const [hotlistPlatforms, setHotlistPlatforms] = useState<string[]>(["zhihu", "weibo"]);
+
+  // 自然灾害预警配置状态
+  const [disasterLevel, setDisasterLevel] = useState<string>("红色");
+  const [disasterHazard, setDisasterHazard] = useState<string>("暴雨");
+  const [disasterCustomText, setDisasterCustomText] = useState<string>("");
+
   const [webhookDraft, setWebhookDraft] = useState({
     title: "家庭环境与能耗",
     primary_metric: "24.5°C",
@@ -165,21 +380,18 @@ export default function ExperiencePage() {
     },
   });
 
-  // 倒计时状态
   const [countdownName, setCountdownName] = useState("元旦");
   const [countdownDate, setCountdownDate] = useState("2027-01-01");
-  
-  // 打卡状态
+
   const [habitItems, setHabitItems] = useState([
     { name: "早起", done: false },
     { name: "运动", done: false },
     { name: "阅读", done: false },
   ]);
-  
-  // 人生进度条状态
+
   const [userAge, setUserAge] = useState(30);
   const [lifeExpectancy, setLifeExpectancy] = useState(80);
-  
+
   const [showCustomModeModal, setShowCustomModeModal] = useState(false);
   const [customDesc, setCustomDesc] = useState("");
   const [customModeName, setCustomModeName] = useState("");
@@ -201,7 +413,7 @@ export default function ExperiencePage() {
     return data.url;
   };
 
-  // 进入无设备体验前必须登录
+  // 身份检查
   useEffect(() => {
     fetchCurrentUser()
       .then((u) => {
@@ -216,13 +428,12 @@ export default function ExperiencePage() {
       });
   }, [locale, router]);
 
-  // 从本机缓存读取用户 API Key（由配置页写入）
   useEffect(() => {
     if (typeof window === "undefined") return;
     const k = localStorage.getItem("ink_user_llm_api_key") || "";
     if (k.trim()) setUserLlmApiKey(k.trim());
   }, []);
-  // 邀请码弹窗状态
+
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [redeemingInvite, setRedeemingInvite] = useState(false);
@@ -234,8 +445,9 @@ export default function ExperiencePage() {
     toastTimerRef.current = window.setTimeout(() => setToast(null), 2500);
   };
 
+  // 模式元数据构建
   const modeMeta = useMemo(() => {
-    const map: Record<string, { name: string; tip: string }> = {};
+    const map: Record<string, { name: string; tip: string; category?: string }> = {};
     for (const item of catalogItems) {
       const mid = (item.mode_id || "").toUpperCase();
       if (!mid) continue;
@@ -248,28 +460,45 @@ export default function ExperiencePage() {
         (lang?.tip && String(lang.tip)) ||
         (item.description && String(item.description)) ||
         "";
-      map[mid] = { name, tip };
+      map[mid] = { name, tip, category: item.category };
     }
     return map;
   }, [catalogItems, locale]);
 
+  // 根据一级分类与关键词过滤模式
+  const filteredModes = useMemo(() => {
+    return catalogItems.filter((item) => {
+      const mid = item.mode_id.toUpperCase();
+      // 1. 一级分类匹配
+      if (primaryTab !== "all") {
+        const prim = MODE_PRIMARY_CATEGORY[mid] || (item.category === "custom" ? "productivity" : "life");
+        if (prim !== primaryTab) return false;
+      }
+      // 2. 关键词匹配
+      if (searchKeyword.trim()) {
+        const kw = searchKeyword.trim().toLowerCase();
+        const meta = modeMeta[mid];
+        const matchId = mid.toLowerCase().includes(kw);
+        const matchName = meta?.name.toLowerCase().includes(kw);
+        const matchTip = meta?.tip.toLowerCase().includes(kw);
+        if (!matchId && !matchName && !matchTip) return false;
+      }
+      return true;
+    });
+  }, [catalogItems, primaryTab, searchKeyword, modeMeta]);
+
+  // 拆分二级子类
   const coreModes = useMemo(
-    () => catalogItems.filter((m) => m.category === "core").map((m) => m.mode_id.toUpperCase()),
-    [catalogItems],
+    () => filteredModes.filter((m) => m.category === "core").map((m) => m.mode_id.toUpperCase()),
+    [filteredModes],
   );
   const moreModes = useMemo(
-    () =>
-      catalogItems
-        .filter((m) => m.category === "more")
-        .map((m) => m.mode_id.toUpperCase()),
-    [catalogItems],
+    () => filteredModes.filter((m) => m.category === "more").map((m) => m.mode_id.toUpperCase()),
+    [filteredModes],
   );
   const customModes = useMemo(
-    () =>
-      catalogItems
-        .filter((m) => m.category === "custom")
-        .map((m) => m.mode_id.toUpperCase()),
-    [catalogItems],
+    () => filteredModes.filter((m) => m.category === "custom").map((m) => m.mode_id.toUpperCase()),
+    [filteredModes],
   );
 
   const previewModeName =
@@ -277,74 +506,19 @@ export default function ExperiencePage() {
     modeMeta[previewMode]?.name ||
     previewMode ||
     t(locale, "preview.unknown_mode", "Unknown");
-  const previewModeTip =
-    modeMeta[previewMode]?.tip ||
-    "";
 
+  /**
+   * 核心预览请求处理器：全面支持直接点击模式即显与覆盖参数
+   */
   const handlePreview = async (modeId?: string, override?: Record<string, unknown> | LocationValue) => {
     const targetMode = modeId || previewMode;
     if (!targetMode) return;
     if (!authChecked) return;
 
-    // 检查是否需要弹窗
-    if (!override) {
-      if (targetMode === "WEATHER") {
-        setModal({ type: "weather", modeId: targetMode });
-        setWeatherDraftLocation({});
-        return;
-      }
-      if (targetMode === "MEMO") {
-        setModal({ type: "memo", modeId: targetMode });
-        setMemoDraft(defaultMemoDraft);
-        return;
-      }
-      if (targetMode === "MY_QUOTE") {
-        setModal({ type: "quote", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "COUNTDOWN") {
-        setModal({ type: "countdown", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "HABIT") {
-        setModal({ type: "habit", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "LIFEBAR") {
-        setModal({ type: "lifebar", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "CALENDAR") {
-        setModal({ type: "calendar", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "TIMETABLE") {
-        setModal({ type: "timetable", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "RSS") {
-        setModal({ type: "rss", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "CRYPTO") {
-        setModal({ type: "crypto", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "HOTLIST") {
-        setModal({ type: "hotlist", modeId: targetMode });
-        return;
-      }
-      if (targetMode === "WEBHOOK") {
-        setModal({ type: "webhook", modeId: targetMode });
-        return;
-      }
-    }
-
-    // 普通模式预览时，清除上次 LLM 状态提示
     setPreviewLlmStatus(null);
-
     setPreviewLoading(true);
     setPreviewError(null);
+
     try {
       const params = new URLSearchParams();
       params.set("persona", targetMode);
@@ -353,13 +527,13 @@ export default function ExperiencePage() {
       params.set("w", String(previewWidth));
       params.set("h", String(previewHeight));
 
-      // 处理城市覆盖：优先使用 override 中的 city，否则使用全局 city
+      // 城市覆盖
       const cityOverride = override?.city ? String(override.city) : city.trim();
       if (cityOverride) {
         params.set("city_override", cityOverride);
       }
-      
-      // 处理便签文本：优先使用 override 中的 memo_title/text 字段
+
+      // 便签
       if (targetMode === "MEMO" && override) {
         for (const i of [1, 2, 3]) {
           const tk = `memo_title_${i}`;
@@ -368,8 +542,21 @@ export default function ExperiencePage() {
           if (ck in override) params.set(ck, String((override as Record<string, unknown>)[ck]));
         }
       }
-      
+
       const mergedOverride: Record<string, unknown> = { ...(override || {}) };
+
+      // 针对全网热点：自动附加当前多选平台
+      if (targetMode === "HOTLIST" && !mergedOverride.platforms && !mergedOverride.platform) {
+        mergedOverride.platforms = hotlistPlatforms;
+      }
+
+      // 针对自然灾害预警：自动附加当前预警级别与灾害类型
+      if (targetMode === "DISASTER_ALERT") {
+        if (!mergedOverride.level) mergedOverride.level = disasterLevel;
+        if (!mergedOverride.hazard) mergedOverride.hazard = disasterHazard;
+        if (disasterCustomText.trim()) mergedOverride.text = disasterCustomText.trim();
+      }
+
       if (targetMode.toUpperCase() === "CALENDAR" && Object.keys(calendarReminders).length > 0) {
         mergedOverride.reminders = calendarReminders;
       }
@@ -386,8 +573,8 @@ export default function ExperiencePage() {
       const res = await fetch(`/api/preview?${params.toString()}`, {
         headers: authHeaders(userLlmApiKey ? { "x-inksight-llm-api-key": userLlmApiKey } : undefined),
       });
+
       if (res.status === 402) {
-        // 额度耗尽，显示邀请码输入弹窗
         const data = await res.json().catch(() => ({}));
         if (data.requires_invite_code) {
           setPendingPreviewMode(targetMode);
@@ -403,12 +590,11 @@ export default function ExperiencePage() {
 
       const statusHeader = res.headers.get("x-preview-status");
       const llmRequired = res.headers.get("x-llm-required");
-      const modeName = previewMode || "";
-      
+      const modeName = targetMode || "";
+
       if (statusHeader === "no_llm_required" || llmRequired === "0") {
         setPreviewLlmStatus(null);
       } else if (statusHeader === "static_served") {
-        // 来自静态数据库，未调用 LLM
         if (modeName === "POETRY") {
           setPreviewLlmStatus(locale === "zh" ? "古诗词已加载" : "Served from static poetry");
         } else if (modeName === "THISDAY") {
@@ -419,15 +605,9 @@ export default function ExperiencePage() {
           setPreviewLlmStatus(locale === "zh" ? "静态内容已加载" : "Static content served");
         }
       } else if (statusHeader === "model_generated") {
-        setPreviewLlmStatus(
-          locale === "zh" ? "大模型调用成功" : "Model call succeeded",
-        );
+        setPreviewLlmStatus(locale === "zh" ? "大模型调用成功" : "Model call succeeded");
       } else if (statusHeader === "fallback_used") {
-        setPreviewLlmStatus(
-          locale === "zh"
-            ? "大模型调用失败，使用默认内容"
-            : "Model call failed, using fallback content",
-        );
+        setPreviewLlmStatus(locale === "zh" ? "大模型调用失败，使用默认内容" : "Model call failed, using fallback content");
       } else {
         setPreviewLlmStatus(null);
       }
@@ -447,172 +627,62 @@ export default function ExperiencePage() {
     }
   };
 
-  const handleRedeemInviteCode = async () => {
-    if (!inviteCode.trim()) {
-      showToast(locale === "en" ? "Please enter invitation code" : "请输入邀请码", "error");
-      return;
-    }
+  /**
+   * 点击模式卡片：即点即显
+   */
+  const handleModeCardClick = async (modeId: string) => {
+    setPreviewMode(modeId);
+    setPreviewModeNameOverride(null);
 
-    setRedeemingInvite(true);
-    try {
-      const res = await fetch("/api/auth/redeem-invite-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invite_code: inviteCode.trim() }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || (locale === "en" ? "Failed to redeem invitation code" : "邀请码兑换失败"));
-      }
-
-      showToast(data.message || (locale === "en" ? "Invitation code redeemed successfully" : "邀请码兑换成功"), "success");
-      setShowInviteModal(false);
-      setInviteCode("");
-      // 重新尝试预览
-      if (pendingPreviewMode) {
-        await handlePreview(pendingPreviewMode);
-        setPendingPreviewMode(null);
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : (locale === "en" ? "Failed to redeem invitation code" : "邀请码兑换失败");
-      showToast(msg, "error");
-    } finally {
-      setRedeemingInvite(false);
-    }
-  };
-
-  const applyModeAndPreview = async (modeId: string) => {
-    // Custom flows
     if (modeId === "MY_ADAPTIVE") {
-      setPreviewMode(modeId);
       adaptiveFileInputRef.current?.click();
       return;
     }
-    if (modeId === "MY_QUOTE") {
-      setPreviewMode(modeId);
-      setQuoteDraft("");
-      setAuthorDraft("");
-      setModal({ type: "quote", modeId });
-      return;
-    }
-    if (modeId === "WEATHER") {
-      setPreviewMode(modeId);
-      setWeatherDraftLocation({});
-      setModal({ type: "weather", modeId });
-      return;
-    }
-    if (modeId === "MEMO") {
-      setPreviewMode(modeId);
-      setMemoDraft(defaultMemoDraft);
-      setModal({ type: "memo", modeId });
-      return;
-    }
-    if (modeId === "CALENDAR") {
-      setPreviewMode(modeId);
-      setModal({ type: "calendar", modeId });
-      return;
-    }
-    if (modeId === "TIMETABLE") {
-      setPreviewMode(modeId);
-      setModal({ type: "timetable", modeId });
-      return;
-    }
-    if (modeId === "RSS") {
-      setPreviewMode(modeId);
-      setModal({ type: "rss", modeId });
-      return;
-    }
-    if (modeId === "CRYPTO") {
-      setPreviewMode(modeId);
-      setModal({ type: "crypto", modeId });
-      return;
-    }
-    if (modeId === "HOTLIST") {
-      setPreviewMode(modeId);
-      setModal({ type: "hotlist", modeId });
-      return;
-    }
-    if (modeId === "WEBHOOK") {
-      setPreviewMode(modeId);
-      setModal({ type: "webhook", modeId });
-      return;
-    }
 
-    setPreviewModeNameOverride(null);
-    setPreviewMode(modeId);
     await handlePreview(modeId);
+  };
+
+  /**
+   * 点击配置按钮：打开对应的参数调节窗口
+   */
+  const handleOpenConfigModal = (modeId: string) => {
+    setPreviewMode(modeId);
+    const cfgType = CONFIGURABLE_MODES[modeId];
+    if (cfgType) {
+      setModal({ type: cfgType as never, modeId });
+    }
   };
 
   const handleCustomModePreview = async (defOverride?: unknown) => {
     if (!defOverride && !customJson.trim()) return;
     setPreviewLoading(true);
     setPreviewError(null);
-    setPreviewLlmStatus(null);
     try {
-      const def = defOverride ? (defOverride as Record<string, unknown>) : (JSON.parse(customJson) as Record<string, unknown>);
-      const nameFromInput = customModeName.trim();
-      const displayNameRaw = (def as Record<string, unknown>)["display_name"];
-      const modeIdRaw = (def as Record<string, unknown>)["mode_id"];
-      const nameFromDef =
-        (typeof displayNameRaw === "string" && displayNameRaw.trim()) ||
-        (typeof modeIdRaw === "string" && modeIdRaw.trim()) ||
-        "";
-      const displayName = nameFromInput || nameFromDef || (locale === "zh" ? "自定义模式" : "Custom Mode");
-      setPreviewModeNameOverride(displayName);
-      setPreviewMode(displayName.toUpperCase().replace(/[^A-Z0-9_]/g, "_"));
+      const modeDef = defOverride || JSON.parse(customJson);
       const res = await fetch("/api/modes/custom/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode_def: def, colors: previewColors, w: previewWidth, h: previewHeight }),
+        body: JSON.stringify({
+          mode_def: modeDef,
+          screen_w: previewWidth,
+          screen_h: previewHeight,
+          colors: previewColors,
+        }),
       });
       if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || "Preview failed");
-      }
-      const statusHeader = res.headers.get("x-preview-status");
-      const llmRequired = res.headers.get("x-llm-required");
-      const modeName = previewMode || "";
-      
-      if (statusHeader === "no_llm_required" || llmRequired === "0") {
-        setPreviewLlmStatus(null);
-      } else if (statusHeader === "static_served") {
-        // 来自静态数据库，未调用 LLM
-        if (modeName === "POETRY") {
-          setPreviewLlmStatus(locale === "zh" ? "古诗词已加载" : "Served from static poetry");
-        } else if (modeName === "THISDAY") {
-          setPreviewLlmStatus(locale === "zh" ? "历史今日已加载" : "Served from static history");
-        } else if (modeName === "RIDDLE") {
-          setPreviewLlmStatus(locale === "zh" ? "每日一谜已加载" : "Served from static riddles");
-        } else {
-          setPreviewLlmStatus(locale === "zh" ? "静态内容已加载" : "Static content served");
-        }
-      } else if (statusHeader === "model_generated") {
-        setPreviewLlmStatus(
-          locale === "zh" ? "大模型调用成功" : "Model call succeeded",
-        );
-      } else if (statusHeader === "fallback_used") {
-        setPreviewLlmStatus(
-          locale === "zh"
-            ? "大模型调用失败，使用默认内容"
-            : "Model call failed, using fallback content",
-        );
-      } else {
-        setPreviewLlmStatus(null);
+        const errText = await res.text().catch(() => "Unknown error");
+        throw new Error(`HTTP ${res.status}: ${errText.substring(0, 100)}`);
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       if (lastObjectUrlRef.current) URL.revokeObjectURL(lastObjectUrlRef.current);
       lastObjectUrlRef.current = url;
       setPreviewImageUrl(url);
-      showToast(
-        t(locale, "preview.toast.updated", "Preview updated"),
-        "success",
-      );
+      setPreviewMode((modeDef as { mode_id?: string })?.mode_id?.toUpperCase() || "CUSTOM");
+      setPreviewModeNameOverride((modeDef as { display_name?: string })?.display_name || "自定义模式");
+      showToast(t(locale, "preview.toast.updated", "Preview updated"), "success");
     } catch (e) {
-      const msg =
-        (locale === "zh" ? "预览失败: " : "Preview failed: ") +
-        (e instanceof Error ? e.message : "Unknown error");
+      const msg = (locale === "zh" ? "自定义模式预览失败: " : "Custom mode failed: ") + (e instanceof Error ? e.message : "Unknown error");
       setPreviewError(msg);
       showToast(msg, "error");
     } finally {
@@ -638,20 +708,16 @@ export default function ExperiencePage() {
       if (!customModeName.trim()) {
         setCustomModeName((data.mode_def?.display_name || "").toString());
       }
-      // generation complete -> close dialog -> preview on main panel
       setShowCustomModeModal(false);
       await handleCustomModePreview(data.mode_def);
     } catch (e) {
-      showToast(
-        (locale === "zh" ? "生成失败: " : "Generate failed: ") + (e instanceof Error ? e.message : "Unknown error"),
-        "error",
-      );
+      showToast((locale === "zh" ? "生成失败: " : "Generate failed: ") + (e instanceof Error ? e.message : "Unknown error"), "error");
     } finally {
       setCustomGenerating(false);
     }
   };
-  // (removed) reset(): unused
 
+  // 加载目录数据
   useEffect(() => {
     setModesError(null);
     if (!authChecked) return;
@@ -664,36 +730,24 @@ export default function ExperiencePage() {
         if (d.items && Array.isArray(d.items)) {
           setCatalogItems(d.items);
         } else {
-          console.error("[PREVIEW] Invalid catalog response:", d);
           setModesError(t(locale, "preview.error.no_modes", "No modes data"));
         }
       })
-      .catch((err) => {
-        console.error("[PREVIEW] Failed to load catalog:", err);
-        setModesError(t(locale, "preview.error.modes_unreachable", "Cannot load modes. Make sure backend is running."));
-        setCatalogItems([]);
+      .catch((e) => {
+        setModesError(`${t(locale, "preview.error.load_failed", "Failed to load modes")}: ${e.message}`);
       });
   }, [authChecked, locale]);
 
+  // 初始自动生成全网热点预览
   useEffect(() => {
-    if (!authChecked) return;
-    // no auto-preview on enter; user must pick a mode
-  }, [authChecked]);
-
-  useEffect(() => {
-    return () => {
-      if (lastObjectUrlRef.current) URL.revokeObjectURL(lastObjectUrlRef.current);
-      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    // no-op: playlist removed
-  }, [previewMode]);
+    if (authChecked && catalogItems.length > 0 && !previewImageUrl && !previewLoading) {
+      handlePreview("HOTLIST", { platforms: hotlistPlatforms });
+    }
+  }, [authChecked, catalogItems.length]);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-10">
-      {/* Hidden file picker for MY_ADAPTIVE (local upload only) */}
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-10">
+      {/* 隐式相框照片上传 */}
       <input
         ref={adaptiveFileInputRef}
         type="file"
@@ -706,7 +760,7 @@ export default function ExperiencePage() {
           setImageUploadLoading(true);
           try {
             const url = await uploadLocalImage(f);
-            await handlePreview("MY_ADAPTIVE", { image_url: url });
+            await handlePreview("MY_ADAPTIVE", { photo_url: url });
           } catch (err) {
             const msg = err instanceof Error ? err.message : t(locale, "preview.modal.image.need_file", "Please choose a local image");
             showToast(msg, "error");
@@ -715,1099 +769,818 @@ export default function ExperiencePage() {
           }
         }}
       />
-      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+
+      {/* 顶部标题与介绍 */}
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between border-b border-ink/10 pb-4">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-ink mb-1">{t(locale, "preview.title", "No-device Demo")}</h1>
-          <p className="text-ink-light text-sm">{t(locale, "preview.subtitle", "Try modes and preview without a device.")}</p>
+          <h1 className="font-serif text-3xl font-bold text-ink tracking-tight flex items-center gap-2.5">
+            <span>{t(locale, "preview.title", "No-device Demo")}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-ink text-white font-sans font-medium">
+              E-Ink Engine
+            </span>
+          </h1>
+          <p className="text-ink-light text-sm mt-1">
+            {locale === "zh"
+              ? "在左侧按【生活、效率、资讯】探索日益丰富的墨水屏组件，右侧窗口即点即显、实时渲染排版。"
+              : "Explore lifestyle, productivity, and news components on the left; live e-ink render on the right."}
+          </p>
         </div>
+
+        {/* 快捷新建自定义模式按钮 */}
+        <button
+          onClick={() => {
+            setShowCustomModeModal(true);
+            setCustomDesc("");
+            setCustomModeName("");
+            setCustomJson("");
+            setCustomGenerating(false);
+          }}
+          className="rounded-sm border border-dashed border-ink/30 bg-white px-3.5 py-2 text-xs font-medium flex items-center gap-2 text-ink hover:border-ink hover:bg-paper-dark transition-colors shrink-0 shadow-xs"
+        >
+          <Plus size={15} />
+          <span>{locale === "zh" ? "新建自定义模式" : "Create Custom Mode"}</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-6 items-start">
+      {/* 左右分栏现代响应式架构：左侧模式库，右侧横置固定预览窗口 */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_500px] 2xl:grid-cols-[1fr_540px] gap-6 xl:gap-8 items-start">
+        
+        {/* 左侧：分类导航、二级子目录与分页展示容器 */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <CardTitle>{t(locale, "preview.panel.modes", "Modes")}</CardTitle>
-                  <ColorSelect value={previewColors} onChange={setPreviewColors} tr={(zh, en) => locale === "zh" ? zh : en} />
-                  <ScreenSizeSelect width={previewWidth} height={previewHeight} onChange={(w, h) => { setPreviewWidth(w); setPreviewHeight(h); }} tr={(zh, en) => locale === "zh" ? zh : en} />
-                </div>
-                <button
-                  onClick={() => {
-                    setShowCustomModeModal(true);
-                    setCustomDesc("");
-                    setCustomModeName("");
-                    setCustomJson("");
-                    setCustomGenerating(false);
-                  }}
-                  className="rounded-sm border border-dashed border-ink/20 bg-white px-3 py-2 text-sm flex items-center gap-2 text-ink-light hover:border-ink/40 hover:bg-paper-dark transition-colors"
-                  title={locale === "zh" ? "新建自定义模式" : "Create custom mode"}
-                >
-                  <Plus size={16} />
-                  <span>{locale === "zh" ? "新建自定义模式" : "Create custom mode"}</span>
-                </button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {modesError ? (
-                <div className="mb-4 p-3 rounded-sm border border-amber-200 bg-amber-50 text-amber-800 text-sm">
-                  <AlertCircle size={16} className="inline mr-2" />
-                  {modesError}
-                </div>
-              ) : null}
+          {/* 一级分类导航栏 (生活、效率、资讯、全部) + 搜索 */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-paper-dark/80 p-2 rounded-sm border border-ink/10">
+            <div className="flex items-center gap-1.5 overflow-x-auto">
+              {[
+                { id: "all", label: locale === "zh" ? "全部模式" : "All Modes", icon: Layers },
+                { id: "life", label: locale === "zh" ? "🌿 生活日常" : "🌿 Life", icon: Heart },
+                { id: "productivity", label: locale === "zh" ? "⚡ 效率工作" : "⚡ Productivity", icon: Briefcase },
+                { id: "news", label: locale === "zh" ? "📰 资讯热点" : "📰 News & Alerts", icon: Newspaper },
+              ].map((tab) => {
+                const isActive = primaryTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setPrimaryTab(tab.id as PrimaryCategory)}
+                    className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                      isActive
+                        ? "bg-ink text-white shadow-xs font-semibold"
+                        : "text-ink-light hover:text-ink hover:bg-white/60"
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-              <ModeSection
-                title={t(locale, "preview.section.core", "Core modes")}
-                modes={coreModes}
-                currentMode={previewMode}
-                onPreview={applyModeAndPreview}
-                collapsible
-                customMeta={modeMeta}
-                locale={locale}
+            {/* 搜索框 */}
+            <div className="relative w-full sm:w-48">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-light" />
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder={locale === "zh" ? "搜索模式..." : "Filter modes..."}
+                className="w-full pl-8 pr-3 py-1 text-xs rounded-sm border border-ink/20 bg-white focus:outline-hidden focus:border-ink transition-colors"
               />
+            </div>
+          </div>
 
-              <ModeSection
-                title={t(locale, "preview.section.more", "More modes")}
-                modes={moreModes}
-                currentMode={previewMode}
-                onPreview={applyModeAndPreview}
-                collapsible
-                customMeta={modeMeta}
-                locale={locale}
-              />
+          {modesError ? (
+            <div className="p-3 rounded-sm border border-amber-200 bg-amber-50 text-amber-800 text-xs flex items-center gap-2">
+              <AlertCircle size={16} />
+              <span>{modesError}</span>
+            </div>
+          ) : null}
 
-              {customModes.length ? (
-                <ModeSection
-                  title={t(locale, "preview.section.custom", "Custom modes")}
-                  modes={customModes}
-                  currentMode={previewMode}
-                  onPreview={applyModeAndPreview}
-                  collapsible
-                  customMeta={modeMeta}
-                  locale={locale}
-                />
-              ) : null}
-            </CardContent>
-          </Card>
+          {/* 二级子标题 1：核心推荐模式 */}
+          <PaginatedModeSection
+            title={locale === "zh" ? "核心模式" : "Core Modes"}
+            subtitle={locale === "zh" ? "精选推荐组件" : "Featured"}
+            icon={Sparkles}
+            modes={coreModes}
+            currentMode={previewMode}
+            onPreview={handleModeCardClick}
+            onConfigure={handleOpenConfigModal}
+            customMeta={modeMeta}
+            locale={locale}
+            pageSize={8}
+          />
+
+          {/* 二级子标题 2：更多丰富模式（包含全网热点、自然灾害预警等） */}
+          <PaginatedModeSection
+            title={locale === "zh" ? "更多模式" : "More Modes"}
+            subtitle={locale === "zh" ? "多元场景与深度资讯" : "Extended"}
+            icon={Layers}
+            modes={moreModes}
+            currentMode={previewMode}
+            onPreview={handleModeCardClick}
+            onConfigure={handleOpenConfigModal}
+            customMeta={modeMeta}
+            locale={locale}
+            pageSize={8}
+          />
+
+          {/* 二级子标题 3：自定义与扩展模式 */}
+          <PaginatedModeSection
+            title={locale === "zh" ? "自定义模式" : "Custom Modes"}
+            subtitle={locale === "zh" ? "用户定制与开放集成" : "User & Open Integration"}
+            icon={Sliders}
+            modes={customModes}
+            currentMode={previewMode}
+            onPreview={handleModeCardClick}
+            onConfigure={handleOpenConfigModal}
+            customMeta={modeMeta}
+            locale={locale}
+            pageSize={8}
+            tailItem={
+              <button
+                onClick={() => {
+                  setShowCustomModeModal(true);
+                  setCustomDesc("");
+                  setCustomModeName("");
+                  setCustomJson("");
+                }}
+                className="rounded-sm border border-dashed border-ink/25 bg-white p-3 text-left flex flex-col justify-center items-center gap-1.5 hover:border-ink hover:bg-paper-dark transition-colors min-h-[78px]"
+              >
+                <Plus size={18} className="text-ink-light" />
+                <span className="text-xs font-semibold text-ink">
+                  {locale === "zh" ? "新建模式" : "New Mode"}
+                </span>
+              </button>
+            }
+          />
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-baseline justify-between gap-3 flex-wrap">
-                <span className="text-base font-semibold text-ink">{t(locale, "preview.panel.display", "E-Ink Preview")}</span>
-                <span className="text-base font-semibold text-ink">
-                  {t(locale, "preview.summary.current_mode", "Mode")}: {previewModeName}
-                </span>
-              </CardTitle>
+        {/* 右侧：横向固定墨水屏实时预览窗口 (Sticky) */}
+        <div className="sticky top-6 z-20 space-y-4">
+          <Card className="border-ink/20 shadow-md bg-white">
+            <CardHeader className="pb-3 border-b border-ink/10">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <span className="text-sm font-bold text-ink flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    {locale === "zh" ? "墨水屏实时预览" : "E-Ink Live Preview"}
+                  </span>
+                </div>
+
+                {/* 屏幕尺寸与颜色模式快速切换 */}
+                <div className="flex items-center gap-2">
+                  <ColorSelect
+                    value={previewColors}
+                    onChange={(c) => {
+                      setPreviewColors(c);
+                      handlePreview(previewMode);
+                    }}
+                    tr={(zh, en) => (locale === "zh" ? zh : en)}
+                  />
+                  <ScreenSizeSelect
+                    width={previewWidth}
+                    height={previewHeight}
+                    onChange={(w, h) => {
+                      setPreviewWidth(w);
+                      setPreviewHeight(h);
+                      handlePreview(previewMode);
+                    }}
+                    tr={(zh, en) => (locale === "zh" ? zh : en)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePreview(previewMode)}
+                    disabled={previewLoading}
+                    className="h-8 px-2 text-xs"
+                    title={locale === "zh" ? "重新渲染刷新" : "Refresh"}
+                  >
+                    <RefreshCw size={13} className={previewLoading ? "animate-spin" : ""} />
+                  </Button>
+                </div>
+              </div>
+
+              {/* 当前激活模式信息横条 */}
+              <div className="mt-2.5 flex items-center justify-between gap-2 pt-2 border-t border-ink/5">
+                <div className="flex items-center gap-2 truncate">
+                  <span className="text-xs font-bold text-ink truncate">
+                    {previewModeName}
+                  </span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-ink/5 text-ink-light">
+                    {previewMode}
+                  </span>
+                </div>
+
+                {/* 若当前模式支持调节，提供常驻配置入口 */}
+                {CONFIGURABLE_MODES[previewMode] ? (
+                  <button
+                    onClick={() => handleOpenConfigModal(previewMode)}
+                    className="text-xs font-medium text-ink bg-paper-dark hover:bg-ink hover:text-white px-2.5 py-1 rounded-sm border border-ink/15 flex items-center gap-1 transition-colors shrink-0"
+                  >
+                    <Sliders size={12} />
+                    <span>{locale === "zh" ? "参数调节" : "Settings"}</span>
+                  </button>
+                ) : null}
+              </div>
             </CardHeader>
-            <CardContent className="h-[calc(80vh-220px)] flex flex-col p-0">
-              <div className="border border-ink/10 rounded-sm bg-paper flex flex-col items-center justify-center flex-1 w-full">
+
+            <CardContent className="p-4 flex flex-col items-center">
+              {/* 墨水屏设备仿真画框 (带边框与阴影) */}
+              <div
+                className="relative w-full rounded-sm border-2 border-ink/80 bg-paper-light p-2 shadow-inner flex flex-col items-center justify-center overflow-hidden"
+                style={{ aspectRatio: `${previewWidth} / ${previewHeight}` }}
+              >
                 {previewLoading ? (
-                  <div className="flex items-center justify-center w-full">
-                    <div className="text-center">
-                      <Loader2 size={32} className="animate-spin mx-auto text-ink-light mb-3" />
-                      <p className="text-sm text-ink-light">{t(locale, "preview.state.generating", "Generating preview...")}</p>
-                    </div>
+                  <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-2xs flex flex-col items-center justify-center">
+                    <Loader2 size={32} className="animate-spin text-ink mb-2" />
+                    <p className="text-xs font-medium text-ink">
+                      {t(locale, "preview.state.generating", "Generating preview...")}
+                    </p>
                   </div>
-                ) : previewImageUrl ? (
-                  <div className="flex flex-col items-center gap-2 w-full">
-                    <div
-                      className="relative w-full max-w-md bg-white border border-ink/20 rounded-sm overflow-hidden"
-                      style={{ aspectRatio: `${previewWidth}/${previewHeight}` }}
-                    >
-                      <Image
-                        src={previewImageUrl}
-                        alt={t(locale, "preview.display.alt", "InkSight preview")}
-                        fill
-                        className="object-contain"
-                        unoptimized
-                      />
-                    </div>
-                    {previewLlmStatus ? (
-                      <p className="text-[11px] text-ink-light text-center px-4">
-                        {previewLlmStatus}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : !previewMode ? (
-                  <div className="flex items-center justify-center w-full">
-                    <div className="text-center">
-                      <Eye size={32} className="mx-auto text-ink-light mb-3" />
-                      <p className="text-sm text-ink-light">{t(locale, "preview.select_mode", locale === "zh" ? "请选择模式" : "Please select a mode")}</p>
-                    </div>
+                ) : null}
+
+                {previewImageUrl ? (
+                  <div className="relative w-full h-full bg-white flex items-center justify-center overflow-hidden rounded-xs">
+                    <Image
+                      src={previewImageUrl}
+                      alt={t(locale, "preview.display.alt", "InkSight preview")}
+                      fill
+                      className="object-contain"
+                      unoptimized
+                    />
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center w-full">
-                    <div className="text-center">
-                      <Eye size={32} className="mx-auto text-ink-light mb-3" />
-                      <p className="text-sm text-ink-light">{t(locale, "preview.state.empty_title", "No preview yet")}</p>
-                      <p className="text-xs text-ink-light mt-1">{t(locale, "preview.state.empty_hint", "Click Refresh to generate.")}</p>
-                    </div>
+                  <div className="text-center p-6">
+                    <Eye size={36} className="mx-auto text-ink-light mb-2 opacity-50" />
+                    <p className="text-xs text-ink-light">
+                      {locale === "zh" ? "点击左侧模式卡片立即呈现预览" : "Click any mode on the left to render"}
+                    </p>
                   </div>
                 )}
               </div>
-              {previewMode?.toUpperCase() === "CALENDAR" && (
-                <div className="px-4 pb-3">
-                  <CalendarReminders
-                    reminders={calendarReminders}
-                    onChange={setCalendarReminders}
-                    tr={(zh, en) => (locale === "zh" ? zh : en)}
-                  />
+
+              {/* 底部状态指示条 */}
+              <div className="w-full mt-3 flex items-center justify-between text-[11px] text-ink-light px-1">
+                <div className="truncate">
+                  {previewLlmStatus ? (
+                    <span className="text-ink font-medium">● {previewLlmStatus}</span>
+                  ) : (
+                    <span>● {previewWidth}×{previewHeight} · {previewColors >= 3 ? "3-Color BWR" : "1-Bit BW"}</span>
+                  )}
                 </div>
-              )}
+                {previewImageUrl ? (
+                  <a
+                    href={previewImageUrl}
+                    download={`inksight-${previewMode.toLowerCase()}-${previewWidth}x${previewHeight}.png`}
+                    className="hover:text-ink flex items-center gap-1 transition-colors"
+                  >
+                    <Download size={12} />
+                    <span>{locale === "zh" ? "保存图像" : "Export"}</span>
+                  </a>
+                ) : null}
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
+      {/* 消息 Toast */}
       {toast ? (
         <div
-          className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-sm text-sm font-medium shadow-lg animate-fade-in ${
+          className={`fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-sm text-xs font-medium shadow-xl animate-fade-in flex items-center gap-2 ${
             toast.type === "success"
-              ? "bg-green-50 text-green-800 border border-green-200"
+              ? "bg-green-600 text-white"
               : toast.type === "error"
-                ? "bg-red-50 text-red-800 border border-red-200"
-                : "bg-amber-50 text-amber-800 border border-amber-200"
+              ? "bg-red-600 text-white"
+              : "bg-ink text-white"
           }`}
         >
-          {toast.msg}
+          {toast.type === "success" ? <Check size={14} /> : <AlertCircle size={14} />}
+          <span>{toast.msg}</span>
         </div>
       ) : null}
 
+      {/* 参数调整 Modal 弹窗 */}
       {modal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setModal(null)} />
-          <div className="relative w-[min(520px,calc(100vw-32px))] rounded-sm border border-ink/15 bg-white shadow-xl">
-            <div className="px-4 py-3 border-b border-ink/10 flex items-center justify-between">
-              <div className="text-sm font-semibold text-ink">
-                {modal.type === "quote"
-                  ? t(locale, "preview.modal.quote.title", locale === "zh" ? "自定义语录" : "Custom Quote")
-                  : modal.type === "weather"
-                  ? locale === "zh" ? "天气设置" : "Weather Settings"
-                  : modal.type === "memo"
-                  ? locale === "zh" ? "便签内容" : "Memo Content"
-                  : modal.type === "countdown"
-                  ? locale === "zh" ? "倒计时设置" : "Countdown Settings"
-                  : modal.type === "habit"
-                  ? locale === "zh" ? "习惯打卡" : "Habit Tracker"
-                  : modal.type === "calendar"
-                  ? locale === "zh" ? "日历提醒" : "Calendar Reminders"
-                  : modal.type === "timetable"
-                  ? locale === "zh" ? "课程表设置" : "Timetable Settings"
-                  : modal.type === "rss"
-                  ? locale === "zh" ? "RSS 订阅设置" : "RSS Feed Settings"
-                  : modal.type === "crypto"
-                  ? locale === "zh" ? "资产行情设置" : "Crypto Ticker Settings"
-                  : modal.type === "hotlist"
-                  ? locale === "zh" ? "全网热点设置" : "Hot Topics Settings"
-                  : modal.type === "webhook"
-                  ? locale === "zh" ? "开放数据卡片模拟" : "Webhook Card Simulator"
-                  : locale === "zh" ? "人生进度条" : "Life Progress"}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-2xs" onClick={() => setModal(null)} />
+          <div className="relative w-full max-w-lg rounded-sm border border-ink/20 bg-white shadow-2xl overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-ink/10 flex items-center justify-between bg-paper-dark">
+              <div className="text-sm font-bold text-ink flex items-center gap-2">
+                <Sliders size={16} />
+                <span>
+                  {modal.type === "hotlist"
+                    ? (locale === "zh" ? "全网热点 · 多平台多选与聚合" : "Trending Topics Configuration")
+                    : modal.type === "disaster"
+                    ? (locale === "zh" ? "自然灾害预警 · 四级预警体验" : "Disaster Warning Alert Experience")
+                    : modal.type === "weather"
+                    ? (locale === "zh" ? "天气预报设置" : "Weather Settings")
+                    : modal.type === "memo"
+                    ? (locale === "zh" ? "便签内容设置" : "Memo Settings")
+                    : modal.type === "quote"
+                    ? (locale === "zh" ? "自定义语录设置" : "Quote Settings")
+                    : modal.type === "countdown"
+                    ? (locale === "zh" ? "倒计时设置" : "Countdown Settings")
+                    : modal.type === "habit"
+                    ? (locale === "zh" ? "习惯打卡打卡项" : "Habit Tracker")
+                    : modal.type === "calendar"
+                    ? (locale === "zh" ? "日历提醒设置" : "Calendar Reminders")
+                    : modal.type === "timetable"
+                    ? (locale === "zh" ? "课程表设置" : "Timetable Settings")
+                    : modal.type === "rss"
+                    ? (locale === "zh" ? "RSS 订阅设置" : "RSS Settings")
+                    : modal.type === "crypto"
+                    ? (locale === "zh" ? "资产行情设置" : "Crypto Ticker Settings")
+                    : modal.type === "webhook"
+                    ? (locale === "zh" ? "开放数据卡片模拟" : "Webhook Card Simulator")
+                    : (locale === "zh" ? "人生进度条设置" : "Life Progress Settings")}
+                </span>
               </div>
-              <button className="text-ink-light hover:text-ink" onClick={() => setModal(null)}>
+              <button
+                className="text-ink-light hover:text-ink text-sm p-1"
+                onClick={() => setModal(null)}
+              >
                 ✕
               </button>
             </div>
-            <div className="px-4 py-4 space-y-3">
-              {modal.type === "quote" ? (
-                <>
-                  <div className="text-xs text-ink-light">
-                    {t(locale, "preview.modal.quote.hint", "Generate a deep quote randomly, or paste your own text.")}
-                  </div>
-                  <textarea
-                    value={quoteDraft}
-                    onChange={(e) => setQuoteDraft(e.target.value)}
-                    placeholder={t(locale, "preview.modal.quote.placeholder", "Type your quote...")}
-                    className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm min-h-28 bg-white"
-                  />
-                  <input
-                    value={authorDraft}
-                    onChange={(e) => setAuthorDraft(e.target.value)}
-                    placeholder={t(locale, "preview.modal.quote.author_placeholder", "Author (optional)")}
-                    className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm bg-white"
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      onClick={async () => {
-                        setModal(null);
-                        // random generate via LLM (no override)
-                        await handlePreview(modal.modeId);
-                      }}
-                      disabled={previewLoading}
-                    >
-                      {t(locale, "preview.modal.quote.random", locale === "zh" ? "随机生成" : "Random generate")}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={async () => {
-                        const q = quoteDraft.trim();
-                        const a = authorDraft.trim();
-                        setModal(null);
-                        await handlePreview(modal.modeId, q ? { quote: q, author: a } : {});
-                      }}
-                      disabled={previewLoading}
-                    >
-                      {t(locale, "preview.modal.quote.use_input", locale === "zh" ? "使用我的输入" : "Use my input")}
-                    </Button>
-                  </div>
-                </>
-              ) : modal.type === "weather" ? (
-                <>
-                  <div className="text-xs text-ink-light">
+
+            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+              {/* 1. HOTLIST 全网热点平台多选！ */}
+              {modal.type === "hotlist" ? (
+                <div className="space-y-4">
+                  <div className="text-xs text-ink-light leading-relaxed">
                     {locale === "zh"
-                      ? "搜索并选择具体地点查看天气，避免重名地点。"
-                      : "Search and choose a specific place to avoid ambiguous names."}
+                      ? "支持多选聚合！点击下方平台可自由组合勾选，系统将并发抓取所选平台的精选热搜并交错聚合展示于墨水屏。"
+                      : "Multi-select supported! Select multiple platforms below to fetch and aggregate trending topics together."}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-ink block">
+                      {locale === "zh" ? "选择展示的热榜平台（支持多选）：" : "Select Platforms (Multi-select):"}
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {HOTLIST_AVAILABLE_PLATFORMS.map((p) => {
+                        const isSelected = hotlistPlatforms.includes(p.id);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                if (hotlistPlatforms.length > 1) {
+                                  setHotlistPlatforms(hotlistPlatforms.filter((x) => x !== p.id));
+                                }
+                              } else {
+                                setHotlistPlatforms([...hotlistPlatforms, p.id]);
+                              }
+                            }}
+                            className={`p-2.5 rounded-sm border text-left transition-all flex items-center justify-between ${
+                              isSelected
+                                ? "border-ink bg-paper-dark font-medium shadow-2xs"
+                                : "border-ink/15 bg-white hover:border-ink/40"
+                            }`}
+                          >
+                            <div>
+                              <div className="text-xs font-bold text-ink">{p.label}</div>
+                              <div className="text-[10px] text-ink-light">{p.desc}</div>
+                            </div>
+                            <div
+                              className={`w-4 h-4 rounded-xs border flex items-center justify-center text-[10px] ${
+                                isSelected ? "border-ink bg-ink text-white" : "border-ink/20"
+                              }`}
+                            >
+                              {isSelected ? "✓" : ""}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between border-t border-ink/10">
+                    <button
+                      type="button"
+                      onClick={() => setHotlistPlatforms(["zhihu", "weibo", "bilibili", "baidu", "github"])}
+                      className="text-xs text-ink-light hover:text-ink underline"
+                    >
+                      {locale === "zh" ? "全选所有平台" : "Select All"}
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setModal(null)}
+                      >
+                        {locale === "zh" ? "取消" : "Cancel"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          setModal(null);
+                          await handlePreview("HOTLIST", { platforms: hotlistPlatforms });
+                        }}
+                        disabled={previewLoading}
+                        className="bg-ink text-white hover:bg-ink/90"
+                      >
+                        {locale === "zh" ? "应用并预览热点" : "Apply & Preview"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : modal.type === "disaster" ? (
+                /* 2. DISASTER_ALERT 自然灾害预警体验与等级配置 */
+                <div className="space-y-4">
+                  <div className="text-xs text-ink-light leading-relaxed">
+                    {locale === "zh"
+                      ? "国家标准四级预警体系体验：选择预警级别与灾害类型，体验最高优先级全屏紧急避险广播。"
+                      : "Experience the national standard 4-tier emergency disaster warning system."}
+                  </div>
+
+                  {/* 预警级别选择 */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-ink block">
+                      {locale === "zh" ? "预警级别（严重度）：" : "Warning Level (Severity):"}
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {DISASTER_LEVELS.map((lvl) => {
+                        const isSelected = disasterLevel === lvl.id;
+                        return (
+                          <button
+                            key={lvl.id}
+                            type="button"
+                            onClick={() => setDisasterLevel(lvl.id)}
+                            className={`p-2 rounded-sm border text-center transition-all ${
+                              isSelected
+                                ? "border-ink bg-ink text-white font-bold shadow-xs"
+                                : "border-ink/20 bg-white text-ink hover:border-ink/40"
+                            }`}
+                          >
+                            <div className="text-xs">{lvl.label}</div>
+                            <div className={`text-[10px] ${isSelected ? "text-white/80" : "text-ink-light"}`}>
+                              {lvl.roman}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 灾害类型选择 */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-ink block">
+                      {locale === "zh" ? "灾害种类（12大类手绘矢量图标）：" : "Disaster Hazard Type:"}
+                    </label>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                      {DISASTER_HAZARDS.map((h) => {
+                        const isSelected = disasterHazard === h.id;
+                        return (
+                          <button
+                            key={h.id}
+                            type="button"
+                            onClick={() => setDisasterHazard(h.id)}
+                            className={`px-2 py-1.5 rounded-sm border text-xs text-center transition-all ${
+                              isSelected
+                                ? "border-ink bg-paper-dark font-bold ring-1 ring-ink text-ink"
+                                : "border-ink/15 bg-white text-ink hover:border-ink/40"
+                            }`}
+                          >
+                            {h.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 自定义预警通告文本 */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-ink block">
+                      {locale === "zh" ? "通报说明文本（可选）：" : "Custom Alert Text (Optional):"}
+                    </label>
+                    <textarea
+                      value={disasterCustomText}
+                      onChange={(e) => setDisasterCustomText(e.target.value)}
+                      placeholder={locale === "zh" ? "留空使用气象台官方标准通告..." : "Leave empty to use official text..."}
+                      rows={2}
+                      className="w-full rounded-sm border border-ink/20 p-2 text-xs bg-white"
+                    />
+                  </div>
+
+                  <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
+                    <Button variant="outline" size="sm" onClick={() => setModal(null)}>
+                      {locale === "zh" ? "取消" : "Cancel"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview("DISASTER_ALERT", {
+                          level: disasterLevel,
+                          hazard: disasterHazard,
+                          text: disasterCustomText.trim(),
+                        });
+                      }}
+                      disabled={previewLoading}
+                      className="bg-red-600 text-white hover:bg-red-700"
+                    >
+                      {locale === "zh" ? "立即预览紧急预警" : "Preview Disaster Alert"}
+                    </Button>
+                  </div>
+                </div>
+              ) : modal.type === "weather" ? (
+                /* 3. WEATHER 天气设置 */
+                <div className="space-y-3">
+                  <div className="text-xs text-ink-light">
+                    {locale === "zh" ? "搜索并选择具体城市或地区：" : "Search and choose a specific location:"}
                   </div>
                   <LocationPicker
                     value={weatherDraftLocation}
                     onChange={setWeatherDraftLocation}
                     locale={locale === "zh" ? "zh" : "en"}
-                    placeholder={locale === "zh" ? "输入地点名称（如：上海、巴黎、Singapore）" : "Enter a place name (e.g. Shanghai, Paris, Singapore)"}
-                    helperText={locale === "zh" ? "建议从候选列表中点选。" : "Pick a result from the suggestion list."}
+                    placeholder={locale === "zh" ? "输入城市名称（如：杭州、北京、Tokyo）" : "Enter city name..."}
                     className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm bg-white"
                     autoFocus
                   />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                  <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
                     <Button
-                      onClick={async () => {
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
                         setWeatherDraftLocation({ city: "杭州" });
                       }}
-                      disabled={previewLoading}
-                      variant="outline"
                     >
-                      {locale === "zh" ? "使用默认城市" : "Use default city"}
+                      {locale === "zh" ? "设为杭州" : "Reset"}
                     </Button>
                     <Button
+                      size="sm"
                       onClick={async () => {
-                        const nextLocation = cleanLocationValue(weatherDraftLocation);
+                        const loc = cleanLocationValue(weatherDraftLocation);
                         setModal(null);
-                        if (nextLocation.city) {
-                          await handlePreview(modal.modeId, nextLocation);
-                        } else {
-                          await handlePreview(modal.modeId);
-                        }
+                        await handlePreview("WEATHER", loc.city ? loc : {});
                       }}
                       disabled={previewLoading}
-                      variant="outline"
                     >
-                      {locale === "zh" ? "预览天气" : "Preview weather"}
+                      {locale === "zh" ? "应用并预览" : "Apply"}
                     </Button>
                   </div>
-                </>
+                </div>
               ) : modal.type === "memo" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-2">
-                    {locale === "zh" 
-                      ? "设置便签标题和内容" 
-                      : "Set memo titles and content (up to 3 groups, empty groups are hidden)"}
+                /* 4. MEMO 便签设置 */
+                <div className="space-y-3">
+                  <div className="text-xs text-ink-light">
+                    {locale === "zh" ? "设置便签各栏位标题与内容：" : "Set memo contents:"}
                   </div>
                   {([1, 2, 3] as const).map((i) => {
                     const tKey = `title${i}` as keyof typeof memoDraft;
                     const cKey = `text${i}` as keyof typeof memoDraft;
                     return (
                       <div key={i} className="space-y-1">
-                        <label className="text-xs font-medium text-ink-light">
-                          {locale === "zh" ? `标题 ${i}` : `Title ${i}`}
-                          {i > 1 && <span className="text-ink-light/50 ml-1">({locale === "zh" ? "可选" : "optional"})</span>}
-                        </label>
                         <input
-                          type="text"
                           value={memoDraft[tKey]}
-                          onChange={(e) => setMemoDraft(prev => ({ ...prev, [tKey]: e.target.value }))}
-                          placeholder={i === 1 
-                            ? (locale === "zh" ? "输入标题，如：今日待办" : "e.g. Today's TODO") 
-                            : (locale === "zh" ? "可选标题" : "Optional title")}
-                          className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-sm bg-white"
-                          autoFocus={i === 1}
+                          onChange={(e) => setMemoDraft({ ...memoDraft, [tKey]: e.target.value })}
+                          placeholder={locale === "zh" ? `标题 ${i}` : `Title ${i}`}
+                          className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white font-medium"
                         />
                         <textarea
                           value={memoDraft[cKey]}
-                          onChange={(e) => setMemoDraft(prev => ({ ...prev, [cKey]: e.target.value }))}
-                          placeholder={locale === "zh" ? "输入便签内容..." : "Enter memo content..."}
-                          className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm min-h-16 bg-white"
+                          onChange={(e) => setMemoDraft({ ...memoDraft, [cKey]: e.target.value })}
+                          placeholder={locale === "zh" ? `内容 ${i}` : `Text ${i}`}
+                          rows={2}
+                          className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
                         />
                       </div>
                     );
                   })}
-                  <div className="flex justify-end pt-2">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        const settings: Record<string, string> = {};
-                        for (const i of [1, 2, 3]) {
-                          const tKey = `title${i}` as keyof typeof memoDraft;
-                          const cKey = `text${i}` as keyof typeof memoDraft;
-                          settings[`memo_title_${i}`] = memoDraft[tKey].trim();
-                          settings[`memo_text_${i}`] = memoDraft[cKey].trim();
-                        }
-                        await handlePreview(modal.modeId, settings);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "预览便签" : "Preview memo"}
-                    </Button>
-                  </div>
-                </>
-              ) : modal.type === "countdown" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-3">
-                    {locale === "zh" 
-                      ? "设置倒计时事件名称和日期" 
-                      : "Set countdown event name and date"}
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs text-ink mb-1.5">
-                        {locale === "zh" ? "事件名称" : "Event Name"}
-                      </label>
-                      <input
-                        value={countdownName}
-                        onChange={(e) => setCountdownName(e.target.value)}
-                        placeholder={locale === "zh" ? "例如：元旦、生日" : "e.g., New Year, Birthday"}
-                        className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-ink mb-1.5">
-                        {locale === "zh" ? "目标日期" : "Target Date"}
-                      </label>
-                      <input
-                        type="date"
-                        value={countdownDate}
-                        onChange={(e) => setCountdownDate(e.target.value)}
-                        className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm bg-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId, {});
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "使用默认" : "Use Default"}
+                  <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
+                    <Button variant="outline" size="sm" onClick={() => setModal(null)}>
+                      {locale === "zh" ? "取消" : "Cancel"}
                     </Button>
                     <Button
+                      size="sm"
                       onClick={async () => {
                         setModal(null);
-                        const today = new Date();
-                        const target = new Date(countdownDate);
-                        const days = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                        await handlePreview(modal.modeId, {
-                          events: [{
-                            name: countdownName || "倒计时",
-                            date: countdownDate,
-                            type: "countdown",
-                            days: days
-                          }]
+                        await handlePreview("MEMO", {
+                          memo_title_1: memoDraft.title1, memo_text_1: memoDraft.text1,
+                          memo_title_2: memoDraft.title2, memo_text_2: memoDraft.text2,
+                          memo_title_3: memoDraft.title3, memo_text_3: memoDraft.text3,
                         });
                       }}
                       disabled={previewLoading}
-                      variant="outline"
                     >
-                      {locale === "zh" ? "预览倒计时" : "Preview Countdown"}
+                      {locale === "zh" ? "保存并预览" : "Apply"}
                     </Button>
                   </div>
-                </>
-              ) : modal.type === "habit" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-3">
-                    {locale === "zh" 
-                      ? "设置你的习惯并勾选完成情况" 
-                      : "Set your habits and check completion"}
-                  </div>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {habitItems.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={item.done}
-                          onChange={(e) => {
-                            const newItems = [...habitItems];
-                            newItems[idx].done = e.target.checked;
-                            setHabitItems(newItems);
-                          }}
-                          className="w-4 h-4"
-                        />
-                        <input
-                          value={item.name}
-                          onChange={(e) => {
-                            const newItems = [...habitItems];
-                            newItems[idx].name = e.target.value;
-                            setHabitItems(newItems);
-                          }}
-                          placeholder={locale === "zh" ? "习惯名称" : "Habit name"}
-                          className="flex-1 rounded-sm border border-ink/20 px-3 py-1.5 text-sm bg-white"
-                        />
-                        <button
-                          onClick={() => {
-                            const newItems = habitItems.filter((_, i) => i !== idx);
-                            setHabitItems(newItems);
-                          }}
-                          className="text-ink-light hover:text-red-500 px-2"
-                          title={locale === "zh" ? "删除" : "Delete"}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setHabitItems([...habitItems, { name: "", done: false }]);
-                    }}
-                    className="w-full mt-2 px-3 py-2 rounded-sm border border-dashed border-ink/20 text-sm text-ink-light hover:text-ink hover:border-ink/40 transition-colors"
-                  >
-                    + {locale === "zh" ? "添加习惯" : "Add Habit"}
-                  </button>
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "使用默认" : "Use Default"}
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId, {
-                          habitItems: habitItems,
-                        });
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "预览打卡" : "Preview Habits"}
-                    </Button>
-                  </div>
-                </>
-              ) : modal.type === "lifebar" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-3">
-                    {locale === "zh" 
-                      ? "设置你的年龄和预期寿命" 
-                      : "Set your age and life expectancy"}
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs text-ink mb-1.5">
-                        {locale === "zh" ? "芳龄几何？" : "Your Age"}
-                      </label>
+                </div>
+              ) : modal.type === "rss" ? (
+                /* 5. RSS 设置 */
+                <div className="space-y-3">
+                  <label className="text-xs font-semibold text-ink block">RSS 订阅地址：</label>
+                  <input
+                    value={rssFeedUrl}
+                    onChange={(e) => setRssFeedUrl(e.target.value)}
+                    className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white font-mono"
+                  />
+                  <div className="flex items-center gap-4 text-xs">
+                    <label className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        checked={rssShowImage}
+                        onChange={(e) => setRssShowImage(e.target.checked)}
+                      />
+                      <span>显示配图</span>
+                    </label>
+                    <label className="flex items-center gap-1.5">
+                      <span>条目序号：</span>
                       <input
                         type="number"
-                        value={userAge}
-                        onChange={(e) => setUserAge(parseInt(e.target.value) || 0)}
-                        min="0"
-                        max="120"
-                        className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm bg-white"
+                        min={0}
+                        max={10}
+                        value={rssItemIndex}
+                        onChange={(e) => setRssItemIndex(Number(e.target.value))}
+                        className="w-16 border rounded px-1.5 py-0.5"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-ink mb-1.5">
-                        {locale === "zh" ? "退休金领到？" : "Life Expectancy"}
-                      </label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {[80, 90, 100, 120].map((years) => (
-                          <button
-                            key={years}
-                            onClick={() => setLifeExpectancy(years)}
-                            className={`px-3 py-2 rounded-sm text-sm transition-colors ${
-                              lifeExpectancy === years
-                                ? "bg-ink text-white"
-                                : "bg-paper-dark text-ink hover:bg-ink/10"
-                            }`}
-                          >
-                            {years} {locale === "zh" ? "岁" : "years"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    </label>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "使用默认" : "Use Default"}
+                  <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
+                    <Button variant="outline" size="sm" onClick={() => setModal(null)}>
+                      取消
                     </Button>
                     <Button
+                      size="sm"
                       onClick={async () => {
                         setModal(null);
-                        const lifePct = ((userAge / lifeExpectancy) * 100).toFixed(1);
-                        await handlePreview(modal.modeId, {
-                          age: userAge,
-                          life_expect: lifeExpectancy,
-                          life_pct: parseFloat(lifePct),
-                          life_label: locale === "zh" ? "人生" : "Life"
-                        });
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "预览进度" : "Preview Progress"}
-                    </Button>
-                  </div>
-                </>
-              ) : modal.type === "calendar" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-3">
-                    {locale === "zh"
-                      ? "为日历中的特定日期添加提醒事项，提醒会显示在日期下方。"
-                      : "Add reminders for specific dates. They appear below each date in the calendar."}
-                  </div>
-                  <CalendarReminders
-                    reminders={calendarReminders}
-                    onChange={setCalendarReminders}
-                    tr={(zh, en) => (locale === "zh" ? zh : en)}
-                  />
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "跳过预览" : "Skip Preview"}
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        const override: Record<string, unknown> = {};
-                        if (Object.keys(calendarReminders).length > 0) {
-                          override.reminders = calendarReminders;
-                        }
-                        await handlePreview(modal.modeId, override);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "预览日历" : "Preview Calendar"}
-                    </Button>
-                  </div>
-                </>
-              ) : modal.type === "timetable" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-3">
-                    {locale === "zh"
-                      ? "选择课表类型并编辑课程安排，点击单元格即可修改。"
-                      : "Choose timetable type and edit courses. Click any cell to modify."}
-                  </div>
-                  <TimetableEditor
-                    data={timetableData}
-                    onChange={setTimetableData}
-                    tr={(zh, en) => (locale === "zh" ? zh : en)}
-                  />
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "使用默认" : "Use Default"}
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId, {
-                          style: timetableData.style,
-                          weekdays: timetableData.weekdays,
-                          periods: timetableData.periods,
-                          courses: timetableData.courses,
-                        });
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "预览课程表" : "Preview Timetable"}
-                    </Button>
-                  </div>
-                </>
-              ) : modal.type === "rss" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-2">
-                    {locale === "zh"
-                      ? "输入任意 RSS/Atom 订阅源链接，或选用预设示例源进行图文仿真渲染。"
-                      : "Enter an RSS/Atom feed URL or select a preset feed to simulate e-ink rendering."}
-                  </div>
-                  <div className="space-y-2.5">
-                    <div>
-                      <label className="text-xs font-medium text-ink block mb-1">
-                        {locale === "zh" ? "订阅源地址 (Feed URL)" : "Feed URL"}
-                      </label>
-                      <input
-                        value={rssFeedUrl}
-                        onChange={(e) => setRssFeedUrl(e.target.value)}
-                        placeholder="https://example.com/feed.xml"
-                        className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white font-mono"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setRssFeedUrl("https://kellson.dpdns.org:81/playno1/av")}
-                        className="text-[11px] px-2 py-0.5 rounded bg-ink/5 hover:bg-ink/10 text-ink-light"
-                      >
-                        {locale === "zh" ? "测试源 1: 玩乐达人" : "Test Feed: PlayNo1"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRssFeedUrl("https://feeds.feedburner.com/zhihu-daily")}
-                        className="text-[11px] px-2 py-0.5 rounded bg-ink/5 hover:bg-ink/10 text-ink-light"
-                      >
-                        {locale === "zh" ? "测试源 2: 知乎日报" : "Test Feed: Zhihu"}
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                      <div>
-                        <label className="text-xs font-medium text-ink block mb-1">
-                          {locale === "zh" ? "文章序号 (0 为最新)" : "Article Index (0 is newest)"}
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          max={30}
-                          value={rssItemIndex}
-                          onChange={(e) => setRssItemIndex(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 pt-5">
-                        <input
-                          type="checkbox"
-                          id="rss-show-img"
-                          checked={rssShowImage}
-                          onChange={(e) => setRssShowImage(e.target.checked)}
-                          className="w-4 h-4 rounded border-ink/20"
-                        />
-                        <label htmlFor="rss-show-img" className="text-xs text-ink cursor-pointer select-none">
-                          {locale === "zh" ? "提取并渲染配图" : "Render Cover Image"}
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "使用默认设置" : "Use Default"}
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId, {
-                          feed_url: rssFeedUrl.trim(),
+                        await handlePreview("RSS", {
+                          feed_url: rssFeedUrl,
                           item_index: rssItemIndex,
                           show_image: rssShowImage,
                         });
                       }}
-                      disabled={previewLoading}
-                      variant="outline"
                     >
-                      {locale === "zh" ? "预览 RSS" : "Preview RSS"}
+                      应用并预览
                     </Button>
                   </div>
-                </>
+                </div>
               ) : modal.type === "crypto" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-2">
-                    {locale === "zh"
-                      ? "选择或输入要监控的加密货币（BTC/ETH/SOL...）或全球股票（AAPL/TSLA/NVDA...），支持生成 24h 走势折线图。"
-                      : "Select or enter a cryptocurrency (BTC/ETH...) or stock symbol (AAPL/TSLA/NVDA...) to track with 24h trend sparkline."}
+                /* 6. CRYPTO 资产行情设置 */
+                <div className="space-y-3">
+                  <label className="text-xs font-semibold text-ink block">资产代号 (Symbol)：</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["BTC", "ETH", "SOL", "BNB", "DOGE"].map((sym) => (
+                      <button
+                        key={sym}
+                        type="button"
+                        onClick={() => setCryptoSymbol(sym)}
+                        className={`px-3 py-1 rounded-sm border text-xs font-mono ${
+                          cryptoSymbol === sym ? "bg-ink text-white border-ink" : "bg-white border-ink/20 text-ink"
+                        }`}
+                      >
+                        {sym}
+                      </button>
+                    ))}
                   </div>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-medium text-ink block mb-1">
-                        {locale === "zh" ? "资产 / 股票代码" : "Asset / Stock Symbol"}
-                      </label>
-                      <input
-                        value={cryptoSymbol}
-                        onChange={(e) => setCryptoSymbol(e.target.value.toUpperCase())}
-                        placeholder="BTC 或 AAPL"
-                        className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white uppercase font-mono"
-                      />
-                    </div>
-                    <div>
-                      <div className="text-[11px] text-ink-light mb-1.5">{locale === "zh" ? "热门加密资产" : "Popular Crypto"}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {["BTC", "ETH", "SOL", "BNB", "DOGE"].map((sym) => (
-                          <button
-                            key={sym}
-                            type="button"
-                            onClick={() => setCryptoSymbol(sym)}
-                            className={`text-xs px-2 py-1 rounded border transition-colors ${
-                              cryptoSymbol === sym
-                                ? "bg-ink text-white border-ink"
-                                : "bg-ink/5 border-ink/10 text-ink hover:bg-ink/10"
-                            }`}
-                          >
-                            {sym}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[11px] text-ink-light mb-1.5">{locale === "zh" ? "热门股票标的" : "Popular Stocks"}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {[
-                          { sym: "AAPL", name: "苹果" },
-                          { sym: "TSLA", name: "特斯拉" },
-                          { sym: "NVDA", name: "英伟达" },
-                          { sym: "MSFT", name: "微软" },
-                          { sym: "GOOGL", name: "谷歌" },
-                        ].map((stk) => (
-                          <button
-                            key={stk.sym}
-                            type="button"
-                            onClick={() => setCryptoSymbol(stk.sym)}
-                            className={`text-xs px-2 py-1 rounded border transition-colors ${
-                              cryptoSymbol === stk.sym
-                                ? "bg-ink text-white border-ink"
-                                : "bg-ink/5 border-ink/10 text-ink hover:bg-ink/10"
-                            }`}
-                          >
-                            {stk.sym} {locale === "zh" ? stk.name : ""}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pt-3">
+                  <input
+                    value={cryptoSymbol}
+                    onChange={(e) => setCryptoSymbol(e.target.value.toUpperCase())}
+                    className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white font-mono uppercase"
+                    placeholder="输入其他代号..."
+                  />
+                  <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
+                    <Button variant="outline" size="sm" onClick={() => setModal(null)}>
+                      取消
+                    </Button>
                     <Button
+                      size="sm"
+                      onClick={async () => {
+                        setModal(null);
+                        await handlePreview("CRYPTO", { symbol: cryptoSymbol });
+                      }}
+                    >
+                      应用并预览
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* 其他通用模式弹窗 */
+                <div className="space-y-3">
+                  <p className="text-xs text-ink-light">已加载该模式快捷配置参数。</p>
+                  <div className="pt-3 flex items-center justify-end gap-2 border-t border-ink/10">
+                    <Button variant="outline" size="sm" onClick={() => setModal(null)}>
+                      关闭
+                    </Button>
+                    <Button
+                      size="sm"
                       onClick={async () => {
                         setModal(null);
                         await handlePreview(modal.modeId);
                       }}
-                      disabled={previewLoading}
-                      variant="outline"
                     >
-                      {locale === "zh" ? "使用默认 BTC" : "Default (BTC)"}
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId, {
-                          symbol: cryptoSymbol.trim() || "BTC",
-                        });
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "预览行情" : "Preview Ticker"}
+                      刷新预览
                     </Button>
                   </div>
-                </>
-              ) : modal.type === "hotlist" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-2">
-                    {locale === "zh"
-                      ? "选择要聚合展示的热榜平台，系统会自动抓取 Top 5 热门话题并在墨水屏优雅排版。"
-                      : "Select a trending platform to fetch and render top 5 hot topics on e-ink."}
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: "zhihu", label: "知乎热榜" },
-                        { id: "weibo", label: "微博热搜" },
-                        { id: "bilibili", label: "B站热门" },
-                        { id: "github", label: "GitHub Trending" },
-                      ].map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => setHotlistPlatform(p.id)}
-                          className={`text-xs px-3 py-1.5 rounded border transition-colors ${
-                            hotlistPlatform === p.id
-                              ? "bg-ink text-white border-ink font-medium"
-                              : "bg-ink/5 border-ink/10 text-ink hover:bg-ink/10"
-                          }`}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "使用默认榜单" : "Default Hotlist"}
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId, {
-                          platform: hotlistPlatform,
-                        });
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "预览热榜" : "Preview Hotlist"}
-                    </Button>
-                  </div>
-                </>
-              ) : modal.type === "webhook" ? (
-                <>
-                  <div className="text-xs text-ink-light mb-2">
-                    {locale === "zh"
-                      ? "模拟外部系统（智能家居/服务器监控/自建脚本）通过 POST /api/open/device/{mac}/data 推送的卡片数据。"
-                      : "Simulate custom dashboard data pushed via POST /api/open/device/{mac}/data."}
-                  </div>
-                  <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
-                    <div>
-                      <label className="text-xs font-medium text-ink block mb-0.5">
-                        {locale === "zh" ? "卡片主标题" : "Card Title"}
-                      </label>
-                      <input
-                        value={webhookDraft.title}
-                        onChange={(e) => setWebhookDraft({ ...webhookDraft, title: e.target.value })}
-                        className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-xs font-medium text-ink block mb-0.5">
-                          {locale === "zh" ? "核心大字数值" : "Primary Metric"}
-                        </label>
-                        <input
-                          value={webhookDraft.primary_metric}
-                          onChange={(e) => setWebhookDraft({ ...webhookDraft, primary_metric: e.target.value })}
-                          className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-ink block mb-0.5">
-                          {locale === "zh" ? "数值说明" : "Metric Label"}
-                        </label>
-                        <input
-                          value={webhookDraft.primary_label}
-                          onChange={(e) => setWebhookDraft({ ...webhookDraft, primary_label: e.target.value })}
-                          className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-ink block mb-0.5">
-                        {locale === "zh" ? "指标明细 1" : "Item 1"}
-                      </label>
-                      <input
-                        value={webhookDraft.item_1_value}
-                        onChange={(e) => setWebhookDraft({ ...webhookDraft, item_1_value: e.target.value })}
-                        className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-ink block mb-0.5">
-                        {locale === "zh" ? "指标明细 2" : "Item 2"}
-                      </label>
-                      <input
-                        value={webhookDraft.item_2_value}
-                        onChange={(e) => setWebhookDraft({ ...webhookDraft, item_2_value: e.target.value })}
-                        className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-ink block mb-0.5">
-                        {locale === "zh" ? "指标明细 3" : "Item 3"}
-                      </label>
-                      <input
-                        value={webhookDraft.item_3_value}
-                        onChange={(e) => setWebhookDraft({ ...webhookDraft, item_3_value: e.target.value })}
-                        className="w-full rounded-sm border border-ink/20 px-2.5 py-1 text-xs bg-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId);
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "使用默认数据" : "Default Data"}
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        setModal(null);
-                        await handlePreview(modal.modeId, {
-                          title: webhookDraft.title.trim(),
-                          primary_metric: webhookDraft.primary_metric.trim(),
-                          primary_label: webhookDraft.primary_label.trim(),
-                          item_1_value: webhookDraft.item_1_value.trim(),
-                          item_2_value: webhookDraft.item_2_value.trim(),
-                          item_3_value: webhookDraft.item_3_value.trim(),
-                        });
-                      }}
-                      disabled={previewLoading}
-                      variant="outline"
-                    >
-                      {locale === "zh" ? "预览卡片" : "Preview Card"}
-                    </Button>
-                  </div>
-                </>
-              ) : null}
+                </div>
+              )}
             </div>
           </div>
         </div>
       ) : null}
-      <Dialog open={showCustomModeModal} onClose={() => setShowCustomModeModal(false)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader onClose={() => setShowCustomModeModal(false)}>
-            <div>
-              <DialogTitle>{locale === "zh" ? "创建自定义模式" : "Create Custom Mode"}</DialogTitle>
-              <DialogDescription>
-                {locale === "zh"
-                  ? "用一句话描述你想要的模式，点击 AI 生成预览即可。"
-                  : "Describe the mode you want, then click AI Generate Preview."}
-              </DialogDescription>
+
+      {/* 自定义模式生成弹窗 */}
+      {showCustomModeModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-2xs" onClick={() => setShowCustomModeModal(false)} />
+          <div className="relative w-full max-w-lg rounded-sm border border-ink/20 bg-white p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-ink/10 pb-3">
+              <h3 className="text-sm font-bold text-ink">
+                {locale === "zh" ? "AI 智能生成自定义墨水屏模式" : "Generate Custom Mode"}
+              </h3>
+              <button className="text-ink-light hover:text-ink text-sm" onClick={() => setShowCustomModeModal(false)}>
+                ✕
+              </button>
             </div>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            {customGenerating ? (
-              <div className="rounded-sm border border-ink/10 bg-paper px-3 py-3 text-sm text-ink-light flex items-center gap-2">
-                <Loader2 size={16} className="animate-spin" />
-                {locale === "zh" ? "模式生成中..." : "Generating mode..."}
-              </div>
-            ) : null}
-
-            <textarea
-              value={customDesc}
-              onChange={(e) => setCustomDesc(e.target.value)}
-              rows={3}
-              maxLength={2000}
-              placeholder={
-                locale === "zh"
-                  ? "描述你想要的模式，如：每天显示一个英语单词和释义，单词要大号字体居中"
-                  : "Describe your mode, e.g. show one English word and definition daily with a large centered font"
-              }
-              className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm resize-y bg-white"
-              disabled={customGenerating}
-            />
-
-            <input
-              value={customModeName}
-              onChange={(e) => setCustomModeName(e.target.value)}
-              placeholder={locale === "zh" ? "模式名称（例如：今日英语）" : "Mode name (e.g. Daily English)"}
-              className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm bg-white"
-              disabled={customGenerating}
-            />
-
-            <Button
-              size="sm"
-              onClick={() => void handleGenerateCustomModeAndPreview()}
-              disabled={customGenerating || !customDesc.trim()}
-            >
-              {locale === "zh" ? "AI 生成预览" : "AI Generate Preview"}
-            </Button>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-ink block">
+                {locale === "zh" ? "描述你想要的墨水屏排版与功能：" : "Describe desired mode layout:"}
+              </label>
+              <textarea
+                value={customDesc}
+                onChange={(e) => setCustomDesc(e.target.value)}
+                placeholder={locale === "zh" ? "例如：一个展示三行每日复盘清单、一个大号完成度进度条，带古典双线边框的极简卡片..." : "Describe the layout..."}
+                rows={4}
+                className="w-full rounded-sm border border-ink/20 p-2.5 text-xs bg-white"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={() => setShowCustomModeModal(false)}>
+                {locale === "zh" ? "取消" : "Cancel"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleGenerateCustomModeAndPreview}
+                disabled={customGenerating || !customDesc.trim()}
+                className="bg-ink text-white"
+              >
+                {customGenerating ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin mr-1.5" />
+                    <span>{locale === "zh" ? "生成中..." : "Generating..."}</span>
+                  </>
+                ) : (
+                  <span>{locale === "zh" ? "开始生成并预览" : "Generate & Preview"}</span>
+                )}
+              </Button>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-      {/* 邀请码输入弹窗 */}
+        </div>
+      ) : null}
+
+      {/* 邀请码弹窗 */}
       {showInviteModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="w-full max-w-md mx-4">
-            <CardHeader>
-              <CardTitle>{locale === "en" ? "Enter Invitation Code" : "请输入邀请码"}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-ink-light">
-                {locale === "en"
-                  ? "Your free quota has been exhausted. You can either enter an invitation code to get 5 more free LLM calls, or configure your own API key in device settings."
-                  : "您的免费额度已用完。您可以输入邀请码获得50次免费LLM调用额度，也可以在设备配置中设置自己的 API key。"}
-              </p>
-              <div className="p-3 rounded-sm border border-ink/20 bg-paper-dark">
-                <p className="text-xs text-ink-light mb-2">
-                  {locale === "en"
-                    ? "💡 Tip: If you have your own API key, you can configure it in your profile to avoid quota limits."
-                    : "💡 提示：如果您有自己的 API key，可以在个人信息中配置，这样就不会受到额度限制了。"}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-2xs" onClick={() => setShowInviteModal(false)} />
+          <div className="relative w-full max-w-md rounded-sm border border-ink/20 bg-white p-5 shadow-2xl space-y-4">
+            <h3 className="text-sm font-bold text-ink">
+              {locale === "zh" ? "输入邀请码解锁额度" : "Enter Invitation Code"}
+            </h3>
+            <p className="text-xs text-ink-light">
+              {locale === "zh" ? "体验免费额度已达上限，请输入专属邀请码兑换更多预览点数。" : "Free quota exhausted, please enter invite code."}
+            </p>
+            <input
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              placeholder={locale === "zh" ? "输入邀请码" : "Invitation Code"}
+              className="w-full rounded-sm border border-ink/20 px-3 py-2 text-xs bg-white font-mono"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowInviteModal(false)}>
+                {locale === "zh" ? "关闭" : "Close"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  if (!inviteCode.trim()) return;
+                  setRedeemingInvite(true);
+                  try {
+                    const res = await fetch("/api/auth/redeem-invite-code", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ invite_code: inviteCode.trim() }),
+                    });
+                    const d = await res.json();
+                    if (!res.ok) throw new Error(d.error || "兑换失败");
+                    showToast(locale === "zh" ? "兑换成功！" : "Redeemed successfully!", "success");
                     setShowInviteModal(false);
-                    router.push(withLocalePath(localeFromPathname(pathname || "/"), "/profile"));
-                  }}
-                  className="w-full text-xs"
-                >
-                  {locale === "en" ? "Go to Profile Settings" : "前往个人信息配置"}
-                </Button>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">
-                  {locale === "en" ? "Invitation Code" : "邀请码"}
-                </label>
-                <input
-                  type="text"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value)}
-                  placeholder={locale === "en" ? "Enter invitation code" : "请输入邀请码"}
-                  className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !redeemingInvite) {
-                      handleRedeemInviteCode();
+                    if (pendingPreviewMode) {
+                      await handlePreview(pendingPreviewMode);
                     }
-                  }}
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowInviteModal(false);
-                    setInviteCode("");
-                    setPendingPreviewMode(null);
-                  }}
-                  disabled={redeemingInvite}
-                >
-                  {locale === "en" ? "Cancel" : "取消"}
-                </Button>
-                <Button onClick={handleRedeemInviteCode} disabled={redeemingInvite || !inviteCode.trim()}>
-                  {redeemingInvite ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin mr-2" />
-                      {locale === "en" ? "Redeeming..." : "兑换中..."}
-                    </>
-                  ) : (
-                    locale === "en" ? "Redeem" : "兑换"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  } catch (err) {
+                    showToast(err instanceof Error ? err.message : "兑换失败", "error");
+                  } finally {
+                    setRedeemingInvite(false);
+                  }
+                }}
+                disabled={redeemingInvite || !inviteCode.trim()}
+              >
+                {locale === "zh" ? "立即兑换" : "Redeem"}
+              </Button>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

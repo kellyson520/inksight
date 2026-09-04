@@ -75,3 +75,59 @@ def test_open_device_data_and_preview():
         prev_hot = client.get("/api/preview?persona=HOTLIST")
         assert prev_hot.status_code == 200
         assert prev_hot.headers.get("content-type") == "image/png"
+
+        # 验证 HOTLIST 多平台预览
+        import json, urllib.parse
+        ov = json.dumps({"platforms": ["weibo", "zhihu"]})
+        prev_multi = client.get(f"/api/preview?persona=HOTLIST&mode_override={urllib.parse.quote(ov)}")
+        assert prev_multi.status_code == 200
+        assert prev_multi.headers.get("content-type") == "image/png"
+
+        # 验证 DISASTER_ALERT 预警模式预览
+        prev_dis = client.get("/api/preview?persona=DISASTER_ALERT")
+        assert prev_dis.status_code == 200
+        assert prev_dis.headers.get("content-type") == "image/png"
+
+
+@pytest.mark.asyncio
+async def test_hotlist_multi_platform_aggregation():
+    from core.hotlist_service import hotlist_service
+
+    # 1. 多平台多选获取
+    res = await hotlist_service.get_multi_hotlist(["weibo", "zhihu", "bilibili"], limit=5)
+    assert res is not None
+    assert "items" in res
+    assert len(res["items"]) >= 3
+    # 确认存在多源标签
+    titles = [it["title"] for it in res["items"]]
+    tags = [t[:4] for t in titles if "[" in t]
+    assert len(tags) > 0
+
+    # 2. 单平台获取微博
+    res_wb = await hotlist_service.get_hotlist("weibo", limit=5)
+    assert res_wb is not None
+    assert "微博" in res_wb["platform_title"]
+    assert len(res_wb["items"]) >= 3
+
+
+@pytest.mark.asyncio
+async def test_disaster_alert_provider_and_catalog():
+    from core.mode_catalog import builtin_catalog_map
+
+    # 确认在 BUILTIN_CATALOG 中已注册 DISASTER_ALERT
+    cat = builtin_catalog_map()
+    assert "DISASTER_ALERT" in cat
+    assert "预警" in cat["DISASTER_ALERT"].zh.name
+
+    # 确认 provider 执行
+    res = await dispatch_provider(
+        "disaster_alert",
+        {"mode_id": "DISASTER_ALERT"},
+        {"provider": "disaster_alert", "level": "橙色", "hazard": "台风"},
+        {},
+    )
+    assert res is not None
+    assert res["level"] == "橙色"
+    assert res["type_name"] == "台风"
+    assert "台风" in res["title"]
+    assert len(res["advice"]) >= 1

@@ -25,22 +25,21 @@ async def generate_hotlist(
     mode_overrides = config.get("mode_overrides") or {}
     override = mode_overrides.get("HOTLIST") or {}
 
-    platform = "zhihu"
-    if isinstance(override, dict) and override.get("platform"):
-        platform = str(override["platform"])
-    elif isinstance(mode_settings, dict) and mode_settings.get("platform"):
-        platform = str(mode_settings["platform"])
-    elif content_cfg.get("platform"):
-        platform = str(content_cfg["platform"])
+    # 提取多平台或单平台配置
+    platforms_raw = None
+    if isinstance(override, dict):
+        platforms_raw = override.get("platforms") or override.get("platform")
+    if not platforms_raw and isinstance(mode_settings, dict):
+        platforms_raw = mode_settings.get("platforms") or mode_settings.get("platform")
+    if not platforms_raw:
+        platforms_raw = content_cfg.get("platforms") or content_cfg.get("platform") or "zhihu"
 
-    # 统一通过下沉的 hotlist_service 基础设施获取
     try:
-        data = await hotlist_service.get_hotlist(platform)
+        data = await hotlist_service.get_multi_hotlist(platforms_raw)
         if data:
             return data
     except Exception as exc:
-        logger.warning("[HotlistProvider] Failed to get hotlist for %s: %s", platform, exc)
+        logger.warning("[HotlistProvider] Failed to get hotlist for %s: %s", platforms_raw, exc)
 
     # 异常兜底
-    clean_plat = hotlist_service.normalize_platform(platform)
-    return await hotlist_service.get_hotlist(clean_plat)
+    return await hotlist_service.get_multi_hotlist("zhihu")

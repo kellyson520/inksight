@@ -6,14 +6,15 @@
   "description": "Live trending topics from Zhihu, Weibo, Bilibili, GitHub Trending, etc.",
   "settings_schema": [
     {
-      "key": "platform",
-      "label": "Trending Platform",
-      "type": "select",
-      "default": "zhihu",
+      "key": "platforms",
+      "label": "Trending Platforms (Multi-select)",
+      "type": "multiselect",
+      "default": ["zhihu", "weibo"],
       "options": [
         { "value": "zhihu", "label": "Zhihu Trending" },
         { "value": "weibo", "label": "Weibo Hot Search" },
         { "value": "bilibili", "label": "Bilibili Hot" },
+        { "value": "baidu", "label": "Baidu Hot" },
         { "value": "github", "label": "GitHub Trending" }
       ]
     }
@@ -21,7 +22,7 @@
   "content": {
     "type": "computed",
     "provider": "hotlist",
-    "platform": "zhihu",
+    "platforms": ["zhihu", "weibo"],
     "fallback": {
       "platform_title": "Zhihu Trending",
       "update_time": "Live",
