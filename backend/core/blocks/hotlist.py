@@ -173,7 +173,10 @@ def _render_dense_grid(ctx: RenderContext, block: dict[str, Any], items: list[di
 
             # 热度值（靠右）
             if hot_val:
-                hot_str = f"🔥{hot_val}"
+                if any(x in hot_val for x in ("♪", "★", "🔥", "★")):
+                    hot_str = hot_val
+                else:
+                    hot_str = f"🔥{hot_val}"
                 hw = font_hot.getbbox(hot_str)[2] - font_hot.getbbox(hot_str)[0]
                 if col_x + col_w - hw > col_x + rw + pw + int(10 * scale):
                     ctx.draw.text((col_x + col_w - hw, cur_y + int(1 * scale)), hot_str, fill=EINK_FG, font=font_hot)

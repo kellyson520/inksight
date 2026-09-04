@@ -79,10 +79,13 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [
+  { id: "netease", label: "网易云热歌", desc: "云音乐飙升与热歌前列" },
+  { id: "douban", label: "豆瓣电影", desc: "高口碑热门影视榜" },
+  { id: "douyin", label: "抖音热点", desc: "短视频全网热点" },
+  { id: "wechat", label: "微信热榜", desc: "社交高频精选关注" },
   { id: "zhihu", label: "知乎热榜", desc: "高热深度讨论" },
   { id: "weibo", label: "微博热搜", desc: "全民实时热度" },
   { id: "bilibili", label: "B站热门", desc: "热门视频与科技" },
-  { id: "douyin", label: "抖音热点", desc: "短视频全网热点" },
   { id: "baidu", label: "百度热搜", desc: "全网即时事件" },
   { id: "36kr", label: "36氪热榜", desc: "商业科技头条" },
   { id: "sspai", label: "少数派", desc: "数字生活与高效生产力" },

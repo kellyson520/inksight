@@ -7,15 +7,17 @@ import { DISASTER_LEVELS, DISASTER_HAZARDS } from "../types";
 interface DisasterConfigProps {
   initialLevel: string;
   initialHazard: string;
+  initialCity?: string;
   locale: string;
   previewLoading: boolean;
   onClose: () => void;
-  onSubmit: (override: { level: string; hazard: string; text?: string }) => Promise<void>;
+  onSubmit: (override: { level: string; hazard: string; text?: string; city?: string }) => Promise<void>;
 }
 
 export function DisasterConfig({
   initialLevel,
   initialHazard,
+  initialCity = "",
   locale,
   previewLoading,
   onClose,
@@ -23,14 +25,28 @@ export function DisasterConfig({
 }: DisasterConfigProps) {
   const [disasterLevel, setDisasterLevel] = useState(initialLevel || "red");
   const [disasterHazard, setDisasterHazard] = useState(initialHazard || "rainstorm");
+  const [disasterCity, setDisasterCity] = useState(initialCity || "");
   const [disasterCustomText, setDisasterCustomText] = useState("");
 
   return (
     <div className="space-y-4">
       <div className="text-xs text-ink-light leading-relaxed">
         {locale === "zh"
-          ? "国家标准四级预警体系体验：选择预警级别与灾害类型，体验最高优先级全屏紧急避险广播。"
-          : "Experience the national standard 4-tier emergency disaster warning system."}
+          ? "国家标准四级预警体系：支持设定精准城市以防跨区误判，并在达到严重度门槛时触发全屏紧急避险。"
+          : "National standard 4-tier emergency disaster warning system with strict regional filtering."}
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-ink block">
+          {locale === "zh" ? "监控城市/地区（防跨区误判）：" : "Monitored City/Region (Prevents false alarms):"}
+        </label>
+        <input
+          type="text"
+          value={disasterCity}
+          onChange={(e) => setDisasterCity(e.target.value)}
+          placeholder={locale === "zh" ? "例如：杭州市、北京市、上海市（留空则跟随设备位置）" : "e.g. Hangzhou, Beijing (defaults to device city)"}
+          className="w-full px-3 py-1.5 text-xs rounded-sm border border-ink/20 bg-white focus:outline-hidden focus:border-ink transition-colors"
+        />
       </div>
 
       <div className="space-y-1.5">
@@ -110,6 +126,7 @@ export function DisasterConfig({
             await onSubmit({
               level: disasterLevel,
               hazard: disasterHazard,
+              city: disasterCity.trim(),
               text: disasterCustomText.trim(),
             });
           }}

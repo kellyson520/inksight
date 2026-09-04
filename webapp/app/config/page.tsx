@@ -2724,7 +2724,7 @@ function ConfigPageInner() {
             {/* Modes Tab */}
             {activeTab === "modes" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-6 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_480px] gap-6 items-start">
                   <ModeSelector
                     tr={tr}
                     selectedModes={selectedModes}

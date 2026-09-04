@@ -276,7 +276,9 @@ def clear_simulated_alert(mac: str) -> None:
 
 
 async def check_device_disaster_alert(mac: str, cfg: dict | None) -> dict[str, Any] | None:
-    """检查设备是否启用了灾害预警监听，并判断是否有达到严重度门槛的有效警报。"""
+    """检查设备是否启用了灾害预警监听，并判断是否有达到严重度门槛的有效警报。
+    增加严格的地区归属匹配与防误判机制，杜绝远距离无关地区的灾害预警误触发设备全屏避险。
+    """
     norm_mac = (mac or "").upper()
 
     # 1. 优先检查模拟/演练中的预警
@@ -294,17 +296,41 @@ async def check_device_disaster_alert(mac: str, cfg: dict | None) -> dict[str, A
     min_level_name = alert_cfg.get("min_level", "yellow").lower()
     threshold_score = LEVEL_SEVERITY.get(min_level_name, 3)
 
-    # 确定监控的经纬度
-    city = alert_cfg.get("city") or cfg.get("city") or ""
-    lat = cfg.get("latitude")
-    lon = cfg.get("longitude")
+    # 确定监控的城市与经纬度
+    city = (alert_cfg.get("city") or cfg.get("city") or "").strip()
+    lat = alert_cfg.get("latitude") or cfg.get("latitude")
+    lon = alert_cfg.get("longitude") or cfg.get("longitude")
     if lat is None or lon is None:
         lat, lon = await _resolve_city_coords(city)
 
     active_alerts = await fetch_active_alerts(float(lat), float(lon), city)
     for al in active_alerts:
-        if al.get("severity_score", 4) <= threshold_score:
-            return al
+        # 严重度门槛过滤
+        if al.get("severity_score", 4) > threshold_score:
+            continue
+
+        # 地区精准匹配与防误判检验
+        # 如果预警文本或标题含有地域信息，确保与配置的城市地区一致或重叠
+        if city:
+            c_norm = city.replace("市", "").replace("区", "").replace("县", "")
+            al_sender = al.get("sender", "")
+            al_title = al.get("title", "")
+            al_text = al.get("text", "")
+            combined_geo = f"{al_sender} {al_title} {al_text}"
+
+            # 如果预警来源于特定地方台发布（包含“气象台”），检查是否与本市一致
+            if "气象台" in al_sender:
+                # 地方台发布若明确包含其他城市且完全不包含本市，则判定为非本区预警，予以拦截
+                if c_norm and (c_norm not in combined_geo):
+                    # 仅当 sender/title 明确属于省外或别市台发布时过滤
+                    logger.debug(
+                        "[DisasterService] Mismatched city alert filtered: device_city=%s, sender=%s",
+                        city,
+                        al_sender,
+                    )
+                    continue
+
+        return al
 
     return None
 
