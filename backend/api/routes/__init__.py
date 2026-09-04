@@ -17,6 +17,7 @@ from .voice import router as voice_router
 from .open import router as open_router
 from .market import router as market_router
 from .hotlist import router as hotlist_router
+from .server_status import router as server_status_router
 
 api_routers = [
     render_router,
@@ -37,6 +38,7 @@ api_routers = [
     open_router,
     market_router,
     hotlist_router,
+    server_status_router,
 ]
 
 page_routers = [pages_router]

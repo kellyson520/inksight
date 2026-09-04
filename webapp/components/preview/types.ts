@@ -43,6 +43,7 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   WORD_OF_THE_DAY: "productivity",
   WEBHOOK: "productivity",
   POMODORO: "productivity",
+  SERVER_STATUS: "productivity",
 
   // 资讯 (News & Alerts)
   BRIEFING: "news",
@@ -74,6 +75,7 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   MY_ADAPTIVE: "adaptive",
   POMODORO: "pomodoro",
   DRINK_WATER: "drink_water",
+  SERVER_STATUS: "server_status",
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [

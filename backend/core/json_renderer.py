@@ -104,6 +104,7 @@ _BUILTIN_STATIC_ATTRIBUTIONS = {
         "WORD_OF_THE_DAY": "— 每日精进",
         "POMODORO": "— 专注当下",
         "DRINK_WATER": "— 保持水润",
+        "SERVER_STATUS": "— 守护在线",
     },
     "en": {
         "ARTWALL": "— Ink Art",
@@ -126,6 +127,7 @@ _BUILTIN_STATIC_ATTRIBUTIONS = {
         "WORD_OF_THE_DAY": "— Expand Your Lexicon",
         "POMODORO": "— Deep Focus",
         "DRINK_WATER": "— Stay Hydrated",
+        "SERVER_STATUS": "— Always Online",
     },
 }
 

@@ -1,0 +1,194 @@
+{
+  "mode_id": "SERVER_STATUS",
+  "display_name": "Server Status",
+  "icon": "server",
+  "cacheable": false,
+  "description": "Real-time host & VPS performance monitor for CPU, memory, disk, load average and uptime",
+  "settings_schema": [
+    {
+      "key": "server_name",
+      "label": "Server Name",
+      "type": "text",
+      "default": "Production Server",
+      "placeholder": "e.g. VPS-US / Homelab"
+    },
+    {
+      "key": "server_key",
+      "label": "Report Key",
+      "type": "text",
+      "default": "default",
+      "placeholder": "Matching key in reporting script"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "server_status",
+    "fallback": {
+      "server_name": "Linux-Host",
+      "cpu_pct": 36.5,
+      "mem_pct": 68.2,
+      "disk_pct": 52.0,
+      "cpu_label": "CPU 37%",
+      "mem_label": "MEM 68%",
+      "disk_label": "DISK 52%",
+      "mem_str": "2.2G / 3.3G (68%)",
+      "disk_str": "18.5G Free / 39.3G",
+      "load_str": "0.45 / 0.62 / 0.58",
+      "uptime": "5d 12h",
+      "overview_line": "LOAD 0.45 / 0.62 / 0.58  ·  UP 5d 12h",
+      "status_tag": "NORMAL",
+      "update_time": "12:00:00",
+      "ip": "127.0.0.1"
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 5,
+        "padding": 5,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_x": 4,
+            "items": [
+              {
+                "type": "text",
+                "field": "server_name",
+                "font": "roboto_bold",
+                "font_size": 15
+              },
+              {
+                "type": "badge",
+                "field": "status_tag",
+                "font_size": 11,
+                "padding_x": 6,
+                "padding_y": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "two_column",
+        "ratio": 0.54,
+        "left": [
+          {
+            "type": "text",
+            "field": "cpu_label",
+            "font": "noto_serif_bold",
+            "font_size": 12,
+            "margin_x": 12
+          },
+          {
+            "type": "progress_bar",
+            "field": "cpu_pct",
+            "height": 5,
+            "margin_x": 12,
+            "margin_y": 2
+          },
+          {
+            "type": "text",
+            "field": "mem_label",
+            "font": "noto_serif_bold",
+            "font_size": 12,
+            "margin_x": 12,
+            "margin_top": 3
+          },
+          {
+            "type": "text",
+            "field": "mem_str",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "margin_x": 12
+          },
+          {
+            "type": "progress_bar",
+            "field": "mem_pct",
+            "height": 5,
+            "margin_x": 12,
+            "margin_y": 2
+          },
+          {
+            "type": "text",
+            "field": "disk_label",
+            "font": "noto_serif_bold",
+            "font_size": 12,
+            "margin_x": 12,
+            "margin_top": 3
+          },
+          {
+            "type": "text",
+            "field": "disk_str",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "margin_x": 12
+          },
+          {
+            "type": "progress_bar",
+            "field": "disk_pct",
+            "height": 5,
+            "margin_x": 12,
+            "margin_y": 2
+          }
+        ],
+        "right": [
+          {
+            "type": "progress_ring",
+            "field": "cpu_pct",
+            "size": 60,
+            "label": "CPU",
+            "margin_bottom": 4
+          },
+          {
+            "type": "progress_ring",
+            "field": "mem_pct",
+            "size": 60,
+            "label": "MEM",
+            "margin_bottom": 2
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 15
+      },
+      {
+        "type": "spacer",
+        "height": 3
+      },
+      {
+        "type": "centered_text",
+        "field": "overview_line",
+        "font": "noto_serif_regular",
+        "font_size": 11,
+        "margin_y": 2
+      }
+    ],
+    "footer": {
+      "label": "Server Status",
+      "attribution_template": "— Always Online"
+    }
+  }
+}

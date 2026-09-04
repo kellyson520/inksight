@@ -6,6 +6,7 @@ import { HotlistConfig } from "./configs/hotlist-config";
 import { DisasterConfig } from "./configs/disaster-config";
 import { WeatherConfig } from "./configs/weather-config";
 import { CryptoStockConfig } from "./configs/crypto-stock-config";
+import { ServerStatusConfig } from "./configs/server-status-config";
 import {
   MemoConfig,
   RssConfig,
@@ -35,7 +36,8 @@ interface ModeConfigModalProps {
       | "disaster"
       | "webhook"
       | "pomodoro"
-      | "drink_water";
+      | "drink_water"
+      | "server_status";
     modeId: string;
   };
   locale: string;
@@ -89,6 +91,8 @@ export function ModeConfigModal({
         return locale === "zh" ? "专注番茄钟设置" : "Focus Pomodoro Settings";
       case "drink_water":
         return locale === "zh" ? "健康补水设置" : "Hydration Settings";
+      case "server_status":
+        return locale === "zh" ? "服务器与主机性能监控" : "Server Status Monitor";
       default:
         return locale === "zh" ? "模式参数设置" : "Mode Settings";
     }
@@ -219,6 +223,15 @@ export function ModeConfigModal({
               onClose={onClose}
               onSubmit={async (override) => {
                 await onSubmit("DRINK_WATER", override);
+              }}
+            />
+          ) : modal.type === "server_status" ? (
+            <ServerStatusConfig
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (override) => {
+                await onSubmit("SERVER_STATUS", override);
               }}
             />
           ) : (

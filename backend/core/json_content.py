@@ -10,6 +10,7 @@ import json
 import logging
 import random
 import re
+import time
 from json import JSONDecodeError
 from datetime import datetime
 from pathlib import Path
@@ -1418,6 +1419,56 @@ async def _generate_computed_content(mode_def: dict, content_cfg: dict, fallback
             "target_cups": target_cups,
             "target_ml": target_ml,
             "current_ml": current_ml,
+        }
+
+    if provider == "server_status":
+        from .server_status_service import server_status_service
+
+        config = kwargs.get("config") or {}
+        lang = kwargs.get("language", "zh")
+        is_en = lang == "en"
+
+        mo = config.get("mode_overrides", {})
+        s_ov = mo.get("SERVER_STATUS", {}) if isinstance(mo, dict) else {}
+
+        server_key = s_ov.get("server_key") or s_ov.get("server_name")
+        metrics = server_status_service.get_metrics_for_mode(server_key)
+
+        server_name = str(s_ov.get("server_name") or metrics.get("server_name") or "Linux Server")
+        cpu_pct = float(metrics.get("cpu_pct", 0.0))
+        mem_pct = float(metrics.get("mem_pct", 0.0))
+        disk_pct = float(metrics.get("disk_pct", 0.0))
+        mem_str = str(metrics.get("mem_str", "0G / 0G"))
+        disk_str = str(metrics.get("disk_str", "0G 可用"))
+        load_str = str(metrics.get("load_str", "0.00 / 0.00 / 0.00"))
+        uptime = str(metrics.get("uptime", "在线"))
+        update_time = str(metrics.get("update_time", time.strftime("%H:%M:%S")))
+
+        cpu_label = f"CPU {cpu_pct:.0f}%"
+        mem_label = f"MEM {mem_pct:.0f}%"
+        disk_label = f"DISK {disk_pct:.0f}%"
+
+        overview_line = f"LOAD {load_str}  ·  UP {uptime}"
+        status_tag = "NORMAL" if is_en else "运行正常"
+        if cpu_pct > 90 or mem_pct > 95:
+            status_tag = "HIGH LOAD" if is_en else "高负荷运行"
+
+        return {
+            "server_name": server_name,
+            "cpu_pct": cpu_pct,
+            "mem_pct": mem_pct,
+            "disk_pct": disk_pct,
+            "cpu_label": cpu_label,
+            "mem_label": mem_label,
+            "disk_label": disk_label,
+            "mem_str": mem_str,
+            "disk_str": disk_str,
+            "load_str": load_str,
+            "uptime": uptime,
+            "overview_line": overview_line,
+            "status_tag": status_tag,
+            "update_time": update_time,
+            "ip": metrics.get("ip", "127.0.0.1"),
         }
 
     if provider == "calendar_grid":
