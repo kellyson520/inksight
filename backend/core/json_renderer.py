@@ -2116,7 +2116,14 @@ def _render_temp_chart(ctx: RenderContext, block: dict) -> None:
 
 
 def _render_sparkline(ctx: RenderContext, block: dict) -> None:
-    """Render a clean, high-contrast trend sparkline for financial/crypto/sensor data."""
+    """Render an advanced, high-contrast trend sparkline for financial/crypto/sensor data.
+    Features:
+    - Real time-series smooth line
+    - Baseline dashed reference line
+    - E-ink stippled area shading under curve
+    - Extrema (Peak/Valley) price annotations
+    - Optional time axis ticks
+    """
     field_name = block.get("field", "sparkline_data")
     raw_data = ctx.get_field(field_name)
     if not isinstance(raw_data, list) or not raw_data:
@@ -2137,13 +2144,16 @@ def _render_sparkline(ctx: RenderContext, block: dict) -> None:
     if len(values) < 2:
         return
 
-    # 参数解析
-    chart_height = int(block.get("height", 50) * ctx.scale)
-    line_width = int(block.get("line_width", 2) * ctx.scale) or 1
-    margin_x = int(block.get("margin_x", 16) * ctx.scale)
-    margin_bottom = int(block.get("margin_bottom", 10) * ctx.scale)
+    scale = ctx.scale
+    chart_height = int(block.get("height", 46) * scale)
+    line_width = int(block.get("line_width", 2) * scale) or 1
+    margin_x = int(block.get("margin_x", 16) * scale)
+    margin_bottom = int(block.get("margin_bottom", 8) * scale)
     show_baseline = bool(block.get("show_baseline", True))
     show_endpoints = bool(block.get("show_endpoints", True))
+    area_shading = bool(block.get("area_shading", True))
+    show_extrema = bool(block.get("show_extrema", False))
+    show_time_axis = bool(block.get("show_time_axis", False))
 
     color_name = block.get("color", "red" if ctx.colors >= 3 else "black")
     line_fill = ctx.color_index(color_name, default=EINK_FG)
@@ -2153,15 +2163,15 @@ def _render_sparkline(ctx: RenderContext, block: dict) -> None:
         return
 
     x0 = ctx.x_offset + margin_x
-    y_top = ctx.y + int(4 * ctx.scale)
-    y_bottom = y_top + chart_height - int(8 * ctx.scale)
+    y_top = ctx.y + int(4 * scale)
+    y_bottom = y_top + chart_height - int(6 * scale)
     usable_h = y_bottom - y_top
 
     min_v = min(values)
     max_v = max(values)
     span = max_v - min_v
     if span <= 0:
-        span = 1.0  # 防止除以零
+        span = 1.0
 
     n = len(values)
     step = width / (n - 1)
@@ -2169,33 +2179,50 @@ def _render_sparkline(ctx: RenderContext, block: dict) -> None:
     points: list[tuple[float, float]] = []
     for i, v in enumerate(values):
         px = x0 + i * step
-        # 归一化 Y 坐标（数值越大 Y 越靠上）
         ratio = (v - min_v) / span
         py = y_bottom - (ratio * usable_h)
         points.append((px, py))
 
-    # 绘制参考基准虚线 (首个点基准 或 中间参考线)
-    if show_baseline:
-        base_val = float(block.get("baseline_value", values[0]))
-        base_ratio = (base_val - min_v) / span
-        if 0.0 <= base_ratio <= 1.0:
-            base_y = y_bottom - (base_ratio * usable_h)
-            # 虚线绘制
-            dash_w = int(4 * ctx.scale) or 3
-            dash_gap = int(3 * ctx.scale) or 2
-            cur_x = x0
-            while cur_x < x0 + width:
-                seg_end = min(cur_x + dash_w, x0 + width)
-                ctx.draw.line([(cur_x, base_y), (seg_end, base_y)], fill=EINK_FG, width=1)
-                cur_x += dash_w + dash_gap
+    # 基准参考线 (开盘/起点或指定基准)
+    base_val = float(block.get("baseline_value", values[0]))
+    base_ratio = (base_val - min_v) / span
+    base_y = y_bottom - (base_ratio * usable_h) if (0.0 <= base_ratio <= 1.0) else y_bottom
 
-    # 绘制连续折线
+    # 1. 墨水屏网点立体阴影填充 (Area Shading)
+    if area_shading and len(points) >= 2:
+        shade_color = line_fill
+        for i in range(len(points) - 1):
+            px0, py0 = points[i]
+            px1, py1 = points[i + 1]
+            x_start = int(px0)
+            x_end = int(px1)
+            for x in range(x_start, x_end):
+                progress = (x - px0) / max(1.0, px1 - px0)
+                curve_y = int(py0 + progress * (py1 - py0))
+                # 填充从曲线到基准线（或下沿）之间的区域
+                shade_bottom = int(min(y_bottom, max(curve_y, base_y)))
+                for y in range(curve_y + 2, shade_bottom):
+                    # 墨水屏专用稀疏网点：(x + y) % 4 == 0
+                    if (x + y) % 4 == 0 and x % 2 == 0:
+                        ctx.draw.point((x, y), fill=shade_color)
+
+    # 2. 参考基准虚线
+    if show_baseline and 0.0 <= base_ratio <= 1.0:
+        dash_w = int(4 * scale) or 3
+        dash_gap = int(3 * scale) or 2
+        cur_x = x0
+        while cur_x < x0 + width:
+            seg_end = min(cur_x + dash_w, x0 + width)
+            ctx.draw.line([(cur_x, base_y), (seg_end, base_y)], fill=EINK_FG, width=1)
+            cur_x += dash_w + dash_gap
+
+    # 3. 连续主折线
     for i in range(1, len(points)):
         ctx.draw.line([points[i - 1], points[i]], fill=line_fill, width=line_width)
 
-    # 绘制首尾关键点圆点指示
+    # 4. 首尾关键点圆点指示
     if show_endpoints and len(points) >= 2:
-        r = int(2.5 * ctx.scale) or 2
+        r = int(2.5 * scale) or 2
         # 起始点：空心
         sx, sy = points[0]
         ctx.draw.ellipse([sx - r, sy - r, sx + r, sy + r], fill=EINK_BG)
@@ -2204,7 +2231,37 @@ def _render_sparkline(ctx: RenderContext, block: dict) -> None:
         ex, ey = points[-1]
         ctx.draw.ellipse([ex - r, ey - r, ex + r, ey + r], fill=line_fill)
 
-    ctx.y = y_top + chart_height + margin_bottom
+    # 5. 极值标注 (Min/Max Callouts)
+    if show_extrema:
+        max_idx = values.index(max_v)
+        min_idx = values.index(min_v)
+        font_ext = load_font("noto_serif_regular", int(10 * scale))
+        
+        # 最高点
+        hx, hy = points[max_idx]
+        htxt = f"{max_v:,.1f}"
+        hbbox = font_ext.getbbox(htxt)
+        htw = hbbox[2] - hbbox[0]
+        ctx.draw.text((hx - htw // 2, hy - 12), htxt, fill=EINK_FG, font=font_ext)
+
+        # 最低点
+        lx, ly = points[min_idx]
+        ltxt = f"{min_v:,.1f}"
+        lbbox = font_ext.getbbox(ltxt)
+        ltw = lbbox[2] - lbbox[0]
+        ctx.draw.text((lx - ltw // 2, ly + 4), ltxt, fill=EINK_FG, font=font_ext)
+
+    # 6. 时间轴刻度
+    if show_time_axis:
+        font_axis = load_font("noto_serif_light", int(9 * scale))
+        start_label = block.get("start_label", "24h前")
+        end_label = block.get("end_label", "最新")
+        ctx.draw.text((x0, y_bottom + 2), start_label, fill=EINK_FG, font=font_axis)
+        ebbox = font_axis.getbbox(end_label)
+        ctx.draw.text((x0 + width - (ebbox[2] - ebbox[0]), y_bottom + 2), end_label, fill=EINK_FG, font=font_axis)
+        ctx.y = y_top + chart_height + margin_bottom + int(10 * scale)
+    else:
+        ctx.y = y_top + chart_height + margin_bottom
 
 
 def _render_forecast_cards(ctx: RenderContext, block: dict) -> None:
@@ -2788,6 +2845,160 @@ def _render_grid(ctx: RenderContext, block: dict) -> None:
         cur_y += row_h + gap_y
 
     ctx.y = cur_y + margin_bottom
+
+
+def _render_metric_card(ctx: RenderContext, block: dict) -> None:
+    """Render a modern bounded metric card with title, large value, unit, badge, and subtitle."""
+    scale = ctx.scale
+    margin_x = int(block.get("margin_x", 12) * scale)
+    margin_bottom = int(block.get("margin_bottom", 8) * scale)
+    padding = int(block.get("padding", 10) * scale)
+    radius = int(block.get("radius", 6) * scale)
+    card_w = ctx.available_width - margin_x * 2
+    card_x = ctx.x_offset + margin_x
+    start_y = ctx.y
+
+    title = ctx.resolve(str(ctx.get_field(block.get("title_field", "")) if block.get("title_field") else block.get("title", "")))
+    val = ctx.resolve(str(ctx.get_field(block.get("field", "")) if block.get("field") else block.get("value", "")))
+    unit = ctx.resolve(str(block.get("unit", "")))
+    badge_text = ctx.resolve(str(ctx.get_field(block.get("badge_field", "")) if block.get("badge_field") else block.get("badge", "")))
+    sub = ctx.resolve(str(ctx.get_field(block.get("sub_field", "")) if block.get("sub_field") else block.get("subtitle", "")))
+
+    font_title = load_font("noto_serif_regular", int(12 * scale))
+    font_val = load_font("noto_serif_bold", int(block.get("font_size", 28) * scale))
+    font_unit = load_font("noto_serif_light", int(12 * scale))
+    font_sub = load_font("noto_serif_light", int(11 * scale))
+
+    v_bbox = font_val.getbbox(val) if val else (0, 0, 0, 0)
+    card_h = padding * 2 + int(14 * scale) + (v_bbox[3] - v_bbox[1]) + (int(14 * scale) if sub else 0) + 6
+
+    border_type = block.get("border", "solid")
+    if border_type == "solid":
+        ctx.draw.rounded_rectangle([card_x, start_y, card_x + card_w, start_y + card_h], radius=radius, outline=EINK_FG, width=1)
+    elif border_type == "dashed":
+        draw_dashed_line(ctx.draw, (card_x, start_y), (card_x + card_w, start_y), fill=EINK_FG)
+        draw_dashed_line(ctx.draw, (card_x, start_y + card_h), (card_x + card_w, start_y + card_h), fill=EINK_FG)
+        draw_dashed_line(ctx.draw, (card_x, start_y), (card_x, start_y + card_h), fill=EINK_FG)
+        draw_dashed_line(ctx.draw, (card_x + card_w, start_y), (card_x + card_w, start_y + card_h), fill=EINK_FG)
+
+    cur_y = start_y + padding
+    if title:
+        ctx.draw.text((card_x + padding, cur_y), title, fill=EINK_FG, font=font_title)
+    if badge_text:
+        badge_font = load_font("noto_serif_bold", int(10 * scale))
+        bb = badge_font.getbbox(badge_text)
+        bw = bb[2] - bb[0] + 10
+        bh = max(bb[3], int(10 * scale)) + 4
+        bx = card_x + card_w - padding - bw
+        ctx.draw.rounded_rectangle([bx, cur_y - 1, bx + bw, cur_y + bh - 1], radius=4, fill=ctx.color_index(block.get("badge_color", "red"), default=EINK_FG))
+        ctx.draw.text((bx + 5 - bb[0], cur_y + 1 - bb[1]), badge_text, fill=EINK_BG, font=badge_font)
+
+    cur_y += int(16 * scale)
+    val_color = ctx.color_index(block.get("color", "black"), default=EINK_FG)
+    ctx.draw.text((card_x + padding - v_bbox[0], cur_y - v_bbox[1]), val, fill=val_color, font=font_val)
+    if unit:
+        vw = v_bbox[2] - v_bbox[0]
+        ctx.draw.text((card_x + padding + vw + 4, cur_y + (v_bbox[3] - v_bbox[1]) - int(14 * scale)), unit, fill=EINK_FG, font=font_unit)
+
+    cur_y += (v_bbox[3] - v_bbox[1]) + 4
+    if sub:
+        ctx.draw.text((card_x + padding, cur_y), sub, fill=EINK_FG, font=font_sub)
+
+    ctx.y = start_y + card_h + margin_bottom
+
+
+def _render_striped_table(ctx: RenderContext, block: dict) -> None:
+    """Render a table with striped / divided rows."""
+    columns = block.get("columns", [])
+    rows = block.get("rows", [])
+    if not columns or not rows:
+        return
+
+    scale = ctx.scale
+    margin_x = int(block.get("margin_x", 12) * scale)
+    margin_bottom = int(block.get("margin_bottom", 8) * scale)
+    table_w = ctx.available_width - margin_x * 2
+    start_x = ctx.x_offset + margin_x
+    start_y = ctx.y
+
+    col_count = len(columns)
+    col_w = table_w // col_count
+    font_hdr = load_font("noto_serif_bold", int(11 * scale))
+    font_row = load_font("noto_serif_regular", int(12 * scale))
+
+    cur_y = start_y
+    for i, col in enumerate(columns):
+        cx = start_x + i * col_w
+        lbl = col.get("label", "")
+        ctx.draw.text((cx + 4, cur_y), lbl, fill=EINK_FG, font=font_hdr)
+    cur_y += int(16 * scale)
+    ctx.draw.line([(start_x, cur_y), (start_x + table_w, cur_y)], fill=EINK_FG, width=1)
+    cur_y += 3
+
+    row_h = int(block.get("row_height", 18) * scale)
+    for r_idx, row_data in enumerate(rows):
+        if cur_y >= ctx.footer_top - 6:
+            break
+        if r_idx % 2 == 1 and block.get("striped", True):
+            for px in range(start_x, start_x + table_w):
+                if px % 2 == 0:
+                    for py in range(cur_y, cur_y + row_h - 1):
+                        if (px + py) % 4 == 0:
+                            ctx.draw.point((px, py), fill=EINK_FG)
+
+        for c_idx, col in enumerate(columns):
+            cx = start_x + c_idx * col_w
+            key = col.get("key")
+            val = str(row_data.get(key, "") if isinstance(row_data, dict) else (row_data[c_idx] if c_idx < len(row_data) else ""))
+            ctx.draw.text((cx + 4, cur_y + 2), val, fill=EINK_FG, font=font_row)
+        cur_y += row_h
+
+    ctx.y = cur_y + margin_bottom
+
+
+def _render_segmented_row(ctx: RenderContext, block: dict) -> None:
+    """Render a segmented bar or rating meter (e.g. battery segments, risk levels)."""
+    scale = ctx.scale
+    segments = max(1, int(block.get("segments", 5)))
+    active = int(ctx.get_field(block.get("active_field", "")) if block.get("active_field") else block.get("active", 3))
+    margin_x = int(block.get("margin_x", 16) * scale)
+    margin_bottom = int(block.get("margin_bottom", 6) * scale)
+    h = int(block.get("height", 6) * scale)
+    gap = int(block.get("gap", 4) * scale)
+    radius = int(block.get("radius", 2) * scale)
+
+    total_w = ctx.available_width - margin_x * 2
+    seg_w = (total_w - (segments - 1) * gap) // segments
+    start_x = ctx.x_offset + margin_x
+    start_y = ctx.y
+
+    active_fill = ctx.color_index(block.get("active_color", "red" if ctx.colors >= 3 else "black"), default=EINK_FG)
+
+    for i in range(segments):
+        sx = start_x + i * (seg_w + gap)
+        if i < active:
+            ctx.draw.rounded_rectangle([sx, start_y, sx + seg_w, start_y + h], radius=radius, fill=active_fill)
+        else:
+            ctx.draw.rounded_rectangle([sx, start_y, sx + seg_w, start_y + h], radius=radius, outline=EINK_FG, width=1)
+
+    ctx.y = start_y + h + margin_bottom
+
+
+def _render_badge_group(ctx: RenderContext, block: dict) -> None:
+    """Render a group of badges side-by-side with uniform gap."""
+    badges = block.get("badges", [])
+    if not badges:
+        return
+    flex_data = {
+        "type": "flex_row",
+        "justify": block.get("justify", "center"),
+        "align_items": "center",
+        "gap": block.get("gap", 6),
+        "margin_x": block.get("margin_x", 0),
+        "margin_bottom": block.get("margin_bottom", 6),
+        "items": badges,
+    }
+    _render_flex_row(ctx, flex_data)
 
 
 def _render_group(ctx: RenderContext, block: dict) -> None:
@@ -3547,5 +3758,9 @@ _BLOCK_RENDERERS["badge"] = _render_badge
 _BLOCK_RENDERERS["flex_row"] = _render_flex_row
 _BLOCK_RENDERERS["card"] = _render_card
 _BLOCK_RENDERERS["grid"] = _render_grid
+_BLOCK_RENDERERS["metric_card"] = _render_metric_card
+_BLOCK_RENDERERS["striped_table"] = _render_striped_table
+_BLOCK_RENDERERS["segmented_row"] = _render_segmented_row
+_BLOCK_RENDERERS["badge_group"] = _render_badge_group
 _BLOCK_RENDERERS["calendar_grid"] = _render_calendar_grid
 _BLOCK_RENDERERS["timetable_grid"] = _render_timetable_grid
