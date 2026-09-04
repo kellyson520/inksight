@@ -1435,36 +1435,64 @@ export default function ExperiencePage() {
                 <>
                   <div className="text-xs text-ink-light mb-2">
                     {locale === "zh"
-                      ? "选择或输入要监控的加密货币资产代码，支持 BTC, ETH, SOL, DOGE 等。"
-                      : "Select or enter a cryptocurrency symbol to monitor (BTC, ETH, SOL, DOGE, etc.)."}
+                      ? "选择或输入要监控的加密货币（BTC/ETH/SOL...）或全球股票（AAPL/TSLA/NVDA...），支持生成 24h 走势折线图。"
+                      : "Select or enter a cryptocurrency (BTC/ETH...) or stock symbol (AAPL/TSLA/NVDA...) to track with 24h trend sparkline."}
                   </div>
                   <div className="space-y-3">
                     <div>
                       <label className="text-xs font-medium text-ink block mb-1">
-                        {locale === "zh" ? "资产代码" : "Asset Symbol"}
+                        {locale === "zh" ? "资产 / 股票代码" : "Asset / Stock Symbol"}
                       </label>
                       <input
                         value={cryptoSymbol}
                         onChange={(e) => setCryptoSymbol(e.target.value.toUpperCase())}
-                        placeholder="BTC"
+                        placeholder="BTC 或 AAPL"
                         className="w-full rounded-sm border border-ink/20 px-3 py-1.5 text-xs bg-white uppercase font-mono"
                       />
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {["BTC", "ETH", "SOL", "BNB", "DOGE", "XRP"].map((sym) => (
-                        <button
-                          key={sym}
-                          type="button"
-                          onClick={() => setCryptoSymbol(sym)}
-                          className={`text-xs px-2.5 py-1 rounded border transition-colors ${
-                            cryptoSymbol === sym
-                              ? "bg-ink text-white border-ink"
-                              : "bg-ink/5 border-ink/10 text-ink hover:bg-ink/10"
-                          }`}
-                        >
-                          {sym}
-                        </button>
-                      ))}
+                    <div>
+                      <div className="text-[11px] text-ink-light mb-1.5">{locale === "zh" ? "热门加密资产" : "Popular Crypto"}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {["BTC", "ETH", "SOL", "BNB", "DOGE"].map((sym) => (
+                          <button
+                            key={sym}
+                            type="button"
+                            onClick={() => setCryptoSymbol(sym)}
+                            className={`text-xs px-2 py-1 rounded border transition-colors ${
+                              cryptoSymbol === sym
+                                ? "bg-ink text-white border-ink"
+                                : "bg-ink/5 border-ink/10 text-ink hover:bg-ink/10"
+                            }`}
+                          >
+                            {sym}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-ink-light mb-1.5">{locale === "zh" ? "热门股票标的" : "Popular Stocks"}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { sym: "AAPL", name: "苹果" },
+                          { sym: "TSLA", name: "特斯拉" },
+                          { sym: "NVDA", name: "英伟达" },
+                          { sym: "MSFT", name: "微软" },
+                          { sym: "GOOGL", name: "谷歌" },
+                        ].map((stk) => (
+                          <button
+                            key={stk.sym}
+                            type="button"
+                            onClick={() => setCryptoSymbol(stk.sym)}
+                            className={`text-xs px-2 py-1 rounded border transition-colors ${
+                              cryptoSymbol === stk.sym
+                                ? "bg-ink text-white border-ink"
+                                : "bg-ink/5 border-ink/10 text-ink hover:bg-ink/10"
+                            }`}
+                          >
+                            {stk.sym} {locale === "zh" ? stk.name : ""}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 pt-3">

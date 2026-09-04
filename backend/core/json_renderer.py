@@ -2117,6 +2117,98 @@ def _render_temp_chart(ctx: RenderContext, block: dict) -> None:
     ctx.y = y_bottom + int(18 * ctx.scale)
 
 
+def _render_sparkline(ctx: RenderContext, block: dict) -> None:
+    """Render a clean, high-contrast trend sparkline for financial/crypto/sensor data."""
+    field_name = block.get("field", "sparkline_data")
+    raw_data = ctx.get_field(field_name)
+    if not isinstance(raw_data, list) or not raw_data:
+        return
+
+    # 支持数值列表 [100.2, 101.5, ...] 或字典列表 [{'val': 100.2}, ...]
+    val_key = block.get("value_key", "value")
+    values: list[float] = []
+    for item in raw_data:
+        if isinstance(item, (int, float)):
+            values.append(float(item))
+        elif isinstance(item, dict) and val_key in item:
+            try:
+                values.append(float(item[val_key]))
+            except (ValueError, TypeError):
+                continue
+
+    if len(values) < 2:
+        return
+
+    # 参数解析
+    chart_height = int(block.get("height", 50) * ctx.scale)
+    line_width = int(block.get("line_width", 2) * ctx.scale) or 1
+    margin_x = int(block.get("margin_x", 16) * ctx.scale)
+    margin_bottom = int(block.get("margin_bottom", 10) * ctx.scale)
+    show_baseline = bool(block.get("show_baseline", True))
+    show_endpoints = bool(block.get("show_endpoints", True))
+
+    color_name = block.get("color", "red" if ctx.colors >= 3 else "black")
+    line_fill = ctx.color_index(color_name, default=EINK_FG)
+
+    width = ctx.available_width - margin_x * 2
+    if width <= 0:
+        return
+
+    x0 = ctx.x_offset + margin_x
+    y_top = ctx.y + int(4 * ctx.scale)
+    y_bottom = y_top + chart_height - int(8 * ctx.scale)
+    usable_h = y_bottom - y_top
+
+    min_v = min(values)
+    max_v = max(values)
+    span = max_v - min_v
+    if span <= 0:
+        span = 1.0  # 防止除以零
+
+    n = len(values)
+    step = width / (n - 1)
+
+    points: list[tuple[float, float]] = []
+    for i, v in enumerate(values):
+        px = x0 + i * step
+        # 归一化 Y 坐标（数值越大 Y 越靠上）
+        ratio = (v - min_v) / span
+        py = y_bottom - (ratio * usable_h)
+        points.append((px, py))
+
+    # 绘制参考基准虚线 (首个点基准 或 中间参考线)
+    if show_baseline:
+        base_val = float(block.get("baseline_value", values[0]))
+        base_ratio = (base_val - min_v) / span
+        if 0.0 <= base_ratio <= 1.0:
+            base_y = y_bottom - (base_ratio * usable_h)
+            # 虚线绘制
+            dash_w = int(4 * ctx.scale) or 3
+            dash_gap = int(3 * ctx.scale) or 2
+            cur_x = x0
+            while cur_x < x0 + width:
+                seg_end = min(cur_x + dash_w, x0 + width)
+                ctx.draw.line([(cur_x, base_y), (seg_end, base_y)], fill=EINK_FG, width=1)
+                cur_x += dash_w + dash_gap
+
+    # 绘制连续折线
+    for i in range(1, len(points)):
+        ctx.draw.line([points[i - 1], points[i]], fill=line_fill, width=line_width)
+
+    # 绘制首尾关键点圆点指示
+    if show_endpoints and len(points) >= 2:
+        r = int(2.5 * ctx.scale) or 2
+        # 起始点：空心
+        sx, sy = points[0]
+        ctx.draw.ellipse([sx - r, sy - r, sx + r, sy + r], fill=EINK_BG)
+        ctx.draw.ellipse([sx - r, sy - r, sx + r, sy + r], outline=line_fill, width=1)
+        # 终点最新价：实心圆点
+        ex, ey = points[-1]
+        ctx.draw.ellipse([ex - r, ey - r, ex + r, ey + r], fill=line_fill)
+
+    ctx.y = y_top + chart_height + margin_bottom
+
+
 def _render_forecast_cards(ctx: RenderContext, block: dict) -> None:
     """Render multi-day forecast cards similar to the reference UI."""
     field_name = block.get("field", "forecast")
@@ -3131,6 +3223,7 @@ _BLOCK_RENDERERS["two_column"] = _render_two_column
 _BLOCK_RENDERERS["image"] = _render_image
 _BLOCK_RENDERERS["progress_bar"] = _render_progress_bar
 _BLOCK_RENDERERS["temp_chart"] = _render_temp_chart
+_BLOCK_RENDERERS["sparkline"] = _render_sparkline
 _BLOCK_RENDERERS["forecast_cards"] = _render_forecast_cards
 _BLOCK_RENDERERS["big_number"] = _render_big_number
 _BLOCK_RENDERERS["icon_list"] = _render_icon_list

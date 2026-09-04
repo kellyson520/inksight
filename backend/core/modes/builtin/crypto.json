@@ -3,20 +3,21 @@
   "display_name": "资产行情",
   "icon": "trending-up",
   "cacheable": true,
-  "description": "实时监控主流加密货币或金融资产价格、24小时涨跌幅与高低点",
+  "description": "实时监控主流加密货币或全球股票资产价格、涨跌幅与分时趋势折线图",
   "settings_schema": [
     {
       "key": "symbol",
-      "label": "资产代码",
+      "label": "资产/股票代码",
       "type": "select",
       "default": "BTC",
       "options": [
         { "value": "BTC", "label": "Bitcoin (BTC)" },
         { "value": "ETH", "label": "Ethereum (ETH)" },
         { "value": "SOL", "label": "Solana (SOL)" },
-        { "value": "BNB", "label": "BNB (BNB)" },
         { "value": "DOGE", "label": "Dogecoin (DOGE)" },
-        { "value": "XRP", "label": "Ripple (XRP)" }
+        { "value": "AAPL", "label": "Apple 苹果 (AAPL)" },
+        { "value": "TSLA", "label": "Tesla 特斯拉 (TSLA)" },
+        { "value": "NVDA", "label": "NVIDIA 英伟达 (NVDA)" }
       ]
     }
   ],
@@ -32,7 +33,8 @@
       "is_up": true,
       "high_24h": "$65,100.00",
       "low_24h": "$62,900.00",
-      "update_time": "实时"
+      "update_time": "实时",
+      "sparkline_data": [62900, 63100, 63400, 63200, 63800, 64100, 63900, 64500, 64800, 64280]
     }
   },
   "layout": {
@@ -44,14 +46,37 @@
     "body": [
       {
         "type": "spacer",
-        "height": 12
+        "height": 8
       },
       {
         "type": "text",
         "field": "name",
         "font": "noto_serif_bold",
-        "font_size": 22,
-        "line_height": 26,
+        "font_size": 20,
+        "line_height": 24,
+        "align": "center"
+      },
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "text",
+        "field": "symbol",
+        "font": "noto_serif_regular",
+        "font_size": 13,
+        "align": "center"
+      },
+      {
+        "type": "spacer",
+        "height": 8
+      },
+      {
+        "type": "text",
+        "field": "price",
+        "font": "noto_serif_bold",
+        "font_size": 38,
+        "line_height": 42,
         "align": "center"
       },
       {
@@ -60,38 +85,25 @@
       },
       {
         "type": "text",
-        "field": "symbol",
-        "font": "noto_serif_regular",
-        "font_size": 14,
-        "align": "center"
-      },
-      {
-        "type": "spacer",
-        "height": 12
-      },
-      {
-        "type": "text",
-        "field": "price",
-        "font": "noto_serif_bold",
-        "font_size": 42,
-        "line_height": 48,
-        "align": "center"
-      },
-      {
-        "type": "spacer",
-        "height": 8
-      },
-      {
-        "type": "text",
         "field": "change_24h",
         "color": "red",
         "font": "noto_serif_bold",
-        "font_size": 20,
+        "font_size": 18,
         "align": "center"
       },
       {
         "type": "spacer",
-        "height": 14
+        "height": 4
+      },
+      {
+        "type": "sparkline",
+        "field": "sparkline_data",
+        "height": 46,
+        "line_width": 2,
+        "margin_x": 20,
+        "show_baseline": true,
+        "show_endpoints": true,
+        "color": "red"
       },
       {
         "type": "separator",
@@ -100,7 +112,7 @@
       },
       {
         "type": "spacer",
-        "height": 8
+        "height": 6
       },
       {
         "type": "key_value",
@@ -113,7 +125,7 @@
       }
     ],
     "footer": {
-      "label": "行情追踪",
+      "label": "行情趋势追踪",
       "attribution_template": "更新于 {update_time}"
     }
   }
