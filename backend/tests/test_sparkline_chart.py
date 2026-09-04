@@ -57,20 +57,15 @@ async def test_crypto_price_and_percentage_no_overlap():
     cfg = {"mode_overrides": {"CRYPTO": {"symbol": "AAPL"}}}
     img, _ = await generate_and_render("CRYPTO", cfg, date_ctx, weather, 100.0, colors=3)
     arr = np.array(img)
-    # 验证在 Y=100 到 Y=200 之间，黑色价格与红色涨跌幅行不发生像素行重叠
-    price_black_rows = []
-    change_red_rows = []
-    for y in range(100, 200):
-        row = set(arr[y, 100:300])
-        if 0 in row:
-            price_black_rows.append(y)
-        if 3 in row:
-            change_red_rows.append(y)
-    
-    assert price_black_rows, "Price text rows should exist"
-    assert change_red_rows, "Change percentage text rows should exist"
-    max_price_y = max(price_black_rows)
-    min_change_y = min(change_red_rows)
-    # 确保两者之间至少有 5 像素的正间距，绝对不重叠
-    assert min_change_y - max_price_y >= 5, f"Expected gap >= 5, got {min_change_y - max_price_y}"
+    # 验证在 flex_row 行中，价格（黑色 0）与涨跌徽标（红色 3）并排居中且保持安全水平间隙，无水平碰撞
+    row_checked = False
+    for y in range(90, 140):
+        red_cols = np.where(arr[y, :] == 3)[0]
+        black_cols = np.where(arr[y, :] == 0)[0]
+        if len(red_cols) > 0 and len(black_cols) > 0:
+            black_right = black_cols[black_cols < red_cols.min()].max() if any(black_cols < red_cols.min()) else 0
+            red_left = red_cols.min()
+            assert red_left - black_right >= 8, f"Expected gap >= 8, got {red_left - black_right}"
+            row_checked = True
+    assert row_checked, "Flex row with price and change badge should exist"
 

@@ -1,35 +1,35 @@
 {
   "mode_id": "HOTLIST",
-  "display_name": "Hot Topics",
+  "display_name": "Trending Feeds",
   "icon": "flame",
   "cacheable": true,
-  "description": "Aggregated daily hot trends from GitHub, Zhihu, Weibo, and Bilibili",
+  "description": "Live trending topics from Zhihu, Weibo, Bilibili, GitHub Trending, etc.",
   "settings_schema": [
     {
       "key": "platform",
       "label": "Trending Platform",
       "type": "select",
-      "default": "github",
+      "default": "zhihu",
       "options": [
-        { "value": "github", "label": "GitHub Trending" },
-        { "value": "zhihu", "label": "Zhihu Hot Topics" },
+        { "value": "zhihu", "label": "Zhihu Trending" },
         { "value": "weibo", "label": "Weibo Hot Search" },
-        { "value": "bilibili", "label": "Bilibili Trends" }
+        { "value": "bilibili", "label": "Bilibili Hot" },
+        { "value": "github", "label": "GitHub Trending" }
       ]
     }
   ],
   "content": {
     "type": "computed",
     "provider": "hotlist",
-    "platform": "github",
+    "platform": "zhihu",
     "fallback": {
-      "platform_title": "GitHub Trending",
-      "update_time": "Realtime",
-      "item_1": "1. vllm: High-throughput LLM serving engine",
-      "item_2": "2. excalidraw: Virtual whiteboard for sketching",
-      "item_3": "3. inksight: Smart E-Ink desktop companion",
-      "item_4": "4. fastapi: Modern high-performance web framework",
-      "item_5": "5. home-assistant: Open source home automation"
+      "platform_title": "Zhihu Trending",
+      "update_time": "Live",
+      "item_1": "1. Breakthroughs in room-temperature quantum computing",
+      "item_2": "2. How AI is transforming daily productivity and engineering",
+      "item_3": "3. Deep space probes transmit unprecedented high-res photos",
+      "item_4": "4. Proven habits for deep mental focus and health",
+      "item_5": "5. Top curated books and technical documentaries this month"
     }
   },
   "layout": {
@@ -41,16 +41,35 @@
     "body": [
       {
         "type": "spacer",
-        "height": 4
+        "height": 6
       },
       {
-        "type": "text",
-        "field": "platform_title",
-        "color": "red",
-        "font": "noto_serif_bold",
-        "font_size": 20,
-        "line_height": 24,
-        "align": "center"
+        "type": "flex_row",
+        "justify": "center",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "red",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 6
+          },
+          {
+            "type": "badge",
+            "text": "TOP 5",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
       },
       {
         "type": "spacer",
@@ -123,7 +142,7 @@
       }
     ],
     "footer": {
-      "label": "Trending Hotlist",
+      "label": "Trending Aggregator",
       "attribution_template": "Updated at {update_time}"
     }
   }

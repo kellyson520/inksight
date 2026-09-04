@@ -37,9 +37,9 @@
       "status_tag": "优良",
       "item_1_label": "空气湿度",
       "item_1_value": "48% 舒适",
-      "item_2_label": "PM2.5 质量",
+      "item_2_label": "PM2.5",
       "item_2_value": "12 μg/m³",
-      "item_3_label": "今日用电量",
+      "item_3_label": "今日用电",
       "item_3_value": "4.2 kWh",
       "timestamp": "12:00"
     }
@@ -53,62 +53,91 @@
     "body": [
       {
         "type": "spacer",
-        "height": 8
+        "height": 6
       },
       {
-        "type": "text",
-        "field": "title",
-        "font": "noto_serif_bold",
-        "font_size": 20,
-        "align": "center"
-      },
-      {
-        "type": "spacer",
-        "height": 8
-      },
-      {
-        "type": "text",
-        "field": "primary_metric",
-        "color": "red",
-        "font": "noto_serif_bold",
-        "font_size": 44,
-        "line_height": 50,
-        "align": "center"
-      },
-      {
-        "type": "text",
-        "field": "primary_label",
-        "font": "noto_serif_regular",
-        "font_size": 13,
-        "align": "center"
-      },
-      {
-        "type": "spacer",
-        "height": 10
-      },
-      {
-        "type": "separator",
-        "line_width": 1,
-        "dashed": true
-      },
-      {
-        "type": "spacer",
-        "height": 8
-      },
-      {
-        "type": "key_value",
-        "items": [
-          { "label": "空气湿度", "field": "item_1_value" },
-          { "label": "空气质量", "field": "item_2_value" },
-          { "label": "耗电情况", "field": "item_3_value" }
-        ],
-        "font_size": 13,
-        "align": "center"
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 12,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_x": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "title",
+                "font": "noto_serif_bold",
+                "font_size": 16
+              },
+              {
+                "type": "badge",
+                "field": "status_tag",
+                "variant": "solid",
+                "bg_color": "red",
+                "color": "white",
+                "font_size": 11,
+                "padding_x": 6,
+                "padding_y": 2,
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "spacer",
+            "height": 6
+          },
+          {
+            "type": "text",
+            "field": "primary_metric",
+            "color": "red",
+            "font": "noto_serif_bold",
+            "font_size": 38,
+            "align": "center"
+          },
+          {
+            "type": "text",
+            "field": "primary_label",
+            "font": "noto_serif_regular",
+            "font_size": 13,
+            "align": "center"
+          },
+          {
+            "type": "spacer",
+            "height": 8
+          },
+          {
+            "type": "separator",
+            "style": "dashed",
+            "line_width": 1
+          },
+          {
+            "type": "spacer",
+            "height": 6
+          },
+          {
+            "type": "grid",
+            "columns": 3,
+            "show_divider": true,
+            "margin_x": 4,
+            "font_size": 10,
+            "value_size": 12,
+            "items": [
+              { "label": "{item_1_label}", "field": "item_1_value" },
+              { "label": "{item_2_label}", "field": "item_2_value" },
+              { "label": "{item_3_label}", "field": "item_3_value" }
+            ]
+          }
+        ]
       }
     ],
     "footer": {
-      "label": "开放 Webhook 数据",
-      "attribution_template": "更新于 {timestamp}"
+      "label": "开放物联卡片",
+      "attribution_template": "接收于 {timestamp}"
     }
   }
 }

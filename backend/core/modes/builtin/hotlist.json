@@ -23,7 +23,7 @@
     "provider": "hotlist",
     "platform": "zhihu",
     "fallback": {
-      "platform_title": "知乎今日热榜",
+      "platform_title": "知乎实时热榜",
       "update_time": "实时",
       "item_1": "1. 科学家在常温超导与量子计算领域取得新进展",
       "item_2": "2. 人工智能如何重塑个人生产力与工作流？",
@@ -41,16 +41,35 @@
     "body": [
       {
         "type": "spacer",
-        "height": 4
+        "height": 6
       },
       {
-        "type": "text",
-        "field": "platform_title",
-        "color": "red",
-        "font": "noto_serif_bold",
-        "font_size": 20,
-        "line_height": 24,
-        "align": "center"
+        "type": "flex_row",
+        "justify": "center",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "red",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 6
+          },
+          {
+            "type": "badge",
+            "text": "焦点 TOP 5",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
       },
       {
         "type": "spacer",
@@ -123,7 +142,7 @@
       }
     ],
     "footer": {
-      "label": "实时热榜",
+      "label": "实时资讯聚合",
       "attribution_template": "更新于 {update_time}"
     }
   }

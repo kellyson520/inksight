@@ -1,15 +1,15 @@
 {
   "mode_id": "WEBHOOK",
-  "display_name": "Webhook Card",
+  "display_name": "Open Data Card",
   "icon": "layout-dashboard",
   "cacheable": false,
-  "description": "Receive and render custom structured dashboard data from Home Assistant or external scripts",
+  "description": "Custom IoT and home automation dashboard received via HTTP POST webhook",
   "settings_schema": [
     {
       "key": "title",
       "label": "Card Title",
       "type": "text",
-      "default": "Home Environment",
+      "default": "Environment & Energy",
       "placeholder": "Enter card title"
     },
     {
@@ -21,25 +21,25 @@
     },
     {
       "key": "primary_label",
-      "label": "Metric Subtitle",
+      "label": "Primary Label",
       "type": "text",
-      "default": "Indoor Temperature",
-      "placeholder": "e.g. Temperature"
+      "default": "Room Temperature",
+      "placeholder": "e.g. Room Temp"
     }
   ],
   "content": {
     "type": "computed",
     "provider": "webhook",
     "fallback": {
-      "title": "Home Environment",
+      "title": "Environment & Energy",
       "primary_metric": "23.6°C",
-      "primary_label": "Indoor Temperature",
-      "status_tag": "Good",
+      "primary_label": "Room Temperature",
+      "status_tag": "Optimal",
       "item_1_label": "Humidity",
-      "item_1_value": "48% Comfortable",
-      "item_2_label": "Air Quality",
+      "item_1_value": "48%",
+      "item_2_label": "PM2.5",
       "item_2_value": "12 μg/m³",
-      "item_3_label": "Energy Used",
+      "item_3_label": "Daily Power",
       "item_3_value": "4.2 kWh",
       "timestamp": "12:00"
     }
@@ -53,62 +53,91 @@
     "body": [
       {
         "type": "spacer",
-        "height": 8
+        "height": 6
       },
       {
-        "type": "text",
-        "field": "title",
-        "font": "noto_serif_bold",
-        "font_size": 20,
-        "align": "center"
-      },
-      {
-        "type": "spacer",
-        "height": 8
-      },
-      {
-        "type": "text",
-        "field": "primary_metric",
-        "color": "red",
-        "font": "noto_serif_bold",
-        "font_size": 44,
-        "line_height": 50,
-        "align": "center"
-      },
-      {
-        "type": "text",
-        "field": "primary_label",
-        "font": "noto_serif_regular",
-        "font_size": 13,
-        "align": "center"
-      },
-      {
-        "type": "spacer",
-        "height": 10
-      },
-      {
-        "type": "separator",
-        "line_width": 1,
-        "dashed": true
-      },
-      {
-        "type": "spacer",
-        "height": 8
-      },
-      {
-        "type": "key_value",
-        "items": [
-          { "label": "Humidity", "field": "item_1_value" },
-          { "label": "Air Quality", "field": "item_2_value" },
-          { "label": "Energy Used", "field": "item_3_value" }
-        ],
-        "font_size": 13,
-        "align": "center"
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 12,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_x": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "title",
+                "font": "noto_serif_bold",
+                "font_size": 16
+              },
+              {
+                "type": "badge",
+                "field": "status_tag",
+                "variant": "solid",
+                "bg_color": "red",
+                "color": "white",
+                "font_size": 11,
+                "padding_x": 6,
+                "padding_y": 2,
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "spacer",
+            "height": 6
+          },
+          {
+            "type": "text",
+            "field": "primary_metric",
+            "color": "red",
+            "font": "noto_serif_bold",
+            "font_size": 38,
+            "align": "center"
+          },
+          {
+            "type": "text",
+            "field": "primary_label",
+            "font": "noto_serif_regular",
+            "font_size": 13,
+            "align": "center"
+          },
+          {
+            "type": "spacer",
+            "height": 8
+          },
+          {
+            "type": "separator",
+            "style": "dashed",
+            "line_width": 1
+          },
+          {
+            "type": "spacer",
+            "height": 6
+          },
+          {
+            "type": "grid",
+            "columns": 3,
+            "show_divider": true,
+            "margin_x": 4,
+            "font_size": 10,
+            "value_size": 12,
+            "items": [
+              { "label": "{item_1_label}", "field": "item_1_value" },
+              { "label": "{item_2_label}", "field": "item_2_value" },
+              { "label": "{item_3_label}", "field": "item_3_value" }
+            ]
+          }
+        ]
       }
     ],
     "footer": {
-      "label": "Open Webhook",
-      "attribution_template": "Updated at {timestamp}"
+      "label": "IoT Open Card",
+      "attribution_template": "Received at {timestamp}"
     }
   }
 }

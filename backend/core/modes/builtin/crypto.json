@@ -49,79 +49,86 @@
         "height": 10
       },
       {
-        "type": "text",
-        "field": "name",
-        "font": "noto_serif_bold",
-        "font_size": 20,
-        "line_height": 24,
-        "align": "center"
-      },
-      {
-        "type": "spacer",
-        "height": 4
-      },
-      {
-        "type": "text",
-        "field": "symbol",
-        "font": "noto_serif_regular",
-        "font_size": 13,
-        "align": "center"
+        "type": "flex_row",
+        "justify": "center",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "text",
+            "field": "name",
+            "font": "noto_serif_bold",
+            "font_size": 20
+          },
+          {
+            "type": "badge",
+            "field": "symbol",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
       },
       {
         "type": "spacer",
         "height": 10
       },
       {
-        "type": "text",
-        "field": "price",
-        "font": "noto_serif_bold",
-        "font_size": 36,
-        "line_height": 40,
-        "align": "center"
+        "type": "flex_row",
+        "justify": "center",
+        "align_items": "center",
+        "gap": 12,
+        "items": [
+          {
+            "type": "text",
+            "field": "price",
+            "font": "noto_serif_bold",
+            "font_size": 34
+          },
+          {
+            "type": "badge",
+            "field": "change_24h",
+            "variant": "solid",
+            "bg_color": "red",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 8,
+            "padding_y": 3,
+            "radius": 6
+          }
+        ]
       },
       {
         "type": "spacer",
         "height": 8
       },
       {
-        "type": "text",
-        "field": "change_24h",
-        "color": "red",
-        "font": "noto_serif_bold",
-        "font_size": 18,
-        "align": "center"
-      },
-      {
-        "type": "spacer",
-        "height": 10
-      },
-      {
         "type": "sparkline",
         "field": "sparkline_data",
-        "height": 42,
+        "height": 44,
         "line_width": 2,
-        "margin_x": 24,
+        "margin_x": 20,
         "show_baseline": true,
         "show_endpoints": true,
         "color": "red"
-      },
-      {
-        "type": "separator",
-        "line_width": 1,
-        "dashed": true
       },
       {
         "type": "spacer",
         "height": 6
       },
       {
-        "type": "key_value",
+        "type": "grid",
+        "columns": 2,
+        "show_divider": true,
+        "margin_x": 30,
+        "font_size": 11,
+        "value_size": 13,
         "items": [
-          { "label": "24h 最高", "field": "high_24h" },
-          { "label": "24h 最低", "field": "low_24h" }
-        ],
-        "font_size": 12,
-        "align": "center"
+          { "label": "24h 最高", "field": "high_24h", "align": "center" },
+          { "label": "24h 最低", "field": "low_24h", "align": "center" }
+        ]
       }
     ],
     "footer": {

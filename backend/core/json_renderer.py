@@ -2475,6 +2475,321 @@ def _render_key_value(ctx: RenderContext, block: dict) -> None:
     ctx.y += font_size + 4
 
 
+def _measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple[int, int]:
+    """Measure single block (width, height) without mutating context."""
+    btype = block.get("type", "")
+    if btype == "badge":
+        text = str(ctx.get_field(block.get("field", "")) if block.get("field") else ctx.resolve(block.get("template", block.get("text", ""))))
+        font_size = int(block.get("font_size", 12) * ctx.scale)
+        font_key = block.get("font", "noto_serif_bold")
+        if has_cjk(text):
+            font_key = _pick_cjk_font(font_key)
+        font = load_font(font_key, font_size)
+        bbox = font.getbbox(text)
+        pad_x = int(block.get("padding_x", 8) * ctx.scale)
+        pad_y = int(block.get("padding_y", 3) * ctx.scale)
+        w = bbox[2] - bbox[0] + pad_x * 2
+        h = max(bbox[3], font_size) + pad_y * 2
+        return w, h
+    elif btype in ("text", "centered_text"):
+        text = str(ctx.get_field(block.get("field", "")) if block.get("field") else ctx.resolve(block.get("template", block.get("text", ""))))
+        font_size = int(block.get("font_size", 14) * ctx.scale)
+        font_key = block.get("font", "noto_serif_regular")
+        if has_cjk(text):
+            font_key = _pick_cjk_font(font_key)
+        font = load_font(font_key, font_size)
+        bbox = font.getbbox(text)
+        w = min(bbox[2] - bbox[0], max_width)
+        line_height = int(block.get("line_height", font_size + 6) * ctx.scale) if block.get("line_height") else (font_size + 6)
+        h = max(line_height, bbox[3])
+        return w, h
+    elif btype == "icon_text":
+        text = str(ctx.get_field(block.get("field", "")) if block.get("field") else ctx.resolve(block.get("template", block.get("text", ""))))
+        font_size = int(block.get("font_size", 14) * ctx.scale)
+        icon_size = int(block.get("icon_size", 12) * ctx.scale)
+        font = load_font(_pick_cjk_font("noto_serif_regular") if has_cjk(text) else "noto_serif_regular", font_size)
+        bbox = font.getbbox(text)
+        w = icon_size + 4 + (bbox[2] - bbox[0])
+        h = max(icon_size, font_size + 6)
+        return w, h
+    else:
+        measure_img = Image.new("1", (max(1, max_width), 100), EINK_BG)
+        mc = RenderContext(
+            draw=ImageDraw.Draw(measure_img),
+            img=measure_img,
+            content=ctx.content,
+            screen_w=ctx.screen_w,
+            screen_h=ctx.screen_h,
+            y=0,
+            x_offset=0,
+            available_width=max_width,
+            colors=ctx.colors,
+        )
+        _render_block(mc, block)
+        return max_width, max(1, mc.y)
+
+
+def _render_badge(ctx: RenderContext, block: dict) -> None:
+    """Render a modern e-ink capsule pill or badge (e.g. [+1.24%], [BTC], [实时])."""
+    field_name = block.get("field")
+    template = block.get("template")
+    if field_name:
+        text = str(ctx.get_field(field_name))
+    elif template:
+        text = ctx.resolve(template)
+    else:
+        text = str(block.get("text", ""))
+
+    if not text:
+        return
+
+    font_size = int(block.get("font_size", 12) * ctx.scale)
+    font_key = block.get("font", "noto_serif_bold")
+    if has_cjk(text):
+        font_key = _pick_cjk_font(font_key)
+    font = load_font(font_key, font_size)
+
+    bbox = font.getbbox(text)
+    tw = bbox[2] - bbox[0]
+    th = max(bbox[3], font_size)
+
+    pad_x = int(block.get("padding_x", 8) * ctx.scale)
+    pad_y = int(block.get("padding_y", 3) * ctx.scale)
+    badge_w = tw + pad_x * 2
+    badge_h = th + pad_y * 2
+    radius = int(block.get("radius", badge_h // 2) * ctx.scale)
+    if "radius" not in block:
+        radius = badge_h // 2
+
+    align = block.get("align", "center")
+    margin_x = int(block.get("margin_x", 0) * ctx.scale)
+    margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
+
+    if align == "center":
+        bx = ctx.x_offset + (ctx.available_width - badge_w) // 2
+    elif align == "right":
+        bx = ctx.x_offset + ctx.available_width - badge_w - margin_x
+    else:
+        bx = ctx.x_offset + margin_x
+
+    by = ctx.y
+    variant = block.get("variant", "solid")
+    bg_color_name = block.get("bg_color", "red" if ctx.colors >= 3 else "black")
+    text_color_name = block.get("color")
+
+    bg_fill = ctx.color_index(bg_color_name, default=EINK_FG)
+
+    if variant == "solid":
+        ctx.draw.rounded_rectangle([bx, by, bx + badge_w, by + badge_h], radius=radius, fill=bg_fill)
+        text_fill = ctx.color_index(text_color_name, default=EINK_BG) if text_color_name else EINK_BG
+    elif variant == "outline":
+        ctx.draw.rounded_rectangle([bx, by, bx + badge_w, by + badge_h], radius=radius, outline=bg_fill, width=1)
+        text_fill = ctx.color_index(text_color_name, default=bg_fill) if text_color_name else bg_fill
+    else:
+        text_fill = ctx.color_index(text_color_name, default=EINK_FG)
+
+    tx = bx + pad_x - bbox[0]
+    ty = by + pad_y + max(0, (badge_h - 2 * pad_y - (bbox[3] - bbox[1])) // 2) - bbox[1]
+    ctx.draw.text((tx, ty), text, fill=text_fill, font=font)
+
+    ctx.y += badge_h + margin_bottom
+
+
+def _render_flex_row(ctx: RenderContext, block: dict) -> None:
+    """Render items horizontally in a flexible row with alignment and gap."""
+    items = block.get("items", [])
+    if not items or not isinstance(items, list):
+        return
+
+    margin_x = int(block.get("margin_x", 0) * ctx.scale)
+    margin_bottom = int(block.get("margin_bottom", 8) * ctx.scale)
+    gap = int(block.get("gap", 8) * ctx.scale)
+    justify = block.get("justify", "center")
+    align_items = block.get("align_items", "center")
+
+    avail_w = max(10, ctx.available_width - margin_x * 2)
+
+    sizes = []
+    for item in items:
+        w, h = _measure_block_size(ctx, item, avail_w)
+        sizes.append((w, h))
+
+    total_items_w = sum(s[0] for s in sizes)
+    row_h = max(s[1] for s in sizes) if sizes else 0
+    k = len(items)
+
+    if justify == "space-between" and k > 1:
+        computed_gap = max(0, (avail_w - total_items_w) // (k - 1))
+        start_x = ctx.x_offset + margin_x
+    elif justify == "left":
+        computed_gap = gap
+        start_x = ctx.x_offset + margin_x
+    elif justify == "right":
+        computed_gap = gap
+        total_w = total_items_w + (k - 1) * gap
+        start_x = ctx.x_offset + ctx.available_width - margin_x - total_w
+    else:
+        computed_gap = gap
+        total_w = total_items_w + (k - 1) * gap
+        start_x = ctx.x_offset + (ctx.available_width - total_w) // 2
+
+    row_y = ctx.y
+    cur_x = start_x
+
+    for idx, (item, (w, h)) in enumerate(zip(items, sizes)):
+        if align_items == "bottom":
+            item_y = row_y + (row_h - h)
+        elif align_items == "top":
+            item_y = row_y
+        else:
+            item_y = row_y + (row_h - h) // 2
+
+        btype = item.get("type", "")
+        if btype == "badge":
+            b_copy = dict(item)
+            b_copy["margin_x"] = 0
+            b_copy["margin_bottom"] = 0
+            b_ctx = RenderContext(
+                draw=ctx.draw, img=ctx.img, content=ctx.content,
+                screen_w=ctx.screen_w, screen_h=ctx.screen_h,
+                y=item_y, x_offset=cur_x, available_width=w,
+                colors=ctx.colors, footer_height=ctx.footer_height,
+            )
+            _render_badge(b_ctx, b_copy)
+        elif btype in ("text", "centered_text"):
+            text = str(ctx.get_field(item.get("field", "")) if item.get("field") else ctx.resolve(item.get("template", item.get("text", ""))))
+            font_size = int(item.get("font_size", 14) * ctx.scale)
+            font_key = item.get("font", "noto_serif_regular")
+            if has_cjk(text):
+                font_key = _pick_cjk_font(font_key)
+            font = load_font(font_key, font_size)
+            bbox = font.getbbox(text)
+            color = ctx.color_index(item.get("color", "black"), default=EINK_FG)
+            ctx.draw.text((cur_x - bbox[0], item_y - bbox[1] + (h - (bbox[3] - bbox[1])) // 2), text, fill=color, font=font)
+        else:
+            item_ctx = RenderContext(
+                draw=ctx.draw, img=ctx.img, content=ctx.content,
+                screen_w=ctx.screen_w, screen_h=ctx.screen_h,
+                y=item_y, x_offset=cur_x, available_width=w,
+                colors=ctx.colors, footer_height=ctx.footer_height,
+            )
+            _render_block(item_ctx, item)
+
+        cur_x += w + computed_gap
+
+    ctx.y = row_y + row_h + margin_bottom
+
+
+def _render_card(ctx: RenderContext, block: dict) -> None:
+    """Render a container card with stylish borders, radius, padding and background."""
+    children = block.get("children", [])
+    if not children:
+        return
+
+    scale = ctx.scale
+    margin_x = int(block.get("margin_x", 12) * scale)
+    margin_bottom = int(block.get("margin_bottom", 8) * scale)
+    padding = int(block.get("padding", 8) * scale)
+    radius = int(block.get("radius", 6) * scale)
+    border_type = block.get("border", "solid")
+    border_width = int(block.get("border_width", 1))
+    border_color_name = block.get("border_color", "black")
+    border_color = ctx.color_index(border_color_name, default=EINK_FG)
+
+    card_x = ctx.x_offset + margin_x
+    card_w = ctx.available_width - margin_x * 2
+    inner_w = card_w - padding * 2
+
+    inner_h = _measure_column_blocks_height(ctx, children, x_offset=card_x + padding, available_width=inner_w)
+    card_h = inner_h + padding * 2
+
+    start_y = ctx.y
+    if border_type == "solid":
+        ctx.draw.rounded_rectangle([card_x, start_y, card_x + card_w, start_y + card_h], radius=radius, outline=border_color, width=border_width)
+    elif border_type == "dashed":
+        draw_dashed_line(ctx.draw, (card_x + radius, start_y), (card_x + card_w - radius, start_y), fill=border_color, width=border_width)
+        draw_dashed_line(ctx.draw, (card_x + radius, start_y + card_h), (card_x + card_w - radius, start_y + card_h), fill=border_color, width=border_width)
+        draw_dashed_line(ctx.draw, (card_x, start_y + radius), (card_x, start_y + card_h - radius), fill=border_color, width=border_width)
+        draw_dashed_line(ctx.draw, (card_x + card_w, start_y + radius), (card_x + card_w, start_y + card_h - radius), fill=border_color, width=border_width)
+
+    child_ctx = RenderContext(
+        draw=ctx.draw, img=ctx.img, content=ctx.content,
+        screen_w=ctx.screen_w, screen_h=ctx.screen_h,
+        y=start_y + padding, x_offset=card_x + padding,
+        available_width=inner_w, colors=ctx.colors,
+        footer_height=ctx.footer_height, footer_top_offset=ctx.footer_top_offset,
+    )
+    for child in children:
+        if child_ctx.y >= ctx.footer_top - 6:
+            break
+        _render_block(child_ctx, child)
+
+    ctx.y = start_y + card_h + margin_bottom
+
+
+def _render_grid(ctx: RenderContext, block: dict) -> None:
+    """Render a multi-column metrics grid with optional dividers."""
+    items = block.get("items", [])
+    if not items or not isinstance(items, list):
+        return
+
+    scale = ctx.scale
+    cols = max(1, int(block.get("columns", 2)))
+    gap_x = int(block.get("gap_x", block.get("gap", 8)) * scale)
+    gap_y = int(block.get("gap_y", block.get("gap", 6)) * scale)
+    margin_x = int(block.get("margin_x", 12) * scale)
+    margin_bottom = int(block.get("margin_bottom", 8) * scale)
+    show_divider = bool(block.get("show_divider", True))
+
+    total_avail_w = ctx.available_width - margin_x * 2
+    col_w = (total_avail_w - (cols - 1) * gap_x) // cols
+    font_size = int(block.get("font_size", 11) * scale)
+    val_size = int(block.get("value_size", 13) * scale)
+    font_lbl = load_font("noto_serif_light", font_size)
+    font_val = load_font("noto_serif_bold", val_size)
+
+    rows = [items[i:i + cols] for i in range(0, len(items), cols)]
+    cur_y = ctx.y
+
+    for r_idx, row in enumerate(rows):
+        row_h = font_size + val_size + 8
+        for c_idx, cell in enumerate(row):
+            cx = ctx.x_offset + margin_x + c_idx * (col_w + gap_x)
+            lbl = ctx.resolve(cell.get("label", ""))
+            val_f = cell.get("field")
+            val = str(ctx.get_field(val_f)) if val_f else str(cell.get("value", ""))
+            val = ctx.resolve(val)
+            align = cell.get("align", "center")
+
+            # 居中或左对齐计算
+            lbl_bbox = font_lbl.getbbox(lbl) if lbl else (0, 0, 0, 0)
+            lbl_w = lbl_bbox[2] - lbl_bbox[0]
+            val_bbox = font_val.getbbox(val) if val else (0, 0, 0, 0)
+            val_w = val_bbox[2] - val_bbox[0]
+
+            if align == "center":
+                lx = cx + (col_w - lbl_w) // 2
+                vx = cx + (col_w - val_w) // 2
+            else:
+                lx = cx
+                vx = cx
+
+            if lbl:
+                ctx.draw.text((lx, cur_y), lbl, fill=EINK_FG, font=font_lbl)
+
+            val_color_name = cell.get("color", "black")
+            val_color = ctx.color_index(val_color_name, default=EINK_FG)
+            ctx.draw.text((vx, cur_y + font_size + 4), val, fill=val_color, font=font_val)
+
+            if show_divider and c_idx < len(row) - 1:
+                div_x = cx + col_w + gap_x // 2
+                draw_dashed_line(ctx.draw, (div_x, cur_y + 2), (div_x, cur_y + row_h - 2), fill=EINK_FG, width=1)
+
+        cur_y += row_h + gap_y
+
+    ctx.y = cur_y + margin_bottom
+
+
 def _render_group(ctx: RenderContext, block: dict) -> None:
     title = block.get("title", "")
     if title:
@@ -3228,5 +3543,9 @@ _BLOCK_RENDERERS["icon_list"] = _render_icon_list
 _BLOCK_RENDERERS["key_value"] = _render_key_value
 _BLOCK_RENDERERS["group"] = _render_group
 _BLOCK_RENDERERS["weather_icon"] = _render_weather_icon
+_BLOCK_RENDERERS["badge"] = _render_badge
+_BLOCK_RENDERERS["flex_row"] = _render_flex_row
+_BLOCK_RENDERERS["card"] = _render_card
+_BLOCK_RENDERERS["grid"] = _render_grid
 _BLOCK_RENDERERS["calendar_grid"] = _render_calendar_grid
 _BLOCK_RENDERERS["timetable_grid"] = _render_timetable_grid
