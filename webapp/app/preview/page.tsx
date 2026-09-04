@@ -214,7 +214,25 @@ export default function ExperiencePage() {
         }
       }
       if (!res.ok) {
-        const errText = await res.text().catch(() => "Unknown error");
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("image/")) {
+          const blob = await res.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          if (lastObjectUrlRef.current) URL.revokeObjectURL(lastObjectUrlRef.current);
+          lastObjectUrlRef.current = objectUrl;
+          setPreviewImageUrl(objectUrl);
+          throw new Error(locale === "zh" ? `后端渲染异常 (HTTP ${res.status})` : `Render error (HTTP ${res.status})`);
+        }
+        let errText = "";
+        try {
+          const data = await res.json();
+          errText = data.message || data.error || JSON.stringify(data);
+        } catch {
+          errText = await res.text().catch(() => "Unknown error");
+        }
+        if (errText.includes("PNG") || errText.includes("IHDR")) {
+          errText = locale === "zh" ? "后端渲染图像异常" : "Backend image render error";
+        }
         throw new Error(`HTTP ${res.status}: ${errText.substring(0, 100)}`);
       }
 

@@ -281,13 +281,13 @@ def load_icon(name: str, size: tuple[int, int] | None = None) -> Image.Image | N
     return None
 
 
-def get_weather_icon(weather_code: int) -> Image.Image | None:
+def get_weather_icon(weather_code: int, size: tuple[int, int] | None = None) -> Image.Image | None:
     """Get weather icon image by WMO weather code."""
     icon_name = WEATHER_ICON_MAP.get(weather_code, "cloud")
-    return load_icon(icon_name, size=ICON_SIZES["weather"])
+    return load_icon(icon_name, size=size or ICON_SIZES["weather"])
 
 
-def get_mode_icon(mode: str) -> Image.Image | None:
+def get_mode_icon(mode: str, size: tuple[int, int] | None = None) -> Image.Image | None:
     """Get footer mode icon (book, electric_bolt, etc.)."""
     icon_name = None
     try:
@@ -307,7 +307,7 @@ def get_mode_icon(mode: str) -> Image.Image | None:
         }
         icon_name = fallback_icons.get(mode.upper())
     if icon_name:
-        return load_icon(icon_name, size=ICON_SIZES["mode"])
+        return load_icon(icon_name, size=size or ICON_SIZES["mode"])
     return None
 
 
