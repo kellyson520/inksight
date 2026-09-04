@@ -54,34 +54,32 @@ PLATFORM_NAMES: dict[str, str] = {
 
 _FALLBACK_HOTLISTS: dict[str, list[dict[str, str]]] = {
     "netease": [
-        {"title": "海屿你 - 马也_Crabbit", "hot": "♪ 99w+"},
-        {"title": "甲乙丙丁 (你我怎么两清) - 李佳薇", "hot": "♪ 85w+"},
-        {"title": "两 难 - 加木", "hot": "♪ 76w+"},
-        {"title": "我不难过 - 孙燕姿", "hot": "♪ 68w+"},
-        {"title": "碎碎念 - 队长", "hot": "♪ 59w+"},
-        {"title": "向云端 - 小霞 / 李健", "hot": "♪ 52w+"},
-        {"title": "离别开出花 - 就是南方凯", "hot": "♪ 48w+"},
-        {"title": "瞬 - 郑润泽", "hot": "♪ 42w+"},
+        {"title": "互删 (我走以后) - 江辰", "hot": "♪ 飙升"},
+        {"title": "唯有追赶风的方向 - 知更鸟 / Chevy", "hot": "♪ 飙升"},
+        {"title": "夏日尽头的我们 - N3 / 命运结构", "hot": "♪ 飙升"},
+        {"title": "循迹 (Live版) - 王铮亮 / 李佳薇", "hot": "♪ 飙升"},
+        {"title": "悬溺 - 葛东琪", "hot": "♪ 热门"},
+        {"title": "离别开出花 - 就是南方凯", "hot": "♪ 热门"},
+        {"title": "瞬 - 郑润泽", "hot": "♪ 热门"},
+        {"title": "向云端 - 小霞 / 李健", "hot": "♪ 热门"},
     ],
     "douban": [
-        {"title": "抓特务 (张艺谋执导谍战新作)", "hot": "★ 7.4"},
-        {"title": "激情邀约 (悬疑剧情年度黑马)", "hot": "★ 7.4"},
-        {"title": "家中低语 (北欧治愈系暖心佳作)", "hot": "★ 6.6"},
-        {"title": "伪钞之王 (跨国高智商金融犯罪)", "hot": "★ 7.2"},
-        {"title": "奥本海默 (克里斯托弗·诺兰传记史诗)", "hot": "★ 8.8"},
-        {"title": "沙丘2 (弗兰克·赫伯特太空科幻巨作)", "hot": "★ 8.3"},
-        {"title": "周处除三害 (犯罪动作高口碑爆款)", "hot": "★ 8.1"},
-        {"title": "利益区域 (第96届奥斯卡最佳国际影片)", "hot": "★ 8.2"},
+        {"title": "欢迎来龙餐馆 (文牧野执导佳作)", "hot": "★ 8.7"},
+        {"title": "奥德赛 (科幻史诗巨制)", "hot": "★ 8.6"},
+        {"title": "杀死比尔：血色全传 (昆汀全新重制)", "hot": "★ 8.7"},
+        {"title": "大熊雨林 (高分治愈自然纪录片)", "hot": "★ 8.6"},
+        {"title": "抓特务 (高能反特悬疑谍战)", "hot": "★ 7.4"},
+        {"title": "无界之环 (太空科幻年度黑马)", "hot": "★ 7.9"},
+        {"title": "女仆日记 (欧洲文艺高分精选)", "hot": "★ 7.3"},
+        {"title": "空枪 (高口碑警匪犯罪新作)", "hot": "★ 7.2"},
     ],
     "wechat": [
-        {"title": "微信公开课：小程序与大模型连接日常生活新形态", "hot": "10w+"},
-        {"title": "深度：为什么当代人越来越需要一面不打扰的墨水屏？", "hot": "10w+"},
-        {"title": "数码生活：从冗杂通知到专注心流的桌面极简蜕变", "hot": "8.6w"},
-        {"title": "科普：人类是如何一步步把星辰大海写进科技日常的？", "hot": "7.9w"},
-        {"title": "生活美学：在快节奏城市里打造自己的呼吸感角落", "hot": "6.8w"},
-        {"title": "国家防灾减灾中心发布秋季公众安全避险指南", "hot": "5.5w"},
-        {"title": "读书日精选：十本值得在慢时光里反复翻阅的经典书", "hot": "4.9w"},
-        {"title": "健康新知：保持规律作息对大脑认知的神奇修复力", "hot": "3.8w"},
+        {"title": "全网关注：西藏吉隆抢险救援最新进展通报", "hot": "194万"},
+        {"title": "教育部回应教师管理规范与涉师投诉处理程序", "hot": "173万"},
+        {"title": "科技前沿：大模型与多模态智能硬件深度赋能日常", "hot": "128万"},
+        {"title": "深度讨论：如何打造属于自己的专注防打扰数字空间？", "hot": "95万"},
+        {"title": "生活新知：规律作息对大脑与专注力的积极改善", "hot": "78万"},
+        {"title": "科普聚焦：人类探测器传回深空高精度巡检图像", "hot": "62万"},
     ],
     "zhihu": [
         {"title": "科学家在常温超导与量子计算领域取得新突破", "hot": "1420万"},
@@ -436,69 +434,119 @@ class HotlistService:
                     return items
 
         elif platform == "netease":
-            url = "https://music.163.com/api/playlist/detail?id=3778678"
-            r = await client.get(
-                url,
-                headers={"User-Agent": _BROWSER_UA, "Referer": "https://music.163.com/"},
-                timeout=4.0,
-            )
-            if r.status_code == 200:
-                data = r.json()
-                tracks = data.get("result", {}).get("tracks", [])
-                items = []
-                for t in tracks:
-                    name = (t.get("name") or "").strip()
-                    artists = "/".join([a.get("name", "") for a in t.get("artists", []) if a.get("name")])
-                    title = f"{name} - {artists}" if artists else name
-                    pop = t.get("popularity", 90)
-                    hot = f"♪ {pop}°" if pop else "♪ 热度"
-                    if name and not any(it["title"] == title for it in items):
-                        items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name})
-                    if len(items) >= limit:
-                        break
-                if items:
-                    return items
-
-        elif platform == "douban":
-            url = "https://movie.douban.com/j/search_subjects?type=movie&tag=%E7%83%AD%E9%97%A8&page_limit=20&page_start=0"
-            r = await client.get(
-                url,
-                headers={"User-Agent": _BROWSER_UA, "Referer": "https://movie.douban.com/"},
-                timeout=4.0,
-            )
-            if r.status_code == 200:
-                data = r.json()
-                subjects = data.get("subjects", [])
-                items = []
-                for s in subjects:
-                    title = (s.get("title") or "").strip()
-                    rate = s.get("rate")
-                    hot = f"★ {rate}" if rate else "★ 推荐"
-                    if title and not any(it["title"] == title for it in items):
-                        items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name})
-                    if len(items) >= limit:
-                        break
-                if items:
-                    return items
-
-        elif platform == "wechat":
-            # 聚合百度热搜与知乎热点的精选微信向热议要闻
-            url = "https://top.baidu.com/api/board?platform=wise&tab=realtime"
-            r = await client.get(url, headers={"User-Agent": _BROWSER_UA}, timeout=4.0)
-            if r.status_code == 200:
-                cards = r.json().get("data", {}).get("cards", [])
-                items = []
-                if cards and cards[0].get("content"):
-                    for c_it in cards[0]["content"]:
-                        for it in c_it.get("content", []):
-                            w = it.get("word", "").strip()
-                            hot = _format_hot_value(it.get("hotScore"))
-                            if w and not any(x["title"] == w for x in items):
-                                items.append({"title": w, "hot": f"{hot}", "platform": platform, "platform_name": plat_name})
+            # 优先获取网易云音乐【飙升榜 (19723756)】，备选【新歌榜 (3779629)】，杜绝陈旧老歌霸榜
+            for playlist_id in (19723756, 3779629, 3778678):
+                try:
+                    url = f"https://music.163.com/api/playlist/detail?id={playlist_id}"
+                    r = await client.get(
+                        url,
+                        headers={"User-Agent": _BROWSER_UA, "Referer": "https://music.163.com/"},
+                        timeout=4.0,
+                    )
+                    if r.status_code == 200:
+                        data = r.json()
+                        tracks = data.get("result", {}).get("tracks", [])
+                        items = []
+                        for t in tracks:
+                            name = (t.get("name") or "").strip()
+                            artists = "/".join([a.get("name", "") for a in t.get("artists", []) if a.get("name")])
+                            title = f"{name} - {artists}" if artists else name
+                            pop = t.get("popularity", 95)
+                            hot = f"♪ {pop}°" if pop else "♪ 飙升"
+                            if name and not any(it["title"] == title for it in items):
+                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name})
                             if len(items) >= limit:
                                 break
-                if items:
-                    return items
+                        if items:
+                            return items
+                except Exception:
+                    continue
+
+        elif platform == "douban":
+            # 优先获取豆瓣移动端【实时热门电影榜】与【院线正在热映】，附带真实高分星级
+            douban_headers = {
+                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+                "Referer": "https://m.douban.com/movie",
+            }
+            endpoints = [
+                "https://m.douban.com/rexxar/api/v2/subject_collection/movie_real_time_hotest/items?count=15",
+                "https://m.douban.com/rexxar/api/v2/subject_collection/movie_weekly_best/items?count=15",
+                "https://movie.douban.com/j/search_subjects?type=movie&tag=%E7%83%AD%E9%97%A8&page_limit=20&page_start=0",
+            ]
+            for u in endpoints:
+                try:
+                    r = await client.get(u, headers=douban_headers, timeout=4.0)
+                    if r.status_code == 200:
+                        data = r.json()
+                        collection_items = data.get("subject_collection_items") or data.get("subjects") or []
+                        items = []
+                        for s in collection_items:
+                            title = (s.get("title") or "").strip()
+                            rate = (
+                                s.get("rating", {}).get("value")
+                                if isinstance(s.get("rating"), dict)
+                                else s.get("rate")
+                            )
+                            hot = f"★ {rate}" if rate else "★ 热播"
+                            if title and not any(it["title"] == title for it in items):
+                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name})
+                            if len(items) >= limit:
+                                break
+                        if items:
+                            return items
+                except Exception:
+                    continue
+
+        elif platform == "wechat":
+            # 优先使用微信客户端/腾讯新闻实时热搜源，反映最新社交热点
+            try:
+                tx_url = "https://r.inews.qq.com/gw/event/hot_ranking_list?ids_hash=&offset=0&pageSize=20"
+                r = await client.get(
+                    tx_url,
+                    headers={"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"},
+                    timeout=4.0,
+                )
+                if r.status_code == 200:
+                    data = r.json()
+                    idlist = data.get("idlist", [])
+                    items = []
+                    if idlist and isinstance(idlist[0], dict) and "newslist" in idlist[0]:
+                        for it in idlist[0]["newslist"]:
+                            title = (it.get("title") or "").strip()
+                            # 过滤开头的说明性置顶条目
+                            if "每10分钟更新" in title or "用户最关注" in title:
+                                continue
+                            score = it.get("hotEvent", {}).get("hotScore")
+                            hot = _format_hot_value(score) if score else "热议"
+                            if title and not any(x["title"] == title for x in items):
+                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name})
+                            if len(items) >= limit:
+                                break
+                    if items:
+                        return items
+            except Exception:
+                pass
+
+            # 备用：百度全网即时热搜
+            try:
+                url = "https://top.baidu.com/api/board?platform=wise&tab=realtime"
+                r = await client.get(url, headers={"User-Agent": _BROWSER_UA}, timeout=4.0)
+                if r.status_code == 200:
+                    cards = r.json().get("data", {}).get("cards", [])
+                    items = []
+                    if cards and cards[0].get("content"):
+                        for c_it in cards[0]["content"]:
+                            for it in c_it.get("content", []):
+                                w = it.get("word", "").strip()
+                                hot = _format_hot_value(it.get("hotScore"))
+                                if w and not any(x["title"] == w for x in items):
+                                    items.append({"title": w, "hot": f"{hot}", "platform": platform, "platform_name": plat_name})
+                                if len(items) >= limit:
+                                    break
+                    if items:
+                        return items
+            except Exception:
+                pass
 
         elif platform == "36kr":
             url = "https://gateway.36kr.com/api/mis/nav/home/nav/rank/hot"
