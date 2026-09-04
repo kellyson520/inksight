@@ -39,11 +39,12 @@ async def generate_disaster_alert(
             score, meta = normalize_warning_level(lvl)
             hazard_key = active.get("hazard_key") or _map_hazard_to_key(active.get("type_name", ""))
             advices = active.get("advice") or _generate_default_advice(hazard_key)
+            clean_lvl = lvl.replace("预警", "").strip()
             return {
-                "level": lvl,
+                "level": clean_lvl,
                 "type_name": active.get("type_name", "气象灾害"),
                 "hazard_key": hazard_key,
-                "title": active.get("title", f"{lvl}预警"),
+                "title": active.get("title", f"【{active.get('type_name', '气象灾害')}{clean_lvl}预警】"),
                 "sender": active.get("sender", "国家气象局"),
                 "pub_time": active.get("pub_time", time.strftime("%H:%M")),
                 "text": active.get("text", "预警信号生效中，请做好防范。"),
@@ -64,11 +65,12 @@ async def generate_disaster_alert(
     pub_time = str(override.get("pub_time") or time.strftime("%H:%M"))
     text = str(override.get("text") or f"气象台发布{hazard}{level}预警信号，请各单位及居民全面做好防灾应急与避险工作。")
 
+    clean_level = level.replace("预警", "").strip()
     return {
-        "level": level,
+        "level": clean_level,
         "type_name": hazard,
         "hazard_key": hazard_key,
-        "title": f"【{hazard}{level}预警】",
+        "title": f"【{hazard}{clean_level}预警】",
         "sender": sender,
         "pub_time": pub_time,
         "text": text,

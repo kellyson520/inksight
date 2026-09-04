@@ -44,10 +44,10 @@
     "level": "红色",
     "hazard": "暴雨",
     "fallback": {
-      "level": "红色",
-      "type_name": "暴雨",
+      "level": "Red",
+      "type_name": "Rainstorm",
       "hazard_key": "rainstorm",
-      "title": "【暴雨预警】",
+      "title": "【Rainstorm Red Alert】",
       "sender": "National Disaster Prevention Center",
       "pub_time": "12:00",
       "text": "Severe rainstorm warning active. Please take emergency precautions immediately.",

@@ -433,8 +433,14 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     draw_disaster_vector_icon(ctx.draw, hazard, icon_cx, icon_cy, size=icon_size, color=fg_col, accent_color=acc_col)
     ctx.y += icon_size + int(4 * ctx.scale)
 
-    # 2. 居中标题：【暴雨预警】
-    title_text = f"【{type_name}预警】"
+    # 2. 居中标题：【暴雨红色预警】（国家应急规范中，标题必须携带颜色级别）
+    clean_level = level.replace("预警", "").strip()
+    if clean_level and clean_level not in type_name:
+        title_text = f"【{type_name}{clean_level}预警】"
+    elif "预警" not in type_name:
+        title_text = f"【{type_name}预警】"
+    else:
+        title_text = f"【{type_name}】"
     title_font_size = int(block.get("title_font_size", 18) * ctx.scale)
     title_font = load_font("noto_serif_bold", title_font_size)
     tb = safe_font_bbox(title_font, title_text)
