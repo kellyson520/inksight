@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # 基础目录与持久化快照文件
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _CACHE_FILE = _DATA_DIR / "real_market_cache.json"
+_CUSTOM_STOCKS_FILE = _DATA_DIR / "custom_stocks.json"
 
 _STOCK_SYMBOLS = {"AAPL", "TSLA", "NVDA", "MSFT", "GOOGL", "AMZN", "META", "BABA"}
 
@@ -115,6 +116,80 @@ class MarketService:
         self._ttl = ttl
         self._cache: dict[str, tuple[float, dict[str, Any]]] = {}
         self._persisted = self._load_persisted()
+        self._custom_stocks = self._load_custom_stocks()
+
+    def _load_custom_stocks(self) -> dict[str, str]:
+        """加载用户添加并持久化的自定义股票列表 (symbol -> name)。"""
+        if not _CUSTOM_STOCKS_FILE.exists():
+            return {}
+        try:
+            with open(_CUSTOM_STOCKS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
+        except Exception as e:
+            logger.warning("[MarketService] Failed to load custom stocks: %s", e)
+            return {}
+
+    def _save_custom_stocks(self) -> None:
+        """持久化保存用户添加的自定义股票代码。"""
+        try:
+            _DATA_DIR.mkdir(parents=True, exist_ok=True)
+            with open(_CUSTOM_STOCKS_FILE, "w", encoding="utf-8") as f:
+                json.dump(self._custom_stocks, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.warning("[MarketService] Failed to save custom stocks: %s", e)
+
+    def get_all_stocks(self) -> list[dict[str, Any]]:
+        """获取所有可用股票列表（包含内置热门股票与用户添加的持久化自定义股票）。"""
+        res: list[dict[str, Any]] = []
+        # 1. 内置推荐股票
+        for sym, name in _STOCK_NAMES.items():
+            res.append({"symbol": sym, "name": name, "is_custom": False})
+        # 2. 用户持久化保存的股票
+        for sym, name in self._custom_stocks.items():
+            if sym not in _STOCK_NAMES:
+                res.append({"symbol": sym, "name": name or sym, "is_custom": True})
+        return res
+
+    async def add_custom_stock(self, raw_symbol: str, custom_name: str = "") -> dict[str, Any]:
+        """用户添加一个自定义股票代码并持久化存储。自动从财经接口探测并验证有效性。"""
+        sym = self.normalize_symbol(raw_symbol)
+        name = custom_name.strip()
+
+        # 尝试通过股票接口探测行情并获取真实官方名称
+        stock_data = await self._fetch_stock(sym)
+        if stock_data and not name:
+            # 尝试从返回的 name 中提取纯中文名
+            # 例如: "超威半导体 (AMD)" -> "超威半导体"
+            raw_n = stock_data.get("name", "")
+            if "(" in raw_n:
+                name = raw_n.split("(")[0].strip()
+            else:
+                name = raw_n.strip() or sym
+
+        if not name:
+            name = _STOCK_NAMES.get(sym, sym)
+
+        self._custom_stocks[sym] = name
+        self._save_custom_stocks()
+
+        if stock_data:
+            self._cache[sym] = (time.time(), stock_data)
+            self._persisted[sym] = stock_data
+            self._save_persisted()
+
+        logger.info("[MarketService] Custom stock persisted: %s (%s)", sym, name)
+        return {"symbol": sym, "name": name, "success": True, "data": stock_data}
+
+    def remove_custom_stock(self, raw_symbol: str) -> bool:
+        """从持久化存储中移除用户添加的股票代码。"""
+        sym = self.normalize_symbol(raw_symbol)
+        if sym in self._custom_stocks:
+            del self._custom_stocks[sym]
+            self._save_custom_stocks()
+            logger.info("[MarketService] Custom stock removed: %s", sym)
+            return True
+        return False
 
     def _load_persisted(self) -> dict[str, dict[str, Any]]:
         if not _CACHE_FILE.exists():
@@ -162,10 +237,27 @@ class MarketService:
         if cached and (now - cached[0] < self._ttl):
             return cached[1]
 
-        if sym in _STOCK_SYMBOLS:
+        is_known_stock = sym in _STOCK_SYMBOLS or sym in self._custom_stocks
+        is_known_crypto = sym in _CRYPTO_NAMES
+
+        res = None
+        if is_known_stock:
             res = await self._fetch_stock(sym)
-        else:
+        elif is_known_crypto:
             res = await self._fetch_crypto(sym)
+        else:
+            # 未知代码：优先尝试美股/全球股票实时探测
+            res = await self._fetch_stock(sym)
+            if res and res.get("sparkline_data"):
+                # 探测到是合法股票，自动加入持久化股票库
+                raw_n = res.get("name", "")
+                pure_name = raw_n.split("(")[0].strip() if "(" in raw_n else sym
+                if sym not in self._custom_stocks:
+                    self._custom_stocks[sym] = pure_name
+                    self._save_custom_stocks()
+                    logger.info("[MarketService] Auto-discovered and persisted stock: %s (%s)", sym, pure_name)
+            else:
+                res = await self._fetch_crypto(sym)
 
         if res and res.get("sparkline_data"):
             self._cache[sym] = (now, res)

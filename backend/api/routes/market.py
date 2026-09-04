@@ -59,3 +59,43 @@ async def get_market_timeseries(
         "points_count": len(pts),
         "sparkline_data": pts,
     }
+
+
+@router.get("/stocks")
+async def get_all_stocks() -> dict[str, Any]:
+    """获取所有可用股票列表（包含官方内置热门股票与用户添加的持久化自定义股票）。"""
+    stocks = market_service.get_all_stocks()
+    return {
+        "success": True,
+        "count": len(stocks),
+        "stocks": stocks,
+    }
+
+
+@router.post("/stocks")
+async def add_custom_stock(body: dict[str, Any]) -> dict[str, Any]:
+    """用户添加一个自定义股票代码并持久化存储（方便下次和所有设备调用）。"""
+    symbol = str(body.get("symbol", "")).strip().upper()
+    name = str(body.get("name", "")).strip()
+    if not symbol:
+        return {"success": False, "error": "Symbol cannot be empty"}
+
+    res = await market_service.add_custom_stock(symbol, name)
+    return {
+        "success": True,
+        "stock": {
+            "symbol": res["symbol"],
+            "name": res["name"],
+            "is_custom": True,
+        },
+    }
+
+
+@router.delete("/stocks/{symbol}")
+async def delete_custom_stock(symbol: str) -> dict[str, Any]:
+    """从持久化存储中移除用户添加的股票代码。"""
+    removed = market_service.remove_custom_stock(symbol)
+    return {
+        "success": removed,
+        "symbol": symbol.strip().upper(),
+    }
