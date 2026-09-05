@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import os
+import time
+import uuid
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request
@@ -19,6 +21,7 @@ from api.shared import (
     limiter,
 )
 from core.errors import InkSightError
+from core.observability import obs
 
 
 def _build_allowed_hosts() -> list[str]:
@@ -127,6 +130,28 @@ class OriginValidationMiddleware(BaseHTTPMiddleware):
         return JSONResponse({"error": "origin_not_allowed"}, status_code=403)
 
 
+class RequestObservabilityMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        incoming = request.headers.get("x-request-id", "").strip()
+        request_id = incoming[:128] if incoming and all(ch.isalnum() or ch in "-_." for ch in incoming) else str(uuid.uuid4())
+        started = time.perf_counter()
+        with obs.start_request(request_id):
+            status_code = 500
+            try:
+                response = await call_next(request)
+                status_code = response.status_code
+                return response
+            finally:
+                obs.emit("request.completed", {
+                    "method": request.method,
+                    "route": request.url.path,
+                    "status": status_code,
+                    "duration_ms": round((time.perf_counter() - started) * 1000, 2),
+                })
+                if "response" in locals():
+                    response.headers["X-Request-ID"] = request_id
+
+
 class _AccessLogFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         full_path = ""
@@ -157,6 +182,7 @@ _allowed_hosts = _build_allowed_hosts()
 
 app = FastAPI(title="InkSight API", version="1.1.0", lifespan=lifespan)
 app.state.limiter = limiter
+app.add_middleware(RequestObservabilityMiddleware)
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=_allowed_hosts,
