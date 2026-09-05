@@ -43,8 +43,9 @@ def test_cpa_keeper_mode_content_views():
     assert content_auths["title"] == "本地认证文件与限额看板"
     assert "认证文件" in content_auths["summary_1_label"]
     assert "重置" in content_auths["summary_2_label"]
-    assert "card_1_left_name" in content_auths
-    assert "card_1_right_val" in content_auths
+    assert "item_1_title" in content_auths
+    assert "item_1_progress_val" in content_auths
+    assert "item_1_detail" in content_auths
 
     # 2. 综合总览视图 (overview)
     content_overview = svc.get_mode_content(config_override={"view": "overview"}, language="zh")

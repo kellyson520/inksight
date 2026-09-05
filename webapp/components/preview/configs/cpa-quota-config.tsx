@@ -167,22 +167,22 @@ export function CpaQuotaConfig({
           {[
             {
               id: "auths",
-              label: locale === "zh" ? "🔑 认证文件与限额" : "🔑 Auth Files & Quotas",
+              label: locale === "zh" ? "认证文件与限额" : "Auth Files & Quotas",
               tip: locale === "zh" ? "不同认证文件重置时间与已用量" : "Auth reset countdown & volume",
             },
             {
               id: "overview",
-              label: locale === "zh" ? "📊 综合总览看板" : "📊 Comprehensive",
+              label: locale === "zh" ? "综合总览看板" : "Comprehensive",
               tip: locale === "zh" ? "认证文件+账单+模型综合展示" : "Auths, billing and models",
             },
             {
               id: "users",
-              label: locale === "zh" ? "👤 用户消费账单" : "👤 User Billing",
+              label: locale === "zh" ? "用户消费账单" : "User Billing",
               tip: locale === "zh" ? "API Key 用户消费排行榜" : "API keys spending ranking",
             },
             {
               id: "models",
-              label: locale === "zh" ? "⚡ 模型消耗分布" : "⚡ Model Usage",
+              label: locale === "zh" ? "模型消耗分布" : "Model Usage",
               tip: locale === "zh" ? "热门 AI 模型吞吐与调用量" : "Token volume per model",
             },
           ].map((item) => (

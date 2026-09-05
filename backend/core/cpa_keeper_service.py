@@ -2,6 +2,7 @@
 InkSight CPA 与 Keeper 容器额度聚合基础设施服务 (CPA & Usage Keeper Service)
 连接本地 CLIProxyAPI (CPA) 容器与 CPA-Usage-Keeper 容器，
 聚合多账户认证文件、限额重置周期、模型消耗、调用次数与费用账单。
+【特别约束】：禁止在墨水屏输出字符串中包含任何 Emoji，确保黑白电子纸点阵整洁美观且无超出边框风险。
 """
 from __future__ import annotations
 
@@ -168,7 +169,7 @@ class CpaKeeperService:
                     ).fetchone()
 
                     ident_reset_str = "无需重置"
-                    rem_pct_num: Optional[int] = None
+                    rem_pct_num: int = 100
                     if cycle:
                         c_id, q_key, r_at_str, win_sec = cycle
                         if r_at_str:
@@ -195,12 +196,16 @@ class CpaKeeperService:
                             (c_id,),
                         ).fetchone()
                         if seg and seg[0] is not None:
-                            rem_pct_num = seg[0]
+                            rem_pct_num = max(0, min(100, int(seg[0])))
 
-                    # 友好显示标签
+                    # 友好显示标签（简练且无 emoji）
                     disp_label = alias_name if alias_name else (acc_name.split("@")[0] if "@" in acc_name else acc_name)
                     if not disp_label:
                         disp_label = file_name.replace(".json", "")
+
+                    # 限制显示长度防止溢出
+                    if len(disp_label) > 12:
+                        disp_label = disp_label[:11] + "…"
 
                     auth_identities.append({
                         "id": ir[0],
@@ -214,8 +219,8 @@ class CpaKeeperService:
                         "tokens": total_toks,
                         "tokens_str": _format_token_count(total_toks),
                         "reset_str": ident_reset_str,
-                        "remaining_pct": f"{rem_pct_num}%" if rem_pct_num is not None else "100%",
-                        "remaining_pct_num": rem_pct_num if rem_pct_num is not None else 100,
+                        "remaining_pct": f"{rem_pct_num}%",
+                        "remaining_pct_num": rem_pct_num,
                         "last_used": last_used_str[:16].replace("T", " ") if last_used_str else "从未",
                         "disabled": is_disabled,
                     })
@@ -245,6 +250,8 @@ class CpaKeeperService:
                 ).fetchall()
                 for kr in k_rows:
                     name = kr[0] or kr[1] or "Default"
+                    if len(name) > 12:
+                        name = name[:11] + "…"
                     cost = round(float(kr[2] or 0.0), 2)
                     reqs = int(kr[3] or 0)
                     toks = int(kr[4] or 0)
@@ -276,9 +283,9 @@ class CpaKeeperService:
         # 兜底测试数据
         if not auth_identities:
             auth_identities = [
-                {"display_name": "AA", "provider": "CODEX", "tokens_str": "2.87B", "requests": 26138, "reset_str": "3时38分", "remaining_pct": "85%", "last_used": "今日 08:30", "disabled": False},
-                {"display_name": "huo02", "provider": "ANTIGRAVITY", "tokens_str": "482.9M", "requests": 3370, "reset_str": "持续可用", "remaining_pct": "100%", "last_used": "今日 08:30", "disabled": False},
-                {"display_name": "h", "provider": "GEMINI", "tokens_str": "224.0K", "requests": 43, "reset_str": "持续可用", "remaining_pct": "100%", "last_used": "今日 08:03", "disabled": False},
+                {"display_name": "AA", "provider": "CODEX", "tokens_str": "2.87B", "requests": 26138, "reset_str": "3时38分", "remaining_pct": "85%", "remaining_pct_num": 85, "disabled": False},
+                {"display_name": "huo02", "provider": "ANTIGRAVITY", "tokens_str": "482.9M", "requests": 3370, "reset_str": "持续可用", "remaining_pct": "100%", "remaining_pct_num": 100, "disabled": False},
+                {"display_name": "h", "provider": "GEMINI", "tokens_str": "224.0K", "requests": 43, "reset_str": "持续可用", "remaining_pct": "100%", "remaining_pct_num": 100, "disabled": False},
             ]
 
         if not users:
@@ -327,7 +334,7 @@ class CpaKeeperService:
         return res
 
     def get_mode_content(self, config_override: Optional[dict[str, Any]] = None, language: str = "zh") -> dict[str, Any]:
-        """根据用户选定的看板模式 (auths / overview / users / models) 为墨水屏提供定制化数据。"""
+        """根据用户选定的看板模式为墨水屏提供定制化数据，完全去除 Emoji 并优化长条形单列进度条排版。"""
         metrics = self.get_aggregated_metrics()
         is_en = language == "en"
 
@@ -345,53 +352,62 @@ class CpaKeeperService:
         users = metrics.get("users", [])
         models = metrics.get("top_models", [])
 
-        # 默认占位安全回退
         def safe_get(lst, idx, default):
             return lst[idx] if len(lst) > idx else default
 
+        def format_model_name(name: str) -> str:
+            return (
+                name.replace("gemini-", "Gemini ")
+                .replace("-flash-high", " Flash")
+                .replace("claude-", "Claude ")
+                .replace("-sonnet-4-6", " Sonnet")
+                .replace("gpt-", "GPT-")
+            )
+
         # -------------------------------------------------------------
-        # 1. 认证文件与限额看板 (auths) —— 查看各本地认证文件的重置时间与已用量
+        # 1. 认证文件与限额看板 (auths) —— 单列全宽+进度条，无 Emoji
         # -------------------------------------------------------------
         if focus_view == "auths":
             title = "本地认证文件与限额看板" if not is_en else "Auth Files & Quota Status"
             summary_1_lbl = "认证文件" if not is_en else "Auth Files"
             summary_1_val = f"{len(auths)} 个" if not is_en else f"{len(auths)} Files"
-            summary_2_lbl = "窗口重置倒计时" if not is_en else "Next Quota Reset"
+            summary_2_lbl = "限额窗口重置" if not is_en else "Next Quota Reset"
             summary_2_val = metrics["reset_countdown"]
             summary_3_lbl = "今日总 Token" if not is_en else "Today Tokens"
             summary_3_val = metrics["today_tokens_str"]
 
-            col_left_title = "🔑 认证账号 / 渠道" if not is_en else "🔑 Auth Account / Provider"
-            col_right_title = "⏳ 限额重置与已用量" if not is_en else "⏳ Reset Time & Used Volume"
+            col_title = "认证文件限额与请求用量" if not is_en else "Auth Files Quota & Usage"
 
-            # 4 个卡片条目
-            a1 = safe_get(auths, 0, {"display_name": "—", "provider": "—", "tokens_str": "0", "reset_str": "—", "remaining_pct": "100%", "requests": 0})
-            a2 = safe_get(auths, 1, {"display_name": "—", "provider": "—", "tokens_str": "0", "reset_str": "—", "remaining_pct": "100%", "requests": 0})
-            a3 = safe_get(auths, 2, {"display_name": "—", "provider": "—", "tokens_str": "0", "reset_str": "—", "remaining_pct": "100%", "requests": 0})
+            a1 = safe_get(auths, 0, {"display_name": "—", "provider": "—", "tokens_str": "0", "reset_str": "—", "remaining_pct": "100%", "remaining_pct_num": 100, "requests": 0})
+            a2 = safe_get(auths, 1, {"display_name": "—", "provider": "—", "tokens_str": "0", "reset_str": "—", "remaining_pct": "100%", "remaining_pct_num": 100, "requests": 0})
+            a3 = safe_get(auths, 2, {"display_name": "—", "provider": "—", "tokens_str": "0", "reset_str": "—", "remaining_pct": "100%", "remaining_pct_num": 100, "requests": 0})
 
-            card_1_left_name = f"{a1['provider']} · {a1['display_name']}"
-            card_1_left_val = f"已用: {a1['tokens_str']} ({a1['requests']}次)" if not is_en else f"Used: {a1['tokens_str']} ({a1['requests']} reqs)"
-            card_1_right_name = f"{a1['display_name']} 配额" if not is_en else f"{a1['display_name']} Quota"
-            card_1_right_val = f"重置: {a1['reset_str']} · 剩余: {a1['remaining_pct']}" if not is_en else f"Reset: {a1['reset_str']} ({a1['remaining_pct']} left)"
+            # 单列条目 1
+            item_1_title = f"{a1['display_name']} [{a1['provider']}]"
+            item_1_status = f"重置: {a1['reset_str']}" if not is_en else f"Reset: {a1['reset_str']}"
+            item_1_progress_val = str(a1.get("remaining_pct_num", 100))
+            item_1_detail = f"剩余配额: {a1['remaining_pct']} · 已用: {a1['tokens_str']} ({a1['requests']}次)" if not is_en else f"Quota: {a1['remaining_pct']} left · Used: {a1['tokens_str']} ({a1['requests']} reqs)"
 
-            card_2_left_name = f"{a2['provider']} · {a2['display_name']}"
-            card_2_left_val = f"已用: {a2['tokens_str']} ({a2['requests']}次)" if not is_en else f"Used: {a2['tokens_str']} ({a2['requests']} reqs)"
-            card_2_right_name = f"{a2['display_name']} 配额" if not is_en else f"{a2['display_name']} Quota"
-            card_2_right_val = f"重置: {a2['reset_str']} · 剩余: {a2['remaining_pct']}" if not is_en else f"Reset: {a2['reset_str']} ({a2['remaining_pct']} left)"
+            # 单列条目 2
+            item_2_title = f"{a2['display_name']} [{a2['provider']}]"
+            item_2_status = f"重置: {a2['reset_str']}" if not is_en else f"Reset: {a2['reset_str']}"
+            item_2_progress_val = str(a2.get("remaining_pct_num", 100))
+            item_2_detail = f"剩余配额: {a2['remaining_pct']} · 已用: {a2['tokens_str']} ({a2['requests']}次)" if not is_en else f"Quota: {a2['remaining_pct']} left · Used: {a2['tokens_str']} ({a2['requests']} reqs)"
 
-            card_3_left_name = f"{a3['provider']} · {a3['display_name']}"
-            card_3_left_val = f"已用: {a3['tokens_str']} ({a3['requests']}次)" if not is_en else f"Used: {a3['tokens_str']} ({a3['requests']} reqs)"
-            card_3_right_name = f"{a3['display_name']} 配额" if not is_en else f"{a3['display_name']} Quota"
-            card_3_right_val = f"重置: {a3['reset_str']} · 剩余: {a3['remaining_pct']}" if not is_en else f"Reset: {a3['reset_str']} ({a3['remaining_pct']} left)"
+            # 单列条目 3
+            item_3_title = f"{a3['display_name']} [{a3['provider']}]"
+            item_3_status = f"重置: {a3['reset_str']}" if not is_en else f"Reset: {a3['reset_str']}"
+            item_3_progress_val = str(a3.get("remaining_pct_num", 100))
+            item_3_detail = f"剩余配额: {a3['remaining_pct']} · 已用: {a3['tokens_str']} ({a3['requests']}次)" if not is_en else f"Quota: {a3['remaining_pct']} left · Used: {a3['tokens_str']} ({a3['requests']} reqs)"
 
             reset_bottom_label = (
-                f"认证凭证: {len(auths)} 个 · 首选重置: {metrics['reset_countdown']}"
+                f"认证文件: {len(auths)} 个 · 窗口重置: {metrics['reset_countdown']}"
                 if not is_en
-                else f"Auths: {len(auths)} · Reset in: {metrics['reset_countdown']}"
+                else f"Auth Files: {len(auths)} · Reset in: {metrics['reset_countdown']}"
             )
 
         # -------------------------------------------------------------
-        # 2. 用户消费账单排行 (users)
+        # 2. 用户消费账单排行 (users) —— 单列全宽+消费占比进度条
         # -------------------------------------------------------------
         elif focus_view == "users":
             title = "用户与 Key 消费排行榜" if not is_en else "User Billing & Quota Ranking"
@@ -402,36 +418,40 @@ class CpaKeeperService:
             summary_3_lbl = "累计消费账单" if not is_en else "Total Billing"
             summary_3_val = metrics["total_cost_str"]
 
-            col_left_title = "💳 用户消费榜 (Top 1-3)" if not is_en else "💳 User Billing (Top 1-3)"
-            col_right_title = "📊 用户请求明细" if not is_en else "📊 User Requests Detail"
+            col_title = "用户消费账单与请求占比" if not is_en else "User Billing & Request Breakdown"
 
-            u1 = safe_get(users, 0, {"name": "—", "cost_str": "$0.00", "tokens_str": "0", "requests": 0})
-            u2 = safe_get(users, 1, {"name": "—", "cost_str": "$0.00", "tokens_str": "0", "requests": 0})
-            u3 = safe_get(users, 2, {"name": "—", "cost_str": "$0.00", "tokens_str": "0", "requests": 0})
+            u1 = safe_get(users, 0, {"name": "—", "cost": 0.0, "cost_str": "$0.00", "tokens_str": "0", "requests": 0})
+            u2 = safe_get(users, 1, {"name": "—", "cost": 0.0, "cost_str": "$0.00", "tokens_str": "0", "requests": 0})
+            u3 = safe_get(users, 2, {"name": "—", "cost": 0.0, "cost_str": "$0.00", "tokens_str": "0", "requests": 0})
 
-            card_1_left_name = f"TOP 1 · {u1['name']}"
-            card_1_left_val = f"{u1['cost_str']} ({u1['tokens_str']})"
-            card_1_right_name = f"{u1['name']} 统计"
-            card_1_right_val = f"请求: {u1['requests']} 次" if not is_en else f"{u1['requests']} requests"
+            tot_cost = max(metrics.get("total_cost_usd", 1.0), 1.0)
+            p1 = max(5, min(100, int((u1["cost"] / tot_cost) * 100)))
+            p2 = max(5, min(100, int((u2["cost"] / tot_cost) * 100)))
+            p3 = max(5, min(100, int((u3["cost"] / tot_cost) * 100)))
 
-            card_2_left_name = f"TOP 2 · {u2['name']}"
-            card_2_left_val = f"{u2['cost_str']} ({u2['tokens_str']})"
-            card_2_right_name = f"{u2['name']} 统计"
-            card_2_right_val = f"请求: {u2['requests']} 次" if not is_en else f"{u2['requests']} requests"
+            item_1_title = f"TOP 1 · {u1['name']}"
+            item_1_status = f"{u1['cost_str']}"
+            item_1_progress_val = str(p1)
+            item_1_detail = f"账单占比: {p1}% · 吞吐: {u1['tokens_str']} ({u1['requests']}次)" if not is_en else f"Share: {p1}% · Tokens: {u1['tokens_str']} ({u1['requests']} reqs)"
 
-            card_3_left_name = f"TOP 3 · {u3['name']}"
-            card_3_left_val = f"{u3['cost_str']} ({u3['tokens_str']})"
-            card_3_right_name = f"{u3['name']} 统计"
-            card_3_right_val = f"请求: {u3['requests']} 次" if not is_en else f"{u3['requests']} requests"
+            item_2_title = f"TOP 2 · {u2['name']}"
+            item_2_status = f"{u2['cost_str']}"
+            item_2_progress_val = str(p2)
+            item_2_detail = f"账单占比: {p2}% · 吞吐: {u2['tokens_str']} ({u2['requests']}次)" if not is_en else f"Share: {p2}% · Tokens: {u2['tokens_str']} ({u2['requests']} reqs)"
+
+            item_3_title = f"TOP 3 · {u3['name']}"
+            item_3_status = f"{u3['cost_str']}"
+            item_3_progress_val = str(p3)
+            item_3_detail = f"账单占比: {p3}% · 吞吐: {u3['tokens_str']} ({u3['requests']}次)" if not is_en else f"Share: {p3}% · Tokens: {u3['tokens_str']} ({u3['requests']} reqs)"
 
             reset_bottom_label = (
-                f"账单总额: {metrics['total_cost_str']} · 成功率: {metrics['today_success_rate']}%"
+                f"账单总计: {metrics['total_cost_str']} · 成功率: {metrics['today_success_rate']}%"
                 if not is_en
-                else f"Total: {metrics['total_cost_str']} · OK: {metrics['today_success_rate']}%"
+                else f"Total: {metrics['total_cost_str']} · Success: {metrics['today_success_rate']}%"
             )
 
         # -------------------------------------------------------------
-        # 3. AI 模型消耗分布 (models)
+        # 3. AI 模型消耗分布 (models) —— 单列全宽+Token占比进度条
         # -------------------------------------------------------------
         elif focus_view == "models":
             title = "AI 模型消耗与请求分布" if not is_en else "AI Model Usage Distribution"
@@ -443,45 +463,40 @@ class CpaKeeperService:
             summary_3_lbl = "今日总 Token" if not is_en else "Today Tokens"
             summary_3_val = metrics["today_tokens_str"]
 
-            col_left_title = "⚡ 热门模型排行 (Tokens)" if not is_en else "⚡ Top Models (Tokens)"
-            col_right_title = "📈 调用请求量排行" if not is_en else "📈 Request Count Ranking"
+            col_title = "热门模型调用排行与 Token 吞吐" if not is_en else "Top Models Ranking & Token Volume"
 
-            m1 = safe_get(models, 0, {"model": "—", "tokens_str": "0", "requests": 0})
-            m2 = safe_get(models, 1, {"model": "—", "tokens_str": "0", "requests": 0})
-            m3 = safe_get(models, 2, {"model": "—", "tokens_str": "0", "requests": 0})
+            m1 = safe_get(models, 0, {"model": "—", "tokens": 0, "tokens_str": "0", "requests": 0})
+            m2 = safe_get(models, 1, {"model": "—", "tokens": 0, "tokens_str": "0", "requests": 0})
+            m3 = safe_get(models, 2, {"model": "—", "tokens": 0, "tokens_str": "0", "requests": 0})
 
-            def format_model_name(name: str) -> str:
-                return (
-                    name.replace("gemini-", "Gemini ")
-                    .replace("-flash-high", " Flash")
-                    .replace("claude-", "Claude ")
-                    .replace("-sonnet-4-6", " Sonnet")
-                    .replace("gpt-", "GPT-")
-                )
+            tot_toks = max(sum(m.get("tokens", 0) for m in models), 1)
+            mp1 = max(5, min(100, int((m1["tokens"] / tot_toks) * 100)))
+            mp2 = max(5, min(100, int((m2["tokens"] / tot_toks) * 100)))
+            mp3 = max(5, min(100, int((m3["tokens"] / tot_toks) * 100)))
 
-            card_1_left_name = format_model_name(m1["model"])
-            card_1_left_val = f"{m1['tokens_str']} Tokens"
-            card_1_right_name = format_model_name(m1["model"])
-            card_1_right_val = f"{m1['requests']} 次调用" if not is_en else f"{m1['requests']} calls"
+            item_1_title = format_model_name(m1["model"])
+            item_1_status = f"{m1['tokens_str']} Tokens"
+            item_1_progress_val = str(mp1)
+            item_1_detail = f"吞吐占比: {mp1}% · 调用: {m1['requests']} 次" if not is_en else f"Share: {mp1}% · Calls: {m1['requests']} reqs"
 
-            card_2_left_name = format_model_name(m2["model"])
-            card_2_left_val = f"{m2['tokens_str']} Tokens"
-            card_2_right_name = format_model_name(m2["model"])
-            card_2_right_val = f"{m2['requests']} 次调用" if not is_en else f"{m2['requests']} calls"
+            item_2_title = format_model_name(m2["model"])
+            item_2_status = f"{m2['tokens_str']} Tokens"
+            item_2_progress_val = str(mp2)
+            item_2_detail = f"吞吐占比: {mp2}% · 调用: {m2['requests']} 次" if not is_en else f"Share: {mp2}% · Calls: {m2['requests']} reqs"
 
-            card_3_left_name = format_model_name(m3["model"])
-            card_3_left_val = f"{m3['tokens_str']} Tokens"
-            card_3_right_name = format_model_name(m3["model"])
-            card_3_right_val = f"{m3['requests']} 次调用" if not is_en else f"{m3['requests']} calls"
+            item_3_title = format_model_name(m3["model"])
+            item_3_status = f"{m3['tokens_str']} Tokens"
+            item_3_progress_val = str(mp3)
+            item_3_detail = f"吞吐占比: {mp3}% · 调用: {m3['requests']} 次" if not is_en else f"Share: {mp3}% · Calls: {m3['requests']} reqs"
 
             reset_bottom_label = (
                 f"今日 Token: {metrics['today_tokens_str']} · 成功率: {metrics['today_success_rate']}%"
                 if not is_en
-                else f"Today: {metrics['today_tokens_str']} · {metrics['today_success_rate']}% OK"
+                else f"Today: {metrics['today_tokens_str']} · Success: {metrics['today_success_rate']}%"
             )
 
         # -------------------------------------------------------------
-        # 4. 综合总览看板 (overview)
+        # 4. 综合总览看板 (overview) —— 单列全宽+核心进度
         # -------------------------------------------------------------
         else:
             title = "CPA 额度综合看板" if not is_en else "CPA Quota Overview"
@@ -492,33 +507,31 @@ class CpaKeeperService:
             summary_3_lbl = "累计账单" if not is_en else "Total Billing"
             summary_3_val = metrics["total_cost_str"]
 
-            col_left_title = "🔑 认证文件 & 限额重置" if not is_en else "🔑 Auths & Quota Reset"
-            col_right_title = "👤 用户账单 & 模型" if not is_en else "👤 Users & Models"
+            col_title = "核心凭证限额与系统负载总览" if not is_en else "Core Quota & System Load Overview"
 
-            a1 = safe_get(auths, 0, {"display_name": "AA", "provider": "CODEX", "tokens_str": "2.87B", "reset_str": "3时38分", "remaining_pct": "85%"})
-            a2 = safe_get(auths, 1, {"display_name": "huo02", "provider": "ANTIGRAVITY", "tokens_str": "482.9M", "reset_str": "持续可用", "remaining_pct": "100%"})
-            u1 = safe_get(users, 0, {"name": "huo", "cost_str": "$258.73", "tokens_str": "3.17B"})
-            m1 = safe_get(models, 0, {"model": "gpt-5.6-luna", "tokens_str": "2.72B"})
+            a1 = safe_get(auths, 0, {"display_name": "AA", "provider": "CODEX", "tokens_str": "2.87B", "reset_str": "3时38分", "remaining_pct": "85%", "remaining_pct_num": 85, "requests": 26138})
+            u1 = safe_get(users, 0, {"name": "huo", "cost_str": "$258.73", "tokens_str": "3.17B", "requests": 24574})
+            m1 = safe_get(models, 0, {"model": "gpt-5.6-luna", "tokens_str": "2.72B", "requests": 23496})
 
-            card_1_left_name = f"{a1['provider']} · {a1['display_name']}"
-            card_1_left_val = f"已用: {a1['tokens_str']}"
-            card_1_right_name = f"重置倒计时"
-            card_1_right_val = f"{a1['reset_str']} ({a1['remaining_pct']})"
+            item_1_title = f"首要凭证 · {a1['display_name']} [{a1['provider']}]"
+            item_1_status = f"重置: {a1['reset_str']}"
+            item_1_progress_val = str(a1.get("remaining_pct_num", 85))
+            item_1_detail = f"剩余配额: {a1['remaining_pct']} · 已用: {a1['tokens_str']} ({a1['requests']}次)" if not is_en else f"Quota: {a1['remaining_pct']} left · Used: {a1['tokens_str']}"
 
-            card_2_left_name = f"{a2['provider']} · {a2['display_name']}"
-            card_2_left_val = f"已用: {a2['tokens_str']}"
-            card_2_right_name = f"用户 TOP 1"
-            card_2_right_val = f"{u1['name']}: {u1['cost_str']}"
+            item_2_title = f"主力用户 · {u1['name']}"
+            item_2_status = f"{u1['cost_str']}"
+            item_2_progress_val = "80"
+            item_2_detail = f"消费账单: {u1['cost_str']} · 吞吐: {u1['tokens_str']} ({u1['requests']}次)" if not is_en else f"Billing: {u1['cost_str']} · Tokens: {u1['tokens_str']}"
 
-            card_3_left_name = f"主力模型"
-            card_3_left_val = f"{m1['model'].replace('gpt-', 'GPT-')}"
-            card_3_right_name = f"消耗 Token"
-            card_3_right_val = f"{m1['tokens_str']}"
+            item_3_title = f"主力模型 · {format_model_name(m1['model'])}"
+            item_3_status = f"{m1['tokens_str']}"
+            item_3_progress_val = "90"
+            item_3_detail = f"模型消耗: {m1['tokens_str']} Tokens ({m1['requests']}次调用)" if not is_en else f"Tokens: {m1['tokens_str']} ({m1['requests']} calls)"
 
             reset_bottom_label = (
                 f"窗口重置: {metrics['reset_countdown']} · 今日请求: {metrics['today_requests']} 次"
                 if not is_en
-                else f"Reset in: {metrics['reset_countdown']} · Reqs: {metrics['today_requests']}"
+                else f"Reset in: {metrics['reset_countdown']} · Requests: {metrics['today_requests']}"
             )
 
         return {
@@ -530,20 +543,19 @@ class CpaKeeperService:
             "summary_2_val": summary_2_val,
             "summary_3_label": summary_3_lbl,
             "summary_3_val": summary_3_val,
-            "col_left_title": col_left_title,
-            "col_right_title": col_right_title,
-            "card_1_left_name": card_1_left_name,
-            "card_1_left_val": card_1_left_val,
-            "card_1_right_name": card_1_right_name,
-            "card_1_right_val": card_1_right_val,
-            "card_2_left_name": card_2_left_name,
-            "card_2_left_val": card_2_left_val,
-            "card_2_right_name": card_2_right_name,
-            "card_2_right_val": card_2_right_val,
-            "card_3_left_name": card_3_left_name,
-            "card_3_left_val": card_3_left_val,
-            "card_3_right_name": card_3_right_name,
-            "card_3_right_val": card_3_right_val,
+            "col_title": col_title,
+            "item_1_title": item_1_title,
+            "item_1_status": item_1_status,
+            "item_1_progress_val": item_1_progress_val,
+            "item_1_detail": item_1_detail,
+            "item_2_title": item_2_title,
+            "item_2_status": item_2_status,
+            "item_2_progress_val": item_2_progress_val,
+            "item_2_detail": item_2_detail,
+            "item_3_title": item_3_title,
+            "item_3_status": item_3_status,
+            "item_3_progress_val": item_3_progress_val,
+            "item_3_detail": item_3_detail,
             "reset_bottom_label": reset_bottom_label,
             "update_time": metrics["update_time"],
         }

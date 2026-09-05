@@ -27,25 +27,24 @@
       "header_status": "CPA 在线 · Keeper 在线",
       "summary_1_label": "认证文件",
       "summary_1_val": "4 个",
-      "summary_2_label": "窗口重置倒计时",
+      "summary_2_label": "限额窗口重置",
       "summary_2_val": "3时38分",
       "summary_3_label": "今日总 Token",
       "summary_3_val": "75.3M",
-      "col_left_title": "🔑 认证账号 / 渠道",
-      "col_right_title": "⏳ 限额重置与已用量",
-      "card_1_left_name": "CODEX · AA",
-      "card_1_left_val": "已用: 2.87B (26138次)",
-      "card_1_right_name": "AA 配额",
-      "card_1_right_val": "重置: 3时38分 · 剩余: 85%",
-      "card_2_left_name": "ANTIGRAVITY · huo02",
-      "card_2_left_val": "已用: 482.9M (3370次)",
-      "card_2_right_name": "huo02 配额",
-      "card_2_right_val": "重置: 无需重置 · 剩余: 100%",
-      "card_3_left_name": "GEMINI · h",
-      "card_3_left_val": "已用: 224.0K (43次)",
-      "card_3_right_name": "h 配额",
-      "card_3_right_val": "重置: 无需重置 · 剩余: 100%",
-      "reset_bottom_label": "认证凭证: 4 个 · 首选重置: 3时38分",
+      "col_title": "认证文件限额与请求用量",
+      "item_1_title": "AA [CODEX]",
+      "item_1_status": "重置: 3时38分",
+      "item_1_progress_val": "85",
+      "item_1_detail": "剩余配额: 85% · 已用: 2.87B (26138次)",
+      "item_2_title": "huo02 [ANTIGRAVITY]",
+      "item_2_status": "重置: 持续可用",
+      "item_2_progress_val": "100",
+      "item_2_detail": "剩余配额: 100% · 已用: 482.9M (3370次)",
+      "item_3_title": "h [GEMINI]",
+      "item_3_status": "重置: 持续可用",
+      "item_3_progress_val": "100",
+      "item_3_detail": "剩余配额: 100% · 已用: 224.0K (43次)",
+      "reset_bottom_label": "认证文件: 4 个 · 窗口重置: 3时38分",
       "update_time": "12:00:00"
     }
   },
@@ -164,109 +163,97 @@
         "height": 4
       },
       {
-        "type": "two_column",
-        "ratio": 0.5,
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 5,
         "margin_x": 8,
-        "left": [
+        "children": [
           {
-            "type": "card",
-            "border": "solid",
-            "radius": 4,
-            "padding": 5,
-            "children": [
-              {
-                "type": "text",
-                "field": "col_left_title",
-                "font": "noto_serif_bold",
-                "font_size": 11,
-                "margin_bottom": 4
-              },
-              {
-                "type": "flex_row",
-                "justify": "space-between",
-                "items": [
-                  { "type": "text", "field": "card_1_left_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "card_1_left_val", "font": "noto_serif_regular", "font_size": 10 }
-                ]
-              },
-              {
-                "type": "separator",
-                "dashed": true,
-                "margin_y": 3
-              },
-              {
-                "type": "flex_row",
-                "justify": "space-between",
-                "items": [
-                  { "type": "text", "field": "card_2_left_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "card_2_left_val", "font": "noto_serif_regular", "font_size": 10 }
-                ]
-              },
-              {
-                "type": "separator",
-                "dashed": true,
-                "margin_y": 3
-              },
-              {
-                "type": "flex_row",
-                "justify": "space-between",
-                "items": [
-                  { "type": "text", "field": "card_3_left_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "card_3_left_val", "font": "noto_serif_regular", "font_size": 10 }
-                ]
-              }
-            ]
-          }
-        ],
-        "right": [
+            "type": "text",
+            "field": "col_title",
+            "font": "noto_serif_bold",
+            "font_size": 11,
+            "margin_bottom": 4
+          },
           {
-            "type": "card",
-            "border": "solid",
-            "radius": 4,
-            "padding": 5,
-            "children": [
-              {
-                "type": "text",
-                "field": "col_right_title",
-                "font": "noto_serif_bold",
-                "font_size": 11,
-                "margin_bottom": 4
-              },
-              {
-                "type": "flex_row",
-                "justify": "space-between",
-                "items": [
-                  { "type": "text", "field": "card_1_right_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "card_1_right_val", "font": "noto_serif_regular", "font_size": 10 }
-                ]
-              },
-              {
-                "type": "separator",
-                "dashed": true,
-                "margin_y": 3
-              },
-              {
-                "type": "flex_row",
-                "justify": "space-between",
-                "items": [
-                  { "type": "text", "field": "card_2_right_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "card_2_right_val", "font": "noto_serif_regular", "font_size": 10 }
-                ]
-              },
-              {
-                "type": "separator",
-                "dashed": true,
-                "margin_y": 3
-              },
-              {
-                "type": "flex_row",
-                "justify": "space-between",
-                "items": [
-                  { "type": "text", "field": "card_3_right_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "card_3_right_val", "font": "noto_serif_regular", "font_size": 10 }
-                ]
-              }
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "items": [
+              { "type": "text", "field": "item_1_title", "font": "noto_serif_bold", "font_size": 10 },
+              { "type": "text", "field": "item_1_status", "font": "noto_serif_bold", "font_size": 10 }
             ]
+          },
+          {
+            "type": "progress_bar",
+            "field": "item_1_progress_val",
+            "max": 100,
+            "height": 5,
+            "margin_top": 2,
+            "margin_bottom": 2
+          },
+          {
+            "type": "text",
+            "field": "item_1_detail",
+            "font": "noto_serif_regular",
+            "font_size": 9
+          },
+          {
+            "type": "separator",
+            "dashed": true,
+            "margin_y": 3
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "items": [
+              { "type": "text", "field": "item_2_title", "font": "noto_serif_bold", "font_size": 10 },
+              { "type": "text", "field": "item_2_status", "font": "noto_serif_bold", "font_size": 10 }
+            ]
+          },
+          {
+            "type": "progress_bar",
+            "field": "item_2_progress_val",
+            "max": 100,
+            "height": 5,
+            "margin_top": 2,
+            "margin_bottom": 2
+          },
+          {
+            "type": "text",
+            "field": "item_2_detail",
+            "font": "noto_serif_regular",
+            "font_size": 9
+          },
+          {
+            "type": "separator",
+            "dashed": true,
+            "margin_y": 3
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "items": [
+              { "type": "text", "field": "item_3_title", "font": "noto_serif_bold", "font_size": 10 },
+              { "type": "text", "field": "item_3_status", "font": "noto_serif_bold", "font_size": 10 }
+            ]
+          },
+          {
+            "type": "progress_bar",
+            "field": "item_3_progress_val",
+            "max": 100,
+            "height": 5,
+            "margin_top": 2,
+            "margin_bottom": 2
+          },
+          {
+            "type": "text",
+            "field": "item_3_detail",
+            "font": "noto_serif_regular",
+            "font_size": 9
           }
         ]
       },
