@@ -569,9 +569,12 @@ def _build_component_node(defn: dict, content: dict) -> ComponentNode:
                     item_content.update(item)
                 children.append(_build_component_node(item_def, item_content))
         return ComponentNode(kind=kind, props=defn, content=content, children=children)
+    raw_children = defn.get("children", [])
+    if not raw_children and "items" in defn and isinstance(defn.get("items"), list):
+        raw_children = defn.get("items", [])
     children = [
         _build_component_node(child, content)
-        for child in defn.get("children", [])
+        for child in raw_children
         if isinstance(child, dict)
     ]
     return ComponentNode(kind=kind, props=defn, content=content, children=children)

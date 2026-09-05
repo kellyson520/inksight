@@ -36,15 +36,11 @@
       "card_1_reset_text": "5h重置: 2时45分   7天重置: 6天0时",
       "card_1_usage_text": "已用: 2.87B Tokens · 26,139 次请求",
       "card_1_ring_val": "85",
-      "card_1_ring_text": "85%",
-      "card_1_ring_label": "剩余配额",
       "card_2_title": "huo02  [ANTIGRAVITY]",
       "card_2_status": "• 正常调用中",
       "card_2_reset_text": "5h重置: 持续可用   7天重置: 持续可用",
       "card_2_usage_text": "已用: 485.5M Tokens · 3,370 次请求",
       "card_2_ring_val": "100",
-      "card_2_ring_text": "100%",
-      "card_2_ring_label": "配额充沛",
       "reset_bottom_label": "监控认证文件: 2 个  ·  今日总 Token: 85.6M",
       "update_time": "12:00:00"
     }
@@ -57,32 +53,34 @@
     "body": [
       {
         "type": "spacer",
-        "height": 4
+        "height": 3
       },
       {
         "type": "card",
         "border": "solid",
-        "radius": 4,
-        "padding": 5,
+        "radius": 3,
+        "padding": 4,
         "margin_x": 8,
+        "margin_bottom": 3,
         "children": [
           {
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
             "margin_x": 4,
+            "margin_bottom": 0,
             "items": [
               {
                 "type": "text",
                 "field": "title",
                 "font": "noto_serif_bold",
-                "font_size": 14
+                "font_size": 13
               },
               {
                 "type": "badge",
                 "field": "header_status",
-                "font_size": 10,
-                "padding_x": 6,
+                "font_size": 9,
+                "padding_x": 5,
                 "padding_y": 1
               }
             ]
@@ -90,40 +88,38 @@
         ]
       },
       {
-        "type": "spacer",
-        "height": 4
-      },
-      {
         "type": "card",
         "border": "solid",
-        "radius": 4,
-        "padding": 5,
+        "radius": 3,
+        "padding": 4,
         "margin_x": 8,
+        "margin_bottom": 3,
         "children": [
           {
             "type": "flex_row",
             "justify": "space-around",
             "align_items": "center",
+            "margin_bottom": 1,
             "items": [
               {
                 "type": "text",
                 "field": "summary_1_label",
                 "font": "noto_serif_regular",
-                "font_size": 10,
+                "font_size": 9,
                 "align": "center"
               },
               {
                 "type": "text",
                 "field": "summary_2_label",
                 "font": "noto_serif_regular",
-                "font_size": 10,
+                "font_size": 9,
                 "align": "center"
               },
               {
                 "type": "text",
                 "field": "summary_3_label",
                 "font": "noto_serif_regular",
-                "font_size": 10,
+                "font_size": 9,
                 "align": "center"
               }
             ]
@@ -132,27 +128,27 @@
             "type": "flex_row",
             "justify": "space-around",
             "align_items": "center",
-            "margin_top": 2,
+            "margin_bottom": 0,
             "items": [
               {
                 "type": "text",
                 "field": "summary_1_val",
                 "font": "noto_serif_bold",
-                "font_size": 14,
+                "font_size": 13,
                 "align": "center"
               },
               {
                 "type": "text",
                 "field": "summary_2_val",
                 "font": "noto_serif_bold",
-                "font_size": 14,
+                "font_size": 13,
                 "align": "center"
               },
               {
                 "type": "text",
                 "field": "summary_3_val",
                 "font": "noto_serif_bold",
-                "font_size": 14,
+                "font_size": 13,
                 "align": "center"
               }
             ]
@@ -160,168 +156,131 @@
         ]
       },
       {
-        "type": "spacer",
-        "height": 4
-      },
-      {
         "type": "card",
         "border": "solid",
-        "radius": 4,
-        "padding": 6,
+        "radius": 3,
+        "padding": 5,
         "margin_x": 8,
+        "margin_bottom": 3,
         "children": [
           {
-            "type": "flex_row",
-            "justify": "space-between",
-            "align_items": "center",
-            "items": [
+            "type": "two_column",
+            "ratio": 0.82,
+            "margin_x": 0,
+            "gap": 6,
+            "left_align_y": "center",
+            "right_align_y": "center",
+            "left": [
               {
-                "type": "vertical_stack",
-                "gap": 3,
-                "children": [
-                  {
-                    "type": "flex_row",
-                    "align_items": "center",
-                    "items": [
-                      { "type": "text", "field": "card_1_title", "font": "noto_serif_bold", "font_size": 12 },
-                      { "type": "spacer", "width": 8 },
-                      { "type": "text", "field": "card_1_status", "font": "noto_serif_regular", "font_size": 9 }
-                    ]
-                  },
-                  {
-                    "type": "text",
-                    "field": "card_1_reset_text",
-                    "font": "noto_serif_bold",
-                    "font_size": 10
-                  },
-                  {
-                    "type": "text",
-                    "field": "card_1_usage_text",
-                    "font": "noto_serif_regular",
-                    "font_size": 9
-                  }
+                "type": "flex_row",
+                "justify": "left",
+                "align_items": "center",
+                "margin_bottom": 3,
+                "items": [
+                  { "type": "text", "field": "card_1_title", "font": "noto_serif_bold", "font_size": 11 },
+                  { "type": "spacer", "width": 6 },
+                  { "type": "text", "field": "card_1_status", "font": "noto_serif_regular", "font_size": 9 }
                 ]
               },
               {
-                "type": "vertical_stack",
-                "align_items": "center",
-                "gap": 1,
-                "children": [
-                  {
-                    "type": "ring_progress",
-                    "field": "card_1_ring_val",
-                    "text_field": "card_1_ring_text",
-                    "max": 100,
-                    "size": 44,
-                    "ring_width": 3,
-                    "font": "roboto_bold",
-                    "font_size": 10
-                  },
-                  {
-                    "type": "text",
-                    "field": "card_1_ring_label",
-                    "font": "noto_serif_regular",
-                    "font_size": 8,
-                    "align": "center"
-                  }
-                ]
+                "type": "text",
+                "field": "card_1_reset_text",
+                "font": "noto_serif_bold",
+                "font_size": 10,
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "card_1_usage_text",
+                "font": "noto_serif_regular",
+                "font_size": 9,
+                "margin_bottom": 0
+              }
+            ],
+            "right": [
+              {
+                "type": "progress_ring",
+                "field": "card_1_ring_val",
+                "size": 42,
+                "label": "剩余配额",
+                "margin_bottom": 0
               }
             ]
           }
         ]
       },
       {
-        "type": "spacer",
-        "height": 4
-      },
-      {
         "type": "card",
         "border": "solid",
-        "radius": 4,
-        "padding": 6,
+        "radius": 3,
+        "padding": 5,
         "margin_x": 8,
+        "margin_bottom": 3,
         "children": [
           {
-            "type": "flex_row",
-            "justify": "space-between",
-            "align_items": "center",
-            "items": [
+            "type": "two_column",
+            "ratio": 0.82,
+            "margin_x": 0,
+            "gap": 6,
+            "left_align_y": "center",
+            "right_align_y": "center",
+            "left": [
               {
-                "type": "vertical_stack",
-                "gap": 3,
-                "children": [
-                  {
-                    "type": "flex_row",
-                    "align_items": "center",
-                    "items": [
-                      { "type": "text", "field": "card_2_title", "font": "noto_serif_bold", "font_size": 12 },
-                      { "type": "spacer", "width": 8 },
-                      { "type": "text", "field": "card_2_status", "font": "noto_serif_regular", "font_size": 9 }
-                    ]
-                  },
-                  {
-                    "type": "text",
-                    "field": "card_2_reset_text",
-                    "font": "noto_serif_bold",
-                    "font_size": 10
-                  },
-                  {
-                    "type": "text",
-                    "field": "card_2_usage_text",
-                    "font": "noto_serif_regular",
-                    "font_size": 9
-                  }
+                "type": "flex_row",
+                "justify": "left",
+                "align_items": "center",
+                "margin_bottom": 3,
+                "items": [
+                  { "type": "text", "field": "card_2_title", "font": "noto_serif_bold", "font_size": 11 },
+                  { "type": "spacer", "width": 6 },
+                  { "type": "text", "field": "card_2_status", "font": "noto_serif_regular", "font_size": 9 }
                 ]
               },
               {
-                "type": "vertical_stack",
-                "align_items": "center",
-                "gap": 1,
-                "children": [
-                  {
-                    "type": "ring_progress",
-                    "field": "card_2_ring_val",
-                    "text_field": "card_2_ring_text",
-                    "max": 100,
-                    "size": 44,
-                    "ring_width": 3,
-                    "font": "roboto_bold",
-                    "font_size": 10
-                  },
-                  {
-                    "type": "text",
-                    "field": "card_2_ring_label",
-                    "font": "noto_serif_regular",
-                    "font_size": 8,
-                    "align": "center"
-                  }
-                ]
+                "type": "text",
+                "field": "card_2_reset_text",
+                "font": "noto_serif_bold",
+                "font_size": 10,
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "card_2_usage_text",
+                "font": "noto_serif_regular",
+                "font_size": 9,
+                "margin_bottom": 0
+              }
+            ],
+            "right": [
+              {
+                "type": "progress_ring",
+                "field": "card_2_ring_val",
+                "size": 42,
+                "label": "配额充沛",
+                "margin_bottom": 0
               }
             ]
           }
         ]
-      },
-      {
-        "type": "spacer",
-        "height": 4
       },
       {
         "type": "flex_row",
         "justify": "space-between",
         "align_items": "center",
         "margin_x": 10,
+        "margin_bottom": 0,
         "items": [
           {
             "type": "text",
             "field": "reset_bottom_label",
             "font": "noto_serif_regular",
-            "font_size": 10
+            "font_size": 9
           },
           {
             "type": "text",
             "field": "update_time",
             "font": "noto_serif_regular",
-            "font_size": 10
+            "font_size": 9
           }
         ]
       }
