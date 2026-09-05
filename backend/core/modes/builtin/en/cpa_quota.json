@@ -1,48 +1,52 @@
 {
   "mode_id": "CPA_QUOTA",
-  "display_name": "Quota Dashboard",
+  "display_name": "Quota & Auth Dashboard",
   "icon": "gauge",
   "category": "productivity",
   "cacheable": false,
-  "description": "Monitors local CPA & Keeper containers: today's tokens, success rate, user billing & model distribution",
+  "description": "Monitors local CPA & Keeper auth files reset times, used volumes, user billing and model rankings",
   "settings_schema": [
     {
       "key": "view",
       "label": "Dashboard View",
       "type": "select",
       "options": [
-        { "value": "overview", "label": "Overview" },
-        { "value": "users", "label": "User Quotas" },
-        { "value": "models", "label": "Model Usage" }
+        { "value": "auths", "label": "Auth Files & Quotas" },
+        { "value": "overview", "label": "Comprehensive Overview" },
+        { "value": "users", "label": "User Billing Ranking" },
+        { "value": "models", "label": "Model Usage Ranking" }
       ],
-      "default": "overview"
+      "default": "auths"
     }
   ],
   "content": {
     "type": "computed",
     "provider": "cpa_quota",
     "fallback": {
-      "title": "CPA Quota Dashboard",
+      "title": "Auth Files & Quota Status",
       "header_status": "CPA Online · Keeper Online",
-      "today_tokens_str": "66.4M",
-      "today_requests": "583",
-      "today_success_rate": "96.9%",
-      "total_cost_str": "$311.19",
-      "today_summary": "Today Tokens: 66.4M · Reqs: 583 · 96.9% OK",
-      "reset_label": "Reset in: 4h 1m",
-      "update_time": "12:00:00",
-      "user_1_name": "huo",
-      "user_1_val": "$258.73 (3.17B)",
-      "user_2_name": "yang",
-      "user_2_val": "$52.40 (988M)",
-      "user_3_name": "test",
-      "user_3_val": "$0.06 (195K)",
-      "model_1_name": "GPT-5.6-luna",
-      "model_1_val": "2.72B",
-      "model_2_name": "Gemini 3.8 Flash",
-      "model_2_val": "480M",
-      "model_3_name": "Claude Sonnet",
-      "model_3_val": "61.6M"
+      "summary_1_label": "Auth Files",
+      "summary_1_val": "4 Files",
+      "summary_2_label": "Next Quota Reset",
+      "summary_2_val": "3h 38m",
+      "summary_3_label": "Today Tokens",
+      "summary_3_val": "75.3M",
+      "col_left_title": "🔑 Auth Account / Provider",
+      "col_right_title": "⏳ Reset Time & Used Volume",
+      "card_1_left_name": "CODEX · AA",
+      "card_1_left_val": "Used: 2.87B (26138 reqs)",
+      "card_1_right_name": "AA Quota",
+      "card_1_right_val": "Reset: 3h 38m (85% left)",
+      "card_2_left_name": "ANTIGRAVITY · huo02",
+      "card_2_left_val": "Used: 482.9M (3370 reqs)",
+      "card_2_right_name": "huo02 Quota",
+      "card_2_right_val": "Reset: No Limit (100% left)",
+      "card_3_left_name": "GEMINI · h",
+      "card_3_left_val": "Used: 224.0K (43 reqs)",
+      "card_3_right_name": "h Quota",
+      "card_3_right_val": "Reset: No Limit (100% left)",
+      "reset_bottom_label": "Auths: 4 · Reset in: 3h 38m",
+      "update_time": "12:00:00"
     }
   },
   "layout": {
@@ -72,7 +76,7 @@
                 "type": "text",
                 "field": "title",
                 "font": "lora_bold",
-                "font_size": 15
+                "font_size": 14
               },
               {
                 "type": "badge",
@@ -93,7 +97,7 @@
         "type": "card",
         "border": "solid",
         "radius": 4,
-        "padding": 6,
+        "padding": 5,
         "margin_x": 8,
         "children": [
           {
@@ -103,21 +107,21 @@
             "items": [
               {
                 "type": "text",
-                "text": "Today Tokens",
+                "field": "summary_1_label",
                 "font": "inter_medium",
                 "font_size": 10,
                 "align": "center"
               },
               {
                 "type": "text",
-                "text": "Requests / Success",
+                "field": "summary_2_label",
                 "font": "inter_medium",
                 "font_size": 10,
                 "align": "center"
               },
               {
                 "type": "text",
-                "text": "Total Spent",
+                "field": "summary_3_label",
                 "font": "inter_medium",
                 "font_size": 10,
                 "align": "center"
@@ -132,23 +136,23 @@
             "items": [
               {
                 "type": "text",
-                "field": "today_tokens_str",
+                "field": "summary_1_val",
                 "font": "lora_bold",
-                "font_size": 15,
+                "font_size": 14,
                 "align": "center"
               },
               {
                 "type": "text",
-                "field": "today_success_rate",
+                "field": "summary_2_val",
                 "font": "lora_bold",
-                "font_size": 15,
+                "font_size": 14,
                 "align": "center"
               },
               {
                 "type": "text",
-                "field": "total_cost_str",
+                "field": "summary_3_val",
                 "font": "lora_bold",
-                "font_size": 15,
+                "font_size": 14,
                 "align": "center"
               }
             ]
@@ -161,7 +165,7 @@
       },
       {
         "type": "two_column",
-        "ratio": 0.52,
+        "ratio": 0.5,
         "margin_x": 8,
         "left": [
           {
@@ -172,7 +176,7 @@
             "children": [
               {
                 "type": "text",
-                "text": "👤 User Billing",
+                "field": "col_left_title",
                 "font": "lora_bold",
                 "font_size": 11,
                 "margin_bottom": 4
@@ -181,8 +185,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "user_1_name", "font": "lora_bold", "font_size": 10 },
-                  { "type": "text", "field": "user_1_val", "font": "inter_medium", "font_size": 10 }
+                  { "type": "text", "field": "card_1_left_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_1_left_val", "font": "inter_medium", "font_size": 10 }
                 ]
               },
               {
@@ -194,8 +198,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "user_2_name", "font": "lora_bold", "font_size": 10 },
-                  { "type": "text", "field": "user_2_val", "font": "inter_medium", "font_size": 10 }
+                  { "type": "text", "field": "card_2_left_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_2_left_val", "font": "inter_medium", "font_size": 10 }
                 ]
               },
               {
@@ -207,8 +211,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "user_3_name", "font": "lora_bold", "font_size": 10 },
-                  { "type": "text", "field": "user_3_val", "font": "inter_medium", "font_size": 10 }
+                  { "type": "text", "field": "card_3_left_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_3_left_val", "font": "inter_medium", "font_size": 10 }
                 ]
               }
             ]
@@ -223,7 +227,7 @@
             "children": [
               {
                 "type": "text",
-                "text": "⚡ Top Models",
+                "field": "col_right_title",
                 "font": "lora_bold",
                 "font_size": 11,
                 "margin_bottom": 4
@@ -232,8 +236,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "model_1_name", "font": "lora_bold", "font_size": 10 },
-                  { "type": "text", "field": "model_1_val", "font": "inter_medium", "font_size": 10 }
+                  { "type": "text", "field": "card_1_right_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_1_right_val", "font": "inter_medium", "font_size": 10 }
                 ]
               },
               {
@@ -245,8 +249,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "model_2_name", "font": "lora_bold", "font_size": 10 },
-                  { "type": "text", "field": "model_2_val", "font": "inter_medium", "font_size": 10 }
+                  { "type": "text", "field": "card_2_right_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_2_right_val", "font": "inter_medium", "font_size": 10 }
                 ]
               },
               {
@@ -258,8 +262,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "model_3_name", "font": "lora_bold", "font_size": 10 },
-                  { "type": "text", "field": "model_3_val", "font": "inter_medium", "font_size": 10 }
+                  { "type": "text", "field": "card_3_right_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_3_right_val", "font": "inter_medium", "font_size": 10 }
                 ]
               }
             ]
@@ -278,7 +282,7 @@
         "items": [
           {
             "type": "text",
-            "field": "reset_label",
+            "field": "reset_bottom_label",
             "font": "inter_medium",
             "font_size": 10
           },

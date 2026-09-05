@@ -228,11 +228,11 @@ export function ModeSelector({
                               e.stopPropagation();
                               onOpenConfigModal(mode);
                             }}
-                            className="text-[10px] text-ink/80 hover:text-ink font-sans bg-paper px-1.5 py-0.5 rounded-xs border border-ink/20 hover:border-ink flex items-center gap-0.5 transition-colors"
+                            className="text-[10px] text-ink/80 hover:text-ink hover:bg-paper-dark font-medium bg-white px-1.5 py-0.5 rounded-xs border border-ink/20 hover:border-ink flex items-center gap-0.5 transition-all"
                             title={tr("点击调节此模式的参数配置", "Configure mode parameters")}
                           >
                             <Sliders size={10} />
-                            <span>{tr("调参", "Config")}</span>
+                            <span>{tr("调节", "Config")}</span>
                           </button>
                         ) : null}
                         {isSelected ? (
@@ -260,17 +260,6 @@ export function ModeSelector({
                   </button>
 
                   <div className="flex items-center gap-1.5">
-                    {onOpenConfigModal && isConfigurable ? (
-                      <button
-                        type="button"
-                        onClick={() => onOpenConfigModal(mode)}
-                        className="px-1.5 py-0.5 rounded-sm border border-ink/25 bg-white text-ink text-[11px] font-medium hover:bg-paper-dark hover:border-ink flex items-center gap-1 transition-all"
-                        title={tr("调节此模式参数（如热榜平台、城市等）", "Configure mode parameters")}
-                      >
-                        <Sliders size={11} />
-                        <span>{tr("调节参数", "Settings")}</span>
-                      </button>
-                    ) : null}
                     <button
                       type="button"
                       onClick={() => handleModeApply(mode)}

@@ -1,48 +1,52 @@
 {
   "mode_id": "CPA_QUOTA",
-  "display_name": "额度仪表盘",
+  "display_name": "额度与认证看板",
   "icon": "gauge",
   "category": "productivity",
   "cacheable": false,
-  "description": "监控本地 CPA 容器与 Keeper 容器的今日 Token、请求成功率、用户消费账单与模型排行",
+  "description": "监控本地 CPA 容器与 Keeper 容器的认证文件重置时间、已用量、用户消费与模型排行",
   "settings_schema": [
     {
       "key": "view",
       "label": "看板视图",
       "type": "select",
       "options": [
-        { "value": "overview", "label": "综合总览" },
-        { "value": "users", "label": "用户消费排行" },
-        { "value": "models", "label": "模型消耗分布" }
+        { "value": "auths", "label": "认证文件与限额 (重置时间+用量)" },
+        { "value": "overview", "label": "综合总览 (认证+账单+模型)" },
+        { "value": "users", "label": "用户消费排行 (Key账单)" },
+        { "value": "models", "label": "模型消耗分布 (Token吞吐)" }
       ],
-      "default": "overview"
+      "default": "auths"
     }
   ],
   "content": {
     "type": "computed",
     "provider": "cpa_quota",
     "fallback": {
-      "title": "CPA 额度仪表盘",
+      "title": "本地认证文件与限额看板",
       "header_status": "CPA 在线 · Keeper 在线",
-      "today_tokens_str": "66.4M",
-      "today_requests": "583",
-      "today_success_rate": "96.9%",
-      "total_cost_str": "$311.19",
-      "today_summary": "今日 Token: 66.4M · 请求: 583 次 · 成功率: 96.9%",
-      "reset_label": "窗口重置: 4时1分",
-      "update_time": "12:00:00",
-      "user_1_name": "huo",
-      "user_1_val": "$258.73 (3.17B)",
-      "user_2_name": "yang",
-      "user_2_val": "$52.40 (988M)",
-      "user_3_name": "test",
-      "user_3_val": "$0.06 (195K)",
-      "model_1_name": "GPT-5.6-luna",
-      "model_1_val": "2.72B",
-      "model_2_name": "Gemini 3.8 Flash",
-      "model_2_val": "480M",
-      "model_3_name": "Claude Sonnet",
-      "model_3_val": "61.6M"
+      "summary_1_label": "认证文件",
+      "summary_1_val": "4 个",
+      "summary_2_label": "窗口重置倒计时",
+      "summary_2_val": "3时38分",
+      "summary_3_label": "今日总 Token",
+      "summary_3_val": "75.3M",
+      "col_left_title": "🔑 认证账号 / 渠道",
+      "col_right_title": "⏳ 限额重置与已用量",
+      "card_1_left_name": "CODEX · AA",
+      "card_1_left_val": "已用: 2.87B (26138次)",
+      "card_1_right_name": "AA 配额",
+      "card_1_right_val": "重置: 3时38分 · 剩余: 85%",
+      "card_2_left_name": "ANTIGRAVITY · huo02",
+      "card_2_left_val": "已用: 482.9M (3370次)",
+      "card_2_right_name": "huo02 配额",
+      "card_2_right_val": "重置: 无需重置 · 剩余: 100%",
+      "card_3_left_name": "GEMINI · h",
+      "card_3_left_val": "已用: 224.0K (43次)",
+      "card_3_right_name": "h 配额",
+      "card_3_right_val": "重置: 无需重置 · 剩余: 100%",
+      "reset_bottom_label": "认证凭证: 4 个 · 首选重置: 3时38分",
+      "update_time": "12:00:00"
     }
   },
   "layout": {
@@ -72,7 +76,7 @@
                 "type": "text",
                 "field": "title",
                 "font": "noto_serif_bold",
-                "font_size": 15
+                "font_size": 14
               },
               {
                 "type": "badge",
@@ -93,7 +97,7 @@
         "type": "card",
         "border": "solid",
         "radius": 4,
-        "padding": 6,
+        "padding": 5,
         "margin_x": 8,
         "children": [
           {
@@ -103,21 +107,21 @@
             "items": [
               {
                 "type": "text",
-                "text": "今日 Token",
+                "field": "summary_1_label",
                 "font": "noto_serif_regular",
                 "font_size": 10,
                 "align": "center"
               },
               {
                 "type": "text",
-                "text": "请求量 / 成功率",
+                "field": "summary_2_label",
                 "font": "noto_serif_regular",
                 "font_size": 10,
                 "align": "center"
               },
               {
                 "type": "text",
-                "text": "账单总计",
+                "field": "summary_3_label",
                 "font": "noto_serif_regular",
                 "font_size": 10,
                 "align": "center"
@@ -132,23 +136,23 @@
             "items": [
               {
                 "type": "text",
-                "field": "today_tokens_str",
+                "field": "summary_1_val",
                 "font": "noto_serif_bold",
-                "font_size": 15,
+                "font_size": 14,
                 "align": "center"
               },
               {
                 "type": "text",
-                "field": "today_success_rate",
+                "field": "summary_2_val",
                 "font": "noto_serif_bold",
-                "font_size": 15,
+                "font_size": 14,
                 "align": "center"
               },
               {
                 "type": "text",
-                "field": "total_cost_str",
+                "field": "summary_3_val",
                 "font": "noto_serif_bold",
-                "font_size": 15,
+                "font_size": 14,
                 "align": "center"
               }
             ]
@@ -161,7 +165,7 @@
       },
       {
         "type": "two_column",
-        "ratio": 0.52,
+        "ratio": 0.5,
         "margin_x": 8,
         "left": [
           {
@@ -172,7 +176,7 @@
             "children": [
               {
                 "type": "text",
-                "text": "👤 用户消费账单",
+                "field": "col_left_title",
                 "font": "noto_serif_bold",
                 "font_size": 11,
                 "margin_bottom": 4
@@ -181,8 +185,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "user_1_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "user_1_val", "font": "noto_serif_regular", "font_size": 10 }
+                  { "type": "text", "field": "card_1_left_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_1_left_val", "font": "noto_serif_regular", "font_size": 10 }
                 ]
               },
               {
@@ -194,8 +198,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "user_2_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "user_2_val", "font": "noto_serif_regular", "font_size": 10 }
+                  { "type": "text", "field": "card_2_left_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_2_left_val", "font": "noto_serif_regular", "font_size": 10 }
                 ]
               },
               {
@@ -207,8 +211,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "user_3_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "user_3_val", "font": "noto_serif_regular", "font_size": 10 }
+                  { "type": "text", "field": "card_3_left_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_3_left_val", "font": "noto_serif_regular", "font_size": 10 }
                 ]
               }
             ]
@@ -223,7 +227,7 @@
             "children": [
               {
                 "type": "text",
-                "text": "⚡ 热门模型排行",
+                "field": "col_right_title",
                 "font": "noto_serif_bold",
                 "font_size": 11,
                 "margin_bottom": 4
@@ -232,8 +236,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "model_1_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "model_1_val", "font": "noto_serif_regular", "font_size": 10 }
+                  { "type": "text", "field": "card_1_right_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_1_right_val", "font": "noto_serif_regular", "font_size": 10 }
                 ]
               },
               {
@@ -245,8 +249,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "model_2_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "model_2_val", "font": "noto_serif_regular", "font_size": 10 }
+                  { "type": "text", "field": "card_2_right_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_2_right_val", "font": "noto_serif_regular", "font_size": 10 }
                 ]
               },
               {
@@ -258,8 +262,8 @@
                 "type": "flex_row",
                 "justify": "space-between",
                 "items": [
-                  { "type": "text", "field": "model_3_name", "font": "noto_serif_bold", "font_size": 10 },
-                  { "type": "text", "field": "model_3_val", "font": "noto_serif_regular", "font_size": 10 }
+                  { "type": "text", "field": "card_3_right_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "card_3_right_val", "font": "noto_serif_regular", "font_size": 10 }
                 ]
               }
             ]
@@ -278,7 +282,7 @@
         "items": [
           {
             "type": "text",
-            "field": "reset_label",
+            "field": "reset_bottom_label",
             "font": "noto_serif_regular",
             "font_size": 10
           },
