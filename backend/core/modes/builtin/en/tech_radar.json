@@ -1,0 +1,122 @@
+{
+  "mode_id": "TECH_RADAR",
+  "display_name": "Tech Radar",
+  "icon": "terminal",
+  "cacheable": true,
+  "description": "Geek Tech Radar & Open Source Pulse, highlighting system architectures & commands",
+  "content": {
+    "type": "external_data",
+    "provider": "tech_radar",
+    "fallback": {
+      "radar_title": "TECH RADAR · AI / ML",
+      "project_name": "vLLM",
+      "category_badge": "AI / ML",
+      "stars_metric": "38.2k",
+      "trend_score": 94.5,
+      "summary": "High-throughput and memory-efficient LLM inference engine with PagedAttention.",
+      "tags": ["LLM", "Inference", "CUDA", "Python"],
+      "snippet_title": "vllm-serve.sh",
+      "code_snippet": [
+        "python3 -m vllm.entrypoints.openai.api_server \\",
+        "  --model deepseek-ai/DeepSeek-V3 \\",
+        "  --tensor-parallel-size 4 \\",
+        "  --max-model-len 8192"
+      ],
+      "update_time": "16:00"
+    }
+  },
+  "layout": {
+    "body_align": "center",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 12,
+        "items": [
+          {
+            "type": "badge",
+            "field": "radar_title",
+            "variant": "solid",
+            "font_size": 10,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 3
+          },
+          {
+            "type": "badge",
+            "field": "stars_metric",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 3
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "text",
+        "field": "project_name",
+        "font": "roboto_bold",
+        "font_size": 22,
+        "align": "left",
+        "margin_x": 12
+      },
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "stat_progress_bar",
+        "label": "Trending Score",
+        "value_field": "trend_score",
+        "max_value": 100,
+        "unit": "PTS",
+        "margin_x": 12,
+        "height": 6,
+        "margin_bottom": 6
+      },
+      {
+        "type": "text",
+        "field": "summary",
+        "font": "noto_serif_regular",
+        "font_size": 11,
+        "max_lines": 2,
+        "margin_x": 12,
+        "margin_bottom": 6
+      },
+      {
+        "type": "pill_tag_list",
+        "field": "tags",
+        "margin_x": 12,
+        "font_size": 9,
+        "variant": "outline",
+        "margin_bottom": 6
+      },
+      {
+        "type": "code_snippet_box",
+        "field": "code_snippet",
+        "title_field": "snippet_title",
+        "margin_x": 12,
+        "font_size": 9,
+        "margin_bottom": 4
+      }
+    ],
+    "footer": {
+      "label": "TECH RADAR",
+      "attribution_template": "InkSight Tech Radar · Explore Frontiers"
+    }
+  }
+}

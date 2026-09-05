@@ -55,6 +55,7 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "HABIT": "productivity",
     "FOCUS": "productivity",
     "GITHUB": "productivity",
+    "TECH_RADAR": "productivity",
     # 生活日常
     "CLOCK": "life",
     "WEATHER": "life",

@@ -228,6 +228,12 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         en=CatalogText(name="Change Notice", tip="Web & endpoint change monitor notice, interrupts on change"),
     ),
     CatalogItem(
+        mode_id="TECH_RADAR",
+        category="productivity",
+        zh=CatalogText(name="科技雷达", tip="极客前沿开源技术与系统架构雷达，带高密度代码与标签"),
+        en=CatalogText(name="Tech Radar", tip="Geek open-source pulse and system architecture radar"),
+    ),
+    CatalogItem(
         mode_id="WEBHOOK",
         category="custom",
         zh=CatalogText(name="开放数据卡片", tip="接收智能家居、监控脚本推送的自定义指标卡片"),

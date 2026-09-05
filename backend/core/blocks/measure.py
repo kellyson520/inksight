@@ -170,6 +170,20 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
         mb = int(block.get("margin_bottom", 4) * ctx.scale)
         return max_width, int(18 * ctx.scale) + mb
 
+    elif btype == "stat_progress_bar":
+        font_size = int(block.get("font_size", 11) * ctx.scale)
+        bar_h = max(4, int(block.get("height", 7) * ctx.scale))
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, font_size + bar_h + 10 + mb
+
+    elif btype == "pill_tag_list":
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, int(26 * ctx.scale) + mb
+
+    elif btype == "code_snippet_box":
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, int(72 * ctx.scale) + mb
+
     else:
         measure_img = Image.new("1", (max(1, max_width), 100), EINK_BG)
         mc = RenderContext(

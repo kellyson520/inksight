@@ -63,5 +63,18 @@
     "last_summary": "紧急告警 系统遭遇突发网络抖动",
     "max_presentations": 2,
     "target_mac": "TEST_MAC_001"
+  },
+  {
+    "id": "mon_1788593143409",
+    "name": "测试站点",
+    "url": "https://example.com/test-service",
+    "enabled": true,
+    "check_interval": 300,
+    "last_checked": 1788593143,
+    "last_status": "changed",
+    "last_hash": "3cf9ae68d561a44c",
+    "last_summary": "紧急告警 系统遭遇突发网络抖动",
+    "max_presentations": 2,
+    "target_mac": "TEST_MAC_001"
   }
 ]

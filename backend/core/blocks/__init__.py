@@ -28,6 +28,7 @@ from . import frames as _frames_module
 from . import disaster as _disaster_module
 from . import hotlist as _hotlist_module
 from . import monitoring as _monitoring_module
+from . import geek_widgets as _geek_widgets_module
 
 from .grids import slice_calendar_rows_around_day
 
