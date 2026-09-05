@@ -18,6 +18,7 @@ from .open import router as open_router
 from .market import router as market_router
 from .hotlist import router as hotlist_router
 from .server_status import router as server_status_router
+from .cpa_keeper import router as cpa_keeper_router
 
 api_routers = [
     render_router,
@@ -39,6 +40,7 @@ api_routers = [
     market_router,
     hotlist_router,
     server_status_router,
+    cpa_keeper_router,
 ]
 
 page_routers = [pages_router]

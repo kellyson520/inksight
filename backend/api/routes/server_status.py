@@ -22,9 +22,27 @@ async def get_server_status(
 ) -> dict[str, Any]:
     """获取当前服务器性能指标。"""
     metrics = server_status_service.get_metrics_for_mode(key)
+    custom_name = server_status_service.get_server_name(key)
     return {
         "success": True,
         "metrics": metrics,
+        "custom_name": custom_name,
+    }
+
+
+@router.post("/rename")
+async def rename_server(payload: dict[str, Any]) -> dict[str, Any]:
+    """持久化修改服务器显示名称/别名。"""
+    key = str(payload.get("key") or payload.get("server_key") or "default").strip()
+    name = str(payload.get("server_name") or payload.get("name") or "").strip()
+    if not name:
+        return {"success": False, "error": "Server name cannot be empty"}
+    persisted_name = server_status_service.set_server_name(key, name)
+    return {
+        "success": True,
+        "key": key,
+        "server_name": persisted_name,
+        "message": "服务器名称已成功持久化保存",
     }
 
 

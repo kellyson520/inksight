@@ -1,0 +1,295 @@
+{
+  "mode_id": "CPA_QUOTA",
+  "display_name": "额度仪表盘",
+  "icon": "gauge",
+  "category": "productivity",
+  "cacheable": false,
+  "description": "监控本地 CPA 容器与 Keeper 容器的今日 Token、请求成功率、用户消费账单与模型排行",
+  "settings_schema": [
+    {
+      "key": "view",
+      "label": "看板视图",
+      "type": "select",
+      "options": [
+        { "value": "overview", "label": "综合总览" },
+        { "value": "users", "label": "用户消费排行" },
+        { "value": "models", "label": "模型消耗分布" }
+      ],
+      "default": "overview"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "cpa_quota",
+    "fallback": {
+      "title": "CPA 额度仪表盘",
+      "header_status": "CPA 在线 · Keeper 在线",
+      "today_tokens_str": "66.4M",
+      "today_requests": "583",
+      "today_success_rate": "96.9%",
+      "total_cost_str": "$311.19",
+      "today_summary": "今日 Token: 66.4M · 请求: 583 次 · 成功率: 96.9%",
+      "reset_label": "窗口重置: 4时1分",
+      "update_time": "12:00:00",
+      "user_1_name": "huo",
+      "user_1_val": "$258.73 (3.17B)",
+      "user_2_name": "yang",
+      "user_2_val": "$52.40 (988M)",
+      "user_3_name": "test",
+      "user_3_val": "$0.06 (195K)",
+      "model_1_name": "GPT-5.6-luna",
+      "model_1_val": "2.72B",
+      "model_2_name": "Gemini 3.8 Flash",
+      "model_2_val": "480M",
+      "model_3_name": "Claude Sonnet",
+      "model_3_val": "61.6M"
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 5,
+        "margin_x": 8,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_x": 4,
+            "items": [
+              {
+                "type": "text",
+                "field": "title",
+                "font": "noto_serif_bold",
+                "font_size": 15
+              },
+              {
+                "type": "badge",
+                "field": "header_status",
+                "font_size": 10,
+                "padding_x": 6,
+                "padding_y": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 6,
+        "margin_x": 8,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-around",
+            "align_items": "center",
+            "items": [
+              {
+                "type": "text",
+                "text": "今日 Token",
+                "font": "noto_serif_regular",
+                "font_size": 10,
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "请求量 / 成功率",
+                "font": "noto_serif_regular",
+                "font_size": 10,
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "账单总计",
+                "font": "noto_serif_regular",
+                "font_size": 10,
+                "align": "center"
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-around",
+            "align_items": "center",
+            "margin_top": 2,
+            "items": [
+              {
+                "type": "text",
+                "field": "today_tokens_str",
+                "font": "noto_serif_bold",
+                "font_size": 15,
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "field": "today_success_rate",
+                "font": "noto_serif_bold",
+                "font_size": 15,
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "field": "total_cost_str",
+                "font": "noto_serif_bold",
+                "font_size": 15,
+                "align": "center"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "two_column",
+        "ratio": 0.52,
+        "margin_x": 8,
+        "left": [
+          {
+            "type": "card",
+            "border": "solid",
+            "radius": 4,
+            "padding": 5,
+            "children": [
+              {
+                "type": "text",
+                "text": "👤 用户消费账单",
+                "font": "noto_serif_bold",
+                "font_size": 11,
+                "margin_bottom": 4
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "user_1_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "user_1_val", "font": "noto_serif_regular", "font_size": 10 }
+                ]
+              },
+              {
+                "type": "separator",
+                "dashed": true,
+                "margin_y": 3
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "user_2_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "user_2_val", "font": "noto_serif_regular", "font_size": 10 }
+                ]
+              },
+              {
+                "type": "separator",
+                "dashed": true,
+                "margin_y": 3
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "user_3_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "user_3_val", "font": "noto_serif_regular", "font_size": 10 }
+                ]
+              }
+            ]
+          }
+        ],
+        "right": [
+          {
+            "type": "card",
+            "border": "solid",
+            "radius": 4,
+            "padding": 5,
+            "children": [
+              {
+                "type": "text",
+                "text": "⚡ 热门模型排行",
+                "font": "noto_serif_bold",
+                "font_size": 11,
+                "margin_bottom": 4
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "model_1_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "model_1_val", "font": "noto_serif_regular", "font_size": 10 }
+                ]
+              },
+              {
+                "type": "separator",
+                "dashed": true,
+                "margin_y": 3
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "model_2_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "model_2_val", "font": "noto_serif_regular", "font_size": 10 }
+                ]
+              },
+              {
+                "type": "separator",
+                "dashed": true,
+                "margin_y": 3
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "model_3_name", "font": "noto_serif_bold", "font_size": 10 },
+                  { "type": "text", "field": "model_3_val", "font": "noto_serif_regular", "font_size": 10 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space-between",
+        "align_items": "center",
+        "margin_x": 10,
+        "items": [
+          {
+            "type": "text",
+            "field": "reset_label",
+            "font": "noto_serif_regular",
+            "font_size": 10
+          },
+          {
+            "type": "text",
+            "field": "update_time",
+            "font": "noto_serif_regular",
+            "font_size": 10
+          }
+        ]
+      }
+    ]
+  }
+}

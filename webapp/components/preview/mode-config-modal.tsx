@@ -7,6 +7,7 @@ import { DisasterConfig } from "./configs/disaster-config";
 import { WeatherConfig } from "./configs/weather-config";
 import { CryptoStockConfig } from "./configs/crypto-stock-config";
 import { ServerStatusConfig } from "./configs/server-status-config";
+import { CpaQuotaConfig } from "./configs/cpa-quota-config";
 import {
   MemoConfig,
   RssConfig,
@@ -37,7 +38,8 @@ interface ModeConfigModalProps {
       | "webhook"
       | "pomodoro"
       | "drink_water"
-      | "server_status";
+      | "server_status"
+      | "cpa_quota";
     modeId: string;
   };
   locale: string;
@@ -51,6 +53,9 @@ interface ModeConfigModalProps {
   initialDisasterCity?: string;
   initialRssFeedUrl: string;
   initialCryptoSymbol: string;
+  initialServerName?: string;
+  initialServerKey?: string;
+  initialCpaQuotaView?: string;
 }
 
 export function ModeConfigModal({
@@ -66,6 +71,9 @@ export function ModeConfigModal({
   initialDisasterCity = "",
   initialRssFeedUrl,
   initialCryptoSymbol,
+  initialServerName,
+  initialServerKey,
+  initialCpaQuotaView = "overview",
 }: ModeConfigModalProps) {
   const getModalTitle = () => {
     switch (modal.type) {
@@ -97,6 +105,8 @@ export function ModeConfigModal({
         return locale === "zh" ? "健康补水设置" : "Hydration Settings";
       case "server_status":
         return locale === "zh" ? "服务器与主机性能监控" : "Server Status Monitor";
+      case "cpa_quota":
+        return locale === "zh" ? "CPA 额度仪表盘" : "CPA Quota Dashboard";
       default:
         return locale === "zh" ? "模式参数设置" : "Mode Settings";
     }
@@ -233,11 +243,23 @@ export function ModeConfigModal({
             />
           ) : modal.type === "server_status" ? (
             <ServerStatusConfig
+              initialServerName={initialServerName}
+              initialServerKey={initialServerKey}
               locale={locale}
               previewLoading={previewLoading}
               onClose={onClose}
               onSubmit={async (override) => {
                 await onSubmit("SERVER_STATUS", override);
+              }}
+            />
+          ) : modal.type === "cpa_quota" ? (
+            <CpaQuotaConfig
+              initialView={initialCpaQuotaView}
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (override) => {
+                await onSubmit("CPA_QUOTA", override);
               }}
             />
           ) : (

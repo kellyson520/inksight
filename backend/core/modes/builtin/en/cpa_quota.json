@@ -1,0 +1,295 @@
+{
+  "mode_id": "CPA_QUOTA",
+  "display_name": "Quota Dashboard",
+  "icon": "gauge",
+  "category": "productivity",
+  "cacheable": false,
+  "description": "Monitors local CPA & Keeper containers: today's tokens, success rate, user billing & model distribution",
+  "settings_schema": [
+    {
+      "key": "view",
+      "label": "Dashboard View",
+      "type": "select",
+      "options": [
+        { "value": "overview", "label": "Overview" },
+        { "value": "users", "label": "User Quotas" },
+        { "value": "models", "label": "Model Usage" }
+      ],
+      "default": "overview"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "cpa_quota",
+    "fallback": {
+      "title": "CPA Quota Dashboard",
+      "header_status": "CPA Online · Keeper Online",
+      "today_tokens_str": "66.4M",
+      "today_requests": "583",
+      "today_success_rate": "96.9%",
+      "total_cost_str": "$311.19",
+      "today_summary": "Today Tokens: 66.4M · Reqs: 583 · 96.9% OK",
+      "reset_label": "Reset in: 4h 1m",
+      "update_time": "12:00:00",
+      "user_1_name": "huo",
+      "user_1_val": "$258.73 (3.17B)",
+      "user_2_name": "yang",
+      "user_2_val": "$52.40 (988M)",
+      "user_3_name": "test",
+      "user_3_val": "$0.06 (195K)",
+      "model_1_name": "GPT-5.6-luna",
+      "model_1_val": "2.72B",
+      "model_2_name": "Gemini 3.8 Flash",
+      "model_2_val": "480M",
+      "model_3_name": "Claude Sonnet",
+      "model_3_val": "61.6M"
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 5,
+        "margin_x": 8,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_x": 4,
+            "items": [
+              {
+                "type": "text",
+                "field": "title",
+                "font": "lora_bold",
+                "font_size": 15
+              },
+              {
+                "type": "badge",
+                "field": "header_status",
+                "font_size": 10,
+                "padding_x": 6,
+                "padding_y": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 6,
+        "margin_x": 8,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-around",
+            "align_items": "center",
+            "items": [
+              {
+                "type": "text",
+                "text": "Today Tokens",
+                "font": "inter_medium",
+                "font_size": 10,
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Requests / Success",
+                "font": "inter_medium",
+                "font_size": 10,
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Total Spent",
+                "font": "inter_medium",
+                "font_size": 10,
+                "align": "center"
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-around",
+            "align_items": "center",
+            "margin_top": 2,
+            "items": [
+              {
+                "type": "text",
+                "field": "today_tokens_str",
+                "font": "lora_bold",
+                "font_size": 15,
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "field": "today_success_rate",
+                "font": "lora_bold",
+                "font_size": 15,
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "field": "total_cost_str",
+                "font": "lora_bold",
+                "font_size": 15,
+                "align": "center"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "two_column",
+        "ratio": 0.52,
+        "margin_x": 8,
+        "left": [
+          {
+            "type": "card",
+            "border": "solid",
+            "radius": 4,
+            "padding": 5,
+            "children": [
+              {
+                "type": "text",
+                "text": "👤 User Billing",
+                "font": "lora_bold",
+                "font_size": 11,
+                "margin_bottom": 4
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "user_1_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "user_1_val", "font": "inter_medium", "font_size": 10 }
+                ]
+              },
+              {
+                "type": "separator",
+                "dashed": true,
+                "margin_y": 3
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "user_2_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "user_2_val", "font": "inter_medium", "font_size": 10 }
+                ]
+              },
+              {
+                "type": "separator",
+                "dashed": true,
+                "margin_y": 3
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "user_3_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "user_3_val", "font": "inter_medium", "font_size": 10 }
+                ]
+              }
+            ]
+          }
+        ],
+        "right": [
+          {
+            "type": "card",
+            "border": "solid",
+            "radius": 4,
+            "padding": 5,
+            "children": [
+              {
+                "type": "text",
+                "text": "⚡ Top Models",
+                "font": "lora_bold",
+                "font_size": 11,
+                "margin_bottom": 4
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "model_1_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "model_1_val", "font": "inter_medium", "font_size": 10 }
+                ]
+              },
+              {
+                "type": "separator",
+                "dashed": true,
+                "margin_y": 3
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "model_2_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "model_2_val", "font": "inter_medium", "font_size": 10 }
+                ]
+              },
+              {
+                "type": "separator",
+                "dashed": true,
+                "margin_y": 3
+              },
+              {
+                "type": "flex_row",
+                "justify": "space-between",
+                "items": [
+                  { "type": "text", "field": "model_3_name", "font": "lora_bold", "font_size": 10 },
+                  { "type": "text", "field": "model_3_val", "font": "inter_medium", "font_size": 10 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space-between",
+        "align_items": "center",
+        "margin_x": 10,
+        "items": [
+          {
+            "type": "text",
+            "field": "reset_label",
+            "font": "inter_medium",
+            "font_size": 10
+          },
+          {
+            "type": "text",
+            "field": "update_time",
+            "font": "inter_medium",
+            "font_size": 10
+          }
+        ]
+      }
+    ]
+  }
+}

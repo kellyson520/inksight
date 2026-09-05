@@ -1532,6 +1532,16 @@ async def _generate_computed_content(mode_def: dict, content_cfg: dict, fallback
             "ip": metrics.get("ip", "127.0.0.1"),
         }
 
+    if provider == "cpa_quota":
+        from .cpa_keeper_service import cpa_keeper_service
+
+        config = kwargs.get("config") or {}
+        lang = kwargs.get("language", "zh")
+        mo = config.get("mode_overrides", {})
+        cq_ov = mo.get("CPA_QUOTA", {}) if isinstance(mo, dict) else {}
+
+        return cpa_keeper_service.get_mode_content(config_override=cq_ov, language=lang)
+
     if provider == "calendar_grid":
         import calendar as cal_mod
         from zhdate import ZhDate

@@ -67,7 +67,7 @@
               {
                 "type": "text",
                 "field": "server_name",
-                "font": "roboto_bold",
+                "font": "noto_serif_bold",
                 "font_size": 15
               },
               {

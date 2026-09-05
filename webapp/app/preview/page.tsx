@@ -74,6 +74,9 @@ export default function ExperiencePage() {
   const [disasterHazard, setDisasterHazard] = useState<string>("暴雨");
   const [rssFeedUrl, _setRssFeedUrl] = useState("https://kellson.dpdns.org:81/playno1/av");
   const [cryptoSymbol, setCryptoSymbol] = useState("BTC");
+  const [serverName, setServerName] = useState("");
+  const [serverKey, setServerKey] = useState("default");
+  const [cpaQuotaView, setCpaQuotaView] = useState("overview");
 
   // 自定义模式与邀请码弹窗状态
   const [showCustomModeModal, setShowCustomModeModal] = useState(false);
@@ -226,6 +229,13 @@ export default function ExperiencePage() {
       if ((targetMode === "CRYPTO" || targetMode === "MARKET") && !mergedOverride.symbol) {
         mergedOverride.symbol = cryptoSymbol;
       }
+      if (targetMode === "SERVER_STATUS") {
+        if (!mergedOverride.server_name && serverName) mergedOverride.server_name = serverName;
+        if (!mergedOverride.server_key && serverKey) mergedOverride.server_key = serverKey;
+      }
+      if (targetMode === "CPA_QUOTA") {
+        if (!mergedOverride.view && cpaQuotaView) mergedOverride.view = cpaQuotaView;
+      }
 
       if (Object.keys(mergedOverride).length > 0) {
         params.set("mode_override", JSON.stringify(mergedOverride));
@@ -345,6 +355,21 @@ export default function ExperiencePage() {
       } catch {}
       showToast(
         locale === "zh" ? `已保存并切换行情标的: ${sym}` : `Saved & switched ticker: ${sym}`,
+        "success"
+      );
+    }
+    if (modeId === "SERVER_STATUS") {
+      if (override.server_name) setServerName(String(override.server_name));
+      if (override.server_key) setServerKey(String(override.server_key));
+      showToast(
+        locale === "zh" ? "已保存服务器监控配置" : "Server monitor config saved",
+        "success"
+      );
+    }
+    if (modeId === "CPA_QUOTA") {
+      if (override.view) setCpaQuotaView(String(override.view));
+      showToast(
+        locale === "zh" ? "已保存 CPA 额度看板设置" : "CPA Quota config saved",
         "success"
       );
     }
@@ -568,6 +593,9 @@ export default function ExperiencePage() {
           initialDisasterHazard={disasterHazard}
           initialRssFeedUrl={rssFeedUrl}
           initialCryptoSymbol={cryptoSymbol}
+          initialServerName={serverName}
+          initialServerKey={serverKey}
+          initialCpaQuotaView={cpaQuotaView}
         />
       ) : null}
 

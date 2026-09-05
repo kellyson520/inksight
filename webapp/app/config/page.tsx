@@ -2856,6 +2856,15 @@ function ConfigPageInner() {
                       (modeOverrides["MARKET"]?.symbol as string) ||
                       "BTC"
                     }
+                    initialServerName={
+                      (modeOverrides["SERVER_STATUS"]?.server_name as string) || ""
+                    }
+                    initialServerKey={
+                      (modeOverrides["SERVER_STATUS"]?.server_key as string) || "default"
+                    }
+                    initialCpaQuotaView={
+                      (modeOverrides["CPA_QUOTA"]?.view as string) || "overview"
+                    }
                   />
                 ) : null}
 

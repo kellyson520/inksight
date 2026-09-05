@@ -1,0 +1,22 @@
+{
+  "records": {
+    "test-node": {
+      "server_name": "Node-Test-01",
+      "ip": "",
+      "cpu_pct": 55.4,
+      "mem_pct": 62.1,
+      "mem_str": "62.1%",
+      "disk_pct": 45.0,
+      "disk_str": "45.0%",
+      "load_str": "0.00 / 0.00 / 0.00",
+      "uptime": "20天",
+      "update_time": "08:20:34",
+      "source": "pushed"
+    }
+  },
+  "aliases": {
+    "default": "家庭生产NAS",
+    "vps-sgp": "新加坡云服-01"
+  },
+  "saved_at": "2026-09-05 08:20:34"
+}

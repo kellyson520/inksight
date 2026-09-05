@@ -66,6 +66,7 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   GITHUB: "productivity",
   POMODORO: "productivity",
   SERVER_STATUS: "productivity",
+  CPA_QUOTA: "productivity",
   // 生活日常
   CLOCK: "life",
   WEATHER: "life",

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Server, Copy, Check, Terminal, Cpu, HardDrive } from "lucide-react";
 
 interface ServerStatusConfigProps {
+  initialServerName?: string;
+  initialServerKey?: string;
   locale: string;
   previewLoading: boolean;
   onClose: () => void;
@@ -12,33 +14,39 @@ interface ServerStatusConfigProps {
 }
 
 export function ServerStatusConfig({
+  initialServerName,
+  initialServerKey,
   locale,
   previewLoading,
   onClose,
   onSubmit,
 }: ServerStatusConfigProps) {
-  const [serverName, setServerName] = useState("主生产服务器");
-  const [serverKey, setServerKey] = useState("default");
+  const [serverName, setServerName] = useState(initialServerName || "主生产服务器");
+  const [serverKey, setServerKey] = useState(initialServerKey || "default");
   const [cpuPct, setCpuPct] = useState(38);
   const [memPct, setMemPct] = useState(65);
   const [diskPct, setDiskPct] = useState(48);
   const [liveMetrics, setLiveMetrics] = useState<Record<string, unknown> | null>(null);
   const [copied, setCopied] = useState(false);
+  const [savingRename, setSavingRename] = useState(false);
 
   useEffect(() => {
-    fetch("/api/server-status")
+    fetch(`/api/server-status?key=${encodeURIComponent(serverKey || "default")}`)
       .then((res) => res.json())
       .then((d) => {
         if (d.success && d.metrics) {
           setLiveMetrics(d.metrics);
-          if (d.metrics.server_name) setServerName(String(d.metrics.server_name));
+          // 仅在未配置过自定义名称时采用探针默认名称
+          if (!initialServerName && d.metrics.server_name) {
+            setServerName(String(d.custom_name || d.metrics.server_name));
+          }
           if (d.metrics.cpu_pct !== undefined) setCpuPct(Number(d.metrics.cpu_pct));
           if (d.metrics.mem_pct !== undefined) setMemPct(Number(d.metrics.mem_pct));
           if (d.metrics.disk_pct !== undefined) setDiskPct(Number(d.metrics.disk_pct));
         }
       })
       .catch(() => {});
-  }, []);
+  }, [initialServerName, serverKey]);
 
   const curlCommand = `curl -sSL ${typeof window !== "undefined" ? window.location.origin : ""}/api/server-status/script?key=${encodeURIComponent(serverKey || "default")} | bash`;
 
@@ -183,19 +191,38 @@ export function ServerStatusConfig({
         </Button>
         <Button
           size="sm"
-          disabled={previewLoading}
+          disabled={previewLoading || savingRename}
           onClick={async () => {
+            setSavingRename(true);
+            try {
+              // 同步持久化保存服务器改名到后端探针服务
+              if (serverName.trim()) {
+                await fetch("/api/server-status/rename", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    key: serverKey || "default",
+                    server_name: serverName.trim(),
+                  }),
+                });
+              }
+            } catch (err) {
+              console.warn("Failed to persist server rename", err);
+            } finally {
+              setSavingRename(false);
+            }
+
             onClose();
             await onSubmit({
-              server_name: serverName,
-              server_key: serverKey,
+              server_name: serverName.trim(),
+              server_key: serverKey || "default",
               cpu_pct: cpuPct,
               mem_pct: memPct,
               disk_pct: diskPct,
             });
           }}
         >
-          {locale === "zh" ? "应用并预览" : "Apply & Preview"}
+          {locale === "zh" ? "应用并保存" : "Apply & Save"}
         </Button>
       </div>
     </div>

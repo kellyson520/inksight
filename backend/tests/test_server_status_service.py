@@ -44,3 +44,26 @@ def test_server_status_script_generation():
     assert "cpu_sample()" in script
     assert "mem_info()" in script
     assert "curl -s -X POST" in script
+
+
+def test_server_status_persistent_rename():
+    svc = ServerStatusService()
+    # 1. 设定持久化名称
+    res = svc.set_server_name("default", "家庭生产NAS")
+    assert res == "家庭生产NAS"
+    assert svc.get_server_name("default") == "家庭生产NAS"
+
+    # 2. 本地指标中正确应用该名称
+    metrics = svc.get_local_metrics()
+    assert metrics["server_name"] == "家庭生产NAS"
+
+    # 3. 跨实例持久化恢复测试
+    new_svc = ServerStatusService()
+    assert new_svc.get_server_name("default") == "家庭生产NAS"
+    assert new_svc.get_local_metrics()["server_name"] == "家庭生产NAS"
+
+    # 4. 指定 key 节点的重命名
+    svc.set_server_name("vps-sgp", "新加坡云服-01")
+    assert svc.get_server_name("vps-sgp") == "新加坡云服-01"
+    fetched = svc.get_metrics_for_mode("vps-sgp")
+    assert fetched["server_name"] == "新加坡云服-01"

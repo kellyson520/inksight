@@ -6,6 +6,7 @@ InkSight 服务器与主机监控基础设施服务 (Server Status Infrastructur
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import socket
@@ -14,8 +15,16 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
+# 持久化存储文件
+_STORAGE_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "data",
+    "server_status_records.json",
+)
+
 # 全局缓存与远程上报数据
 _pushed_server_data: dict[str, dict[str, Any]] = {}
+_server_aliases: dict[str, str] = {}
 _last_cpu_sample: Optional[tuple[float, float]] = None
 _last_sample_time: float = 0.0
 
@@ -120,6 +129,69 @@ def _sample_local_uptime() -> str:
 class ServerStatusService:
     """服务器性能与探针数据核心服务。"""
 
+    def __init__(self) -> None:
+        self._load_storage()
+
+    def _load_storage(self) -> None:
+        """从持久化文件恢复服务器状态指标与自定义服务器名称别名。"""
+        global _pushed_server_data, _server_aliases
+        try:
+            if os.path.exists(_STORAGE_FILE):
+                with open(_STORAGE_FILE, "r", encoding="utf-8") as f:
+                    content = json.load(f)
+                    if isinstance(content, dict):
+                        _pushed_server_data.update(content.get("records") or {})
+                        _server_aliases.update(content.get("aliases") or {})
+                        logger.info(
+                            "[ServerStatus] Loaded %d records, %d aliases from storage",
+                            len(_pushed_server_data),
+                            len(_server_aliases),
+                        )
+        except Exception as e:
+            logger.warning("[ServerStatus] Failed to load storage from %s: %s", _STORAGE_FILE, e)
+
+    def _save_storage(self) -> None:
+        """持久化保存服务器指标与别名到磁盘。"""
+        global _pushed_server_data, _server_aliases
+        try:
+            os.makedirs(os.path.dirname(_STORAGE_FILE), exist_ok=True)
+            temp_file = f"{_STORAGE_FILE}.tmp"
+            payload = {
+                "records": _pushed_server_data,
+                "aliases": _server_aliases,
+                "saved_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            with open(temp_file, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
+            os.replace(temp_file, _STORAGE_FILE)
+        except Exception as e:
+            logger.warning("[ServerStatus] Failed to save storage to %s: %s", _STORAGE_FILE, e)
+
+    def set_server_name(self, key: Optional[str], new_name: str) -> str:
+        """持久化设置服务器显示名称/别名。"""
+        clean_key = (key or "default").strip().lower()
+        clean_name = new_name.strip()
+        if not clean_name:
+            return ""
+
+        _server_aliases[clean_key] = clean_name
+        # 同步更新已缓存的上报记录中的 server_name
+        if clean_key in _pushed_server_data:
+            _pushed_server_data[clean_key]["server_name"] = clean_name
+
+        self._save_storage()
+        logger.info("[ServerStatus] Server alias persisted for '%s': '%s'", clean_key, clean_name)
+        return clean_name
+
+    def get_server_name(self, key: Optional[str] = None) -> Optional[str]:
+        """获取指定 key 对应的持久化服务器别名。"""
+        clean_key = (key or "default").strip().lower()
+        if clean_key in _server_aliases:
+            return _server_aliases[clean_key]
+        if "default" in _server_aliases:
+            return _server_aliases["default"]
+        return None
+
     def get_local_metrics(self) -> dict[str, Any]:
         """采集当前宿主机指标。"""
         cpu_pct = _sample_local_cpu()
@@ -133,7 +205,10 @@ class ServerStatusService:
         except Exception:
             load_str = "0.00 / 0.00 / 0.00"
 
-        hostname = socket.gethostname() or "Linux-Host"
+        # 优先使用用户持久化配置的自定义名称
+        custom_name = _server_aliases.get("default") or _server_aliases.get("local")
+        hostname = custom_name or socket.gethostname() or "Linux-Host"
+
         return {
             "server_name": hostname,
             "ip": "127.0.0.1",
@@ -157,8 +232,15 @@ class ServerStatusService:
         mem_pct = round(float(data.get("mem_pct") or data.get("mem") or 0.0), 1)
         disk_pct = round(float(data.get("disk_pct") or data.get("disk") or 0.0), 1)
 
+        # 优先使用已持久化的用户别名，其次使用脚本传递的名称
+        custom_name = _server_aliases.get(clean_key)
+        final_server_name = (
+            custom_name
+            or str(data.get("server_name") or data.get("hostname") or clean_key).strip()
+        )
+
         record = {
-            "server_name": str(data.get("server_name") or data.get("hostname") or clean_key).strip(),
+            "server_name": final_server_name,
             "ip": str(data.get("ip") or "").strip(),
             "cpu_pct": max(0.0, min(100.0, cpu_pct)),
             "mem_pct": max(0.0, min(100.0, mem_pct)),
@@ -171,23 +253,30 @@ class ServerStatusService:
             "source": "pushed",
         }
         _pushed_server_data[clean_key] = record
+        self._save_storage()
         logger.info("[ServerStatus] Pushed status updated for '%s': CPU %s%%, MEM %s%%", clean_key, cpu_pct, mem_pct)
         return record
 
     def get_metrics_for_mode(self, server_key: Optional[str] = None) -> dict[str, Any]:
         """获取用于墨水屏渲染的指标字典（优先使用匹配的远程上报数据，否则回退到宿主机本地）。"""
-        if server_key:
+        if server_key and server_key.strip().lower() not in ("default", "local"):
             clean = server_key.strip().lower()
             if clean in _pushed_server_data:
-                return dict(_pushed_server_data[clean])
+                res = dict(_pushed_server_data[clean])
+                if clean in _server_aliases:
+                    res["server_name"] = _server_aliases[clean]
+                return res
+            # 如果配置了该 server_key 的专属别名，返回附带该别名的指标
+            if clean in _server_aliases:
+                res = self.get_local_metrics()
+                res["server_name"] = _server_aliases[clean]
+                return res
 
         if "default" in _pushed_server_data:
-            return dict(_pushed_server_data["default"])
-
-        if _pushed_server_data:
-            # 返回最新上报的记录
-            first_key = list(_pushed_server_data.keys())[0]
-            return dict(_pushed_server_data[first_key])
+            res = dict(_pushed_server_data["default"])
+            if "default" in _server_aliases:
+                res["server_name"] = _server_aliases["default"]
+            return res
 
         return self.get_local_metrics()
 
