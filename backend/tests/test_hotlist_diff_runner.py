@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from core.hotlist_diff_runner import HotlistDiffRunner
@@ -12,12 +14,15 @@ def test_diff_emits_new_and_rank_changed_events():
 
     assert first == []
     assert {event["kind"] for event in second} == {"new", "rank_changed", "removed"}
-    assert next(event for event in second if event["kind"] == "new")["item_id"] == "c"
+    new_event = next(event for event in second if event["kind"] == "new")
+    assert new_event["item_id"] == "c"
+    rank_event = next(event for event in second if event["kind"] == "rank_changed")
+    assert rank_event["old_rank"] == 2
+    assert rank_event["rank"] == 1
 
 
 @pytest.mark.asyncio
 async def test_runner_publishes_diff_events():
-
     events = []
 
     class Service:
@@ -31,36 +36,33 @@ async def test_runner_publishes_diff_events():
 
 
 @pytest.mark.asyncio
-async def test_runner_marks_stale_events_non_realtime():
+async def test_runner_ignores_fallback_as_snapshot_or_event():
     events = []
 
     class Service:
         calls = 0
         async def get_hotlist(self, platform, limit=8):
             self.calls += 1
-            return {"items": [{"title": "A"}] if self.calls == 1 else [{"title": "B"}], "source_status": "stale"}
+            if self.calls == 1:
+                return {"items": [{"title": "A"}], "source_status": "fresh"}
+            return {"items": [{"title": "B"}], "source_status": "fallback"}
 
     runner = HotlistDiffRunner(Service(), publish=events.append)
     await runner.run_once("zhihu")
-    emitted = await runner.run_once("zhihu")
-    assert emitted[0]["is_realtime"] is False
-    assert events[0]["source_status"] == "stale"
+    assert await runner.run_once("zhihu") == []
+    assert events == []
 
 
 @pytest.mark.asyncio
-async def test_runner_writes_idempotent_events_to_outbox(tmp_path):
-    class Service:
-        calls = 0
-        async def get_hotlist(self, platform, limit=8):
-            self.calls += 1
-            title = "A" if self.calls == 1 else "B"
-            return {"items": [{"title": title}], "source_status": "fresh"}
+async def test_runner_restores_snapshot_from_disk(tmp_path):
+    snapshot_path = tmp_path / "snapshots.json"
 
-    from core.event_outbox import EventOutbox
-    outbox = EventOutbox(tmp_path / "events.json")
-    runner = HotlistDiffRunner(Service(), outbox=outbox)
-    await runner.run_once("zhihu")
-    await runner.run_once("zhihu")
-    assert len(outbox.list_pending()) == 2
-    await runner.run_once("zhihu")
-    assert len(outbox.list_pending()) == 2
+    class Service:
+        async def get_hotlist(self, platform, limit=8):
+            return {"items": [{"title": "A"}], "source_status": "fresh"}
+
+    first = HotlistDiffRunner(Service(), snapshot_path=snapshot_path)
+    await first.run_once("zhihu")
+    second = HotlistDiffRunner(Service(), snapshot_path=snapshot_path)
+    assert await second.run_once("zhihu") == []
+    assert json.loads(snapshot_path.read_text())["zhihu"] == {"a": 1}

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import asyncio
-
 from core.event_outbox import EventOutbox
 
 
@@ -24,3 +22,12 @@ def test_outbox_ack_removes_event_and_survives_reload(tmp_path):
     assert reloaded.list_pending() == [event]
     assert reloaded.ack("monitor:1") is True
     assert reloaded.list_pending() == []
+
+
+def test_outbox_quarantines_corrupt_file_instead_of_overwriting(tmp_path):
+    path = tmp_path / "events.json"
+    path.write_text("{broken", encoding="utf-8")
+    outbox = EventOutbox(path)
+
+    assert outbox.list_pending() == []
+    assert list(tmp_path.glob("events.json.corrupt-*"))

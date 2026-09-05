@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,12 @@ class EventOutbox:
                 self._events = [item for item in data if isinstance(item, dict)]
         except (OSError, ValueError, TypeError):
             self._events = []
+            if self.path.exists():
+                quarantine = self.path.with_name(f"{self.path.name}.corrupt-{int(time.time() * 1000)}")
+                try:
+                    os.replace(self.path, quarantine)
+                except OSError:
+                    pass
 
     def _save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
