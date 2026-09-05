@@ -94,7 +94,9 @@ class HotlistDiffRunner:
             event["event_id"] = f"hotlist:{platform}:{event['item_id']}:{event['kind']}:{event.get('old_rank', '')}:{event.get('rank', '')}"
             if self.outbox is not None:
                 self.outbox.publish(event)
-            published = self.publish(event)
+                published = True
+            else:
+                published = self.publish(event)
             if isinstance(published, Awaitable):
                 await published
         return events

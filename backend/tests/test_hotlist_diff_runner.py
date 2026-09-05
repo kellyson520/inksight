@@ -66,3 +66,12 @@ async def test_runner_restores_snapshot_from_disk(tmp_path):
     second = HotlistDiffRunner(Service(), snapshot_path=snapshot_path)
     assert await second.run_once("zhihu") == []
     assert json.loads(snapshot_path.read_text())["zhihu"] == {"a": 1}
+
+
+def test_outbox_assigns_creation_metadata(tmp_path):
+    from core.event_outbox import EventOutbox
+    outbox = EventOutbox(tmp_path / "events.json")
+    outbox.publish({"event_id": "e1", "kind": "new"})
+    item = outbox.list_pending()[0]
+    assert item["created_at"] > 0
+    assert item["attempts"] == 0

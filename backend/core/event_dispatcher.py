@@ -50,6 +50,8 @@ class EventDispatcher:
                     success = False
                 if attempt < self.max_attempts and self.backoff:
                     await asyncio.sleep(self.backoff * attempt)
+            if not success:
+                self.outbox.update(event)
             if success:
                 self.outbox.ack(event_id)
                 obs.emit("event.published", {"event_id": event_id, "kind": event.get("kind", ""), "attempts": event.get("attempts", 1)})

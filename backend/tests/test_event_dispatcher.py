@@ -26,8 +26,9 @@ async def test_dispatcher_acks_successful_events(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_dispatcher_keeps_failed_event_for_retry(tmp_path):
-    outbox = EventOutbox(tmp_path / "events.json")
+async def test_dispatcher_keeps_failed_event_and_persists_attempts(tmp_path):
+    path = tmp_path / "events.json"
+    outbox = EventOutbox(path)
     outbox.publish({"event_id": "e1", "kind": "new"})
 
     async def publish(_event):
@@ -35,7 +36,7 @@ async def test_dispatcher_keeps_failed_event_for_retry(tmp_path):
 
     result = await EventDispatcher(outbox, publish=publish, max_attempts=2, backoff=0).dispatch_once()
     assert result == {"published": 0, "failed": 1, "expired": 0}
-    assert outbox.list_pending()[0]["attempts"] == 2
+    assert EventOutbox(path).list_pending()[0]["attempts"] == 2
 
 
 def test_dispatcher_expires_old_events(tmp_path):

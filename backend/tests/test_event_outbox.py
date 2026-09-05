@@ -9,7 +9,7 @@ def test_outbox_deduplicates_events_by_idempotency_key(tmp_path):
 
     assert outbox.publish(event) is True
     assert outbox.publish(event) is False
-    assert outbox.list_pending() == [event]
+    assert outbox.list_pending()[0]["event_id"] == event["event_id"]
 
 
 def test_outbox_ack_removes_event_and_survives_reload(tmp_path):
@@ -19,7 +19,7 @@ def test_outbox_ack_removes_event_and_survives_reload(tmp_path):
     outbox.publish(event)
 
     reloaded = EventOutbox(path)
-    assert reloaded.list_pending() == [event]
+    assert reloaded.list_pending()[0]["event_id"] == event["event_id"]
     assert reloaded.ack("monitor:1") is True
     assert reloaded.list_pending() == []
 

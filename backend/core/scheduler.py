@@ -75,8 +75,8 @@ async def start_scheduler() -> None:
         snapshot_path=os.path.join(data_dir, "hotlist_snapshots.json"),
     )
     async def _publish_event(event):
-        logger.info("[EventDispatcher] pending event %s/%s", event.get("event_id"), event.get("kind"))
-        return True
+        logger.warning("[EventDispatcher] no delivery adapter configured; retaining event %s", event.get("event_id"))
+        return False
     event_dispatcher = EventDispatcher(hotlist_outbox, publish=_publish_event, backoff=0)
     async def _dispatch_events():
         await event_dispatcher.dispatch_once()

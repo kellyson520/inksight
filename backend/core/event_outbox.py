@@ -48,13 +48,25 @@ class EventOutbox:
             raise ValueError("event_id is required")
         if any(str(item.get("event_id")) == event_id for item in self._events):
             return False
-        self._events.append(dict(event))
+        item = dict(event)
+        item.setdefault("created_at", time.time())
+        item.setdefault("attempts", 0)
+        self._events.append(item)
         self._save()
         return True
 
     def list_pending(self, limit: int | None = None) -> list[dict[str, Any]]:
         events = list(self._events)
         return events if limit is None else events[: max(0, limit)]
+
+    def update(self, event: dict[str, Any]) -> None:
+        event_id = str(event.get("event_id") or "")
+        for index, item in enumerate(self._events):
+            if str(item.get("event_id")) == event_id:
+                self._events[index] = dict(event)
+                self._save()
+                return
+        raise KeyError(event_id)
 
     def ack(self, event_id: str) -> bool:
         before = len(self._events)
