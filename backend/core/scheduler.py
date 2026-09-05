@@ -60,6 +60,19 @@ async def start_scheduler() -> None:
         misfire_grace_time=3600,
     )
 
+    from .monitor_service import monitor_service
+    from .monitor_runner import MonitorRunner
+    monitor_runner = MonitorRunner(monitor_service)
+    scheduler.add_job(
+        monitor_runner.run_once,
+        "interval",
+        seconds=30,
+        id="monitor_poll",
+        name="Web Monitor Poll",
+        max_instances=1,
+        coalesce=True,
+    )
+
     # 周更任务：每周一 03:00 通过 LLM 生成新谜语
     scheduler.add_job(
         job_weekly_update,

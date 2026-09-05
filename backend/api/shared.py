@@ -113,15 +113,18 @@ async def lifespan(app):
     from core.static_store import init_static_tables, migrate_device_state_columns
     from core.preload_store import init_preload_db
     from core.preload_seeder import seed_preload_pool
+    from core.scheduler import start_scheduler, stop_scheduler
 
     await init_cache_db()
     await init_static_tables()
     await migrate_device_state_columns()
     await init_preload_db()
     await seed_preload_pool()
+    await start_scheduler()
 
     yield
 
+    await stop_scheduler()
     await close_all()
 
 
