@@ -4,6 +4,7 @@ from __future__ import annotations
 import ipaddress
 import math
 import random
+import socket
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping
@@ -71,10 +72,16 @@ class OutboundHttp:
             raise ValueError(f"private URL blocked: {url}")
         try:
             address = ipaddress.ip_address(host)
+            addresses = [address]
         except ValueError:
-            return
-        if address.is_private or address.is_loopback or address.is_link_local or address.is_reserved:
-            raise ValueError(f"private URL blocked: {url}")
+            try:
+                infos = socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), type=socket.SOCK_STREAM)
+            except socket.gaierror as exc:
+                raise ValueError(f"host resolution failed: {host}") from exc
+            addresses = [ipaddress.ip_address(info[4][0]) for info in infos]
+        for address in addresses:
+            if address.is_private or address.is_loopback or address.is_link_local or address.is_reserved:
+                raise ValueError(f"private URL blocked: {url}")
 
     @staticmethod
     def _retryable_status(status: int) -> bool:
