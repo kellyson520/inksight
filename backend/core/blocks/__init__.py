@@ -39,6 +39,11 @@ from . import pack_travel as _pack_travel_module
 from . import pack_forms_tables as _pack_forms_module
 from . import pack_frames as _pack_frames_module
 from . import pack_advanced as _pack_advanced_module
+from . import pack_icons_tech as _pack_icons_module
+from . import pack_space as _pack_space_module
+from . import pack_industry as _pack_industry_module
+from . import pack_cyber as _pack_cyber_module
+from . import pack_nature as _pack_nature_module
 
 from .grids import slice_calendar_rows_around_day
 
