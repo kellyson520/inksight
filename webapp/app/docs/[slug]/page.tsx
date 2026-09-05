@@ -31,6 +31,7 @@ const DOCS: Record<string, DocConfig> = {
   faq: { title: "FAQ", file: "faq.md" },
   "voice-mode": { title: "AI Voice Module", file: "voice-mode.md" },
   "dark-mode": { title: "Dark Mode Manual", file: "dark-mode.md" },
+  "docker-deploy": { title: "Docker Deployment", file: "docker-deploy.md" },
   branching: { title: "Branch Strategy", file: "branching.md" },
   changelog: { title: "Changelog & Releases", file: "changelog.md" },
 };

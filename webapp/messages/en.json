@@ -91,6 +91,7 @@
   "docs.item.apiKey": "Configure API Key",
   "docs.item.config": "Device Configuration",
   "docs.item.deploy": "Local Deployment",
+  "docs.item.dockerDeploy": "Docker Deployment",
   "docs.item.branching": "Branch Strategy",
   "docs.item.changelog": "Changelog & Releases",
   "docs.item.pluginDev": "Custom Mode Dev",

@@ -7,6 +7,11 @@
 ### [2026-09-05] - 全局暗黑模式、微信读书增强、二维码展示与 520+ 组件发布
 
 #### 新增特性 (Features)
+- **Docker 生产级单容器部署（All-in-One）**：
+  - 打造全栈整合的一体化 Dockerfile 与 docker-compose.yml；
+  - 集成 Python FastAPI 后端、Next.js Web 控制台与 Supervisor 进程自愈守护；
+  - 挂载持久化数据卷，支持一行命令在 NAS、群晖、树莓派及云服务器极速跑通；
+  - 新增《Docker 一键部署指南》（`docs/docker-deploy.md`）。
 - **Web 端全局黑暗模式（Dark Mode）**：
   - WebApp（`https://kellson.dpdns.org:3001`）全面接入深色主题体系；
   - 顶部导航栏支持一键在日间模式、极客暗黑模式与跟随系统之间平滑切换；

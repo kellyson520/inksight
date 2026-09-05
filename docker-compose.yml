@@ -1,0 +1,30 @@
+services:
+  inksight:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kellyson520/inksight:latest
+    container_name: inksight
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      # 持久化数据库 (包含设备设置、历史状态与缓存)
+      - ./data:/app/backend/data
+      - ./logs:/app/backend/logs
+    environment:
+      - TZ=Asia/Shanghai
+      # 大模型 API Key (按需在 .env 配置)
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY:-}
+      # 天气与自定义密钥
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
+      - TIANAPI_KEY=${TIANAPI_KEY:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

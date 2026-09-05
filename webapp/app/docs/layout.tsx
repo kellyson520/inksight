@@ -32,6 +32,7 @@ const sidebarSections = [
     titleKey: "docs.section.advanced",
     items: [
       { labelKey: "docs.item.deploy", href: "/docs/deploy" },
+      { labelKey: "docs.item.dockerDeploy", href: "/docs/docker-deploy" },
       { labelKey: "docs.item.branching", href: "/docs/branching" },
       { labelKey: "docs.item.changelog", href: "/docs/changelog" },
       { labelKey: "docs.item.pluginDev", href: "/docs/custom-mode-dev" },

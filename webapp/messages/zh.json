@@ -90,6 +90,7 @@
   "docs.item.apiKey": "配置 API Key",
   "docs.item.config": "设备配置",
   "docs.item.deploy": "本地部署",
+  "docs.item.dockerDeploy": "Docker 一键部署",
   "docs.item.branching": "分支说明与规范",
   "docs.item.changelog": "版本迭代更新日志",
   "docs.item.pluginDev": "自定义模式开发",
