@@ -1,201 +1,236 @@
-# InkSight 底层排版组件与模式开发说明手册
+# InkSight 底层排版组件与单体视觉手册 (Layout Blocks Visual Spec)
 
-本文档全面梳理 InkSight 墨水屏专用的底层排版组件体系（E-Ink Layout Blocks），详细说明各组件的数据规范、参数配置、代码示例与实际渲染配图效果，方便快速定制与扩展新的屏幕模式。
+本文档系统性说明 InkSight 墨水屏核心底层排版组件（Blocks）。**每一个组件均附带独立的孤立渲染自拍照（Standalone Snapshot）**，不与其他组件拼接，直观展示单体外观、内部间距与边框效果。
 
 ---
 
 ## 目录
 
-1. [排版设计规范与限制](#1-排版设计规范与限制)
-2. [新增极客高密度组件 (Geek Widgets)](#2-新增极客高密度组件-geek-widgets)
+1. [通用设计约束](#1-通用设计约束)
+2. [极客高密度组件 (Geek Widgets)](#2-极客高密度组件-geek-widgets)
    - [2.1 stat_progress_bar (双端统计进度条)](#21-stat_progress_bar-双端统计进度条)
    - [2.2 pill_tag_list (自适应胶囊标签云)](#22-pill_tag_list-自适应胶囊标签云)
    - [2.3 code_snippet_box (极客终端代码卡片)](#23-code_snippet_box-极客终端代码卡片)
-3. [事件与感知插播组件 (Monitoring & Alerts)](#3-事件与感知插播组件-monitoring--alerts)
-   - [3.1 alert_callout (变动与预警通知横幅)](#31-alert_callout-变动与预警通知横幅)
-   - [3.2 change_diff_card (新旧版本内容差分卡片)](#32-change_diff_card-新旧版本内容差分卡片)
-   - [3.3 timeline_event (时间线事件节点)](#33-timeline_event-时间线事件节点)
-4. [时序与图表组件 (Charts & Media)](#4-时序与图表组件-charts--media)
-   - [4.1 sparkline_chart (高密度金融走势折线)](#41-sparkline_chart-高密度金融走势折线)
-   - [4.2 image (本地/远程图像与书封)](#42-image-本地远程图像与书封)
-5. [综合实战模式范例与配图](#5-综合实战模式范例与配图)
+3. [事件与监控插播组件 (Monitoring & Alerts)](#3-事件与监控插播组件-monitoring--alerts)
+   - [3.1 alert_callout (警报与变动通知条)](#31-alert_callout-警报与变动通知条)
+   - [3.2 change_diff_card (新旧内容差分卡片)](#32-change_diff_card-新旧内容差分卡片)
+   - [3.3 timeline_event (时间线流水节点)](#33-timeline_event-时间线流水节点)
+4. [时序图表与指标组件 (Charts & Metrics)](#4-时序图表与指标组件-charts--metrics)
+   - [4.1 sparkline (高密度金融走势平滑曲线)](#41-sparkline-高密度金融走势平滑曲线)
+   - [4.2 metric_card (单体指标双数值卡片)](#42-metric_card-单体指标双数值卡片)
+   - [4.3 disaster_level_meter (国标四级预警仪表)](#43-disaster_level_meter-国标四级预警仪表)
 
 ---
 
-## 1. 排版设计规范与限制
+## 1. 通用设计约束
 
-- **严禁使用 Emoji**：墨水屏仅支持 1-bit 黑白或三色/四色（黑白红黄），Emoji 渲染会导致字形回退或出现乱码方块，一律使用英文字符、符号（如 `·`、`>`、`#`）或内置矢量图标。
-- **自动度量机制**：所有 block 都必须在 `core/blocks/measure.py` 中声明自身的高度测量规则，确保 flex_row、two_column 及页面滚动高度精确计算，绝不允许溢出到底栏横线之外。
-- **高对比度优先**：细线推荐 `1px`，卡片外框必须包含明确的描边（outline）或反色实心（solid）。
+- **零 Emoji 原则**：墨水屏仅支持黑白灰度或四色（BWRY），Emoji 渲染会导致字形回退或乱码方块，必须使用内置矢量图符或文本符号（`·`, `>`, `#`）。
+- **独立尺寸测量**：每个 block 均实现 `measure_block_size(ctx, block, max_w)` 算法，保证容器自适应与底栏防溢出。
+- **孤立自拍标准**：每个自拍均在纯白画布上单体输出，展示组件自身的边距、笔触（1px）与填充结构。
 
 ---
 
-## 2. 新增极客高密度组件 (Geek Widgets)
+## 2. 极客高密度组件 (Geek Widgets)
 
 ### 2.1 stat_progress_bar (双端统计进度条)
-专为硬件资源占用率、技术热度分值或任务进度打造的进度条，顶端紧凑展示「左端项目名称」与「右端百分比及明细数值」，底部为圆角外框槽线与比例填充。
+专为硬件负载、任务进度、技术热度打造。顶栏紧凑分列「左端标签」与「右端百分比及明细」，底部为跑道型圆角边框与比例填充条。
 
-#### JSON 配置示例
+#### 单体自拍照
+![stat_progress_bar](../images/blocks/individual/stat_progress_bar.png)
+
+#### JSON 参数配置
 ```json
 {
   "type": "stat_progress_bar",
-  "label": "热度指数",
-  "value_field": "trend_score",
+  "label": "CPU 负载率",
+  "value_field": "val",
   "max_value": 100,
-  "unit": "PTS",
-  "margin_x": 12,
-  "height": 6,
+  "unit": "PCT",
+  "margin_x": 10,
+  "height": 8,
   "show_percent": true,
-  "margin_bottom": 6
+  "margin_bottom": 4
 }
 ```
 
-| 参数 | 类型 | 必填 | 说明 |
+| 参数 | 类型 | 缺省值 | 说明 |
 |---|---|---|---|
-| `label` | string | 否 | 左端标题文字，支持模板替换 |
-| `value_field` | string | 是 | 当前数值字段（支持整数或浮点数） |
-| `max_value` | number | 否 | 最大值，默认 100.0 |
-| `unit` | string | 否 | 右端数值单位（如 `PTS`、`GB`、`%`） |
-| `height` | number | 否 | 进度槽高度像素，默认 7 |
-| `margin_x` | number | 否 | 水平左右边距，默认 14 |
-| `color` | string | 否 | 进度条填充颜色（`red` 为四色红，缺省为黑） |
+| `label` | string | `""` | 左侧文字标签 |
+| `value_field` | string | 必填 | 取值数字段（float/int） |
+| `max_value` | number | `100.0` | 最大参考值 |
+| `unit` | string | `""` | 单位标识（如 `PCT`, `GB`, `MB`） |
+| `height` | number | `7` | 进度槽高度（px） |
+| `color` | string | `""` | 填充颜色，可选 `"red"`（三色/四色屏高亮） |
 
 ---
 
 ### 2.2 pill_tag_list (自适应胶囊标签云)
-根据屏幕剩余可用宽度，自动流式折行排列的胶囊标签组。支持实心反色与空心描边两种形态，适合技术栈、分类 Tag、关键词高密度展示。
+流式自动计算剩余行宽并精准换行排版的胶囊标签组。支持实心反白（`solid`）与空心轮廓（`outline`）。
 
-#### JSON 配置示例
+#### 单体自拍照
+![pill_tag_list](../images/blocks/individual/pill_tag_list.png)
+
+#### JSON 参数配置
 ```json
 {
   "type": "pill_tag_list",
   "field": "tags",
-  "margin_x": 12,
-  "font_size": 9,
+  "margin_x": 10,
+  "font_size": 11,
   "variant": "outline",
-  "gap_x": 6,
-  "gap_y": 5,
-  "margin_bottom": 6
+  "gap_x": 8,
+  "gap_y": 6,
+  "margin_bottom": 4
 }
 ```
 
-| 参数 | 类型 | 说明 |
-|---|---|---|
-| `field` | string | 包含标签字符串数组的字段（如 `["Rust", "Docker", "Go"]`） |
-| `variant` | string | `outline`（空心线框黑字）或 `solid`（黑底反白字） |
-| `font_size` | number | 标签字体大小，默认 10 |
-| `padding_x` / `padding_y` | number | 胶囊内边距 |
+| 参数 | 类型 | 缺省值 | 说明 |
+|---|---|---|---|
+| `field` | string | 必填 | 标签字符串数组字段（`["Python", "Rust", "Docker"]`） |
+| `variant` | string | `"outline"` | 形态：`outline`（黑线白底黑字）或 `solid`（黑底白字） |
+| `font_size` | number | `10` | 标签文字大小 |
+| `gap_x` / `gap_y` | number | `6` / `5` | 标签之间的横纵间距 |
 
 ---
 
 ### 2.3 code_snippet_box (极客终端代码卡片)
-拟真 Unix 终端窗口设计，包含顶部反色标题栏、三圆点控制台圆圈，以及下方等宽代码/配置行输出，具备自动超宽截断与行间距优化。
+拟真 Unix 终端窗口设计。上方为实心反色标题条，左侧内嵌 3 个控制台圆圈（窗口操作按钮视觉），右侧为脚本名称；下方为等宽代码行，带自适应文本折行。
 
-#### JSON 配置示例
+#### 单体自拍照
+![code_snippet_box](../images/blocks/individual/code_snippet_box.png)
+
+#### JSON 参数配置
 ```json
 {
   "type": "code_snippet_box",
-  "title_field": "snippet_title",
-  "field": "code_snippet",
-  "margin_x": 12,
-  "font_size": 9,
+  "title": "deploy.sh",
+  "field": "code",
+  "margin_x": 10,
+  "font_size": 10,
   "margin_bottom": 4
 }
 ```
 
 ---
 
-## 3. 事件与感知插播组件 (Monitoring & Alerts)
+## 3. 事件与监控插播组件 (Monitoring & Alerts)
 
-### 3.1 alert_callout (变动与预警通知横幅)
-带左侧高亮强调边框、等级 Tag 徽章与粗体通报标题的通知横幅，适用于紧急变动与灾害抢占插播。
+### 3.1 alert_callout (警报与变动通知条)
+高对比度通报横幅，左侧带有 3px 加粗边框与警示标签徽章，专用于灾害预警、网页变动或关键告警。
 
+#### 单体自拍照
+![alert_callout](../images/blocks/individual/alert_callout.png)
+
+#### JSON 参数配置
 ```json
 {
   "type": "alert_callout",
-  "title": "网页变动感知通报",
+  "title": "检测到系统关键配置变更",
   "level": "warning",
-  "tag": "WEB WATCHER",
-  "margin_x": 12,
-  "margin_bottom": 8
+  "tag": "MONITOR",
+  "margin_x": 10,
+  "margin_bottom": 4
 }
 ```
 
-### 3.2 change_diff_card (新旧版本内容差分卡片)
-结构化对比两段文本的演进：上一状态显示在虚线灰底框中，更新后的新状态显示在粗实线强调框中，带“NEW”标记。
+---
 
+### 3.2 change_diff_card (新旧内容差分卡片)
+清晰对比网页或接口内容的历史版本（变更前 PREV 弱化虚线框）与当前最新版本（更新后 NEW 强调边框）。
+
+#### 单体自拍照
+![change_diff_card](../images/blocks/individual/change_diff_card.png)
+
+#### JSON 参数配置
 ```json
 {
   "type": "change_diff_card",
-  "margin_x": 12,
-  "prev_field": "prev_snippet",
-  "new_field": "new_snippet",
-  "margin_bottom": 8
+  "prev_field": "prev",
+  "new_field": "new",
+  "margin_x": 10,
+  "margin_bottom": 4
 }
 ```
 
-### 3.3 timeline_event (时间线事件节点)
-带有圆形节点与垂直连接线的时间轴条目，适合呈现变更日志、构建记录或部署流水线。
+---
+
+### 3.3 timeline_event (时间线流水节点)
+精细的垂直时间轴节点，包含轴线圆点、时间戳与说明文字，多条连缀可形成部署历史或变更日志流。
+
+#### 单体自拍照
+![timeline_event](../images/blocks/individual/timeline_event.png)
+
+#### JSON 参数配置
+```json
+{
+  "type": "timeline_event",
+  "time": "16:45",
+  "content": "主备节点完成数据同步，备库就绪",
+  "status": "success",
+  "margin_x": 10,
+  "margin_bottom": 2
+}
+```
 
 ---
 
-## 4. 时序与图表组件 (Charts & Media)
+## 4. 时序图表与指标组件 (Charts & Metrics)
 
-### 4.1 sparkline_chart (高密度金融走势折线)
-支持 24 点日内走势高平滑贝塞尔曲线渲染、最高/最低极值虚线标定、振幅区域填充与红绿涨跌联动。
+### 4.1 sparkline (高密度金融走势平滑曲线)
+专为黄金、加密货币与股票设计的 24 点分时走势折线，带极值虚线、区域填充与动态极值标注。
 
+#### 单体自拍照
+![sparkline](../images/blocks/individual/sparkline.png)
+
+#### JSON 参数配置
 ```json
 {
-  "type": "sparkline_chart",
-  "field": "sparkline_data",
-  "height": 72,
-  "margin_x": 14,
+  "type": "sparkline",
+  "field": "pts",
+  "height": 64,
+  "margin_x": 10,
   "show_extremes": true,
-  "line_width": 2
-}
-```
-
-### 4.2 image (本地/远程图像与书封)
-自适应比例缩放与墨水屏二值化/抖动渲染，支持在 `two_column` 中与文本图文并茂并排。
-
-```json
-{
-  "type": "image",
-  "url_field": "cover_url",
-  "width": 115,
-  "height": 160,
-  "fit": "contain",
-  "dither": true
+  "line_width": 2,
+  "margin_bottom": 4
 }
 ```
 
 ---
 
-## 5. 综合实战模式范例与配图
+### 4.2 metric_card (单体指标双数值卡片)
+大字号突出核心指标（如价格、收益率），右上角展示副指标徽章（如涨跌幅百分比），四周带有细线外框。
 
-以下均为通过真实 InkSight 渲染管线输出的 400×300 实际渲染预览效果：
+#### 单体自拍照
+![metric_card](../images/blocks/individual/metric_card.png)
 
-### 5.1 极客科技雷达 (`TECH_RADAR`)
-综合运用了 `stat_progress_bar` + `pill_tag_list` + `code_snippet_box`：
+#### JSON 参数配置
+```json
+{
+  "type": "metric_card",
+  "title": "沪金主力结算价",
+  "value_field": "price",
+  "sub_value_field": "chg",
+  "margin_x": 10,
+  "height": 56,
+  "margin_bottom": 4
+}
+```
 
-![TECH_RADAR 效果图](../images/blocks/tech_radar_preview.png)
+---
 
-### 5.2 网页变更感知通报 (`WEB_NOTICE`)
-综合运用了 `alert_callout` + `change_diff_card` 差分卡片：
+### 4.3 disaster_level_meter (国标四级预警仪表)
+严格按照国标四级预警（蓝/黄/橙/红）阶梯绘制的警报仪表卡，带刻度进度槽与矢量预警图符。
 
-![WEB_NOTICE 效果图](../images/blocks/web_notice_preview.png)
+#### 单体自拍照
+![disaster_level_meter](../images/blocks/individual/disaster_level_meter.png)
 
-### 5.3 黄金与现货趋势走势 (`GOLD`)
-综合运用了双指标对比与 `sparkline_chart` 极值折线：
-
-![GOLD 效果图](../images/blocks/gold_preview.png)
-
-### 5.4 微信读书精选推荐 (`WECHAT_READ`)
-综合运用了 `two_column` 图文绕排与 `image` 封面自适应居中对齐：
-
-![WECHAT_READ 效果图](../images/blocks/wechat_read_preview.png)
-
-### 5.5 国家标准四级自然灾害预警 (`DISASTER_ALERT`)
-最高优先级抢占插播，运用矢量预警图标、等级仪表卡与防御指南：
-
-![DISASTER_ALERT 效果图](../images/blocks/disaster_alert_preview.png)
+#### JSON 参数配置
+```json
+{
+  "type": "disaster_level_meter",
+  "level": "orange",
+  "disaster_type": "rainstorm",
+  "margin_x": 10,
+  "margin_bottom": 4
+}
+```
