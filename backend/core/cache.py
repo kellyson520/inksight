@@ -55,6 +55,7 @@ from .config import (
 )
 from .context import get_date_context, get_weather, calc_battery_pct, extract_location_settings
 from .pipeline import generate_and_render, get_effective_mode_config
+from .observability import obs
 
 
 class ContentCache:
@@ -147,6 +148,7 @@ class ContentCache:
     ) -> Optional[Image.Image]:
         """Get cached image if available and not expired"""
         if DISABLE_CACHE:
+            obs.emit("cache.result", {"result": "disabled", "operation": "content.get"})
             return None
         key = self._get_cache_key(mac, persona, screen_w, screen_h)
         if ttl_minutes is None:
@@ -156,9 +158,11 @@ class ContentCache:
                 img, timestamp = self._cache[key]
                 age_minutes = (datetime.now() - timestamp).total_seconds() / 60
                 if age_minutes < ttl_minutes:
+                    obs.emit("cache.result", {"result": "memory", "operation": "content.get"})
                     return img.copy()
                 else:
                     del self._cache[key]
+                    obs.emit("cache.result", {"result": "expired", "operation": "content.get"})
             # Try SQLite persistent cache
             if not self._persistent_cache_available():
                 return None
@@ -167,9 +171,11 @@ class ContentCache:
                 self._record_db_success()
                 if img:
                     self._cache[key] = (img, datetime.now())
+                    obs.emit("cache.result", {"result": "persistent", "operation": "content.get"})
                     return img.copy()
             except (aiosqlite.Error, OSError, RuntimeError, ValueError) as exc:
                 self._record_db_failure("load", exc)
+            obs.emit("cache.result", {"result": "miss", "operation": "content.get"})
             return None
 
     async def set(
