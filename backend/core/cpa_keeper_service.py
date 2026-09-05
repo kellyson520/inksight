@@ -54,6 +54,19 @@ def _format_timedelta(reset_at_str: Optional[str], now_utc: datetime.datetime) -
         return "持续可用"
 
 
+def _calc_quota_color(pct: int | float) -> str:
+    """< 20% 红色，<= 60% 黄色，其余黑色。"""
+    try:
+        val = float(pct)
+    except (TypeError, ValueError):
+        val = 100.0
+    if val < 20.0:
+        return "red"
+    elif val <= 60.0:
+        return "yellow"
+    return "black"
+
+
 class CpaKeeperService:
     """CPA 代理与 Keeper 额度统计聚合服务。"""
 
@@ -385,6 +398,7 @@ class CpaKeeperService:
             card_1_usage_text = f"已用: {a1['tokens_str']} · {a1['requests']} 次请求" if not is_en else f"Used: {a1['tokens_str']} · {a1['requests']} reqs"
             card_1_ring_val = str(a1.get("remaining_pct_num", 85))
             card_1_ring_text = a1["remaining_pct"]
+            card_1_ring_color = _calc_quota_color(a1.get("remaining_pct_num", 85))
             card_1_ring_label = "剩余配额" if not is_en else "Quota Left"
 
             # 卡片 2 (左侧信息 + 右侧环形)
@@ -394,6 +408,7 @@ class CpaKeeperService:
             card_2_usage_text = f"已用: {a2['tokens_str']} · {a2['requests']} 次请求" if not is_en else f"Used: {a2['tokens_str']} · {a2['requests']} reqs"
             card_2_ring_val = str(a2.get("remaining_pct_num", 100))
             card_2_ring_text = a2["remaining_pct"]
+            card_2_ring_color = _calc_quota_color(a2.get("remaining_pct_num", 100))
             card_2_ring_label = "配额充沛" if not is_en else "Full Quota"
 
             reset_bottom_label = (
@@ -427,6 +442,7 @@ class CpaKeeperService:
             card_1_usage_text = f"吞吐量: {u1['tokens_str']} Tokens"
             card_1_ring_val = str(p1)
             card_1_ring_text = f"{p1}%"
+            card_1_ring_color = _calc_quota_color(p1)
             card_1_ring_label = "账单占比" if not is_en else "Cost Share"
 
             card_2_title = f"TOP 2 · {u2['name']}"
@@ -435,6 +451,7 @@ class CpaKeeperService:
             card_2_usage_text = f"吞吐量: {u2['tokens_str']} Tokens"
             card_2_ring_val = str(p2)
             card_2_ring_text = f"{p2}%"
+            card_2_ring_color = _calc_quota_color(p2)
             card_2_ring_label = "账单占比" if not is_en else "Cost Share"
 
             reset_bottom_label = (
@@ -469,6 +486,7 @@ class CpaKeeperService:
             card_1_usage_text = f"累计 Token: {m1['tokens_str']}"
             card_1_ring_val = str(mp1)
             card_1_ring_text = f"{mp1}%"
+            card_1_ring_color = _calc_quota_color(mp1)
             card_1_ring_label = "吞吐份额" if not is_en else "Token Share"
 
             card_2_title = format_model_name(m2["model"])
@@ -477,6 +495,7 @@ class CpaKeeperService:
             card_2_usage_text = f"累计 Token: {m2['tokens_str']}"
             card_2_ring_val = str(mp2)
             card_2_ring_text = f"{mp2}%"
+            card_2_ring_color = _calc_quota_color(mp2)
             card_2_ring_label = "吞吐份额" if not is_en else "Token Share"
 
             reset_bottom_label = (
@@ -506,6 +525,7 @@ class CpaKeeperService:
             card_1_usage_text = f"配额剩余: {a1['remaining_pct']} · 已用: {a1['tokens_str']}"
             card_1_ring_val = str(a1.get("remaining_pct_num", 85))
             card_1_ring_text = a1["remaining_pct"]
+            card_1_ring_color = _calc_quota_color(a1.get("remaining_pct_num", 85))
             card_1_ring_label = "剩余配额" if not is_en else "Quota Left"
 
             card_2_title = f"主力用户 · {u1['name']}"
@@ -514,6 +534,7 @@ class CpaKeeperService:
             card_2_usage_text = f"Token 吞吐量: {u1['tokens_str']}"
             card_2_ring_val = "80"
             card_2_ring_text = "80%"
+            card_2_ring_color = _calc_quota_color(80)
             card_2_ring_label = "预算占比" if not is_en else "Budget"
 
             reset_bottom_label = (
@@ -537,6 +558,7 @@ class CpaKeeperService:
             "card_1_usage_text": card_1_usage_text,
             "card_1_ring_val": card_1_ring_val,
             "card_1_ring_text": card_1_ring_text,
+            "card_1_ring_color": card_1_ring_color,
             "card_1_ring_label": card_1_ring_label,
             "card_2_title": card_2_title,
             "card_2_status": card_2_status,
@@ -544,6 +566,7 @@ class CpaKeeperService:
             "card_2_usage_text": card_2_usage_text,
             "card_2_ring_val": card_2_ring_val,
             "card_2_ring_text": card_2_ring_text,
+            "card_2_ring_color": card_2_ring_color,
             "card_2_ring_label": card_2_ring_label,
             "reset_bottom_label": reset_bottom_label,
             "update_time": metrics["update_time"],

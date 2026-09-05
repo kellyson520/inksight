@@ -201,6 +201,8 @@
               {
                 "type": "progress_ring",
                 "field": "card_1_ring_val",
+                "color_by_percent": true,
+                "color_field": "card_1_ring_color",
                 "size": 42,
                 "label": "剩余配额",
                 "margin_bottom": 0
@@ -255,6 +257,8 @@
               {
                 "type": "progress_ring",
                 "field": "card_2_ring_val",
+                "color_by_percent": true,
+                "color_field": "card_2_ring_color",
                 "size": 42,
                 "label": "配额充沛",
                 "margin_bottom": 0

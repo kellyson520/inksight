@@ -150,6 +150,25 @@ async def get_latest_heartbeat(mac: str) -> Optional[dict]:
     }
 
 
+async def get_latest_render_log(mac: str) -> Optional[dict]:
+    """获取硬件设备端上报的最新渲染记录时间（排除 Web 端预览）。"""
+    db = await get_main_db()
+    cursor = await db.execute(
+        """SELECT id, persona, created_at FROM render_logs
+           WHERE mac = ?
+           ORDER BY id DESC LIMIT 1""",
+        (mac,),
+    )
+    row = await cursor.fetchone()
+    if not row:
+        return None
+    return {
+        "id": row[0],
+        "persona": row[1],
+        "created_at": row[2],
+    }
+
+
 async def get_device_stats(mac: str) -> dict:
     """Get comprehensive stats for a device."""
     db = await get_main_db()

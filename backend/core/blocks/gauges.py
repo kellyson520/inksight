@@ -109,9 +109,25 @@ def render_progress_ring(ctx: RenderContext, block: dict) -> None:
     # 背景浅轮廓
     ctx.draw.arc(box, start=0, end=360, fill=EINK_FG, width=1)
 
+    # 确定动态颜色规则：< 20% 红色，<= 60% 黄色，其余黑色
+    if block.get("color_by_percent") or block.get("threshold_colors"):
+        if pct < 20.0:
+            active_color_name = "red"
+        elif pct <= 60.0:
+            active_color_name = "yellow"
+        else:
+            active_color_name = "black"
+    elif block.get("color_field"):
+        active_color_name = str(ctx.get_field(block["color_field"]) or "")
+        if not active_color_name:
+            active_color_name = "red" if ctx.colors >= 3 else "black"
+    else:
+        active_color_name = block.get("color", "red" if ctx.colors >= 3 else "black")
+
+    active_color = ctx.color_index(active_color_name, default=EINK_FG)
+
     # 有效进度弧 (从 -90° 开始顺时针走)
     if ratio > 0:
-        active_color = ctx.color_index(block.get("color", "red" if ctx.colors >= 3 else "black"), default=EINK_FG)
         end_deg = -90 + int(ratio * 360)
         ctx.draw.arc(box, start=-90, end=end_deg, fill=active_color, width=max(2, int(4 * scale)))
 
@@ -121,7 +137,8 @@ def render_progress_ring(ctx: RenderContext, block: dict) -> None:
     pbox = font.getbbox(pct_text)
     pw = pbox[2] - pbox[0]
     ph = pbox[3] - pbox[1]
-    ctx.draw.text((center_x - pw // 2, center_y - ph // 2 - pbox[1]), pct_text, fill=EINK_FG, font=font)
+    text_color = active_color if block.get("colored_text", True) else EINK_FG
+    ctx.draw.text((center_x - pw // 2, center_y - ph // 2 - pbox[1]), pct_text, fill=text_color, font=font)
 
     label = str(block.get("label", ""))
     if label:

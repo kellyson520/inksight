@@ -201,6 +201,8 @@
               {
                 "type": "progress_ring",
                 "field": "card_1_ring_val",
+                "color_by_percent": true,
+                "color_field": "card_1_ring_color",
                 "size": 42,
                 "label": "Quota",
                 "margin_bottom": 0
@@ -255,6 +257,8 @@
               {
                 "type": "progress_ring",
                 "field": "card_2_ring_val",
+                "color_by_percent": true,
+                "color_field": "card_2_ring_color",
                 "size": 42,
                 "label": "Full",
                 "margin_bottom": 0

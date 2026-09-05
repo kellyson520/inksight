@@ -150,14 +150,32 @@ export function CpaQuotaConfig({
                   </div>
                 </div>
 
-                {/* 环形进度模拟 */}
+                {/* 环形进度模拟 (＜20%红色，<=60%黄色，其余黑色) */}
                 <div className="flex flex-col items-center justify-center pl-3 border-l border-ink/10">
-                  <div className="w-12 h-12 rounded-full border-3 border-ink flex items-center justify-center bg-white shadow-2xs">
-                    <span className="text-xs font-bold text-ink font-mono">{item.remaining_pct}</span>
+                  <div
+                    className={`w-12 h-12 rounded-full border-3 flex items-center justify-center shadow-2xs ${
+                      (item.remaining_pct_num ?? 100) < 20
+                        ? "border-red-500 bg-red-50 text-red-600"
+                        : (item.remaining_pct_num ?? 100) <= 60
+                        ? "border-amber-500 bg-amber-50 text-amber-600"
+                        : "border-ink bg-white text-ink"
+                    }`}
+                  >
+                    <span className="text-xs font-bold font-mono">{item.remaining_pct}</span>
                   </div>
-                  <span className="text-[9px] text-ink-light mt-1">
+                  <span
+                    className={`text-[9px] mt-1 font-medium ${
+                      (item.remaining_pct_num ?? 100) < 20
+                        ? "text-red-500"
+                        : (item.remaining_pct_num ?? 100) <= 60
+                        ? "text-amber-600"
+                        : "text-ink-light"
+                    }`}
+                  >
                     {item.remaining_pct_num === 100
                       ? (locale === "zh" ? "配额充沛" : "Full")
+                      : item.remaining_pct_num < 20
+                      ? (locale === "zh" ? "配额告急" : "Critical")
                       : (locale === "zh" ? "剩余容量" : "Remaining")}
                   </span>
                 </div>

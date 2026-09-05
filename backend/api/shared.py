@@ -399,6 +399,7 @@ async def build_image(
     user_api_key: Optional[str] = None,
     intent_only: bool = False,
     colors: int = 2,
+    is_preview: bool = False,
 ):
     from core.mode_registry import get_registry
 
@@ -721,7 +722,7 @@ async def build_image(
                             )
                             quota_exhausted = True
                             # 对于设备端，返回兜底图；对于 Web 预览，返回 quota_exhausted 标志让接口处理
-                            if mac:
+                            if mac and not is_preview:
                                 img = _render_quota_exhausted_image(screen_w, screen_h)
                                 await update_device_state(
                                     mac,
@@ -750,7 +751,7 @@ async def build_image(
                                     user_provided_api_key,
                                 )
                             # 对于设备端，返回兜底图；对于 Web 预览，返回 quota_exhausted 标志让接口处理
-                            if mac:
+                            if mac and not is_preview:
                                 img = _render_quota_exhausted_image(screen_w, screen_h)
                                 await update_device_state(
                                     mac,
@@ -827,11 +828,12 @@ async def build_image(
                     )
                     quota_exhausted = True
                     img = _render_quota_exhausted_image(screen_w, screen_h)
-                    await update_device_state(
-                        mac,
-                        last_persona=persona,
-                        last_refresh_at=datetime.now().isoformat(),
-                    )
+                    if mac and not is_preview:
+                        await update_device_state(
+                            mac,
+                            last_persona=persona,
+                            last_refresh_at=datetime.now().isoformat(),
+                        )
                     return img, persona, False, True, quota_exhausted, False, False, usage_source
                 if int(quota.get("free_quota_remaining") or 0) <= 0:
                     quota_exhausted = True
@@ -854,7 +856,7 @@ async def build_image(
                     # 对于设备端，仍然返回1-bit兜底图（设备无法显示弹窗）
                     # 对于Web端，会在 preview 接口中检测并返回 JSON 响应
                     img = _render_quota_exhausted_image(screen_w, screen_h)
-                    if mac:
+                    if mac and not is_preview:
                         await update_device_state(
                             mac,
                             last_persona=persona,
@@ -892,11 +894,12 @@ async def build_image(
                         )
                     quota_exhausted = True
                     img = _render_quota_exhausted_image(screen_w, screen_h)
-                    await update_device_state(
-                        mac,
-                        last_persona=persona,
-                        last_refresh_at=datetime.now().isoformat(),
-                    )
+                    if mac and not is_preview:
+                        await update_device_state(
+                            mac,
+                            last_persona=persona,
+                            last_refresh_at=datetime.now().isoformat(),
+                        )
                     return img, persona, False, True, quota_exhausted, False, False, usage_source
             except Exception:
                 # 如果连 role 都查不到，为了安全起见，也视为额度耗尽
@@ -917,18 +920,20 @@ async def build_image(
                     )
                 quota_exhausted = True
                 img = _render_quota_exhausted_image(screen_w, screen_h)
+                if mac and not is_preview:
+                    await update_device_state(
+                        mac,
+                        last_persona=persona,
+                        last_refresh_at=datetime.now().isoformat(),
+                    )
+                return img, persona, False, True, quota_exhausted, False, False, usage_source
+            # 更新设备状态，但不写入内容缓存，避免后续充值后仍命中"额度耗尽"图片
+            if mac and not is_preview:
                 await update_device_state(
                     mac,
                     last_persona=persona,
                     last_refresh_at=datetime.now().isoformat(),
                 )
-                return img, persona, False, True, quota_exhausted, False, False, usage_source
-            # 更新设备状态，但不写入内容缓存，避免后续充值后仍命中"额度耗尽"图片
-            await update_device_state(
-                mac,
-                last_persona=persona,
-                last_refresh_at=datetime.now().isoformat(),
-            )
             return img, persona, False, True, quota_exhausted, False, False, usage_source
 
     if intent_only:
@@ -985,14 +990,14 @@ async def build_image(
                 colors=colors,
             )
 
-    if mac:
+    if mac and not is_preview:
         await update_device_state(
             mac,
             last_persona=persona,
             last_refresh_at=datetime.now().isoformat(),
         )
 
-    if mac and content_data:
+    if mac and not is_preview and content_data:
         try:
             await save_render_content(mac, persona, content_data)
         except (OSError, ValueError, TypeError):
@@ -1048,7 +1053,7 @@ async def build_image(
             persona,
         )
         # 对于设备端，返回提示图片；对于 Web 预览，返回 api_key_invalid 标志让接口处理
-        if mac:
+        if mac and not is_preview:
             img = _render_api_key_invalid_image(screen_w, screen_h)
             await update_device_state(
                 mac,

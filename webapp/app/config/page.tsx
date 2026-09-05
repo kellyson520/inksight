@@ -787,7 +787,7 @@ function ConfigPageInner() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewStatusText, setPreviewStatusText] = useState("");
   const [previewMode, setPreviewMode] = useState("");
-  const [previewColors, setPreviewColors] = useState(2);
+  const [previewColors, setPreviewColors] = useState(4);
   const [previewWidth, setPreviewWidth] = useState(400);
   const [previewHeight, setPreviewHeight] = useState(300);
   const [previewNoCacheOnce, setPreviewNoCacheOnce] = useState(false);

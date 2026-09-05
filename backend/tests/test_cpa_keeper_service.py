@@ -94,3 +94,52 @@ async def test_cpa_keeper_realtime_force_refresh():
     assert content_1["update_time"] != content_2["update_time"]
     assert content_2["update_time"] != "12:00:00"  # 确保不是硬编码的 fallback
 
+
+def test_quota_color_thresholds():
+    """验证额度百分比颜色阈值规则：<20%红色，<=60%黄色，其余黑色。"""
+    from core.cpa_keeper_service import _calc_quota_color
+
+    assert _calc_quota_color(0) == "red"
+    assert _calc_quota_color(15) == "red"
+    assert _calc_quota_color(19.9) == "red"
+    assert _calc_quota_color(20) == "yellow"
+    assert _calc_quota_color(45) == "yellow"
+    assert _calc_quota_color(60) == "yellow"
+    assert _calc_quota_color(60.1) == "black"
+    assert _calc_quota_color(85) == "black"
+    assert _calc_quota_color(100) == "black"
+
+
+def test_progress_ring_renders_expected_colors():
+    """验证环形进度条组件在4色模式下按百分比阈值渲染红/黄/黑。"""
+    from PIL import Image, ImageDraw
+    from core.blocks.context import RenderContext
+    from core.blocks.gauges import render_progress_ring
+    from core.config import EINK_4COLOR_PALETTE
+
+    # 1. 测试 < 20% (红色，index 3)
+    img_red = Image.new("P", (100, 100), 1)
+    img_red.putpalette(EINK_4COLOR_PALETTE)
+    ctx_red = RenderContext(draw=ImageDraw.Draw(img_red), img=img_red, content={"pct": 15}, screen_w=100, screen_h=100, colors=4)
+    render_progress_ring(ctx_red, {"type": "progress_ring", "field": "pct", "color_by_percent": True, "size": 40})
+    red_pixels = [c for c in img_red.getcolors() if c[1] == 3]
+    assert len(red_pixels) > 0
+
+    # 2. 测试 <= 60% (黄色，index 2)
+    img_yel = Image.new("P", (100, 100), 1)
+    img_yel.putpalette(EINK_4COLOR_PALETTE)
+    ctx_yel = RenderContext(draw=ImageDraw.Draw(img_yel), img=img_yel, content={"pct": 50}, screen_w=100, screen_h=100, colors=4)
+    render_progress_ring(ctx_yel, {"type": "progress_ring", "field": "pct", "color_by_percent": True, "size": 40})
+    yellow_pixels = [c for c in img_yel.getcolors() if c[1] == 2]
+    assert len(yellow_pixels) > 0
+
+    # 3. 测试 > 60% (黑色，index 0)
+    img_blk = Image.new("P", (100, 100), 1)
+    img_blk.putpalette(EINK_4COLOR_PALETTE)
+    ctx_blk = RenderContext(draw=ImageDraw.Draw(img_blk), img=img_blk, content={"pct": 85}, screen_w=100, screen_h=100, colors=4)
+    render_progress_ring(ctx_blk, {"type": "progress_ring", "field": "pct", "color_by_percent": True, "size": 40})
+    has_red = any(c[1] == 3 for c in img_blk.getcolors())
+    has_yellow = any(c[1] == 2 for c in img_blk.getcolors())
+    assert not has_red
+    assert not has_yellow
+

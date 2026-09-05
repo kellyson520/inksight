@@ -14,7 +14,7 @@ from httpx import AsyncClient
 from api.index import app
 from api import shared as shared_api
 from core.cache import content_cache
-from core.config_store import get_device_state, init_db
+from core.config_store import get_device_state, init_db, update_device_state
 from core.config_store import validate_alert_token
 from core.db import get_main_db
 from core.mode_registry import reset_registry
@@ -1241,3 +1241,108 @@ async def test_uploads_accept_multipart_form_image(client):
     body = resp.json()
     assert body["ok"] is True
     assert body["url"].endswith(f"/api/uploads/{body['id']}")
+
+
+@pytest.mark.asyncio
+async def test_preview_does_not_pollute_device_state(client):
+    """测试 Web 端 Preview 请求不会篡改设备端的 last_refresh_at 或 last_persona。"""
+    from datetime import datetime, timedelta
+    mac = "AA:BB:CC:99:88:11"
+    headers = await provision_device_headers(client, mac)
+    claim_resp = await client.post(f"/api/device/{mac}/claim-token", headers=headers)
+    assert claim_resp.status_code == 200
+    await register_user(client, "user_preview_clean")
+    await client.post("/api/claim/consume", json={"token": claim_resp.json()["token"]})
+
+    # 模拟设备原始真实状态：最后刷新在 10 小时前
+    old_time = (datetime.now() - timedelta(hours=10)).isoformat()
+    await update_device_state(mac, last_refresh_at=old_time, last_persona="CALENDAR")
+
+    # Web 用户发起预览（带该设备 MAC）
+    resp = await client.get(f"/api/preview?persona=STOIC&mac={mac}&no_cache=1")
+    assert resp.status_code == 200
+
+    # 验证设备状态完全未被篡改
+    st = await get_device_state(mac)
+    assert st is not None
+    assert st["last_refresh_at"] == old_time
+    assert st["last_persona"] == "CALENDAR"
+
+
+@pytest.mark.asyncio
+async def test_active_device_offline_when_polling_stops(client):
+    """测试常驻活跃设备停止轮询后准确显示离线。"""
+    from datetime import datetime, timedelta
+    mac = "AA:BB:CC:99:88:22"
+    headers = await provision_device_headers(client, mac)
+    claim_resp = await client.post(f"/api/device/{mac}/claim-token", headers=headers)
+    assert claim_resp.status_code == 200
+    await register_user(client, "user_active_offline")
+    await client.post("/api/claim/consume", json={"token": claim_resp.json()["token"]})
+
+    # 配置为 always_active
+    await client.post(
+        "/api/config",
+        json={
+            "mac": mac,
+            "modes": ["STOIC"],
+            "refreshInterval": 30,
+            "always_active": True,
+        },
+    )
+
+    # 模拟轮询中断（最后轮询在 60 秒前，超过 35 秒阈值）
+    stale_poll = (datetime.now() - timedelta(seconds=60)).isoformat()
+    await update_device_state(mac, last_state_poll_at=stale_poll)
+
+    resp = await client.get(f"/api/device/{mac}/state")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["is_online"] is False
+    assert data["runtime_mode"] == "active"
+
+
+@pytest.mark.asyncio
+async def test_interval_device_online_window(client):
+    """测试间歇休眠设备在周期内在线、超时判定离线。"""
+    from datetime import datetime, timedelta
+    from core.stats_store import log_heartbeat
+    mac = "AA:BB:CC:99:88:33"
+    headers = await provision_device_headers(client, mac)
+    claim_resp = await client.post(f"/api/device/{mac}/claim-token", headers=headers)
+    assert claim_resp.status_code == 200
+    await register_user(client, "user_interval_window")
+    await client.post("/api/claim/consume", json={"token": claim_resp.json()["token"]})
+
+    # 刷新间隔 30 分钟（容差周期为 30 + 6 = 36 分钟）
+    await client.post(
+        "/api/config",
+        json={
+            "mac": mac,
+            "modes": ["STOIC"],
+            "refreshInterval": 30,
+            "always_active": False,
+        },
+    )
+
+    # 1. 20 分钟前刚刚心跳上报 -> 处于正常休眠中，判定在线且为 interval 模式
+    t_20min = (datetime.now() - timedelta(minutes=20)).isoformat()
+    await update_device_state(mac, runtime_mode="interval", last_state_poll_at="")
+    await log_heartbeat(mac, 3.8, -50)
+    main_db = await get_main_db()
+    await main_db.execute("UPDATE device_heartbeats SET created_at = ? WHERE mac = ?", (t_20min, mac))
+    await main_db.commit()
+
+    resp = await client.get(f"/api/device/{mac}/state")
+    assert resp.status_code == 200
+    assert resp.json()["is_online"] is True
+    assert resp.json()["runtime_mode"] == "interval"
+
+    # 2. 超时 45 分钟未上报（超过 36 分钟容差） -> 判定离线
+    t_45min = (datetime.now() - timedelta(minutes=45)).isoformat()
+    await main_db.execute("UPDATE device_heartbeats SET created_at = ? WHERE mac = ?", (t_45min, mac))
+    await main_db.commit()
+
+    resp2 = await client.get(f"/api/device/{mac}/state")
+    assert resp2.status_code == 200
+    assert resp2.json()["is_online"] is False

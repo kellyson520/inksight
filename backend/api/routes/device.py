@@ -49,6 +49,7 @@ from core.stats_store import (
     get_favorites,
     get_habit_status,
     get_latest_heartbeat,
+    get_latest_render_log,
     get_latest_render_content,
 )
 
@@ -106,57 +107,79 @@ async def device_state(
     refresh_minutes = resolve_refresh_minutes_for_device_state(cfg, state)
     latest_heartbeat = await get_latest_heartbeat(mac)
     heartbeat_seen = latest_heartbeat.get("created_at") if latest_heartbeat else None
+    latest_render = await get_latest_render_log(mac)
+    render_seen = latest_render.get("created_at") if latest_render else None
 
-    # 综合心跳(heartbeat)、状态轮询(last_state_poll_at)与渲染刷新(last_refresh_at)，确定最新活跃时间 last_seen 与在线状态 is_online
+    # 综合硬件真实上报时间：
+    # 1. 硬件心跳上报 (heartbeat_seen，由 /api/device/{mac}/heartbeat 或真实渲染时记录)
+    # 2. 真实设备渲染记录 (render_seen，来自 render_logs，严格排除 Web 预览)
+    # 3. 真实设备状态轮询 (last_state_poll_at，仅设备带 Token 访问时更新)
+    device_refresh_seen = render_seen or state.get("last_refresh_at")
     activity_timestamps: list[datetime] = []
-    for ts_str in (heartbeat_seen, state.get("last_state_poll_at"), state.get("last_refresh_at")):
+    for ts_str in (heartbeat_seen, render_seen, state.get("last_state_poll_at")):
         if isinstance(ts_str, str) and ts_str:
             try:
                 activity_timestamps.append(datetime.fromisoformat(ts_str))
             except ValueError:
                 pass
+    if not activity_timestamps and device_refresh_seen:
+        try:
+            activity_timestamps.append(datetime.fromisoformat(device_refresh_seen))
+        except ValueError:
+            pass
 
+    now = datetime.now()
     is_online = False
-    last_seen = heartbeat_seen
+    last_seen = heartbeat_seen or render_seen or state.get("last_state_poll_at") or state.get("last_refresh_at")
+    delta_seconds = float("inf")
     if activity_timestamps:
         latest_dt = max(activity_timestamps)
         last_seen = latest_dt.isoformat()
-        delta_seconds = (datetime.now() - latest_dt).total_seconds()
-        is_online = delta_seconds <= (ONLINE_WINDOW_MINUTES * 60)
+        delta_seconds = (now - latest_dt).total_seconds()
 
-    state["last_seen"] = last_seen
-    state["is_online"] = is_online
-    state["refresh_minutes"] = refresh_minutes
-
-    # Auto-fix legacy ota_url missing /api prefix so devices always get a
-    # working proxy URL even if the database was written before the fix.
-    ota_url = state.get("ota_url", "")
-    if ota_url and "/firmware/download" in ota_url and "/api/firmware/download" not in ota_url:
-        state["ota_url"] = ota_url.replace("/firmware/download", "/api/firmware/download")
-
-    runtime_mode = "interval"
+    # 活跃轮询检测（Live / 常开模式下固件每 5 秒轮询一次状态）
     last_poll = state.get("last_state_poll_at", "")
     recent_poll = False
     if isinstance(last_poll, str) and last_poll:
         try:
-            delta = (datetime.now() - datetime.fromisoformat(last_poll)).total_seconds()
-            recent_poll = delta <= 25
+            poll_delta = (now - datetime.fromisoformat(last_poll)).total_seconds()
+            recent_poll = (0 <= poll_delta <= 35)
         except ValueError:
             logger.warning("[DEVICE] Invalid last_state_poll_at for %s: %s", mac, last_poll, exc_info=True)
             recent_poll = False
 
     cfg_always_active = bool(cfg and (cfg.get("always_active") or cfg.get("is_always_active")))
     explicit_mode = str(state.get("runtime_mode") or "").lower()
-    if cfg_always_active:
-        # 用户显式配置了始终保持活跃，且设备当前在线保持轮询时，为 active
-        runtime_mode = "active" if (recent_poll or is_online) else "interval"
-    elif explicit_mode == "active":
-        runtime_mode = "active" if recent_poll else "interval"
-    elif explicit_mode == "interval":
-        runtime_mode = "interval"
-    elif recent_poll:
-        runtime_mode = "active"
 
+    # 依据实际网络交互精准判定：
+    if recent_poll:
+        # 1. 35秒内发起过活跃轮询 -> 设备当前必定实时在线活跃
+        is_online = True
+        runtime_mode = "active"
+    elif cfg_always_active:
+        # 2. 用户配置为常驻活跃，但超时未收到任何轮询 -> 已断电/失联，准确判定为离线
+        is_online = False
+        runtime_mode = "active"
+    elif explicit_mode == "active":
+        # 3. 模式为 active 但无轮询：退化为间歇模式并检验是否在容差休眠期内
+        base_seconds = max(1, int(refresh_minutes)) * 60
+        grace_seconds = max(180, min(900, int(base_seconds * 0.2)))
+        interval_window = base_seconds + grace_seconds
+        is_online = (delta_seconds <= interval_window)
+        runtime_mode = "interval"
+    else:
+        # 4. 间歇休眠模式（Interval Mode）：设备定时深睡
+        # 在 计划刷新周期 + 容差宽限期（20%，至少3分钟，最多15分钟）内，算作正常休眠在线
+        # 超出计划时间未上报唤醒，则判定为离线（断电或配网失效）
+        base_seconds = max(1, int(refresh_minutes)) * 60
+        grace_seconds = max(180, min(900, int(base_seconds * 0.2)))
+        interval_window = base_seconds + grace_seconds
+        is_online = (delta_seconds <= interval_window)
+        runtime_mode = "interval"
+
+    state["last_seen"] = last_seen
+    state["is_online"] = is_online
+    state["refresh_minutes"] = refresh_minutes
     state["runtime_mode"] = runtime_mode
     return state
 

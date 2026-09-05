@@ -190,6 +190,7 @@ async def render(
             force_next=force_next,
             skip_cache=skip_cache_for_this_render,
             colors=params.colors,
+            is_preview=False,
         )
 
         if img.size != (params.w, params.h):
@@ -375,6 +376,7 @@ async def preview(
             user_api_key=x_inksight_llm_api_key,
             intent_only=(intent == 1),
             colors=colors,
+            is_preview=True,
         )
         if intent == 1:
             from fastapi.responses import JSONResponse
@@ -533,6 +535,7 @@ async def preview_stream(
                 current_user_id=current_user_id,
                 user_api_key=x_inksight_llm_api_key,
                 colors=colors,
+                is_preview=True,
             )
             # 如果 API key 无效，返回错误事件
             if api_key_invalid:
