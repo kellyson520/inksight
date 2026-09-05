@@ -60,6 +60,7 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "DAILY": "life",
     "STOIC": "life",
     "MY_QUOTE": "life",
+    "WECHAT_READ": "life",
     "HEALTH": "life",
     "AIR": "life",
     # 灵感创作

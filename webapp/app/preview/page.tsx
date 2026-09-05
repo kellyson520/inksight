@@ -232,6 +232,9 @@ export default function ExperiencePage() {
       if (targetMode === "GOLD" && !mergedOverride.symbol) {
         mergedOverride.symbol = "AU0";
       }
+      if (targetMode === "WECHAT_READ" && !mergedOverride.category) {
+        mergedOverride.category = "ALL";
+      }
       if (targetMode === "SERVER_STATUS") {
         if (!mergedOverride.server_name && serverName) mergedOverride.server_name = serverName;
         if (!mergedOverride.server_key && serverKey) mergedOverride.server_key = serverKey;
@@ -600,6 +603,7 @@ export default function ExperiencePage() {
           initialServerKey={serverKey}
           initialCpaQuotaView={cpaQuotaView}
           initialGoldSymbol="AU0"
+          initialWechatCategory="ALL"
         />
       ) : null}
 

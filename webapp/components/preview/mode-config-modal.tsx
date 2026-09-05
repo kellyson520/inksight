@@ -7,6 +7,7 @@ import { DisasterConfig } from "./configs/disaster-config";
 import { WeatherConfig } from "./configs/weather-config";
 import { CryptoStockConfig } from "./configs/crypto-stock-config";
 import { GoldConfig } from "./configs/gold-config";
+import { WeChatReadConfig } from "./configs/wechat-read-config";
 import { ServerStatusConfig } from "./configs/server-status-config";
 import { CpaQuotaConfig } from "./configs/cpa-quota-config";
 import {
@@ -41,7 +42,8 @@ interface ModeConfigModalProps {
       | "pomodoro"
       | "drink_water"
       | "server_status"
-      | "cpa_quota";
+      | "cpa_quota"
+      | "wechat_read";
     modeId: string;
   };
   locale: string;
@@ -59,6 +61,7 @@ interface ModeConfigModalProps {
   initialServerName?: string;
   initialServerKey?: string;
   initialCpaQuotaView?: string;
+  initialWechatCategory?: string;
 }
 
 export function ModeConfigModal({
@@ -78,6 +81,7 @@ export function ModeConfigModal({
   initialServerName,
   initialServerKey,
   initialCpaQuotaView = "overview",
+  initialWechatCategory = "ALL",
 }: ModeConfigModalProps) {
   const getModalTitle = () => {
     switch (modal.type) {
@@ -113,6 +117,8 @@ export function ModeConfigModal({
         return locale === "zh" ? "服务器与主机性能监控" : "Server Status Monitor";
       case "cpa_quota":
         return locale === "zh" ? "CPA 额度仪表盘" : "CPA Quota Dashboard";
+      case "wechat_read":
+        return locale === "zh" ? "微信读书推荐设置" : "WeChat Read Settings";
       default:
         return locale === "zh" ? "模式参数设置" : "Mode Settings";
     }
@@ -203,6 +209,16 @@ export function ModeConfigModal({
               onClose={onClose}
               onSubmit={async (symbol) => {
                 await onSubmit("GOLD", { symbol });
+              }}
+            />
+          ) : modal.type === "wechat_read" ? (
+            <WeChatReadConfig
+              initialCategory={initialWechatCategory}
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (category) => {
+                await onSubmit("WECHAT_READ", { category });
               }}
             />
           ) : modal.type === "quote" ? (

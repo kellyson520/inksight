@@ -58,6 +58,12 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
         h = max(icon_size, font_size + 6)
         return w, h
 
+    elif btype == "image":
+        w = int(block.get("width", 220) * ctx.scale)
+        h = int(block.get("height", 140) * ctx.scale)
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return min(w, max_width), h + mb
+
     elif btype == "spacer":
         return max_width, int(block.get("height", 8) * ctx.scale)
 

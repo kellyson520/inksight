@@ -360,7 +360,8 @@ def render_image(ctx: RenderContext, block: dict) -> None:
         return
     width = int(block.get("width", 220) * ctx.scale)
     height = int(block.get("height", 140) * ctx.scale)
-    x = int(block.get("x", (ctx.screen_w - width) // 2))
+    default_x = ctx.x_offset + max(0, (ctx.available_width - width) // 2)
+    x = int(block.get("x", default_x))
     y = int(block.get("y", ctx.y))
     fit = str(block.get("fit", "fill") or "fill")
     align_x = str(block.get("align_x", "center") or "center")

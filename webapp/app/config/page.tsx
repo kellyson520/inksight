@@ -2868,6 +2868,9 @@ function ConfigPageInner() {
                     initialCpaQuotaView={
                       (modeOverrides["CPA_QUOTA"]?.view as string) || "overview"
                     }
+                    initialWechatCategory={
+                      (modeOverrides["WECHAT_READ"]?.category as string) || "ALL"
+                    }
                   />
                 ) : null}
 

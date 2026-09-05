@@ -79,6 +79,7 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   LIFEBAR: "lifebar" as never,
   MEMO: "life",
   DRINK_WATER: "life",
+  WECHAT_READ: "life",
   // 灵感与创作
   WORD_OF_THE_DAY: "studio",
   LETTER: "studio",

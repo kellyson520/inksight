@@ -31,6 +31,7 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   MY_QUOTE: "life",
   MY_ADAPTIVE: "life",
   DRINK_WATER: "life",
+  WECHAT_READ: "life",
 
   // 效率 (Productivity)
   COUNTDOWN: "productivity",
@@ -80,6 +81,7 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   DRINK_WATER: "drink_water",
   SERVER_STATUS: "server_status",
   CPA_QUOTA: "cpa_quota",
+  WECHAT_READ: "wechat_read",
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [
@@ -135,6 +137,14 @@ export const POPULAR_STOCKS = [
   { sym: "AMZN", name: "亚马逊", desc: "Amazon" },
   { sym: "META", name: "Meta", desc: "Meta Platforms" },
   { sym: "BABA", name: "阿里巴巴", desc: "Alibaba Group" },
+];
+
+export const WECHAT_READ_CATEGORIES = [
+  { key: "ALL", name: "精选好书", desc: "微信读书神作榜与总榜常青热门" },
+  { key: "LITERATURE", name: "文学小说", desc: "经典小说、名著与科幻文学殿堂作品" },
+  { key: "HISTORY", name: "历史社科", desc: "深刻透彻的历史演进、社会学与宏观分析" },
+  { key: "BUSINESS", name: "商业财经", desc: "商业思考、投资认知与财富逻辑" },
+  { key: "GROWTH", name: "认知成长", desc: "心理疗愈、思维认知与行动跃迁" },
 ];
 
 export const POPULAR_GOLDS = [

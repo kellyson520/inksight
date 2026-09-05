@@ -204,6 +204,12 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         en=CatalogText(name="Gold Trend", tip="Real-time gold spot/futures price, 24h trends and sparkline"),
     ),
     CatalogItem(
+        mode_id="WECHAT_READ",
+        category="more",
+        zh=CatalogText(name="微信读书推荐", tip="精选微信读书神作榜与飙升好书，右侧封面图片配左侧书名与推荐理由"),
+        en=CatalogText(name="WeChat Read", tip="Featured book picks with cover on right and title/review on left"),
+    ),
+    CatalogItem(
         mode_id="HOTLIST",
         category="more",
         zh=CatalogText(name="全网热点", tip="实时知乎、微博、B站、GitHub 聚合热榜"),
