@@ -5,6 +5,7 @@ const LOCALE_COOKIE = "ink_locale";
 const DEFAULT_ALLOWED_HOSTS = new Set([
   "www.inksight.site",
   "inksight.site",
+  "kellson.dpdns.org",
   "localhost",
   "127.0.0.1",
   "::1",
@@ -52,7 +53,9 @@ function isBypassPath(pathname: string): boolean {
 
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  if (!allowedHosts().has(requestHost(req))) {
+  const allowed = allowedHosts();
+  const current = requestHost(req);
+  if (!allowed.has("*") && !allowed.has(current)) {
     return new NextResponse("Not Found", { status: 404 });
   }
   if (isBypassPath(pathname)) return NextResponse.next();

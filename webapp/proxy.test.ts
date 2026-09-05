@@ -58,3 +58,18 @@ test("proxy allows localhost development hosts", () => {
 
   assert.equal(res.status, 200);
 });
+
+test("proxy allows kellson.dpdns.org domain with port", () => {
+  const req = new NextRequest("https://kellson.dpdns.org:3001/config", {
+    headers: {
+      host: "kellson.dpdns.org:3001",
+      "x-forwarded-host": "kellson.dpdns.org:3001",
+      "x-forwarded-proto": "https",
+    },
+  });
+
+  const res = proxy(req);
+
+  assert.equal(res.status, 307);
+  assert.equal(res.headers.get("location"), "https://kellson.dpdns.org:3001/zh/config");
+});

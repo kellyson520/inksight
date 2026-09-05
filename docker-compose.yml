@@ -20,6 +20,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - INKSIGHT_BACKEND_API_BASE=http://127.0.0.1:8070
+      - INKSIGHT_ALLOWED_WEB_HOSTS=kellson.dpdns.org,122.51.44.246,10.0.0.13,localhost,127.0.0.1,*
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 30s
