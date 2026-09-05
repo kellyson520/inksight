@@ -2856,6 +2856,9 @@ function ConfigPageInner() {
                       (modeOverrides["MARKET"]?.symbol as string) ||
                       "BTC"
                     }
+                    initialGoldSymbol={
+                      (modeOverrides["GOLD"]?.symbol as string) || "AU0"
+                    }
                     initialServerName={
                       (modeOverrides["SERVER_STATUS"]?.server_name as string) || ""
                     }

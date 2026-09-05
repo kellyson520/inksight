@@ -1,0 +1,188 @@
+{
+  "mode_id": "GOLD",
+  "display_name": "Gold Trend",
+  "icon": "trending-up",
+  "cacheable": true,
+  "description": "Real-time tracking of Gold spot and futures prices, 24h trends and intraday sparkline chart",
+  "settings_schema": [
+    {
+      "key": "symbol",
+      "label": "Gold Asset",
+      "type": "select",
+      "default": "AU0",
+      "options": [
+        { "value": "AU0", "label": "SHFE Gold (CNY/gram)" },
+        { "value": "XAU", "label": "London Gold (USD/troy oz)" },
+        { "value": "AU9999", "label": "SGE Au99.99 (CNY/gram)" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "gold",
+    "symbol": "AU0",
+    "fallback": {
+      "symbol": "AU0",
+      "symbol_tag": "AU0 · SHFE",
+      "name": "SHFE Gold Futures",
+      "price": "958.00",
+      "unit": "CNY/g",
+      "currency_symbol": "¥",
+      "price_display": "¥958.00",
+      "price_unit_display": "¥958.00 / g",
+      "change_24h": "-1.32%",
+      "change_num": -1.32,
+      "is_up": false,
+      "high_24h": "961.88",
+      "low_24h": "944.10",
+      "amplitude": "1.83%",
+      "sparkline_data": [
+        944.62, 946.80, 948.74, 949.00, 947.38, 947.70, 948.24, 948.90,
+        949.08, 950.12, 951.30, 953.40, 955.10, 956.20, 958.00, 959.50,
+        961.88, 960.20, 959.00, 958.40, 957.80, 958.20, 957.90, 958.00
+      ],
+      "ref_title": "Spot Gold Ref",
+      "ref_price": "$4,430.96 / oz",
+      "ref_change": "-0.94%",
+      "exchange_rate_hint": "1 oz ≈ 31.1035 g",
+      "update_time": "Realtime",
+      "status_text": "SHFE Active Intraday"
+    }
+  },
+  "layout": {
+    "body_align": "center",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 16,
+        "items": [
+          {
+            "type": "text",
+            "field": "name",
+            "font": "noto_serif_bold",
+            "font_size": 17
+          },
+          {
+            "type": "badge",
+            "field": "symbol_tag",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "flex_row",
+        "justify": "center",
+        "align_items": "center",
+        "gap": 10,
+        "items": [
+          {
+            "type": "text",
+            "field": "price_display",
+            "font": "noto_serif_bold",
+            "font_size": 34
+          },
+          {
+            "type": "text",
+            "field": "unit",
+            "font": "noto_serif_light",
+            "font_size": 12
+          },
+          {
+            "type": "badge",
+            "field": "change_24h",
+            "variant": "solid",
+            "bg_color": "red",
+            "color": "white",
+            "font_size": 12,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "sparkline",
+        "field": "sparkline_data",
+        "height": 46,
+        "line_width": 2,
+        "margin_x": 16,
+        "show_baseline": true,
+        "show_endpoints": true,
+        "area_shading": true,
+        "show_extrema": true,
+        "color": "red"
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "grid",
+        "columns": 3,
+        "show_divider": true,
+        "margin_x": 16,
+        "font_size": 11,
+        "value_size": 12,
+        "items": [
+          { "label": "24h High", "field": "high_24h", "align": "center" },
+          { "label": "24h Low", "field": "low_24h", "align": "center" },
+          { "label": "Amplitude", "field": "amplitude", "align": "center" }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true,
+        "margin_x": 16
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 16,
+        "items": [
+          {
+            "type": "text",
+            "field_template": "{ref_title}: {ref_price} ({ref_change})",
+            "font_size": 11
+          },
+          {
+            "type": "text",
+            "field": "exchange_rate_hint",
+            "font_size": 10
+          }
+        ]
+      }
+    ]
+  }
+}

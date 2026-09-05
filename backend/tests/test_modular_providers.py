@@ -8,6 +8,7 @@ def test_registered_providers():
     providers = list_registered_providers()
     assert "rss" in providers
     assert "crypto" in providers
+    assert "gold" in providers
 
 
 @pytest.mark.asyncio

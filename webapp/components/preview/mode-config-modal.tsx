@@ -6,6 +6,7 @@ import { HotlistConfig } from "./configs/hotlist-config";
 import { DisasterConfig } from "./configs/disaster-config";
 import { WeatherConfig } from "./configs/weather-config";
 import { CryptoStockConfig } from "./configs/crypto-stock-config";
+import { GoldConfig } from "./configs/gold-config";
 import { ServerStatusConfig } from "./configs/server-status-config";
 import { CpaQuotaConfig } from "./configs/cpa-quota-config";
 import {
@@ -33,6 +34,7 @@ interface ModeConfigModalProps {
       | "timetable"
       | "rss"
       | "crypto"
+      | "gold"
       | "hotlist"
       | "disaster"
       | "webhook"
@@ -53,6 +55,7 @@ interface ModeConfigModalProps {
   initialDisasterCity?: string;
   initialRssFeedUrl: string;
   initialCryptoSymbol: string;
+  initialGoldSymbol?: string;
   initialServerName?: string;
   initialServerKey?: string;
   initialCpaQuotaView?: string;
@@ -71,6 +74,7 @@ export function ModeConfigModal({
   initialDisasterCity = "",
   initialRssFeedUrl,
   initialCryptoSymbol,
+  initialGoldSymbol = "AU0",
   initialServerName,
   initialServerKey,
   initialCpaQuotaView = "overview",
@@ -97,6 +101,8 @@ export function ModeConfigModal({
         return locale === "zh" ? "RSS 订阅设置" : "RSS Settings";
       case "crypto":
         return locale === "zh" ? "资产与股票行情设置" : "Stock & Asset Settings";
+      case "gold":
+        return locale === "zh" ? "黄金行情走势设置" : "Gold Trend Settings";
       case "webhook":
         return locale === "zh" ? "开放数据卡片模拟" : "Webhook Card Simulator";
       case "pomodoro":
@@ -187,6 +193,16 @@ export function ModeConfigModal({
               onClose={onClose}
               onSubmit={async (symbol) => {
                 await onSubmit("CRYPTO", { symbol });
+              }}
+            />
+          ) : modal.type === "gold" ? (
+            <GoldConfig
+              initialSymbol={initialGoldSymbol}
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (symbol) => {
+                await onSubmit("GOLD", { symbol });
               }}
             />
           ) : modal.type === "quote" ? (

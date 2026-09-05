@@ -229,6 +229,9 @@ export default function ExperiencePage() {
       if ((targetMode === "CRYPTO" || targetMode === "MARKET") && !mergedOverride.symbol) {
         mergedOverride.symbol = cryptoSymbol;
       }
+      if (targetMode === "GOLD" && !mergedOverride.symbol) {
+        mergedOverride.symbol = "AU0";
+      }
       if (targetMode === "SERVER_STATUS") {
         if (!mergedOverride.server_name && serverName) mergedOverride.server_name = serverName;
         if (!mergedOverride.server_key && serverKey) mergedOverride.server_key = serverKey;
@@ -596,6 +599,7 @@ export default function ExperiencePage() {
           initialServerName={serverName}
           initialServerKey={serverKey}
           initialCpaQuotaView={cpaQuotaView}
+          initialGoldSymbol="AU0"
         />
       ) : null}
 

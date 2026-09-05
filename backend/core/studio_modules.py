@@ -44,6 +44,7 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "RSS": "news",
     "STOCK": "news",
     "CRYPTO": "news",
+    "GOLD": "news",
     "MARKET": "news",
     # 效率工作
     "TODO": "productivity",

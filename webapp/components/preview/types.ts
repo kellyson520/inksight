@@ -52,6 +52,7 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   MOYU: "news",
   RSS: "news",
   CRYPTO: "news",
+  GOLD: "news",
   MARKET: "news",
   THISDAY: "news",
   BIAS: "news",
@@ -71,6 +72,7 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   TIMETABLE: "timetable",
   RSS: "rss",
   CRYPTO: "crypto",
+  GOLD: "gold",
   MARKET: "crypto",
   WEBHOOK: "webhook",
   MY_ADAPTIVE: "adaptive",
@@ -133,6 +135,24 @@ export const POPULAR_STOCKS = [
   { sym: "AMZN", name: "亚马逊", desc: "Amazon" },
   { sym: "META", name: "Meta", desc: "Meta Platforms" },
   { sym: "BABA", name: "阿里巴巴", desc: "Alibaba Group" },
+];
+
+export const POPULAR_GOLDS = [
+  {
+    sym: "AU0",
+    name: "沪金主力期货",
+    desc: "上海期货交易所黄金主力连续合约 (元/克)，国内最活跃黄金指标",
+  },
+  {
+    sym: "XAU",
+    name: "伦敦金 (现货黄金)",
+    desc: "全球黄金现货定价基准 (XAU/USD · 美元/盎司)，24小时全球联动",
+  },
+  {
+    sym: "AU9999",
+    name: "上海金 (Au99.99)",
+    desc: "上海黄金交易所现货基准合约 (元/克)，实物金条与饰品金重要锚点",
+  },
 ];
 
 export const POPULAR_CRYPTOS = [

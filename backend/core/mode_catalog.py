@@ -198,6 +198,12 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         en=CatalogText(name="Crypto Ticker", tip="Live cryptocurrency price and 24h change"),
     ),
     CatalogItem(
+        mode_id="GOLD",
+        category="more",
+        zh=CatalogText(name="黄金趋势", tip="实时监测沪金主力、伦敦金现货与金交所金价走势与分时图"),
+        en=CatalogText(name="Gold Trend", tip="Real-time gold spot/futures price, 24h trends and sparkline"),
+    ),
+    CatalogItem(
         mode_id="HOTLIST",
         category="more",
         zh=CatalogText(name="全网热点", tip="实时知乎、微博、B站、GitHub 聚合热榜"),
