@@ -17,6 +17,7 @@ def test_diff_emits_new_and_rank_changed_events():
 
 @pytest.mark.asyncio
 async def test_runner_publishes_diff_events():
+
     events = []
 
     class Service:
@@ -44,3 +45,22 @@ async def test_runner_marks_stale_events_non_realtime():
     emitted = await runner.run_once("zhihu")
     assert emitted[0]["is_realtime"] is False
     assert events[0]["source_status"] == "stale"
+
+
+@pytest.mark.asyncio
+async def test_runner_writes_idempotent_events_to_outbox(tmp_path):
+    class Service:
+        calls = 0
+        async def get_hotlist(self, platform, limit=8):
+            self.calls += 1
+            title = "A" if self.calls == 1 else "B"
+            return {"items": [{"title": title}], "source_status": "fresh"}
+
+    from core.event_outbox import EventOutbox
+    outbox = EventOutbox(tmp_path / "events.json")
+    runner = HotlistDiffRunner(Service(), outbox=outbox)
+    await runner.run_once("zhihu")
+    await runner.run_once("zhihu")
+    assert len(outbox.list_pending()) == 2
+    await runner.run_once("zhihu")
+    assert len(outbox.list_pending()) == 2

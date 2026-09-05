@@ -7,6 +7,8 @@ import re
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from .event_outbox import EventOutbox
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,8 +24,10 @@ class HotlistDiffRunner:
         service: Any | None = None,
         *,
         publish: Callable[[dict[str, Any]], Any] | None = None,
+        outbox: EventOutbox | None = None,
     ) -> None:
         self.service = service
+        self.outbox = outbox
         self.publish = publish or (lambda _event: None)
         self._snapshots: dict[str, dict[str, int]] = {}
 
@@ -54,6 +58,9 @@ class HotlistDiffRunner:
         for event in events:
             event["source_status"] = source_status
             event["is_realtime"] = source_status == "fresh"
+            event["event_id"] = f"hotlist:{platform}:{event['item_id']}:{event['kind']}:{event.get('rank', event.get('old_rank', ''))}"
+            if self.outbox is not None:
+                self.outbox.publish(event)
             published = self.publish(event)
             if isinstance(published, Awaitable):
                 await published

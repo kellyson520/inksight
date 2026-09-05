@@ -64,8 +64,10 @@ async def start_scheduler() -> None:
     from .monitor_runner import MonitorRunner
     from .hotlist_diff_runner import HotlistDiffRunner
     from .hotlist_service import hotlist_service
+    from .event_outbox import EventOutbox
     monitor_runner = MonitorRunner(monitor_service)
-    hotlist_diff_runner = HotlistDiffRunner(hotlist_service)
+    hotlist_outbox = EventOutbox(os.path.join(os.path.dirname(__file__), "..", "data", "event_outbox.json"))
+    hotlist_diff_runner = HotlistDiffRunner(hotlist_service, outbox=hotlist_outbox)
     async def _poll_hotlist_diff():
         for platform in ("zhihu", "weibo", "bilibili"):
             try:
