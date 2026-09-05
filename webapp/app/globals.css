@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --color-ink: #1a1a1a;
   --color-ink-light: #888888;
@@ -7,6 +9,16 @@
   --color-paper: #fafafa;
   --color-paper-dark: #f0f0f0;
   --color-border: rgba(26, 26, 26, 0.1);
+}
+
+.dark {
+  --color-ink: #f4f4f5;
+  --color-ink-light: #a1a1aa;
+  --color-ink-muted: #9ca3af;
+  --color-paper: #121214;
+  --color-paper-dark: #18181b;
+  --color-border: rgba(244, 244, 245, 0.12);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -45,6 +57,11 @@ body {
   background: #ffffff;
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+.dark body {
+  background: #09090b;
+  color: var(--color-ink);
 }
 
 ::selection {
@@ -212,6 +229,71 @@ body {
   margin: 2.5rem 0;
   border: none;
   border-top: 1px solid rgba(26, 26, 26, 0.1);
+}
+
+.dark .docs-prose h2 {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dark .docs-prose hr {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dark .docs-prose a {
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+}
+
+.dark .docs-prose a:hover {
+  text-decoration-color: #f4f4f5;
+}
+
+.dark .docs-prose table th,
+.dark .docs-prose table td {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dark .docs-prose table th {
+  background: #27272a;
+  color: #f4f4f5;
+}
+
+.dark .docs-prose code {
+  background: #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f4f4f5;
+}
+
+.dark .docs-prose blockquote {
+  border-left: 3px solid #71717a;
+  background: #18181b;
+  color: #d4d4d8;
+}
+
+.dark .docs-prose .code-block {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dark .docs-prose .code-header {
+  background: #18181b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+}
+
+.dark .docs-prose .code-block pre {
+  background: #09090b;
+}
+
+.dark .docs-prose .callout {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #18181b;
+}
+
+.dark .docs-prose .callout-icon {
+  color: #f4f4f5;
+}
+
+.dark .docs-prose .callout-important {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* Code Block */

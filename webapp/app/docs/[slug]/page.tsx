@@ -30,6 +30,9 @@ const DOCS: Record<string, DocConfig> = {
   "api-reference": { title: "API Reference", file: "api.md" },
   faq: { title: "FAQ", file: "faq.md" },
   "voice-mode": { title: "AI Voice Module", file: "voice-mode.md" },
+  "dark-mode": { title: "Dark Mode Manual", file: "dark-mode.md" },
+  branching: { title: "Branch Strategy", file: "branching.md" },
+  changelog: { title: "Changelog & Releases", file: "changelog.md" },
 };
 
 async function readDocMarkdown(fileName: string, locale: "zh" | "en"): Promise<string | null> {

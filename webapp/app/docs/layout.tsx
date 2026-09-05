@@ -19,6 +19,7 @@ const sidebarSections = [
         titleKey: "docs.section.usage",
         items: [
           { labelKey: "docs.item.website", href: "/docs/website" },
+          { labelKey: "docs.item.darkMode", href: "/docs/dark-mode" },
           { labelKey: "docs.item.mobileApp", href: "/docs/mobile-app" },
           { labelKey: "docs.item.flash", href: "/docs/flash" },
           { labelKey: "docs.item.buttonControls", href: "/docs/button-controls" },
@@ -31,6 +32,8 @@ const sidebarSections = [
     titleKey: "docs.section.advanced",
     items: [
       { labelKey: "docs.item.deploy", href: "/docs/deploy" },
+      { labelKey: "docs.item.branching", href: "/docs/branching" },
+      { labelKey: "docs.item.changelog", href: "/docs/changelog" },
       { labelKey: "docs.item.pluginDev", href: "/docs/custom-mode-dev" },
       { labelKey: "docs.item.apiReference", href: "/docs/api-reference" },
       { labelKey: "docs.item.faq", href: "/docs/faq" },
@@ -44,7 +47,7 @@ async function Sidebar() {
     <nav className="space-y-6">
       {sidebarSections.map((section) => (
         <div key={section.titleKey}>
-          <h4 className="text-xs font-semibold text-ink-light uppercase tracking-widest mb-2.5 px-3">
+          <h4 className="text-xs font-semibold text-ink-light dark:text-zinc-500 uppercase tracking-widest mb-2.5 px-3">
             {t(locale, section.titleKey)}
           </h4>
           <ul className="space-y-0.5">
@@ -52,7 +55,7 @@ async function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={withLocalePath(locale, item.href)}
-                  className="block px-3 py-1.5 text-sm text-ink-muted rounded-sm hover:text-ink hover:bg-ink/[0.04] transition-colors"
+                  className="block px-3 py-1.5 text-sm text-ink-muted dark:text-zinc-400 rounded-sm hover:text-ink dark:hover:text-zinc-100 hover:bg-ink/[0.04] dark:hover:bg-zinc-800/60 transition-colors"
                 >
                   {t(locale, item.labelKey)}
                 </Link>
@@ -83,8 +86,8 @@ export default async function DocsLayout({
         <aside className="hidden lg:block w-[220px] flex-shrink-0">
           <div className="sticky top-24">
             <div className="flex items-center gap-2 mb-6 px-3">
-              <BookOpen size={16} className="text-ink" />
-              <span className="text-sm font-semibold text-ink">{t(locale, "docs.center")}</span>
+              <BookOpen size={16} className="text-ink dark:text-zinc-200" />
+              <span className="text-sm font-semibold text-ink dark:text-zinc-200">{t(locale, "docs.center")}</span>
             </div>
             <Sidebar />
           </div>

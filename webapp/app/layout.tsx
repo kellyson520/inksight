@@ -4,6 +4,7 @@ import { Inter, Noto_Serif_SC } from "next/font/google";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { PageviewTracker } from "@/components/pageview-tracker";
+import { ThemeProvider } from "@/components/theme-provider";
 import { t } from "@/lib/i18n";
 import { localeForRequest } from "@/lib/locale-server";
 import "./globals.css";
@@ -49,14 +50,23 @@ export default async function RootLayout({
   const lang = locale === "en" ? "en-US" : "zh-CN";
 
   return (
-    <html lang={lang}>
-      <body className={`${inter.variable} ${notoSerifSc.variable} antialiased`}>
-        <Suspense fallback={null}>
-          <PageviewTracker />
-        </Suspense>
-        <Navbar />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+    <html lang={lang} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('inksight-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(!t&&d)||t==='system'&&d){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className={`${inter.variable} ${notoSerifSc.variable} antialiased bg-white dark:bg-zinc-950 text-ink dark:text-zinc-100 transition-colors duration-200`}>
+        <ThemeProvider>
+          <Suspense fallback={null}>
+            <PageviewTracker />
+          </Suspense>
+          <Navbar />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );
