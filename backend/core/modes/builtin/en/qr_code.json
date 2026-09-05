@@ -1,0 +1,120 @@
+{
+  "mode_id": "QR_CODE",
+  "display_name": "QR Code Display",
+  "icon": "qrcode",
+  "cacheable": true,
+  "description": "High-contrast QR Code: Web URL, Wi-Fi Easy Connect and digital cards",
+  "settings_schema": [
+    {
+      "key": "type",
+      "label": "QR Type",
+      "type": "select",
+      "default": "URL",
+      "options": [
+        { "value": "URL", "label": "Web URL Link" },
+        { "value": "WIFI", "label": "Wi-Fi Quick Connect" },
+        { "value": "TEXT", "label": "Plain Text Message" }
+      ]
+    },
+    {
+      "key": "title",
+      "label": "Heading",
+      "type": "text",
+      "default": "Scan with Camera"
+    },
+    {
+      "key": "url",
+      "label": "Destination URL",
+      "type": "text",
+      "default": "https://github.com/kellyson520/inksight"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "qr_code",
+    "fallback": {
+      "title": "Scan with Camera",
+      "subtitle": "Use mobile camera or reader",
+      "qr_content": "https://github.com/kellyson520/inksight",
+      "badge_text": "URL QUICK JUMP",
+      "footer_tip": "InkSight E-Paper Smart Terminal",
+      "update_time": "Live"
+    }
+  },
+  "layout": {
+    "body_align": "center",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "two_column",
+        "margin_x": 16,
+        "gap": 16,
+        "left_ratio": 0.52,
+        "left_blocks": [
+          {
+            "type": "badge",
+            "field": "badge_text",
+            "variant": "solid",
+            "bg_color": "black",
+            "color": "white",
+            "font_size": 9,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 3,
+            "margin_bottom": 8
+          },
+          {
+            "type": "text",
+            "field": "title",
+            "font": "noto_serif_bold",
+            "font_size": 18,
+            "max_lines": 2,
+            "margin_bottom": 6
+          },
+          {
+            "type": "text",
+            "field": "subtitle",
+            "font": "noto_serif_regular",
+            "font_size": 11,
+            "max_lines": 3,
+            "margin_bottom": 10
+          },
+          {
+            "type": "text",
+            "field": "qr_content",
+            "font": "noto_serif_light",
+            "font_size": 8,
+            "max_lines": 2
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "qrcode",
+            "field": "qr_content",
+            "size": 170,
+            "border": 1,
+            "align": "center",
+            "margin_bottom": 4
+          },
+          {
+            "type": "centered_text",
+            "text": "SCAN WITH CAMERA",
+            "font": "noto_serif_regular",
+            "font_size": 8
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "QR CODE",
+      "attribution_template": "Sharp Pixels · High Contrast"
+    }
+  }
+}

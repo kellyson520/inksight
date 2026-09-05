@@ -1,0 +1,132 @@
+{
+  "mode_id": "QR_CODE",
+  "display_name": "二维码展示",
+  "icon": "qrcode",
+  "cacheable": true,
+  "description": "自定义二维码高对比度展示：支持网址跳转、Wi-Fi 一键配网与电子名片",
+  "settings_schema": [
+    {
+      "key": "type",
+      "label": "二维码类型",
+      "type": "select",
+      "default": "URL",
+      "options": [
+        { "value": "URL", "label": "网址链接 (网页跳转)" },
+        { "value": "WIFI", "label": "Wi-Fi 扫码自动连网" },
+        { "value": "TEXT", "label": "普通文本内容" }
+      ]
+    },
+    {
+      "key": "title",
+      "label": "大标题",
+      "type": "text",
+      "default": "扫码直达"
+    },
+    {
+      "key": "url",
+      "label": "跳转网址",
+      "type": "text",
+      "default": "https://github.com/kellyson520/inksight"
+    },
+    {
+      "key": "wifi_ssid",
+      "label": "Wi-Fi 名称 (SSID)",
+      "type": "text",
+      "default": "InkSight-Guest"
+    },
+    {
+      "key": "wifi_password",
+      "label": "Wi-Fi 密码",
+      "type": "text",
+      "default": ""
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "qr_code",
+    "fallback": {
+      "title": "扫码直达",
+      "subtitle": "使用手机微信或相机扫一扫",
+      "qr_content": "https://github.com/kellyson520/inksight",
+      "badge_text": "网址快捷访问",
+      "footer_tip": "InkSight 墨水屏智能终端",
+      "update_time": "实时"
+    }
+  },
+  "layout": {
+    "body_align": "center",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "two_column",
+        "margin_x": 16,
+        "gap": 16,
+        "left_ratio": 0.52,
+        "left_blocks": [
+          {
+            "type": "badge",
+            "field": "badge_text",
+            "variant": "solid",
+            "bg_color": "black",
+            "color": "white",
+            "font_size": 9,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 3,
+            "margin_bottom": 8
+          },
+          {
+            "type": "text",
+            "field": "title",
+            "font": "noto_serif_bold",
+            "font_size": 18,
+            "max_lines": 2,
+            "margin_bottom": 6
+          },
+          {
+            "type": "text",
+            "field": "subtitle",
+            "font": "noto_serif_regular",
+            "font_size": 11,
+            "max_lines": 3,
+            "margin_bottom": 10
+          },
+          {
+            "type": "text",
+            "field": "qr_content",
+            "font": "noto_serif_light",
+            "font_size": 8,
+            "max_lines": 2
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "qrcode",
+            "field": "qr_content",
+            "size": 170,
+            "border": 1,
+            "align": "center",
+            "margin_bottom": 4
+          },
+          {
+            "type": "centered_text",
+            "text": "SCAN WITH CAMERA",
+            "font": "noto_serif_regular",
+            "font_size": 8
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "二维码展示",
+      "attribution_template": "对齐像素 · 极速识别"
+    }
+  }
+}

@@ -184,6 +184,11 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
         mb = int(block.get("margin_bottom", 6) * ctx.scale)
         return max_width, int(72 * ctx.scale) + mb
 
+    elif btype == "qrcode":
+        sz = int(block.get("size", 140) * ctx.scale)
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, sz + mb
+
     elif btype in ("donut_chart", "bar_chart", "candlestick_chart", "area_chart"):
         h = int(block.get("height", 50) * ctx.scale)
         mb = int(block.get("margin_bottom", 6) * ctx.scale)

@@ -10,6 +10,7 @@ from .disaster_provider import generate_disaster_alert
 from .gold_provider import generate_gold
 from .wechat_read_provider import generate_wechat_read
 from .tech_radar_provider import generate_tech_radar
+from .qr_code_provider import generate_qr_code
 
 __all__ = [
     "register_provider",
@@ -23,4 +24,5 @@ __all__ = [
     "generate_gold",
     "generate_wechat_read",
     "generate_tech_radar",
+    "generate_qr_code",
 ]
