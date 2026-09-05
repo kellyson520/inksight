@@ -63,6 +63,7 @@ class ContentCache:
         self._cache: dict[str, tuple[Image.Image, datetime]] = {}
         self._lock = asyncio.Lock()
         self._regenerating: set[str] = set()
+        self._inflight: dict[str, asyncio.Task] = {}
         self._db_failure_count = 0
         self._db_disabled_until: Optional[datetime] = None
 
@@ -177,6 +178,41 @@ class ContentCache:
                 self._record_db_failure("load", exc)
             obs.emit("cache.result", {"result": "miss", "operation": "content.get"})
             return None
+
+    async def get_or_generate(
+        self,
+        mac: str,
+        persona: str,
+        config: dict,
+        generator,
+        *,
+        ttl_minutes: Optional[int] = None,
+        screen_w: int = SCREEN_WIDTH,
+        screen_h: int = SCREEN_HEIGHT,
+    ) -> Image.Image:
+        """Return cached content while coalescing concurrent misses per key."""
+        cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h)
+        if cached is not None:
+            return cached
+        key = self._get_cache_key(mac, persona, screen_w, screen_h)
+        async with self._lock:
+            task = self._inflight.get(key)
+            if task is None:
+                async def produce():
+                    image = await generator()
+                    if image is None:
+                        raise RuntimeError("cache generator returned no image")
+                    await self.set(mac, persona, image, screen_w, screen_h)
+                    return image.copy()
+                task = asyncio.create_task(produce())
+                self._inflight[key] = task
+        try:
+            return await task
+        finally:
+            if task.done():
+                async with self._lock:
+                    if self._inflight.get(key) is task:
+                        self._inflight.pop(key, None)
 
     async def set(
         self, mac: str, persona: str, img: Image.Image,
