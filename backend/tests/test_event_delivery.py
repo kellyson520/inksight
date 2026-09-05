@@ -35,3 +35,9 @@ async def test_device_adapter_does_not_deliver_non_realtime_events():
 
     adapter = DeviceEventDeliveryAdapter(Push())
     assert await adapter.publish({"event_id": "e", "is_realtime": False, "target_mac": "AA"}) is True
+
+
+@pytest.mark.asyncio
+async def test_device_adapter_retains_event_without_target_device():
+    adapter = DeviceEventDeliveryAdapter(object())
+    assert await adapter.publish({"event_id": "e", "is_realtime": True}) is False

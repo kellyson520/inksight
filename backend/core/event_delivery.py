@@ -9,8 +9,10 @@ class DeviceEventDeliveryAdapter:
         self.push_dispatcher = push_dispatcher
 
     async def publish(self, event: dict[str, Any]) -> bool:
-        if event.get("is_realtime") is False or not event.get("target_mac"):
+        if event.get("is_realtime") is False:
             return True
+        if not event.get("target_mac"):
+            return False
         title = f"热榜更新 · {event.get('platform', 'unknown')}"
         item_id = event.get("item_id", "")
         kind = event.get("kind", "changed")

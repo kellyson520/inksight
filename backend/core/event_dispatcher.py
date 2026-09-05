@@ -43,7 +43,7 @@ class EventDispatcher:
                     result = self.publish(event)
                     if isinstance(result, Awaitable):
                         result = await result
-                    success = result is not False
+                    success = result is True
                     if success:
                         break
                 except Exception:
