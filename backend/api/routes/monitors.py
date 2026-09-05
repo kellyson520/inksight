@@ -8,6 +8,8 @@ import hashlib
 import hmac
 import logging
 import os
+import time
+from collections import OrderedDict
 from typing import Any
 from fastapi import APIRouter, Cookie, Header, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -17,6 +19,9 @@ from api.shared import require_membership_access
 from core.auth import validate_mac_param
 
 logger = logging.getLogger(__name__)
+_MONITOR_SIGNATURE_WINDOW_SECONDS = 300
+_MONITOR_NONCES: OrderedDict[str, float] = OrderedDict()
+_MONITOR_NONCE_LIMIT = 1024
 
 router = APIRouter(prefix="/monitors", tags=["monitors"])
 
@@ -102,16 +107,30 @@ async def push_event(
     request: Request,
     ink_session: str | None = Cookie(default=None),
     x_device_token: str | None = Header(default=None, alias="X-Device-Token"),
+    x_monitor_timestamp: str | None = Header(default=None, alias="X-Monitor-Timestamp"),
+    x_monitor_nonce: str | None = Header(default=None, alias="X-Monitor-Nonce"),
     x_monitor_signature: str | None = Header(default=None, alias="X-Monitor-Signature"),
 ) -> dict[str, Any]:
     """外部 Webhook 或监控告警推送接口，直接触发插播通报卡片。"""
     target_mac = payload.target_mac
     if target_mac == "*":
         secret = os.environ.get("MONITOR_WEBHOOK_SECRET", "")
-        signed_body = payload.model_dump_json().encode()
+        try:
+            timestamp = int(x_monitor_timestamp or "")
+        except ValueError:
+            timestamp = 0
+        now = int(time.time())
+        if not x_monitor_nonce or abs(now - timestamp) > _MONITOR_SIGNATURE_WINDOW_SECONDS:
+            raise HTTPException(status_code=403, detail="signed_monitor_webhook_required")
+        if x_monitor_nonce in _MONITOR_NONCES:
+            raise HTTPException(status_code=403, detail="replayed_monitor_webhook")
+        signed_body = f"{timestamp}.{x_monitor_nonce}.{payload.model_dump_json()}".encode()
         expected = hmac.new(secret.encode(), signed_body, hashlib.sha256).hexdigest() if secret else ""
         if not x_monitor_signature or not expected or not hmac.compare_digest(x_monitor_signature, expected):
             raise HTTPException(status_code=403, detail="signed_monitor_webhook_required")
+        _MONITOR_NONCES[x_monitor_nonce] = time.time()
+        while len(_MONITOR_NONCES) > _MONITOR_NONCE_LIMIT:
+            _MONITOR_NONCES.popitem(last=False)
     else:
         await require_membership_access(request, target_mac, ink_session, owner_only=True)
     notice = monitor_service.create_change_notice(

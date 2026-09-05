@@ -29,13 +29,16 @@ async def test_monitor_broadcast_rejects_invalid_signature(monkeypatch):
 async def test_monitor_broadcast_accepts_valid_signature(monkeypatch):
     import hashlib
     import hmac
+    import time
     from api.routes.monitors import EventPushSchema, push_event
 
     secret = "test-secret"
     monkeypatch.setenv("MONITOR_WEBHOOK_SECRET", secret)
     payload = EventPushSchema(site_name="x", new_snippet="changed", target_mac="*")
-    body = payload.model_dump_json().encode()
+    timestamp = str(int(time.time()))
+    nonce = "valid-old-test"
+    body = f"{timestamp}.{nonce}.{payload.model_dump_json()}".encode()
     signature = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
     with patch("api.routes.monitors.monitor_service.create_change_notice", return_value={"notice_id": "n"}):
-        result = await push_event(payload, None, None, None, signature)
+        result = await push_event(payload, None, None, None, timestamp, nonce, signature)
     assert result["success"] is True
