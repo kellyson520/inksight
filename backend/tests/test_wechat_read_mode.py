@@ -98,3 +98,26 @@ async def test_wechat_read_mode_registered():
     assert mode is not None
     assert mode.info.mode_id == "WECHAT_READ"
     assert mode.info.display_name == "微信读书推荐"
+
+
+@pytest.mark.asyncio
+async def test_wechat_read_all_covers_render_without_placeholders():
+    """回归测试：验证全部精选书籍封面图片均能正常下载并渲染，不出现 404 或占位符。"""
+    from core.wechat_read_service import WECHAT_READ_BOOKS
+    for book in WECHAT_READ_BOOKS:
+        img, content = await generate_and_render(
+            "WECHAT_READ",
+            config={"mode_overrides": {"WECHAT_READ": {"book_id": book["id"]}}},
+            date_ctx={"time_str": "15:00", "date_str": "2026-09-05"},
+            weather={"weather_str": "晴", "weather_code": 0},
+            battery_pct=90.0,
+            screen_w=400,
+            screen_h=300,
+            colors=2,
+        )
+        assert img is not None
+        assert content["id"] == book["id"]
+        # 裁剪右侧封面区域 (x: 240..370, y: 30..190)
+        crop = img.crop((240, 30, 360, 190))
+        extrema = crop.getextrema()
+        assert extrema == (0, 255), f"Book {book['title']} cover must have contrast"

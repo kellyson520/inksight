@@ -111,7 +111,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 财富榜 Top 2",
         "recommend_reason": "硅谷投资人纳瓦尔的智慧合集。阐述如何依靠专长与杠杆创造财富，以及如何获取内心的平静与幸福。",
         "quote": "用头脑赚钱，而不是用时间赚钱。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/805/37450805/t6_37450805.jpg",
+        "cover_url": "https://img1.doubanio.com/view/subject/l/public/s34164394.jpg",
     },
     {
         "id": "wr_008",
@@ -139,7 +139,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 文学榜 Top 1",
         "recommend_reason": "鄂温克族最后一任酋长女人的百年自述。展现大兴安岭深处人与自然的生死契约与民族挽歌。",
         "quote": "我是雨和雪的老朋友了，我也看够了它们的面孔。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/571/3421571/t6_3421571.jpg",
+        "cover_url": "https://img1.doubanio.com/view/subject/l/public/s34047464.jpg",
     },
     {
         "id": "wr_010",
@@ -153,7 +153,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 理财榜 Top 3",
         "recommend_reason": "关于财富、贪婪与幸福的19个短篇故事。理财的核心不是冷冰冰的数字，而是对自我心理行为的驾驭。",
         "quote": "最高形式的富有，是每天清晨醒来都能对自己说：今天我可以做任何我想做的事。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/572/38531572/t6_38531572.jpg",
+        "cover_url": "https://img1.doubanio.com/view/subject/l/public/s34079815.jpg",
     },
     {
         "id": "wr_011",

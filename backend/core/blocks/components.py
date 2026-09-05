@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 from io import BytesIO
 from pathlib import Path
@@ -29,6 +30,73 @@ logger = logging.getLogger(__name__)
 
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
 _UPLOAD_DIR = _BACKEND_ROOT / "runtime_uploads"
+_IMAGE_CACHE_DIR = _BACKEND_ROOT / "data" / "image_cache"
+_IMAGE_MEMORY_CACHE: dict[str, bytes] = {}
+
+
+def _paste_converted_image(ctx: RenderContext, img: Image.Image, x: int, y: int) -> None:
+    """将转换完成的图片绘制至画布，妥善适配 1-bit 单色与 4 色调色板模式。"""
+    if ctx.img.mode == "P":
+        if img.mode == "1":
+            # 将 1-bit (0=黑, 255=白) 映射至调色板索引 (0=黑, 1=白)
+            img_p = img.convert("L").point(lambda p: 1 if p > 128 else 0)
+            ctx.img.paste(img_p, (x, y))
+        else:
+            ctx.img.paste(img, (x, y))
+    else:
+        # ctx.img.mode == "1"
+        if img.mode == "P":
+            ctx.img.paste(img.convert("1"), (x, y))
+        else:
+            ctx.img.paste(img, (x, y))
+
+
+def _fetch_image_bytes(image_url: str) -> bytes:
+    """获取远程图片二进制，优先命中内存缓存与本地磁盘持久化缓存。"""
+    if image_url in _IMAGE_MEMORY_CACHE:
+        return _IMAGE_MEMORY_CACHE[image_url]
+
+    _IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_key = hashlib.sha256(image_url.encode("utf-8")).hexdigest()
+    cache_file = _IMAGE_CACHE_DIR / f"{cache_key}.bin"
+    if cache_file.exists() and cache_file.stat().st_size > 0:
+        data = cache_file.read_bytes()
+        _IMAGE_MEMORY_CACHE[image_url] = data
+        return data
+
+    attempts = [
+        {"trust_env": True, "timeout": httpx.Timeout(connect=6.0, read=10.0, write=6.0, pool=6.0)},
+        {"trust_env": False, "timeout": httpx.Timeout(connect=10.0, read=15.0, write=8.0, pool=8.0)},
+    ]
+    req_referer = "https://weread.qq.com/"
+    if "douban" in image_url:
+        req_referer = "https://movie.douban.com/"
+    elif "smzdm" in image_url:
+        req_referer = "https://www.smzdm.com/"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": req_referer,
+    }
+
+    last_error = None
+    for opts in attempts:
+        try:
+            with httpx.Client(timeout=opts["timeout"], follow_redirects=True, trust_env=opts["trust_env"], headers=headers) as client:
+                resp = client.get(image_url)
+            if resp.status_code >= 400:
+                raise ValueError(f"HTTP {resp.status_code}")
+            data = resp.content
+            try:
+                cache_file.write_bytes(data)
+            except Exception:
+                pass
+            _IMAGE_MEMORY_CACHE[image_url] = data
+            return data
+        except (httpx.HTTPError, ValueError) as e:
+            last_error = e
+
+    raise last_error if last_error else ValueError("image fetch failed")
 
 
 def _num(v: Any) -> float:
@@ -382,10 +450,7 @@ def render_image(ctx: RenderContext, block: dict) -> None:
             fit=fit, align_x=align_x, align_y=align_y,
             photo_enhance=photo_enhance,
         )
-        if ctx.colors >= 3:
-            ctx.img.paste(img, (x, y))
-        else:
-            ctx.paste_icon(img, (x, y))
+        _paste_converted_image(ctx, img, x, y)
         ctx.y = y + height + margin_bottom
         return
 
@@ -398,10 +463,7 @@ def render_image(ctx: RenderContext, block: dict) -> None:
                 fit=fit, align_x=align_x, align_y=align_y,
                 photo_enhance=photo_enhance,
             )
-            if ctx.colors >= 3:
-                ctx.img.paste(img, (x, y))
-            else:
-                ctx.paste_icon(img, (x, y))
+            _paste_converted_image(ctx, img, x, y)
             ctx.y = y + height + margin_bottom
             return
         except (OSError, UnidentifiedImageError):
@@ -413,45 +475,14 @@ def render_image(ctx: RenderContext, block: dict) -> None:
         return
 
     try:
-        resp = None
-        last_error = None
-        attempts = [
-            {"trust_env": True, "timeout": httpx.Timeout(connect=8.0, read=12.0, write=8.0, pool=8.0)},
-            {"trust_env": False, "timeout": httpx.Timeout(connect=12.0, read=18.0, write=10.0, pool=10.0)},
-        ]
-        req_referer = "https://weread.qq.com/"
-        if "douban" in image_url:
-            req_referer = "https://movie.douban.com/"
-        elif "smzdm" in image_url:
-            req_referer = "https://www.smzdm.com/"
-
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Referer": req_referer,
-        }
-        for opts in attempts:
-            try:
-                with httpx.Client(timeout=opts["timeout"], follow_redirects=True, trust_env=opts["trust_env"], headers=headers) as client:
-                    resp = client.get(image_url)
-                if resp.status_code >= 400:
-                    raise ValueError(f"HTTP {resp.status_code}")
-                break
-            except (httpx.HTTPError, ValueError) as e:
-                last_error = e
-                resp = None
-        if resp is None:
-            raise last_error if last_error else ValueError("image fetch failed")
-
+        raw_bytes = _fetch_image_bytes(image_url)
         img = convert_image_block(
-            Image.open(BytesIO(resp.content)),
+            Image.open(BytesIO(raw_bytes)),
             width, height, ctx.colors,
             fit=fit, align_x=align_x, align_y=align_y,
             photo_enhance=photo_enhance,
         )
-        if ctx.colors >= 3:
-            ctx.img.paste(img, (x, y))
-        else:
-            ctx.paste_icon(img, (x, y))
+        _paste_converted_image(ctx, img, x, y)
         ctx.y = y + height + margin_bottom
     except Exception as exc:
         logger.warning("[JSONRenderer] Image block download failed: %s", exc)

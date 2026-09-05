@@ -45,7 +45,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "不疯魔不成活。半个世纪的时代波澜跌宕，舞台上的霸王与虞姬，化作中国影史难以逾越的悲壮绝响。",
         "quote": "说好的一辈子，差一年，差一个月，差一个时辰，都不是一辈子。",
         "category": "TOP250",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p2561716440.jpg",
+        "cover_url": "https://img3.doubanio.com/view/subject/l/public/s1441962.jpg",
     },
     {
         "id": "db_003",
@@ -60,7 +60,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "纯真与执着的奇迹。奔跑穿过时代的风雨，用最质朴的善良化解生活的莫测，羽毛飘荡处，是温暖而有力的生命之歌。",
         "quote": "生活就像一盒巧克力，你永远不知道下一块是什么味道。",
         "category": "TOP250",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p2372307693.jpg",
+        "cover_url": "https://img3.doubanio.com/view/subject/l/public/s1332822.jpg",
     },
     {
         "id": "db_004",
