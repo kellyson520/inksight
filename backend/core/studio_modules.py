@@ -41,6 +41,7 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     # 资讯热点
     "HOTLIST": "news",
     "DISASTER_ALERT": "news",
+    "WEB_NOTICE": "news",
     "RSS": "news",
     "STOCK": "news",
     "CRYPTO": "news",

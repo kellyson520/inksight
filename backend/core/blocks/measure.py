@@ -157,6 +157,19 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
     elif btype == "lace_border":
         return max_width, int(14 * ctx.scale)
 
+    elif btype == "alert_callout":
+        h = int(block.get("height", 32) * ctx.scale)
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, h + mb
+
+    elif btype == "change_diff_card":
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, int(96 * ctx.scale) + mb
+
+    elif btype == "timeline_event":
+        mb = int(block.get("margin_bottom", 4) * ctx.scale)
+        return max_width, int(18 * ctx.scale) + mb
+
     else:
         measure_img = Image.new("1", (max(1, max_width), 100), EINK_BG)
         mc = RenderContext(

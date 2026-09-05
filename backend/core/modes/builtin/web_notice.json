@@ -1,0 +1,99 @@
+{
+  "mode_id": "WEB_NOTICE",
+  "display_name": "变动通报",
+  "icon": "bell",
+  "cacheable": false,
+  "description": "智能网页与接口变动感知通报，有变动时插播抢占，展示完成后自动恢复常规轮播",
+  "content": {
+    "type": "static",
+    "site_name": "监控站点",
+    "title": "检测到网页关键变动",
+    "url_short": "https://example.com/status",
+    "change_time": "15:30",
+    "prev_snippet": "变更前: v1.0.0 正式发布",
+    "new_snippet": "现更新为: v1.1.0 架构重构版已上线",
+    "footer_hint": "智能事件感知 · 展示达标后自动恢复正常循环"
+  },
+  "layout": {
+    "body_align": "center",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "alert_callout",
+        "title": "网页变动感知通报",
+        "level": "warning",
+        "tag": "WEB WATCHER",
+        "margin_x": 12,
+        "margin_bottom": 8
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 14,
+        "items": [
+          {
+            "type": "text",
+            "field": "site_name",
+            "font": "noto_serif_bold",
+            "font_size": 17
+          },
+          {
+            "type": "badge",
+            "field": "change_time",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "text",
+        "field": "url_short",
+        "font": "noto_serif_light",
+        "font_size": 10,
+        "align": "left",
+        "margin_x": 14
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "change_diff_card",
+        "margin_x": 12,
+        "prev_field": "prev_snippet",
+        "new_field": "new_snippet",
+        "margin_bottom": 8
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "text",
+        "field": "footer_hint",
+        "font": "noto_serif_light",
+        "font_size": 10,
+        "align": "center"
+      }
+    ],
+    "footer": {
+      "label": "事件监控通报",
+      "attribution_template": "InkSight 智能事件插播引擎"
+    }
+  }
+}

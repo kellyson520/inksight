@@ -222,6 +222,12 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         en=CatalogText(name="Disaster Alert", tip="Emergency 4-tier disaster warning notifications"),
     ),
     CatalogItem(
+        mode_id="WEB_NOTICE",
+        category="more",
+        zh=CatalogText(name="变动通报", tip="智能网页与接口变动感知通报，有变动时插播抢占，平常静默"),
+        en=CatalogText(name="Change Notice", tip="Web & endpoint change monitor notice, interrupts on change"),
+    ),
+    CatalogItem(
         mode_id="WEBHOOK",
         category="custom",
         zh=CatalogText(name="开放数据卡片", tip="接收智能家居、监控脚本推送的自定义指标卡片"),

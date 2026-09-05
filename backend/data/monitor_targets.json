@@ -1,0 +1,67 @@
+[
+  {
+    "id": "mon_001",
+    "name": "InkSight 服务端状态",
+    "url": "http://127.0.0.1:8070/api/modes",
+    "enabled": true,
+    "check_interval": 300,
+    "last_checked": 0,
+    "last_status": "ok",
+    "last_hash": "",
+    "last_summary": "Initial monitor seeded",
+    "max_presentations": 2,
+    "target_mac": "*"
+  },
+  {
+    "id": "mon_1788592054917",
+    "name": "测试站点",
+    "url": "https://example.com/test-service",
+    "enabled": true,
+    "check_interval": 300,
+    "last_checked": 1788592054,
+    "last_status": "changed",
+    "last_hash": "3cf9ae68d561a44c",
+    "last_summary": "紧急告警 系统遭遇突发网络抖动",
+    "max_presentations": 2,
+    "target_mac": "TEST_MAC_001"
+  },
+  {
+    "id": "mon_1788592080657",
+    "name": "测试站点",
+    "url": "https://example.com/test-service",
+    "enabled": true,
+    "check_interval": 300,
+    "last_checked": 1788592080,
+    "last_status": "changed",
+    "last_hash": "3cf9ae68d561a44c",
+    "last_summary": "紧急告警 系统遭遇突发网络抖动",
+    "max_presentations": 2,
+    "target_mac": "TEST_MAC_001"
+  },
+  {
+    "id": "mon_1788592114769",
+    "name": "测试站点",
+    "url": "https://example.com/test-service",
+    "enabled": true,
+    "check_interval": 300,
+    "last_checked": 1788592114,
+    "last_status": "changed",
+    "last_hash": "3cf9ae68d561a44c",
+    "last_summary": "紧急告警 系统遭遇突发网络抖动",
+    "max_presentations": 2,
+    "target_mac": "TEST_MAC_001"
+  },
+  {
+    "id": "mon_1788592371933",
+    "name": "测试站点",
+    "url": "https://example.com/test-service",
+    "enabled": true,
+    "check_interval": 300,
+    "last_checked": 1788592371,
+    "last_status": "changed",
+    "last_hash": "3cf9ae68d561a44c",
+    "last_summary": "紧急告警 系统遭遇突发网络抖动",
+    "max_presentations": 2,
+    "target_mac": "TEST_MAC_001"
+  }
+]
