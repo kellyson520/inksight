@@ -62,7 +62,26 @@ async def start_scheduler() -> None:
 
     from .monitor_service import monitor_service
     from .monitor_runner import MonitorRunner
+    from .hotlist_diff_runner import HotlistDiffRunner
+    from .hotlist_service import hotlist_service
     monitor_runner = MonitorRunner(monitor_service)
+    hotlist_diff_runner = HotlistDiffRunner(hotlist_service)
+    async def _poll_hotlist_diff():
+        for platform in ("zhihu", "weibo", "bilibili"):
+            try:
+                await hotlist_diff_runner.run_once(platform)
+            except Exception:
+                logger.exception("[Scheduler] Hotlist diff failed: %s", platform)
+
+    scheduler.add_job(
+        _poll_hotlist_diff,
+        "interval",
+        seconds=60,
+        id="hotlist_diff_poll",
+        name="Hotlist Diff Poll",
+        max_instances=1,
+        coalesce=True,
+    )
     scheduler.add_job(
         monitor_runner.run_once,
         "interval",

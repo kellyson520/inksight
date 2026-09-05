@@ -21,3 +21,4 @@ async def test_scheduler_registers_monitor_poll_job(monkeypatch):
         await module.start_scheduler()
 
     assert any(call.get("id") == "monitor_poll" for call in calls)
+    assert any(call.get("id") == "hotlist_diff_poll" for call in calls)
