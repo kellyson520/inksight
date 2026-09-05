@@ -8,8 +8,10 @@
 # --------------------------------------------------------
 FROM node:20-alpine AS web-builder
 WORKDIR /app/webapp
+
 COPY webapp/package.json webapp/package-lock.json* ./
 RUN npm ci
+
 COPY webapp/ ./
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
@@ -28,38 +30,36 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TZ=Asia/Shanghai \
     NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production \
-    INKSIGHT_BACKEND_API_BASE="http://127.0.0.1:8080"
+    INKSIGHT_BACKEND_API_BASE="http://127.0.0.1:8070"
 
-# 1. 安装基础依赖、图形字体库、Node.js 20 与 supervisor 守护进程
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    gnupg \
-    supervisor \
-    libopus0 \
-    libopus-dev \
-    libfreetype6 \
-    libfreetype6-dev \
-    libjpeg-dev \
-    zlib1g-dev \
-    tzdata \
+# 1. 切换镜像源并安装基础系统依赖与 supervisor 守护进程
+RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+        sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources; \
+    else \
+        sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list; \
+    fi \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+        supervisor \
+        libfreetype6 \
+        libjpeg-dev \
+        tzdata \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. 安装 Python 依赖
+# 2. 从官方 Node.js 镜像直接拷贝已就绪的 Node 与 npm 运行时
+COPY --from=node:20-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=node:20-slim /usr/local/bin /usr/local/bin
+
+# 3. 安装 Python 依赖
 COPY backend/requirements.txt /app/backend/
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /app/backend/requirements.txt
+RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ --upgrade pip && \
+    pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ -r /app/backend/requirements.txt
 
-# 3. 复制后端完整源码
+# 4. 复制后端源码、文档与预置字体
 COPY backend/ /app/backend/
-
-# 4. 复制预设字体
+COPY docs/ /app/docs/
 RUN cd /app/backend && python scripts/setup_fonts.py || true
 
 # 5. 复制前端构建产物及依赖
@@ -75,13 +75,13 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# 7. 创建持久化目录
-RUN mkdir -p /app/backend/data /app/backend/logs /var/log/supervisor
+# 7. 创建持久化数据与日志目录
+RUN mkdir -p /app/backend/data /app/backend/logs /var/log/supervisor /app/backend/runtime_uploads
 
 WORKDIR /app
 
-# 暴露端口: 3000 (Web 前端及 API 聚合), 8080 (后端直连调试端口)
-EXPOSE 3000 8080
+# 暴露端口: 3000 (Web 前端及 API 聚合), 8070 (后端直连端口)
+EXPOSE 3000 8070
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:3000/ || exit 1
