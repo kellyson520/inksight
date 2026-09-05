@@ -319,6 +319,11 @@ def render_rating_choices(ctx: RenderContext, block: dict) -> None:
 def _resolve_local_asset(path: str) -> str | None:
     if not path:
         return None
+    if path.startswith("/static/"):
+        static_rel = path.lstrip("/")
+        backend_static = Path(__file__).resolve().parent.parent.parent / static_rel
+        if backend_static.exists() and backend_static.is_file():
+            return str(backend_static)
     if path.startswith("/api/uploads/"):
         upload_id = path.rsplit("/", 1)[-1].strip()
         if not upload_id:

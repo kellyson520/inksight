@@ -248,7 +248,15 @@ def load_font_by_name(name: str, size: int, force_truetype: bool = False) -> Ima
                 return ImageFont.truetype(fallback_path, size)
     if name not in _font_warned:
         _font_warned.add(name)
-        logger.warning(f"[FONT] Missing {name}, run: python scripts/setup_fonts.py")
+        logger.warning(f"[FONT] Missing {name}, fallback to NotoSerifSC-Regular.ttf")
+    # 平稳降级到通用可用的中西文字体
+    fallback_cjk = "NotoSerifSC-Regular.ttf"
+    fallback_path = os.path.join(TRUETYPE_DIR, fallback_cjk)
+    if os.path.exists(fallback_path):
+        try:
+            return ImageFont.truetype(fallback_path, size)
+        except Exception:
+            pass
     return ImageFont.load_default()
 
 
