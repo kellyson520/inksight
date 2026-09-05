@@ -159,15 +159,15 @@ def render_two_column(ctx: RenderContext, block: dict) -> None:
     else:
         margin_x = int(ctx.screen_w * 0.06)
 
-    # 窄屏降级退化为单列
-    if ctx.available_width < 250:
+    # 窄屏或可用宽度不足时优雅退化为单列流式布局
+    col_avail = ctx.available_width - margin_x * 2 - gap
+    if ctx.available_width < 250 or col_avail < 40:
         for b in left_blocks:
             render_block(ctx, b)
         for b in right_blocks:
             render_block(ctx, b)
         return
 
-    col_avail = ctx.available_width - margin_x * 2 - gap
     left_w = int(col_avail * ratio)
     right_w = col_avail - left_w
 
@@ -202,6 +202,8 @@ def render_two_column(ctx: RenderContext, block: dict) -> None:
         footer_top_offset=ctx.footer_top_offset,
     )
     for b in left_blocks:
+        if left_ctx.y >= ctx.footer_top - 4:
+            break
         render_block(left_ctx, b)
 
     right_ctx = RenderContext(
@@ -212,6 +214,8 @@ def render_two_column(ctx: RenderContext, block: dict) -> None:
         footer_top_offset=ctx.footer_top_offset,
     )
     for b in right_blocks:
+        if right_ctx.y >= ctx.footer_top - 4:
+            break
         render_block(right_ctx, b)
 
     ctx.y = start_y + max_h
@@ -332,10 +336,12 @@ def render_card(ctx: RenderContext, block: dict) -> None:
     card_w = ctx.available_width - margin_x * 2
     inner_w = card_w - padding * 2
 
+    start_y = ctx.y
     inner_h = measure_column_blocks_height(ctx, children, x_offset=card_x + padding, available_width=inner_w)
     card_h = inner_h + padding * 2
-
-    start_y = ctx.y
+    max_card_h = max(20, ctx.footer_top - start_y - 4)
+    if card_h > max_card_h:
+        card_h = max_card_h
     if border_type == "solid":
         ctx.draw.rounded_rectangle([card_x, start_y, card_x + card_w, start_y + card_h], radius=radius, outline=border_color, width=border_width)
     elif border_type == "dashed":

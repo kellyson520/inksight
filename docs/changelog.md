@@ -7,6 +7,14 @@
 ### [2026-09-05] - 全局暗黑模式、微信读书增强、二维码展示与 520+ 组件发布
 
 #### 新增特性 (Features)
+- **Docker 全量热挂载开发环境与秒级热重载**：
+  - `docker-compose.yml` 配置 `backend/`、`docs/`、`webapp/` 全量代码挂载；
+  - 容器内 Supervisord 启动 Uvicorn `StatReload` 监听，修改代码后 0.3s 自动生效，彻底免除反复重构镜像消耗；
+  - 容器内外共享同一套数据库、缓存与上传文件。
+- **排版引擎与抖动自愈算法增强**：
+  - **原生抖动自愈降级**：`core/native_dither.py` 接入 Atkinson/Floyd-Steinberg 双向自愈降级，消除底层动态链接库异常崩溃风险；
+  - **双栏与卡片边界安全**：`two_column` 与 `card` 增加屏幕底部视口溢出截断保护，极窄可用宽度下自动优雅退化为单栏堆叠；
+  - **中日韩避头尾排版精进**：修复单个孤立汉字后接全角标点的折行问题，支持高对比度微悬挂与自适应拆分。
 - **Docker 生产级单容器部署（All-in-One）**：
   - 打造全栈整合的一体化 Dockerfile 与 docker-compose.yml；
   - 集成 Python FastAPI 后端、Next.js Web 控制台与 Supervisor 进程自愈守护；

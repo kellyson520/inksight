@@ -601,6 +601,7 @@ def wrap_text(text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]
     """智能文本换行：支持完整 URL 保护、中日韩标点避头尾法则与英文字词整体折行。"""
     if not text:
         return []
+    max_width = max(16, int(max_width))
     lines = []
     for paragraph in text.split("\n"):
         if not paragraph:
@@ -616,13 +617,16 @@ def wrap_text(text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]
                 # 避头法则：行首不允许出现结束标点，优先微悬挂或与上一字符共同下移
                 if tok in _NOT_LINE_START and current:
                     hang_span = safe_font_bbox(font, test)[2] - safe_font_bbox(font, test)[0]
-                    if hang_span <= max_width + 12:
+                    if hang_span <= max_width + 16:
                         current = test
                         continue
                     elif len(current) > 1:
                         last_ch = current[-1]
                         lines.append(current[:-1])
                         current = last_ch + tok
+                        continue
+                    else:
+                        current = test
                         continue
 
                 # 避尾法则：行尾不允许单独留下前置引号/括号
