@@ -971,6 +971,7 @@ async def build_image(
                 _generate_image,
                 screen_w=screen_w,
                 screen_h=screen_h,
+                colors=colors,
             )
         else:
             img, content_data = await _generate_image()

@@ -36,6 +36,22 @@ async def test_runner_publishes_diff_events():
 
 
 @pytest.mark.asyncio
+async def test_runner_marks_hotlist_events_for_broadcast_delivery():
+    class Service:
+        calls = 0
+        async def get_hotlist(self, platform, limit=8):
+            self.calls += 1
+            title = "A" if self.calls == 1 else "B"
+            return {"items": [{"title": title}], "source_status": "fresh"}
+
+    runner = HotlistDiffRunner(Service())
+    await runner.run_once("zhihu")
+    events = await runner.run_once("zhihu")
+    assert events
+    assert all(event["target_mac"] == "*" for event in events)
+
+
+@pytest.mark.asyncio
 async def test_runner_ignores_fallback_as_snapshot_or_event():
     events = []
 

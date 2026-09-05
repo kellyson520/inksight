@@ -91,6 +91,7 @@ class HotlistDiffRunner:
         for event in events:
             event["source_status"] = source_status
             event["is_realtime"] = source_status == "fresh"
+            event["target_mac"] = "*"
             event["event_id"] = f"hotlist:{platform}:{event['item_id']}:{event['kind']}:{event.get('old_rank', '')}:{event.get('rank', '')}"
             if self.outbox is not None:
                 self.outbox.publish(event)

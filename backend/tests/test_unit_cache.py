@@ -71,7 +71,7 @@ class TestContentCache:
         assert result is None
 
     def test_cache_key_format(self, cache):
-        assert cache._get_cache_key("AA:BB", "STOIC") == "AA:BB:STOIC:400x300"
+        assert cache._get_cache_key("AA:BB", "STOIC") == "AA:BB:STOIC:400x300:c2"
 
     def test_ttl_minutes_calculation(self, cache, config):
         ttl = cache._get_ttl_minutes(config)

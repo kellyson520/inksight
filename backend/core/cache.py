@@ -84,9 +84,10 @@ class ContentCache:
     def _get_cache_key(
         self, mac: str, persona: str,
         screen_w: int = SCREEN_WIDTH, screen_h: int = SCREEN_HEIGHT,
+        colors: int = 2,
     ) -> str:
         persona = (persona or "").upper()
-        return f"{mac}:{persona}:{screen_w}x{screen_h}"
+        return f"{mac}:{persona}:{screen_w}x{screen_h}:c{colors}"
 
     def _get_preview_cache_key(
         self, persona: str, screen_w: int, screen_h: int,
@@ -146,12 +147,13 @@ class ContentCache:
         self, mac: str, persona: str, config: dict,
         ttl_minutes: Optional[int] = None,
         screen_w: int = SCREEN_WIDTH, screen_h: int = SCREEN_HEIGHT,
+        colors: int = 2,
     ) -> Optional[Image.Image]:
         """Get cached image if available and not expired"""
         if DISABLE_CACHE:
             obs.emit("cache.result", {"result": "disabled", "operation": "content.get"})
             return None
-        key = self._get_cache_key(mac, persona, screen_w, screen_h)
+        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
         if ttl_minutes is None:
             ttl_minutes = self._get_ttl_minutes(config)
         async with self._lock:
@@ -189,6 +191,7 @@ class ContentCache:
         ttl_minutes: Optional[int] = None,
         screen_w: int = SCREEN_WIDTH,
         screen_h: int = SCREEN_HEIGHT,
+        colors: int = 2,
     ) -> Image.Image:
         """Return cached content while coalescing concurrent misses per key."""
         if DISABLE_CACHE:
@@ -197,10 +200,10 @@ class ContentCache:
             if image is None:
                 raise RuntimeError("cache generator returned no image")
             return result
-        cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h)
+        cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h, colors=colors)
         if cached is not None:
             return cached
-        key = self._get_cache_key(mac, persona, screen_w, screen_h)
+        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
         async with self._lock:
             task = self._inflight.get(key)
             if task is None:
@@ -209,7 +212,7 @@ class ContentCache:
                     image = result[0] if isinstance(result, tuple) else result
                     if image is None:
                         raise RuntimeError("cache generator returned no image")
-                    await self.set(mac, persona, image, screen_w, screen_h)
+                    await self.set(mac, persona, image, screen_w, screen_h, colors=colors)
                     return result
                 task = asyncio.create_task(produce())
                 self._inflight[key] = task
@@ -227,11 +230,12 @@ class ContentCache:
     async def set(
         self, mac: str, persona: str, img: Image.Image,
         screen_w: int = SCREEN_WIDTH, screen_h: int = SCREEN_HEIGHT,
+        colors: int = 2,
     ):
         """Store image in cache"""
         if DISABLE_CACHE:
             return
-        key = self._get_cache_key(mac, persona, screen_w, screen_h)
+        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
         async with self._lock:
             img_copy = img.copy()
             self._cache[key] = (img_copy, datetime.now())
