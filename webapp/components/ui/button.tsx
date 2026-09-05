@@ -10,11 +10,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   default:
-    "bg-ink text-white hover:bg-ink/90 border border-ink",
+    "bg-ink text-white hover:bg-ink/90 border border-ink dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-700",
   outline:
-    "bg-transparent text-ink border border-ink hover:bg-ink hover:text-white",
+    "bg-transparent text-ink border border-ink hover:bg-ink hover:text-white dark:text-zinc-200 dark:border-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-100",
   ghost:
-    "bg-transparent text-ink hover:bg-ink/5 border border-transparent",
+    "bg-transparent text-ink hover:bg-ink/5 border border-transparent dark:text-zinc-300 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

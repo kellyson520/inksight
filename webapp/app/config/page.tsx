@@ -3523,8 +3523,8 @@ function ConfigPageInner() {
                         size="sm"
                         className={
                           settingsMode && selectedModes.has(settingsMode)
-                            ? "bg-ink text-white border-ink hover:bg-ink hover:text-white"
-                            : "bg-white text-ink border-ink/20 hover:bg-ink hover:text-white active:bg-ink active:text-white"
+                            ? "bg-ink text-white border-ink hover:bg-ink hover:text-white dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-700"
+                            : "bg-white text-ink border-ink/20 hover:bg-ink hover:text-white active:bg-ink active:text-white dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
                         }
                         onClick={() => handlePreviewFromSettings(true)}
                       >

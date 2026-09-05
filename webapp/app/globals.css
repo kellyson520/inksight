@@ -446,3 +446,57 @@ body {
   box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
+/* 6. 彻底解决暗黑模式下全部按钮、加入轮播按钮和分类 Tab 白底问题 */
+.dark .bg-ink:not(.eink-paper *):not(.eink-paper) {
+  background-color: #27272a !important;
+  color: #f4f4f5 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.dark button.bg-ink,
+.dark a.bg-ink,
+.dark [role="button"].bg-ink {
+  background-color: #27272a !important;
+  color: #f4f4f5 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark button.bg-ink:hover,
+.dark a.bg-ink:hover,
+.dark [role="button"].bg-ink:hover,
+.dark [class*="hover:bg-ink"]:hover {
+  background-color: #3f3f46 !important;
+  color: #ffffff !important;
+}
+
+/* 7. 解决已加入轮播的移除按钮及弱高亮在暗黑模式下的背景 */
+.dark .bg-ink\/10 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #d4d4d8 !important;
+}
+
+.dark .bg-ink\/5 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #a1a1aa !important;
+}
+
+/* 8. 解决所有写死 bg-white 的按钮/链接在暗黑模式下的白底 */
+.dark button.bg-white,
+.dark a.bg-white,
+.dark [role="button"].bg-white,
+.dark .bg-white.text-ink {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: rgba(244, 244, 245, 0.18) !important;
+}
+
+.dark button.bg-white:hover,
+.dark a.bg-white:hover,
+.dark [role="button"].bg-white:hover,
+.dark .bg-white.text-ink:hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+
+

@@ -14,8 +14,8 @@ export function Chip({
       onClick={onClick}
       className={`group px-3 py-1.5 rounded-full text-xs border transition-colors ${
         selected
-          ? "bg-ink text-white border-ink"
-          : "bg-white text-ink-light border-ink/15 hover:bg-ink hover:text-white hover:border-ink"
+          ? "bg-ink text-white border-ink dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700"
+          : "bg-white text-ink-light border-ink/15 hover:bg-ink hover:text-white hover:border-ink dark:bg-zinc-900 dark:text-zinc-400 dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
       }`}
     >
       {children}

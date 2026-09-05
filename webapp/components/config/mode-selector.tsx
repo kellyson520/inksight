@@ -172,8 +172,8 @@ export function ModeSelector({
                   onClick={() => setActiveTab(tab.id as StudioTab)}
                   className={`px-2.5 py-1.5 rounded-sm text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     isActive
-                      ? "bg-ink text-white shadow-2xs font-semibold"
-                      : "text-ink-light hover:text-ink hover:bg-paper-dark"
+                      ? "bg-ink text-white dark:bg-zinc-800 dark:text-zinc-100 dark:border dark:border-zinc-700 shadow-2xs font-semibold"
+                      : "text-ink-light hover:text-ink hover:bg-paper-dark dark:hover:bg-zinc-800/60 dark:text-zinc-400 dark:hover:text-zinc-100"
                   }`}
                 >
                   <Icon size={13} />
@@ -190,7 +190,7 @@ export function ModeSelector({
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder={tr("搜索模式...", "Filter modes...")}
-              className="w-full pl-7 pr-2.5 py-1 text-xs rounded-sm border border-ink/20 bg-white focus:outline-hidden focus:border-ink transition-colors"
+              className="w-full pl-7 pr-2.5 py-1 text-xs rounded-sm border border-ink/20 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-ink dark:text-zinc-100 focus:outline-hidden focus:border-ink dark:focus:border-zinc-500 transition-colors"
             />
           </div>
         </div>
@@ -209,8 +209,8 @@ export function ModeSelector({
                 key={mode}
                 className={`group relative rounded-sm border transition-all flex flex-col justify-between overflow-hidden ${
                   isSelected
-                    ? "border-ink bg-paper-dark/60 shadow-2xs"
-                    : "border-ink/15 bg-white hover:border-ink/40"
+                    ? "border-ink dark:border-zinc-500 bg-paper-dark/60 dark:bg-zinc-800/60 shadow-2xs"
+                    : "border-ink/15 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-ink/40 dark:hover:border-zinc-700"
                 }`}
               >
                 {/* 卡片头部与说明 */}
@@ -230,7 +230,7 @@ export function ModeSelector({
                               e.stopPropagation();
                               onOpenConfigModal(mode);
                             }}
-                            className="text-[10px] text-ink/80 hover:text-ink hover:bg-paper-dark font-medium bg-white px-1.5 py-0.5 rounded-xs border border-ink/20 hover:border-ink flex items-center gap-0.5 transition-all"
+                            className="text-[10px] text-ink/80 hover:text-ink hover:bg-paper-dark dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 font-medium bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded-xs border border-ink/20 dark:border-zinc-700 hover:border-ink dark:hover:border-zinc-500 flex items-center gap-0.5 transition-all"
                             title={tr("点击调节此模式的参数配置", "Configure mode parameters")}
                           >
                             <Sliders size={10} />
@@ -238,7 +238,7 @@ export function ModeSelector({
                           </button>
                         ) : null}
                         {isSelected ? (
-                          <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.2 rounded-xs border border-emerald-300">
+                          <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded-xs border border-emerald-300 dark:border-emerald-800">
                             <Check size={10} /> {tr("已加入", "Active")}
                           </span>
                         ) : null}
@@ -251,7 +251,7 @@ export function ModeSelector({
                 </div>
 
                 {/* 卡片底部操作按钮栏 */}
-                <div className="border-t border-ink/10 bg-paper-light/70 px-2 py-1.5 flex items-center justify-between text-xs">
+                <div className="border-t border-ink/10 dark:border-zinc-800 bg-paper-light/70 dark:bg-zinc-950/70 px-2 py-1.5 flex items-center justify-between text-xs">
                   <button
                     type="button"
                     onClick={() => handleModePreview(mode)}
@@ -267,8 +267,8 @@ export function ModeSelector({
                       onClick={() => handleModeApply(mode)}
                       className={`px-2 py-0.5 rounded-sm text-[11px] font-semibold transition-colors ${
                         isSelected
-                          ? "bg-ink/10 text-ink hover:bg-red-100 hover:text-red-700"
-                          : "bg-ink text-white hover:bg-ink-light"
+                          ? "bg-ink/10 text-ink hover:bg-red-100 hover:text-red-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-950/60 dark:hover:text-red-400"
+                          : "bg-ink text-white hover:bg-ink-light dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 dark:border dark:border-zinc-700"
                       }`}
                     >
                       {isSelected ? tr("移除", "Remove") : tr("加入轮播", "Add")}
@@ -289,8 +289,8 @@ export function ModeSelector({
                 key={mode}
                 className={`group relative rounded-sm border transition-all flex flex-col justify-between overflow-hidden ${
                   isSelected
-                    ? "border-ink bg-paper-dark/60 shadow-2xs"
-                    : "border-ink/15 bg-white hover:border-ink/40"
+                    ? "border-ink dark:border-zinc-500 bg-paper-dark/60 dark:bg-zinc-800/60 shadow-2xs"
+                    : "border-ink/15 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-ink/40 dark:hover:border-zinc-700"
                 }`}
               >
                 <div
@@ -310,7 +310,7 @@ export function ModeSelector({
                   </div>
                 </div>
 
-                <div className="border-t border-ink/10 bg-paper-light/70 px-2 py-1.5 flex items-center justify-between text-xs">
+                <div className="border-t border-ink/10 dark:border-zinc-800 bg-paper-light/70 dark:bg-zinc-950/70 px-2 py-1.5 flex items-center justify-between text-xs">
                   <button
                     type="button"
                     onClick={() => handleModePreview(mode)}
@@ -324,7 +324,7 @@ export function ModeSelector({
                     <button
                       type="button"
                       onClick={() => handleCustomModeDelete(mode)}
-                      className="text-ink-light hover:text-red-600 p-1 rounded-sm hover:bg-red-50 transition-colors"
+                      className="text-ink-light hover:text-red-600 p-1 rounded-sm hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors"
                       title={tr("删除模式", "Delete mode")}
                     >
                       <Trash2 size={12} />
@@ -334,8 +334,8 @@ export function ModeSelector({
                       onClick={() => handleModeApply(mode)}
                       className={`px-2 py-0.5 rounded-sm text-[11px] font-semibold transition-colors ${
                         isSelected
-                          ? "bg-ink/10 text-ink hover:bg-red-100 hover:text-red-700"
-                          : "bg-ink text-white hover:bg-ink-light"
+                          ? "bg-ink/10 text-ink hover:bg-red-100 hover:text-red-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-950/60 dark:hover:text-red-400"
+                          : "bg-ink text-white hover:bg-ink-light dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 dark:border dark:border-zinc-700"
                       }`}
                     >
                       {isSelected ? tr("移除", "Remove") : tr("加入轮播", "Add")}
@@ -350,7 +350,7 @@ export function ModeSelector({
           <button
             type="button"
             onClick={onCreateCustomMode}
-            className="rounded-sm border border-dashed border-ink/25 bg-white/60 p-4 min-h-[96px] flex flex-col items-center justify-center text-ink-light hover:border-ink hover:bg-paper-dark transition-all group"
+            className="rounded-sm border border-dashed border-ink/25 dark:border-zinc-700 bg-white/60 dark:bg-zinc-900/60 p-4 min-h-[96px] flex flex-col items-center justify-center text-ink-light dark:text-zinc-400 hover:border-ink dark:hover:border-zinc-500 hover:bg-paper-dark dark:hover:bg-zinc-800/60 transition-all group"
           >
             <Plus size={18} className="text-ink-light group-hover:text-ink transition-colors mb-1" />
             <span className="text-xs font-semibold text-ink group-hover:underline">
