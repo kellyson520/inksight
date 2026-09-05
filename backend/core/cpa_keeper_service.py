@@ -61,7 +61,7 @@ class CpaKeeperService:
         self,
         keeper_db_path: str = _DEFAULT_KEEPER_DB,
         cpa_db_path: str = _DEFAULT_CPA_BILLING_DB,
-        cache_ttl: float = 4.0,
+        cache_ttl: float = 1.0,
     ) -> None:
         self.keeper_db_path = keeper_db_path
         self.cpa_db_path = cpa_db_path
@@ -327,9 +327,14 @@ class CpaKeeperService:
         self._cached_time = now
         return res
 
-    def get_mode_content(self, config_override: Optional[dict[str, Any]] = None, language: str = "zh") -> dict[str, Any]:
+    def get_mode_content(
+        self,
+        config_override: Optional[dict[str, Any]] = None,
+        language: str = "zh",
+        force_refresh: bool = False,
+    ) -> dict[str, Any]:
         """根据用户选定的看板模式为墨水屏提供定制化数据（无 Emoji、支持双重置与环形进度条）。"""
-        metrics = self.get_aggregated_metrics()
+        metrics = self.get_aggregated_metrics(force_refresh=force_refresh)
         is_en = language == "en"
 
         ov = config_override or {}

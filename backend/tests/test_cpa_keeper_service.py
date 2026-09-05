@@ -79,3 +79,18 @@ async def test_cpa_quota_pipeline_render_all_views():
         assert img.size == (400, 300)
         assert content is not None
         assert "summary_1_val" in content
+
+
+@pytest.mark.asyncio
+async def test_cpa_keeper_realtime_force_refresh():
+    """验证通过 pipeline 获取的内容是当前实时数据而非静态 fallback。"""
+    import asyncio
+    from core.cpa_keeper_service import cpa_keeper_service
+
+    content_1 = cpa_keeper_service.get_mode_content(force_refresh=True)
+    await asyncio.sleep(1.05)
+    content_2 = cpa_keeper_service.get_mode_content(force_refresh=True)
+
+    assert content_1["update_time"] != content_2["update_time"]
+    assert content_2["update_time"] != "12:00:00"  # 确保不是硬编码的 fallback
+
