@@ -414,9 +414,13 @@ def render_image(ctx: RenderContext, block: dict) -> None:
             {"trust_env": True, "timeout": httpx.Timeout(connect=8.0, read=12.0, write=8.0, pool=8.0)},
             {"trust_env": False, "timeout": httpx.Timeout(connect=12.0, read=18.0, write=10.0, pool=10.0)},
         ]
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://weread.qq.com/",
+        }
         for opts in attempts:
             try:
-                with httpx.Client(timeout=opts["timeout"], follow_redirects=True, trust_env=opts["trust_env"]) as client:
+                with httpx.Client(timeout=opts["timeout"], follow_redirects=True, trust_env=opts["trust_env"], headers=headers) as client:
                     resp = client.get(image_url)
                 if resp.status_code >= 400:
                     raise ValueError(f"HTTP {resp.status_code}")
