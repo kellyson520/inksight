@@ -185,6 +185,28 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
     },
 ]
 
+# 远程书封候选源：主源失效时交由 MediaFetcher 自动切换。
+_WECHAT_COVER_FALLBACKS: dict[str, list[str]] = {
+    "wr_007": [
+        "https://img9.doubanio.com/view/subject/l/public/s34164394.jpg",
+        "https://img1.doubanio.com/view/subject/m/public/s34164394.jpg",
+    ],
+    "wr_009": [
+        "https://img9.doubanio.com/view/subject/l/public/s34047464.jpg",
+        "https://img1.doubanio.com/view/subject/m/public/s34047464.jpg",
+    ],
+    "wr_010": [
+        "https://img9.doubanio.com/view/subject/l/public/s34079815.jpg",
+        "https://img1.doubanio.com/view/subject/m/public/s34079815.jpg",
+    ],
+}
+for _book in WECHAT_READ_BOOKS:
+    _primary = str(_book.get("cover_url") or "")
+    _book["cover_urls"] = []
+    for _url in [_primary, *_WECHAT_COVER_FALLBACKS.get(_book["id"], [])]:
+        if _url and _url not in _book["cover_urls"]:
+            _book["cover_urls"].append(_url)
+
 CATEGORIES = [
     {"key": "ALL", "name": "精选好书"},
     {"key": "LITERATURE", "name": "文学小说"},
@@ -239,6 +261,7 @@ class WeChatReadService:
 
     def _format_book(self, book: dict[str, Any]) -> dict[str, Any]:
         res = dict(book)
+        res["cover_urls"] = list(book.get("cover_urls") or [book.get("cover_url", "")])
         res["title_bracketed"] = f"《{book['title']}》"
         res["author_category"] = f"{book['author']} · {book.get('category_name', '图书')}"
         res["update_time"] = time.strftime("%H:%M")

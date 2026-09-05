@@ -38,6 +38,7 @@
       "recommend_reason": "以幽默生动的现代视角重现大明三百年风云。写历史也是写人性与权谋，千万读者心中的通俗历史第一书。",
       "quote": "成功只有一个，按照自己的方式去度过人生。",
       "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/786/842786/t6_842786.jpg",
+      "cover_urls": ["https://wfqqreader-1252317822.image.myqcloud.com/cover/786/842786/t6_842786.jpg"],
       "update_time": "精选",
       "status_text": "微信读书精选"
     }
@@ -153,6 +154,7 @@
           {
             "type": "image",
             "field": "cover_url",
+            "urls_field": "cover_urls",
             "width": 120,
             "height": 174,
             "fit": "cover",

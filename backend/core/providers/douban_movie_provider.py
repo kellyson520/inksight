@@ -70,6 +70,7 @@ async def generate_douban_movie(
                     "recommend_reason": sel["recommend_reason"],
                     "quote": sel["quote"],
                     "cover_url": sel["cover_url"],
+                    "cover_urls": list(sel.get("cover_urls") or [sel["cover_url"]]),
                     "update_time": "热门",
                     "footer_label": "豆瓣电影 · 实时热门",
                     "footer_quote": sel["quote"],

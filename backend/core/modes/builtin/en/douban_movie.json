@@ -154,6 +154,7 @@
           {
             "type": "image",
             "field": "cover_url",
+            "urls_field": "cover_urls",
             "width": 120,
             "height": 174,
             "fit": "cover",

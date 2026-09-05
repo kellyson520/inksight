@@ -12,6 +12,16 @@ from core.pipeline import generate_and_render
 from core.mode_registry import get_registry
 
 
+def test_wechat_read_book_exposes_cover_candidates():
+    """回归测试：上游书籍必须提供可轮换的封面候选链接。"""
+    from core.wechat_read_service import WECHAT_READ_BOOKS
+
+    for book in WECHAT_READ_BOOKS:
+        assert book["cover_urls"]
+        assert book["cover_url"] in book["cover_urls"]
+    assert len(next(book for book in WECHAT_READ_BOOKS if book["id"] == "wr_007")["cover_urls"]) >= 2
+
+
 def test_wechat_read_service_books():
     """测试书籍检索与分类过滤。"""
     all_books = wechat_read_service.get_books_by_category("ALL")

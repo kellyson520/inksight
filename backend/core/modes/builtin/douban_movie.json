@@ -38,6 +38,7 @@
       "recommend_reason": "希望是美好的东西，也许是人间至善，而美好的东西永不消逝。二十年如一日的坚忍与信念，在暴雨雷鸣中张开双臂迎接真正的自由。",
       "quote": "恐惧囚禁灵魂，希望赐予自由。",
       "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg",
+      "cover_urls": ["https://img9.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg"],
       "update_time": "精选",
       "footer_label": "豆瓣电影 · 影史精选",
       "footer_quote": "恐惧囚禁灵魂，希望赐予自由。"
@@ -154,6 +155,7 @@
           {
             "type": "image",
             "field": "cover_url",
+            "urls_field": "cover_urls",
             "width": 120,
             "height": 174,
             "fit": "cover",

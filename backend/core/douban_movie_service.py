@@ -31,6 +31,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "quote": "恐惧囚禁灵魂，希望赐予自由。",
         "category": "TOP250",
         "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg",
+        "cover_urls": ["https://img9.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg", "https://img1.doubanio.com/view/subject/l/public/s1316831.jpg"],
     },
     {
         "id": "db_002",
@@ -169,6 +170,14 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
     },
 ]
 
+for _movie in DOUBAN_CLASSIC_MOVIES:
+    _primary = str(_movie.get("cover_url") or "")
+    _existing = _movie.get("cover_urls") or []
+    _movie["cover_urls"] = []
+    for _url in [_primary, *_existing]:
+        if _url and _url not in _movie["cover_urls"]:
+            _movie["cover_urls"].append(_url)
+
 
 class DoubanMovieService:
     """豆瓣电影数据服务（支持经典库轮播与实时榜单拉取）。"""
@@ -232,6 +241,7 @@ class DoubanMovieService:
                             "quote": f"好电影如同一盏灯，照亮我们内心的角落。",
                             "category": "HOT",
                             "cover_url": cover,
+                            "cover_urls": [cover] if cover else [],
                         })
                     if res:
                         self._cache_online[collection_type] = res
@@ -292,6 +302,7 @@ class DoubanMovieService:
             "recommend_reason": reason,
             "quote": quote,
             "cover_url": cover_url,
+            "cover_urls": list(selected.get("cover_urls") or [cover_url]),
             "update_time": "精选",
             "footer_label": "豆瓣电影 · 影史精选",
             "footer_quote": quote,

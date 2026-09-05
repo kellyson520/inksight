@@ -569,7 +569,7 @@ def _build_thisday_dedup_hint(events: list[str], language: str) -> str:
 
 
 async def _prefetch_images(content: dict, mode_def: dict) -> dict:
-    """Pre-fetch any image URLs referenced by the layout into content dict."""
+    """Prefetch images through the shared resilient media infrastructure."""
     layout = expand_layout_presets(mode_def.get("layout", {}))
     body_blocks = layout.get("body", [])
     image_fields: set = set()
@@ -578,26 +578,46 @@ async def _prefetch_images(content: dict, mode_def: dict) -> dict:
     if not image_fields:
         return content
 
-    # verify=False 支持自签名证书或特定私有镜像代理源
-    async with httpx.AsyncClient(timeout=12.0, verify=False, follow_redirects=True) as client:
-        for field_name in image_fields:
-            url = content.get(field_name)
-            if url and isinstance(url, str) and url.startswith("http"):
-                local_bytes = _resolve_uploaded_image_bytes(url)
-                if local_bytes:
-                    content[f"_prefetched_{field_name}"] = local_bytes
-                    continue
-                if _is_uploaded_image_url(url):
-                    content[f"_invalid_{field_name}"] = "Image link expired"
-                    logger.warning("[JSONContent] Uploaded image link expired for field %s: %s", field_name, url)
-                    continue
-                try:
-                    resp = await client.get(url)
-                    if resp.status_code < 400:
-                        content[f"_prefetched_{field_name}"] = resp.content
-                except httpx.HTTPError:
-                    logger.warning("[JSONContent] Failed to prefetch image field %s", field_name, exc_info=True)
+    from .media_fetcher import MediaFetchError, media_fetcher
+
+    for field_name in image_fields:
+        url = content.get(field_name)
+        if not url or not isinstance(url, str) or not url.startswith("http"):
+            continue
+        local_bytes = _resolve_uploaded_image_bytes(url)
+        if local_bytes:
+            content[f"_prefetched_{field_name}"] = local_bytes
+            continue
+        if _is_uploaded_image_url(url):
+            content[f"_invalid_{field_name}"] = "Image link expired"
+            logger.warning("[JSONContent] Uploaded image link expired for field %s: %s", field_name, url)
+            continue
+        urls_field = next(
+            (block.get("urls_field") for block in _iter_image_blocks(body_blocks)
+             if block.get("field", "image_url") == field_name and block.get("urls_field")),
+            None,
+        )
+        candidates = content.get(urls_field) if urls_field else url
+        try:
+            fetched = await asyncio.to_thread(media_fetcher.fetch_image, candidates)
+            content[f"_prefetched_{field_name}"] = fetched.data
+        except MediaFetchError:
+            logger.warning("[JSONContent] Failed to prefetch image field %s", field_name, exc_info=True)
     return content
+
+
+def _iter_image_blocks(blocks: Any):
+    if isinstance(blocks, dict):
+        if blocks.get("type") == "image":
+            yield blocks
+        for child_key in ("children", "left", "right", "item", "conditions"):
+            children = blocks.get(child_key)
+            if isinstance(children, (list, dict)):
+                yield from _iter_image_blocks(children)
+    elif isinstance(blocks, list):
+        for block in blocks:
+            if isinstance(block, (list, dict)):
+                yield from _iter_image_blocks(block)
 
 
 def _get_fallback(content_cfg: dict) -> dict:

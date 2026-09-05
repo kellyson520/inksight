@@ -4,17 +4,16 @@
 """
 from __future__ import annotations
 
-import hashlib
 import logging
 from io import BytesIO
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-import httpx
 from PIL import Image, UnidentifiedImageError
 
 from core.image_processing import convert_image_block
+from core.media_fetcher import media_fetcher
 from core.patterns.utils import (
     EINK_BG,
     EINK_FG,
@@ -30,8 +29,6 @@ logger = logging.getLogger(__name__)
 
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
 _UPLOAD_DIR = _BACKEND_ROOT / "runtime_uploads"
-_IMAGE_CACHE_DIR = _BACKEND_ROOT / "data" / "image_cache"
-_IMAGE_MEMORY_CACHE: dict[str, bytes] = {}
 
 
 def _paste_converted_image(ctx: RenderContext, img: Image.Image, x: int, y: int) -> None:
@@ -49,54 +46,6 @@ def _paste_converted_image(ctx: RenderContext, img: Image.Image, x: int, y: int)
             ctx.img.paste(img.convert("1"), (x, y))
         else:
             ctx.img.paste(img, (x, y))
-
-
-def _fetch_image_bytes(image_url: str) -> bytes:
-    """获取远程图片二进制，优先命中内存缓存与本地磁盘持久化缓存。"""
-    if image_url in _IMAGE_MEMORY_CACHE:
-        return _IMAGE_MEMORY_CACHE[image_url]
-
-    _IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    cache_key = hashlib.sha256(image_url.encode("utf-8")).hexdigest()
-    cache_file = _IMAGE_CACHE_DIR / f"{cache_key}.bin"
-    if cache_file.exists() and cache_file.stat().st_size > 0:
-        data = cache_file.read_bytes()
-        _IMAGE_MEMORY_CACHE[image_url] = data
-        return data
-
-    attempts = [
-        {"trust_env": True, "timeout": httpx.Timeout(connect=6.0, read=10.0, write=6.0, pool=6.0)},
-        {"trust_env": False, "timeout": httpx.Timeout(connect=10.0, read=15.0, write=8.0, pool=8.0)},
-    ]
-    req_referer = "https://weread.qq.com/"
-    if "douban" in image_url:
-        req_referer = "https://movie.douban.com/"
-    elif "smzdm" in image_url:
-        req_referer = "https://www.smzdm.com/"
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": req_referer,
-    }
-
-    last_error = None
-    for opts in attempts:
-        try:
-            with httpx.Client(timeout=opts["timeout"], follow_redirects=True, trust_env=opts["trust_env"], headers=headers) as client:
-                resp = client.get(image_url)
-            if resp.status_code >= 400:
-                raise ValueError(f"HTTP {resp.status_code}")
-            data = resp.content
-            try:
-                cache_file.write_bytes(data)
-            except Exception:
-                pass
-            _IMAGE_MEMORY_CACHE[image_url] = data
-            return data
-        except (httpx.HTTPError, ValueError) as e:
-            last_error = e
-
-    raise last_error if last_error else ValueError("image fetch failed")
 
 
 def _num(v: Any) -> float:
@@ -442,17 +391,33 @@ def render_image(ctx: RenderContext, block: dict) -> None:
     photo_enhance = bool(block.get("photo_enhance", False))
     margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
 
+    urls_field = block.get("urls_field")
+    candidate_urls = image_url
+    if urls_field:
+        raw_urls = ctx.get_field(str(urls_field))
+        if isinstance(raw_urls, (list, tuple)):
+            candidate_urls = []
+            for raw_url in [image_url, *raw_urls]:
+                value = str(raw_url or "").strip()
+                if value and value not in candidate_urls:
+                    candidate_urls.append(value)
+
     prefetched = ctx.content.get(f"_prefetched_{field_name}")
     if prefetched:
-        img = convert_image_block(
-            Image.open(BytesIO(prefetched)),
-            width, height, ctx.colors,
-            fit=fit, align_x=align_x, align_y=align_y,
-            photo_enhance=photo_enhance,
-        )
-        _paste_converted_image(ctx, img, x, y)
-        ctx.y = y + height + margin_bottom
-        return
+        try:
+            img = convert_image_block(
+                Image.open(BytesIO(prefetched)),
+                width, height, ctx.colors,
+                fit=fit, align_x=align_x, align_y=align_y,
+                photo_enhance=photo_enhance,
+            )
+            _paste_converted_image(ctx, img, x, y)
+            ctx.y = y + height + margin_bottom
+            return
+        except (OSError, UnidentifiedImageError):
+            # Prefetch may have received a stale/non-image response; retry through
+            # the shared fetcher so candidate URLs and cache policy still apply.
+            ctx.content.pop(f"_prefetched_{field_name}", None)
 
     local_path = _resolve_local_asset(image_url)
     if local_path:
@@ -475,9 +440,9 @@ def render_image(ctx: RenderContext, block: dict) -> None:
         return
 
     try:
-        raw_bytes = _fetch_image_bytes(image_url)
+        fetched = media_fetcher.fetch_image(candidate_urls)
         img = convert_image_block(
-            Image.open(BytesIO(raw_bytes)),
+            Image.open(BytesIO(fetched.data)),
             width, height, ctx.colors,
             fit=fit, align_x=align_x, align_y=align_y,
             photo_enhance=photo_enhance,
