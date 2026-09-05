@@ -4,6 +4,23 @@ from __future__ import annotations
 from typing import Any
 
 
+class BroadcastEventDeliveryAdapter:
+    def __init__(self, push_dispatcher: Any) -> None:
+        self.push_dispatcher = push_dispatcher
+
+    async def publish(self, event: dict[str, Any]) -> bool:
+        targets = event.get("target_macs")
+        if not isinstance(targets, list) or not targets:
+            return False
+        result = await self.push_dispatcher.broadcast_alert(
+            title=str(event.get("title") or f"热榜更新 · {event.get('platform', 'unknown')}"),
+            message=str(event.get("message") or f"{event.get('kind', 'changed')}: {event.get('item_id', '')}"),
+            level="info" if event.get("kind") == "new" else "warning",
+            target_macs=[str(mac) for mac in targets],
+        )
+        return isinstance(result, dict) and result.get("success") == len(targets) and result.get("failed", 0) == 0
+
+
 class DeviceEventDeliveryAdapter:
     def __init__(self, push_dispatcher: Any) -> None:
         self.push_dispatcher = push_dispatcher

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from core.event_delivery import DeviceEventDeliveryAdapter
+from core.event_delivery import BroadcastEventDeliveryAdapter, DeviceEventDeliveryAdapter
 
 
 @pytest.mark.asyncio
@@ -41,3 +41,18 @@ async def test_device_adapter_does_not_deliver_non_realtime_events():
 async def test_device_adapter_retains_broadcast_event_for_broadcast_adapter():
     adapter = DeviceEventDeliveryAdapter(object())
     assert await adapter.publish({"event_id": "e", "is_realtime": True, "target_mac": "*"}) is False
+
+
+@pytest.mark.asyncio
+async def test_broadcast_adapter_requires_explicit_targets():
+    calls = []
+
+    class Push:
+        async def broadcast_alert(self, **kwargs):
+            calls.append(kwargs)
+            return {"total": 2, "success": 2, "failed": 0}
+
+    adapter = BroadcastEventDeliveryAdapter(Push())
+    assert await adapter.publish({"event_id": "e", "target_mac": "*", "title": "t", "message": "m"}) is False
+    assert await adapter.publish({"event_id": "e2", "target_macs": ["AA", "BB"], "title": "t", "message": "m"}) is True
+    assert calls[0]["target_macs"] == ["AA", "BB"]
