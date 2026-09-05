@@ -11,12 +11,15 @@ from typing import Any
 
 import httpx
 
+from .outbound_http import OutboundHttp, RequestPolicy
+
 logger = logging.getLogger(__name__)
 
 _DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
 
 _async_client: httpx.AsyncClient | None = None
 _sync_client: httpx.Client | None = None
+_outbound_http = OutboundHttp()
 
 
 def get_async_client() -> httpx.AsyncClient:
@@ -55,38 +58,30 @@ async def fetch_json_async(url: str, headers: dict[str, str] | None = None, time
     """异步抓取 JSON 数据并带自动轻量重试。"""
     client = get_async_client()
     last_err: Exception | None = None
-    for attempt in range(retries + 1):
-        try:
-            r = await client.get(url, headers=headers, timeout=timeout)
-            if r.status_code == 200:
-                return r.json()
-            else:
-                logger.debug("[HttpClient] HTTP %d for %s", r.status_code, url)
-        except Exception as exc:
-            last_err = exc
-            if attempt < retries:
-                await asyncio.sleep(0.3 * (attempt + 1))
-    if last_err:
-        raise last_err
-    return None
+    try:
+        policy = RequestPolicy(
+            max_attempts=max(1, retries + 1),
+            timeout=httpx.Timeout(connect=5.0, read=timeout or 8.0, write=5.0, pool=5.0),
+        )
+        return await asyncio.to_thread(lambda: _outbound_http.get_json(url, headers=headers, policy=policy).json())
+    except Exception as exc:
+        logger.debug("[HttpClient] JSON request failed for %s: %s", url, type(exc).__name__)
+        raise exc
 
 
 async def fetch_text_async(url: str, headers: dict[str, str] | None = None, timeout: float | None = None, retries: int = 1) -> str:
     """异步抓取文本数据并带自动轻量重试。"""
     client = get_async_client()
     last_err: Exception | None = None
-    for attempt in range(retries + 1):
-        try:
-            r = await client.get(url, headers=headers, timeout=timeout)
-            if r.status_code == 200:
-                return r.text
-        except Exception as exc:
-            last_err = exc
-            if attempt < retries:
-                await asyncio.sleep(0.3 * (attempt + 1))
-    if last_err:
-        raise last_err
-    return ""
+    try:
+        policy = RequestPolicy(
+            max_attempts=max(1, retries + 1),
+            timeout=httpx.Timeout(connect=5.0, read=timeout or 8.0, write=5.0, pool=5.0),
+        )
+        return (await asyncio.to_thread(lambda: _outbound_http.get_text(url, headers=headers, policy=policy))).text
+    except Exception as exc:
+        logger.debug("[HttpClient] text request failed for %s: %s", url, type(exc).__name__)
+        raise exc
 
 
 async def close_http_clients() -> None:
