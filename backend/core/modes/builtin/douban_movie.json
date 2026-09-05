@@ -1,0 +1,177 @@
+{
+  "mode_id": "DOUBAN_MOVIE",
+  "display_name": "豆瓣高分电影",
+  "icon": "film",
+  "cacheable": true,
+  "description": "豆瓣高分经典神作与实时热门电影推荐，右侧竖版海报配左侧影评推荐理由",
+  "settings_schema": [
+    {
+      "key": "category",
+      "label": "电影分类与榜单",
+      "type": "select",
+      "default": "ALL",
+      "options": [
+        { "value": "ALL", "label": "影史经典 (全部分类)" },
+        { "value": "TOP250", "label": "Top 250 神作 (肖申克/霸王别姬/阿甘)" },
+        { "value": "SCI_FI", "label": "科幻神作 (星际穿越/盗梦空间)" },
+        { "value": "HEALING", "label": "温情治愈 (千与千寻/忠犬八公)" },
+        { "value": "HOT", "label": "豆瓣热门榜单 (实时热映/高分)" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "douban_movie",
+    "category": "ALL",
+    "fallback": {
+      "id": "db_001",
+      "title": "肖申克的救赎",
+      "title_bracketed": "《肖申克的救赎》",
+      "director": "弗兰克·德拉邦特",
+      "year": "1994",
+      "genre": "剧情 / 犯罪",
+      "director_line": "弗兰克·德拉邦特 执导 · 1994 · 剧情",
+      "rating": "9.7",
+      "rating_label": "豆瓣 9.7 分",
+      "rating_people": "285 万人评价",
+      "rank_tag": "豆瓣电影 Top 250 · NO.1",
+      "recommend_reason": "希望是美好的东西，也许是人间至善，而美好的东西永不消逝。二十年如一日的坚忍与信念，在暴雨雷鸣中张开双臂迎接真正的自由。",
+      "quote": "恐惧囚禁灵魂，希望赐予自由。",
+      "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg",
+      "update_time": "精选",
+      "footer_label": "豆瓣电影 · 影史精选",
+      "footer_quote": "恐惧囚禁灵魂，希望赐予自由。"
+    }
+  },
+  "layout": {
+    "body_align": "center",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "two_column",
+        "margin_x": 12,
+        "gap": 12,
+        "left_ratio": 0.64,
+        "right_ratio": 0.36,
+        "left_align_y": "top",
+        "right_align_y": "top",
+        "left_blocks": [
+          {
+            "type": "badge",
+            "field": "rank_tag",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          },
+          {
+            "type": "spacer",
+            "height": 6
+          },
+          {
+            "type": "text",
+            "field": "title_bracketed",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "line_height": 22,
+            "align": "left",
+            "max_lines": 2
+          },
+          {
+            "type": "spacer",
+            "height": 4
+          },
+          {
+            "type": "text",
+            "field": "director_line",
+            "font": "noto_serif_regular",
+            "font_size": 11,
+            "line_height": 16,
+            "align": "left",
+            "max_lines": 1
+          },
+          {
+            "type": "spacer",
+            "height": 6
+          },
+          {
+            "type": "separator",
+            "line_width": 1,
+            "dashed": true
+          },
+          {
+            "type": "spacer",
+            "height": 6
+          },
+          {
+            "type": "text",
+            "field": "recommend_reason",
+            "font": "noto_serif_regular",
+            "font_size": 11,
+            "line_height": 17,
+            "align": "left",
+            "max_lines": 5
+          },
+          {
+            "type": "spacer",
+            "height": 8
+          },
+          {
+            "type": "flex_row",
+            "justify": "start",
+            "align_items": "center",
+            "gap": 6,
+            "items": [
+              {
+                "type": "badge",
+                "field": "rating_label",
+                "variant": "solid",
+                "bg_color": "red",
+                "color": "white",
+                "font_size": 10,
+                "padding_x": 5,
+                "padding_y": 2,
+                "radius": 3
+              },
+              {
+                "type": "text",
+                "field": "rating_people",
+                "font": "noto_serif_light",
+                "font_size": 10
+              }
+            ]
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "image",
+            "field": "cover_url",
+            "width": 120,
+            "height": 174,
+            "fit": "cover",
+            "photo_enhance": true,
+            "margin_bottom": 4
+          },
+          {
+            "type": "centered_text",
+            "text": "豆瓣电影 · 精选",
+            "font": "noto_serif_light",
+            "font_size": 9
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "豆瓣电影精选",
+      "attribution_template": "{footer_quote}"
+    }
+  }
+}

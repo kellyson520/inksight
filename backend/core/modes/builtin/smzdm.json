@@ -1,0 +1,241 @@
+{
+  "mode_id": "SMZDM",
+  "display_name": "什么值得买",
+  "icon": "shopping-bag",
+  "cacheable": true,
+  "description": "什么值得买热门好价排行榜，每日数码、白菜价与爆款商品高值率优选",
+  "settings_schema": [
+    {
+      "key": "category",
+      "label": "好价排行榜分类",
+      "type": "select",
+      "default": "ALL",
+      "options": [
+        { "value": "ALL", "label": "全站热门榜 (全网热卖/高值率好价)" },
+        { "value": "DIGITAL", "label": "电脑数码榜 (iPhone/Mac/外设/数码)" },
+        { "value": "CHEAP", "label": "超值白菜榜 (刚需日用/文具纸品/神价)" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "smzdm",
+    "category": "ALL",
+    "fallback": {
+      "title": "什么值得买 · 热门好价榜",
+      "header_status": "什么值得买 · 实时排行",
+      "top1_title": "Apple iPhone 16 Pro 256G 原色钛金属",
+      "top1_price": "￥6999",
+      "top1_mall": "京东自营",
+      "top1_tag": "立减1000 · 98%值",
+      "top1_desc": "A18 Pro芯片，4800万融合主摄，支持息屏显示与钛金属轻量机身。",
+      "i1_rank": "NO.1",
+      "i1_title": "Apple iPhone 16 Pro 256G 原色钛金属",
+      "i1_price": "￥6999",
+      "i1_mall": "京东自营",
+      "i1_tag": "立减1000",
+      "i2_rank": "NO.2",
+      "i2_title": "索尼 WH-1000XM5 无线降噪头戴耳机",
+      "i2_price": "￥1599",
+      "i2_mall": "天猫旗舰",
+      "i2_tag": "历史低价",
+      "i3_rank": "NO.3",
+      "i3_title": "追觅 S30 Pro Ultra 全自动扫拖机器人",
+      "i3_price": "￥2799",
+      "i3_mall": "京东自营",
+      "i3_tag": "国家补贴",
+      "i4_rank": "NO.4",
+      "i4_title": "任天堂 Switch OLED 日版游戏掌机",
+      "i4_price": "￥1488",
+      "i4_mall": "拼多多补贴",
+      "i4_tag": "百亿补贴",
+      "i5_rank": "NO.5",
+      "i5_title": "戴森 V12 Detect Slim 轻量吸尘器",
+      "i5_price": "￥2899",
+      "i5_mall": "京东自营",
+      "i5_tag": "限时好价",
+      "footer_label": "什么值得买 · 科学消费"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": { "line_width": 1, "dashed": false },
+    "body": [
+      {
+        "type": "centered_text",
+        "field": "title",
+        "font_size": 17,
+        "font": "noto_serif_bold",
+        "margin_bottom": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "border_width": 1,
+        "padding": 6,
+        "margin_x": 12,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 3,
+            "items": [
+              {
+                "type": "badge",
+                "text": "TOP 1 爆款推荐",
+                "variant": "solid",
+                "bg_color": "red",
+                "color": "white",
+                "font_size": 10,
+                "padding_x": 5,
+                "padding_y": 1.5,
+                "radius": 3
+              },
+              {
+                "type": "text",
+                "field": "top1_tag",
+                "font": "noto_serif_bold",
+                "font_size": 10,
+                "color": "black"
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 3,
+            "items": [
+              {
+                "type": "text",
+                "field": "top1_title",
+                "font": "noto_serif_bold",
+                "font_size": 12,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "top1_price",
+                "font": "noto_serif_bold",
+                "font_size": 13,
+                "color": "red"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "top1_desc",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "line_spacing": 2,
+            "max_lines": 2
+          }
+        ]
+      },
+      {
+        "type": "card",
+        "border": "dashed",
+        "border_width": 1,
+        "padding": 6,
+        "margin_x": 12,
+        "margin_bottom": 4,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "NO.2  索尼 WH-1000XM5 无线降噪头戴耳机",
+                "field": "i2_title",
+                "font": "noto_serif_regular",
+                "font_size": 11,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "i2_price",
+                "font": "noto_serif_bold",
+                "font_size": 11
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "NO.3  追觅 S30 Pro Ultra 全自动扫拖机器人",
+                "field": "i3_title",
+                "font": "noto_serif_regular",
+                "font_size": 11,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "i3_price",
+                "font": "noto_serif_bold",
+                "font_size": 11
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "NO.4  任天堂 Switch OLED 日版游戏掌机",
+                "field": "i4_title",
+                "font": "noto_serif_regular",
+                "font_size": 11,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "i4_price",
+                "font": "noto_serif_bold",
+                "font_size": 11
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 0,
+            "items": [
+              {
+                "type": "text",
+                "text": "NO.5  戴森 V12 Detect Slim 轻量吸尘器",
+                "field": "i5_title",
+                "font": "noto_serif_regular",
+                "font_size": 11,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "i5_price",
+                "font": "noto_serif_bold",
+                "font_size": 11
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "什么值得买 · 好价榜",
+      "attribution_template": "买前比三家 · 科学理性消费"
+    }
+  }
+}

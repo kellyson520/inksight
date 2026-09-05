@@ -235,6 +235,12 @@ export default function ExperiencePage() {
       if (targetMode === "WECHAT_READ" && !mergedOverride.category) {
         mergedOverride.category = "ALL";
       }
+      if (targetMode === "DOUBAN_MOVIE" && !mergedOverride.category) {
+        mergedOverride.category = "ALL";
+      }
+      if (targetMode === "SMZDM" && !mergedOverride.category) {
+        mergedOverride.category = "ALL";
+      }
       if (targetMode === "SERVER_STATUS") {
         if (!mergedOverride.server_name && serverName) mergedOverride.server_name = serverName;
         if (!mergedOverride.server_key && serverKey) mergedOverride.server_key = serverKey;

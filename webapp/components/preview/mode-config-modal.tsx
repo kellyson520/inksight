@@ -8,6 +8,8 @@ import { WeatherConfig } from "./configs/weather-config";
 import { CryptoStockConfig } from "./configs/crypto-stock-config";
 import { GoldConfig } from "./configs/gold-config";
 import { WeChatReadConfig } from "./configs/wechat-read-config";
+import { DoubanMovieConfig } from "./configs/douban-movie-config";
+import { SmzdmConfig } from "./configs/smzdm-config";
 import { ServerStatusConfig } from "./configs/server-status-config";
 import { CpaQuotaConfig } from "./configs/cpa-quota-config";
 import {
@@ -43,7 +45,9 @@ interface ModeConfigModalProps {
       | "drink_water"
       | "server_status"
       | "cpa_quota"
-      | "wechat_read";
+      | "wechat_read"
+      | "douban_movie"
+      | "smzdm";
     modeId: string;
   };
   locale: string;
@@ -119,6 +123,10 @@ export function ModeConfigModal({
         return locale === "zh" ? "CPA 额度仪表盘" : "CPA Quota Dashboard";
       case "wechat_read":
         return locale === "zh" ? "微信读书推荐设置" : "WeChat Read Settings";
+      case "douban_movie":
+        return locale === "zh" ? "豆瓣高分电影设置" : "Douban Movie Settings";
+      case "smzdm":
+        return locale === "zh" ? "什么值得买好价设置" : "SMZDM Deals Settings";
       default:
         return locale === "zh" ? "模式参数设置" : "Mode Settings";
     }
@@ -219,6 +227,26 @@ export function ModeConfigModal({
               onClose={onClose}
               onSubmit={async (category) => {
                 await onSubmit("WECHAT_READ", { category });
+              }}
+            />
+          ) : modal.type === "douban_movie" ? (
+            <DoubanMovieConfig
+              initialCategory="ALL"
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (category) => {
+                await onSubmit("DOUBAN_MOVIE", { category });
+              }}
+            />
+          ) : modal.type === "smzdm" ? (
+            <SmzdmConfig
+              initialCategory="ALL"
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (category) => {
+                await onSubmit("SMZDM", { category });
               }}
             />
           ) : modal.type === "quote" ? (

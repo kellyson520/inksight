@@ -1,0 +1,241 @@
+{
+  "mode_id": "SMZDM",
+  "display_name": "SMZDM Hot Deals",
+  "icon": "shopping-bag",
+  "cacheable": true,
+  "description": "SMZDM Trending Best Deals & Consumer Goods Ranking",
+  "settings_schema": [
+    {
+      "key": "category",
+      "label": "Deals Ranking Category",
+      "type": "select",
+      "default": "ALL",
+      "options": [
+        { "value": "ALL", "label": "Site-wide Top Deals" },
+        { "value": "DIGITAL", "label": "Digital & Tech Gadgets" },
+        { "value": "CHEAP", "label": "Value & Daily Essentials" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "smzdm",
+    "category": "ALL",
+    "fallback": {
+      "title": "SMZDM · Trending Deals",
+      "header_status": "SMZDM · Real-time Deals",
+      "top1_title": "Apple iPhone 16 Pro 256G Natural Titanium",
+      "top1_price": "￥6999",
+      "top1_mall": "JD.com",
+      "top1_tag": "-￥1000 · 98% Worth",
+      "top1_desc": "A18 Pro chip, 48MP fusion camera with lighter titanium body.",
+      "i1_rank": "NO.1",
+      "i1_title": "Apple iPhone 16 Pro 256G",
+      "i1_price": "￥6999",
+      "i1_mall": "JD.com",
+      "i1_tag": "-￥1000",
+      "i2_rank": "NO.2",
+      "i2_title": "Sony WH-1000XM5 Wireless Headphones",
+      "i2_price": "￥1599",
+      "i2_mall": "Tmall Flagship",
+      "i2_tag": "All-time Low",
+      "i3_rank": "NO.3",
+      "i3_title": "Dreame S30 Pro Ultra Robot Vacuum",
+      "i3_price": "￥2799",
+      "i3_mall": "JD.com",
+      "i3_tag": "Gov Subsidy",
+      "i4_rank": "NO.4",
+      "i4_title": "Nintendo Switch OLED Model",
+      "i4_price": "￥1488",
+      "i4_mall": "PDD Subsidy",
+      "i4_tag": "Billion Subsidy",
+      "i5_rank": "NO.5",
+      "i5_title": "Dyson V12 Detect Slim Vacuum",
+      "i5_price": "￥2899",
+      "i5_mall": "JD.com",
+      "i5_tag": "Hot Deal",
+      "footer_label": "SMZDM · Smart Shopping"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": { "line_width": 1, "dashed": false },
+    "body": [
+      {
+        "type": "centered_text",
+        "field": "title",
+        "font_size": 17,
+        "font": "noto_serif_bold",
+        "margin_bottom": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "border_width": 1,
+        "padding": 6,
+        "margin_x": 12,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 3,
+            "items": [
+              {
+                "type": "badge",
+                "text": "TOP 1 FEATURED",
+                "variant": "solid",
+                "bg_color": "red",
+                "color": "white",
+                "font_size": 10,
+                "padding_x": 5,
+                "padding_y": 1.5,
+                "radius": 3
+              },
+              {
+                "type": "text",
+                "field": "top1_tag",
+                "font": "noto_serif_bold",
+                "font_size": 10,
+                "color": "black"
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 3,
+            "items": [
+              {
+                "type": "text",
+                "field": "top1_title",
+                "font": "noto_serif_bold",
+                "font_size": 12,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "top1_price",
+                "font": "noto_serif_bold",
+                "font_size": 13,
+                "color": "red"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "top1_desc",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "line_spacing": 2,
+            "max_lines": 2
+          }
+        ]
+      },
+      {
+        "type": "card",
+        "border": "dashed",
+        "border_width": 1,
+        "padding": 6,
+        "margin_x": 12,
+        "margin_bottom": 4,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "NO.2  Sony WH-1000XM5 Headphones",
+                "field": "i2_title",
+                "font": "noto_serif_regular",
+                "font_size": 11,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "i2_price",
+                "font": "noto_serif_bold",
+                "font_size": 11
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "NO.3  Dreame S30 Pro Ultra Robot Vacuum",
+                "field": "i3_title",
+                "font": "noto_serif_regular",
+                "font_size": 11,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "i3_price",
+                "font": "noto_serif_bold",
+                "font_size": 11
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "NO.4  Nintendo Switch OLED Model",
+                "field": "i4_title",
+                "font": "noto_serif_regular",
+                "font_size": 11,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "i4_price",
+                "font": "noto_serif_bold",
+                "font_size": 11
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 0,
+            "items": [
+              {
+                "type": "text",
+                "text": "NO.5  Dyson V12 Detect Slim Vacuum",
+                "field": "i5_title",
+                "font": "noto_serif_regular",
+                "font_size": 11,
+                "max_lines": 1
+              },
+              {
+                "type": "text",
+                "field": "i5_price",
+                "font": "noto_serif_bold",
+                "font_size": 11
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "SMZDM · Top Deals",
+      "attribution_template": "Smart Consumption · Compare Prices"
+    }
+  }
+}

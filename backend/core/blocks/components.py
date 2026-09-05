@@ -419,9 +419,15 @@ def render_image(ctx: RenderContext, block: dict) -> None:
             {"trust_env": True, "timeout": httpx.Timeout(connect=8.0, read=12.0, write=8.0, pool=8.0)},
             {"trust_env": False, "timeout": httpx.Timeout(connect=12.0, read=18.0, write=10.0, pool=10.0)},
         ]
+        req_referer = "https://weread.qq.com/"
+        if "douban" in image_url:
+            req_referer = "https://movie.douban.com/"
+        elif "smzdm" in image_url:
+            req_referer = "https://www.smzdm.com/"
+
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Referer": "https://weread.qq.com/",
+            "Referer": req_referer,
         }
         for opts in attempts:
             try:

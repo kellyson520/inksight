@@ -32,6 +32,8 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   MY_ADAPTIVE: "life",
   DRINK_WATER: "life",
   WECHAT_READ: "life",
+  DOUBAN_MOVIE: "life",
+  SMZDM: "life",
 
   // 效率 (Productivity)
   COUNTDOWN: "productivity",
@@ -82,6 +84,8 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   SERVER_STATUS: "server_status",
   CPA_QUOTA: "cpa_quota",
   WECHAT_READ: "wechat_read",
+  DOUBAN_MOVIE: "douban_movie",
+  SMZDM: "smzdm",
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [
@@ -145,6 +149,20 @@ export const WECHAT_READ_CATEGORIES = [
   { key: "HISTORY", name: "历史社科", desc: "深刻透彻的历史演进、社会学与宏观分析" },
   { key: "BUSINESS", name: "商业财经", desc: "商业思考、投资认知与财富逻辑" },
   { key: "GROWTH", name: "认知成长", desc: "心理疗愈、思维认知与行动跃迁" },
+];
+
+export const DOUBAN_MOVIE_CATEGORIES = [
+  { key: "ALL", name: "影史经典", desc: "豆瓣评分 9.0+ 传世口碑必看神作" },
+  { key: "TOP250", name: "Top 250 殿堂", desc: "肖申克的救赎 / 霸王别姬 / 阿甘正传等榜首" },
+  { key: "SCI_FI", name: "科幻神作", desc: "星际穿越 / 盗梦空间等震撼思维宇宙经典" },
+  { key: "HEALING", name: "温情治愈", desc: "千与千寻 / 忠犬八公等抚慰人心的光影记忆" },
+  { key: "HOT", name: "实时热门榜", desc: "豆瓣电影实时热映与近期高分好评" },
+];
+
+export const SMZDM_CATEGORIES = [
+  { key: "ALL", name: "全站热门榜", desc: "全网热卖数码、品质家电与高值率好价" },
+  { key: "DIGITAL", name: "电脑数码榜", desc: "iPhone / MacBook / 降噪耳机 / 游戏外设好价" },
+  { key: "CHEAP", name: "超值白菜榜", desc: "刚需日用、优质纸品、文具百货神价优选" },
 ];
 
 export const POPULAR_GOLDS = [
