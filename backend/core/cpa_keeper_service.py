@@ -54,12 +54,14 @@ def _format_timedelta(reset_at_str: Optional[str], now_utc: datetime.datetime) -
         return "持续可用"
 
 
-def _calc_quota_color(pct: int | float) -> str:
-    """< 20% 红色，<= 60% 黄色，其余黑色。"""
+def _calc_quota_color(pct: int | float | None) -> str:
+    """< 20% 红色，<= 60% 黄色，其余黑色；未知额度使用黑色。"""
+    if pct is None:
+        return "black"
     try:
         val = float(pct)
     except (TypeError, ValueError):
-        val = 100.0
+        return "black"
     if val < 20.0:
         return "red"
     elif val <= 60.0:
@@ -214,16 +216,20 @@ class CpaKeeperService:
                     ).fetchone()
                     reset_7d_str = _format_timedelta(c_7d[1] if c_7d else None, now_utc)
 
-                    # 3. 剩余配额百分比 (来自最近的 quota_percent_segments)
-                    rem_pct_num = 100
-                    target_cycle_id = (c_5h[0] if c_5h else None) or (c_7d[0] if c_7d else None)
-                    if target_cycle_id:
+                    # 3. 剩余配额百分比：优先5h窗口，缺失时使用7d窗口。
+                    # 没有 Keeper 观测时必须显示“未知”，不能伪报 100%。
+                    rem_pct_num: Optional[int] = None
+                    for cycle in (c_5h, c_7d):
+                        if not cycle:
+                            continue
                         seg = cur.execute(
                             "SELECT remaining_percent FROM quota_percent_segments WHERE cycle_id = ? ORDER BY id DESC LIMIT 1",
-                            (target_cycle_id,),
+                            (cycle[0],),
                         ).fetchone()
                         if seg and seg[0] is not None:
                             rem_pct_num = max(0, min(100, int(seg[0])))
+                            break
+                    rem_pct_text = f"{rem_pct_num}%" if rem_pct_num is not None else "未知"
 
                     # 标签名称
                     disp_label = alias_name if alias_name else (acc_name.split("@")[0] if "@" in acc_name else acc_name)
@@ -248,9 +254,10 @@ class CpaKeeperService:
                         "tokens_str": _format_token_count(total_toks),
                         "reset_5h_str": reset_5h_str,
                         "reset_7d_str": reset_7d_str,
-                        "remaining_pct": f"{rem_pct_num}%",
+                        "remaining_pct": rem_pct_text,
                         "remaining_pct_num": rem_pct_num,
                         "last_used": last_used_str[:16].replace("T", " ") if last_used_str else "从未",
+                        "quota_observed": rem_pct_num is not None,
                     })
 
                 con.close()
