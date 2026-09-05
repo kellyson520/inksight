@@ -255,16 +255,13 @@ def load_font_by_name(name: str, size: int, force_truetype: bool = False) -> Ima
 def rgba_to_mono(
     img: Image.Image, target_size: tuple[int, int] | None = None
 ) -> Image.Image:
-    """Convert an RGBA icon to monochrome (mode '1'), optionally resizing."""
+    """Convert an RGBA icon to monochrome (mode '1'), optionally resizing. Vectorized with Pillow point LUT."""
     if target_size:
         img = img.resize(target_size, Image.LANCZOS)
     img = img.convert("RGBA")
-    mono = Image.new("1", img.size, 1)
-    for x in range(img.width):
-        for y in range(img.height):
-            _, _, _, a = img.getpixel((x, y))
-            if a > 128:
-                mono.putpixel((x, y), 0)
+    alpha = img.getchannel("A")
+    # alpha > 128 为不透明图案 (黑色 0), 其余为白色背景 (1)
+    mono = alpha.point(lambda p: 0 if p > 128 else 1, mode="1")
     return mono
 
 
