@@ -11,7 +11,7 @@
       "label": "看板视图",
       "type": "select",
       "options": [
-        { "value": "auths", "label": "认证文件与限额 (重置时间+用量)" },
+        { "value": "auths", "label": "认证文件与限额 (双重置+环形进度)" },
         { "value": "overview", "label": "综合总览 (认证+账单+模型)" },
         { "value": "users", "label": "用户消费排行 (Key账单)" },
         { "value": "models", "label": "模型消耗分布 (Token吞吐)" }
@@ -25,26 +25,27 @@
     "fallback": {
       "title": "本地认证文件与限额看板",
       "header_status": "CPA 在线 · Keeper 在线",
-      "summary_1_label": "认证文件",
-      "summary_1_val": "4 个",
-      "summary_2_label": "限额窗口重置",
-      "summary_2_val": "3时38分",
-      "summary_3_label": "今日总 Token",
-      "summary_3_val": "75.3M",
-      "col_title": "认证文件限额与请求用量",
-      "item_1_title": "AA [CODEX]",
-      "item_1_status": "重置: 3时38分",
-      "item_1_progress_val": "85",
-      "item_1_detail": "剩余配额: 85% · 已用: 2.87B (26138次)",
-      "item_2_title": "huo02 [ANTIGRAVITY]",
-      "item_2_status": "重置: 持续可用",
-      "item_2_progress_val": "100",
-      "item_2_detail": "剩余配额: 100% · 已用: 482.9M (3370次)",
-      "item_3_title": "h [GEMINI]",
-      "item_3_status": "重置: 持续可用",
-      "item_3_progress_val": "100",
-      "item_3_detail": "剩余配额: 100% · 已用: 224.0K (43次)",
-      "reset_bottom_label": "认证文件: 4 个 · 窗口重置: 3时38分",
+      "summary_1_label": "运行中文件",
+      "summary_1_val": "2 个",
+      "summary_2_label": "5小时窗口重置",
+      "summary_2_val": "2时45分",
+      "summary_3_label": "7天窗口重置",
+      "summary_3_val": "6天0时",
+      "card_1_title": "AA  [CODEX]",
+      "card_1_status": "• 正常调用中",
+      "card_1_reset_text": "5h重置: 2时45分   7天重置: 6天0时",
+      "card_1_usage_text": "已用: 2.87B Tokens · 26,139 次请求",
+      "card_1_ring_val": "85",
+      "card_1_ring_text": "85%",
+      "card_1_ring_label": "剩余配额",
+      "card_2_title": "huo02  [ANTIGRAVITY]",
+      "card_2_status": "• 正常调用中",
+      "card_2_reset_text": "5h重置: 持续可用   7天重置: 持续可用",
+      "card_2_usage_text": "已用: 485.5M Tokens · 3,370 次请求",
+      "card_2_ring_val": "100",
+      "card_2_ring_text": "100%",
+      "card_2_ring_label": "配额充沛",
+      "reset_bottom_label": "监控认证文件: 2 个  ·  今日总 Token: 85.6M",
       "update_time": "12:00:00"
     }
   },
@@ -166,94 +167,137 @@
         "type": "card",
         "border": "solid",
         "radius": 4,
-        "padding": 5,
+        "padding": 6,
         "margin_x": 8,
         "children": [
           {
-            "type": "text",
-            "field": "col_title",
-            "font": "noto_serif_bold",
-            "font_size": 11,
-            "margin_bottom": 4
-          },
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "items": [
+              {
+                "type": "vertical_stack",
+                "gap": 3,
+                "children": [
+                  {
+                    "type": "flex_row",
+                    "align_items": "center",
+                    "items": [
+                      { "type": "text", "field": "card_1_title", "font": "noto_serif_bold", "font_size": 12 },
+                      { "type": "spacer", "width": 8 },
+                      { "type": "text", "field": "card_1_status", "font": "noto_serif_regular", "font_size": 9 }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "field": "card_1_reset_text",
+                    "font": "noto_serif_bold",
+                    "font_size": 10
+                  },
+                  {
+                    "type": "text",
+                    "field": "card_1_usage_text",
+                    "font": "noto_serif_regular",
+                    "font_size": 9
+                  }
+                ]
+              },
+              {
+                "type": "vertical_stack",
+                "align_items": "center",
+                "gap": 1,
+                "children": [
+                  {
+                    "type": "ring_progress",
+                    "field": "card_1_ring_val",
+                    "text_field": "card_1_ring_text",
+                    "max": 100,
+                    "size": 44,
+                    "ring_width": 3,
+                    "font": "roboto_bold",
+                    "font_size": 10
+                  },
+                  {
+                    "type": "text",
+                    "field": "card_1_ring_label",
+                    "font": "noto_serif_regular",
+                    "font_size": 8,
+                    "align": "center"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 6,
+        "margin_x": 8,
+        "children": [
           {
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
             "items": [
-              { "type": "text", "field": "item_1_title", "font": "noto_serif_bold", "font_size": 10 },
-              { "type": "text", "field": "item_1_status", "font": "noto_serif_bold", "font_size": 10 }
+              {
+                "type": "vertical_stack",
+                "gap": 3,
+                "children": [
+                  {
+                    "type": "flex_row",
+                    "align_items": "center",
+                    "items": [
+                      { "type": "text", "field": "card_2_title", "font": "noto_serif_bold", "font_size": 12 },
+                      { "type": "spacer", "width": 8 },
+                      { "type": "text", "field": "card_2_status", "font": "noto_serif_regular", "font_size": 9 }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "field": "card_2_reset_text",
+                    "font": "noto_serif_bold",
+                    "font_size": 10
+                  },
+                  {
+                    "type": "text",
+                    "field": "card_2_usage_text",
+                    "font": "noto_serif_regular",
+                    "font_size": 9
+                  }
+                ]
+              },
+              {
+                "type": "vertical_stack",
+                "align_items": "center",
+                "gap": 1,
+                "children": [
+                  {
+                    "type": "ring_progress",
+                    "field": "card_2_ring_val",
+                    "text_field": "card_2_ring_text",
+                    "max": 100,
+                    "size": 44,
+                    "ring_width": 3,
+                    "font": "roboto_bold",
+                    "font_size": 10
+                  },
+                  {
+                    "type": "text",
+                    "field": "card_2_ring_label",
+                    "font": "noto_serif_regular",
+                    "font_size": 8,
+                    "align": "center"
+                  }
+                ]
+              }
             ]
-          },
-          {
-            "type": "progress_bar",
-            "field": "item_1_progress_val",
-            "max": 100,
-            "height": 5,
-            "margin_top": 2,
-            "margin_bottom": 2
-          },
-          {
-            "type": "text",
-            "field": "item_1_detail",
-            "font": "noto_serif_regular",
-            "font_size": 9
-          },
-          {
-            "type": "separator",
-            "dashed": true,
-            "margin_y": 3
-          },
-          {
-            "type": "flex_row",
-            "justify": "space-between",
-            "align_items": "center",
-            "items": [
-              { "type": "text", "field": "item_2_title", "font": "noto_serif_bold", "font_size": 10 },
-              { "type": "text", "field": "item_2_status", "font": "noto_serif_bold", "font_size": 10 }
-            ]
-          },
-          {
-            "type": "progress_bar",
-            "field": "item_2_progress_val",
-            "max": 100,
-            "height": 5,
-            "margin_top": 2,
-            "margin_bottom": 2
-          },
-          {
-            "type": "text",
-            "field": "item_2_detail",
-            "font": "noto_serif_regular",
-            "font_size": 9
-          },
-          {
-            "type": "separator",
-            "dashed": true,
-            "margin_y": 3
-          },
-          {
-            "type": "flex_row",
-            "justify": "space-between",
-            "align_items": "center",
-            "items": [
-              { "type": "text", "field": "item_3_title", "font": "noto_serif_bold", "font_size": 10 },
-              { "type": "text", "field": "item_3_status", "font": "noto_serif_bold", "font_size": 10 }
-            ]
-          },
-          {
-            "type": "progress_bar",
-            "field": "item_3_progress_val",
-            "max": 100,
-            "height": 5,
-            "margin_top": 2,
-            "margin_bottom": 2
-          },
-          {
-            "type": "text",
-            "field": "item_3_detail",
-            "font": "noto_serif_regular",
-            "font_size": 9
           }
         ]
       },

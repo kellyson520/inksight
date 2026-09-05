@@ -515,6 +515,13 @@ def _measure_component_progress_bar(node: ComponentNode, scale: float) -> None:
     node.draw_data = {"width": width, "height": height}
 
 
+def _measure_component_ring_progress(node: ComponentNode, scale: float) -> None:
+    size = _scaled_value(node.props.get("size", 48), scale, 48, 16)
+    node.measured_width = size
+    node.measured_height = size
+    node.draw_data = {"size": size}
+
+
 def _measure_component_separator(node: ComponentNode, available_width: int | None, scale: float) -> None:
     line_width = max(1, int(node.props.get("line_width", 1)))
     width = available_width if available_width is not None else _scaled_value(node.props.get("width"), scale, 60, 4)
@@ -671,6 +678,9 @@ def _measure_component_node(node: ComponentNode, available_width: int | None, th
         return
     if node.kind == "progress_bar":
         _measure_component_progress_bar(node, scale)
+        return
+    if node.kind == "ring_progress":
+        _measure_component_ring_progress(node, scale)
         return
     if node.kind == "separator":
         _measure_component_separator(node, available_width, scale)
@@ -1048,6 +1058,46 @@ def _paint_component_node(ctx: RenderContext, node: ComponentNode, theme: dict, 
         fill_w = int((width - 2) * ratio)
         if fill_w > 0:
             ctx.draw.rectangle([x + 1, y + 1, x + 1 + fill_w, y + height - 1], fill=EINK_FG)
+        return
+    if node.kind == "ring_progress":
+        value = _num(node.content.get(node.props.get("field", ""), ""))
+        max_value = max(_num(node.content.get(node.props.get("max_field", ""), "")), 1)
+        ratio = max(0.0, min(1.0, value / max_value))
+        size = min(box.width, box.height, node.draw_data.get("size", min(box.width, box.height)))
+        x = box.x + max(0, (box.width - size) // 2)
+        y = box.y + max(0, (box.height - size) // 2)
+
+        cx = x + size // 2
+        cy = y + size // 2
+        r = (size - 4) // 2
+        ring_w = max(2, _scaled_value(node.props.get("ring_width", 3), scale, 3, 1))
+
+        # 绘制背景底轨 (浅灰色细线)
+        color = ctx.resolve_color(node.props)
+        track_color = 180 if ctx.colors > 2 else color
+        ctx.draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=track_color, width=1)
+        ctx.draw.ellipse([cx - r + ring_w, cy - r + ring_w, cx + r - ring_w, cy + r - ring_w], outline=track_color, width=1)
+
+        # 绘制进度弧段 (从 12 点钟方向 -90 度开始顺时针)
+        if ratio > 0.01:
+            end_deg = -90 + int(360.0 * ratio)
+            for dr in range(ring_w):
+                ctx.draw.arc([cx - r + dr, cy - r + dr, cx + r - dr, cy + r - dr], start=-90, end=end_deg, fill=color, width=1)
+
+        # 绘制环形中间的文本 (如 85%)
+        center_text = str(node.content.get(node.props.get("text_field", ""), ""))
+        if not center_text:
+            center_text = f"{int(ratio * 100)}%"
+        
+        font_size = _scaled_value(node.props.get("font_size", 10), scale, 10, 7)
+        font_name = node.props.get("font", "roboto_bold")
+        font = load_font(font_name, font_size)
+        bbox = font.getbbox(center_text)
+        tw = bbox[2] - bbox[0]
+        th = bbox[3] - bbox[1]
+        tx = cx - tw // 2
+        ty = cy - th // 2 - bbox[1]
+        ctx.draw.text((tx, ty), center_text, fill=color, font=font)
         return
     if node.kind == "separator":
         style = node.props.get("style", "solid")
