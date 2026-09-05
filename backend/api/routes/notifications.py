@@ -3,7 +3,8 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from core.push_service import push_dispatcher
-from core.auth import require_admin, require_user
+from core.auth import require_admin, require_user, validate_mac_param
+from core.config_store import is_device_owner
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -38,10 +39,13 @@ class BroadcastAlertRequest(BaseModel):
 
 
 @router.post("/device-alert")
-async def send_device_alert(body: DeviceAlertPushRequest, _: Any = Depends(require_user)):
+async def send_device_alert(body: DeviceAlertPushRequest, user_id: int = Depends(require_user)):
     """向指定墨水屏发送 Focus Alert 实时弹窗提醒。"""
+    mac = validate_mac_param(body.mac)
+    if not await is_device_owner(mac, user_id):
+        raise HTTPException(status_code=403, detail="device_owner_required")
     ok = await push_dispatcher.push_to_device(
-        mac=body.mac,
+        mac=mac,
         sender=body.sender,
         message=body.message,
         level=body.level,
@@ -49,7 +53,7 @@ async def send_device_alert(body: DeviceAlertPushRequest, _: Any = Depends(requi
     )
     if not ok:
         raise HTTPException(status_code=500, detail="Failed to enqueue device alert")
-    return {"ok": True, "mac": body.mac}
+    return {"ok": True, "mac": mac}
 
 
 @router.post("/bark")
