@@ -3,12 +3,15 @@ from __future__ import annotations
 import html
 import logging
 import re
+import asyncio
 import time
 import xml.etree.ElementTree as ET
 from typing import Any, Optional
 from urllib.parse import urljoin
 
 import httpx
+
+from .outbound_http import RequestPolicy, outbound_http
 
 logger = logging.getLogger(__name__)
 
@@ -82,17 +85,30 @@ async def fetch_and_parse_rss(feed_url: str, timeout: float = 12.0) -> dict[str,
     }
 
     raw_xml = ""
-    # verify=False 兼容自签名证书、特殊内网或特定DDNS代理
-    async with httpx.AsyncClient(timeout=timeout, verify=False, follow_redirects=True) as client:
-        try:
-            resp = await client.get(feed_url, headers=headers)
-            if resp.status_code >= 400:
-                logger.warning(f"[RSS] HTTP error {resp.status_code} fetching {feed_url}")
-                return {"error": f"HTTP {resp.status_code}", "items": []}
-            raw_xml = resp.text
-        except Exception as e:
-            logger.warning(f"[RSS] Network error fetching {feed_url}: {e}")
-            return {"error": str(e), "items": []}
+    try:
+        base_timeout = RequestPolicy().timeout
+        policy = RequestPolicy(
+            timeout=httpx.Timeout(
+                connect=base_timeout.connect,
+                read=max(1.0, timeout),
+                write=base_timeout.write,
+                pool=base_timeout.pool,
+            ),
+            max_attempts=3,
+            max_response_bytes=2 * 1024 * 1024,
+            verify=True,
+            follow_redirects=False,
+        )
+        response = await asyncio.to_thread(
+            outbound_http.get_text,
+            feed_url,
+            headers=headers,
+            policy=policy,
+        )
+        raw_xml = response.text
+    except Exception as e:
+        logger.warning("[RSS] Network error fetching %s: %s", feed_url, type(e).__name__)
+        return {"error": str(e), "items": []}
 
     if not raw_xml:
         return {"error": "Empty response", "items": []}

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import html
 import json
 import os
 import re
 import xml.etree.ElementTree as ET
+from urllib.parse import urlencode
 
 import logging
 import httpx
@@ -20,6 +22,7 @@ from tenacity import (
 
 from .errors import LLMKeyMissingError
 from .config import DEFAULT_LLM_PROVIDER, DEFAULT_LLM_MODEL
+from .outbound_http import RequestPolicy, outbound_http
 
 logger = logging.getLogger(__name__)
 
@@ -569,40 +572,37 @@ def _fallback_content(persona: str) -> dict:
 
 async def fetch_hn_top_stories(limit: int = 3) -> list[dict]:
     """获取 Hacker News 热榜 Top N（并发请求各 story）"""
-    import asyncio as _asyncio
-
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
-                "https://hacker-news.firebaseio.com/v0/topstories.json"
-            )
-            if resp.status_code != 200:
-                logger.error(f"[HN] Failed to fetch top stories: {resp.status_code}")
-                return []
+        response = await asyncio.to_thread(
+            outbound_http.get_json,
+            "https://hacker-news.firebaseio.com/v0/topstories.json",
+        )
+        story_ids = response.json()[:limit]
 
-            story_ids = resp.json()[:limit]
-
-            async def _fetch_one(sid: int) -> dict | None:
-                r = await client.get(
-                    f"https://hacker-news.firebaseio.com/v0/item/{sid}.json"
+        async def _fetch_one(sid: int) -> dict | None:
+            try:
+                response = await asyncio.to_thread(
+                    outbound_http.get_json,
+                    f"https://hacker-news.firebaseio.com/v0/item/{sid}.json",
                 )
-                if r.status_code == 200:
-                    s = r.json()
-                    return {
-                        "title": s.get("title", "No title"),
-                        "score": s.get("score", 0),
-                        "url": s.get("url", ""),
-                    }
+                story = response.json()
+                return {
+                    "title": story.get("title", "No title"),
+                    "score": story.get("score", 0),
+                    "url": story.get("url", ""),
+                }
+            except Exception as exc:
+                logger.warning(f"[HN] Failed to fetch story {sid}: {exc}")
                 return None
 
-            results = await _asyncio.gather(*[_fetch_one(sid) for sid in story_ids])
-            stories = [s for s in results if s is not None]
+        results = await asyncio.gather(*[_fetch_one(sid) for sid in story_ids])
+        stories = [story for story in results if story is not None]
 
-            logger.info(f"[HN] Fetched {len(stories)} stories (concurrent)")
-            return stories
+        logger.info(f"[HN] Fetched {len(stories)} stories (concurrent)")
+        return stories
 
-    except (httpx.HTTPError, ValueError, TypeError) as e:
-        logger.error(f"[HN] Error: {e}")
+    except (httpx.HTTPError, ValueError, TypeError) as exc:
+        logger.error(f"[HN] Error: {exc}")
         return []
 
 
@@ -627,56 +627,55 @@ async def fetch_ph_top_product() -> dict:
         return text[:100]
 
     try:
-        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-            resp = await client.get("https://www.producthunt.com/feed")
-            if resp.status_code != 200:
-                logger.error(f"[PH] Failed to fetch RSS: {resp.status_code}")
-                return {}
+        response = await asyncio.to_thread(
+            outbound_http.get_text,
+            "https://www.producthunt.com/feed",
+            policy=RequestPolicy(follow_redirects=True),
+        )
+        root = ET.fromstring(response.content)
 
-            root = ET.fromstring(resp.content)
+        namespaces = {
+            "atom": "http://www.w3.org/2005/Atom",
+            "media": "http://search.yahoo.com/mrss/",
+        }
 
-            namespaces = {
-                "atom": "http://www.w3.org/2005/Atom",
-                "media": "http://search.yahoo.com/mrss/",
-            }
+        items = (
+            root.findall(".//item")
+            or root.findall(".//entry", namespaces)
+            or root.findall(".//{http://www.w3.org/2005/Atom}entry")
+        )
 
-            items = (
-                root.findall(".//item")
-                or root.findall(".//entry", namespaces)
-                or root.findall(".//{http://www.w3.org/2005/Atom}entry")
-            )
+        if not items:
+            logger.warning(f"[PH] No items found in RSS. Root tag: {root.tag}")
+            return {}
 
-            if not items:
-                logger.warning(f"[PH] No items found in RSS. Root tag: {root.tag}")
-                return {}
+        first_item = items[0]
 
-            first_item = items[0]
+        title = _first_present(
+            first_item.find("title"),
+            first_item.find("{http://www.w3.org/2005/Atom}title"),
+        )
+        description = _first_present(
+            first_item.find("description"),
+            first_item.find("summary"),
+            first_item.find("{http://www.w3.org/2005/Atom}summary"),
+            first_item.find("content"),
+            first_item.find("{http://www.w3.org/2005/Atom}content"),
+        )
 
-            title = _first_present(
-                first_item.find("title"),
-                first_item.find("{http://www.w3.org/2005/Atom}title"),
-            )
-            description = _first_present(
-                first_item.find("description"),
-                first_item.find("summary"),
-                first_item.find("{http://www.w3.org/2005/Atom}summary"),
-                first_item.find("content"),
-                first_item.find("{http://www.w3.org/2005/Atom}content"),
-            )
+        tagline_text = ""
+        if description is not None and description.text:
+            tagline_text = _clean_ph_description(description.text)
 
-            tagline_text = ""
-            if description is not None and description.text:
-                tagline_text = _clean_ph_description(description.text)
+        product = {
+            "name": title.text if title is not None else "Unknown Product",
+            "tagline": tagline_text,
+        }
 
-            product = {
-                "name": title.text if title is not None else "Unknown Product",
-                "tagline": tagline_text,
-            }
+        logger.info(f"[PH] Fetched product: {product['name']}")
+        return product
 
-            logger.info(f"[PH] Fetched product: {product['name']}")
-            return product
-
-    except (httpx.HTTPError, ET.ParseError) as e:
+    except (httpx.HTTPError, ET.ParseError, ValueError, TypeError) as e:
         logger.exception("[PH] Error fetching Product Hunt product")
         return {}
 
@@ -684,31 +683,29 @@ async def fetch_ph_top_product() -> dict:
 async def fetch_devto_top(limit: int = 1) -> list[dict]:
     """获取 Dev.to 热门文章。"""
     try:
-        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-            resp = await client.get(
-                "https://dev.to/api/articles",
-                params={"per_page": limit, "top": 7},
-            )
-            if resp.status_code != 200:
-                logger.error(f"[DevTo] Failed to fetch top articles: {resp.status_code}")
-                return []
-            data = resp.json()
-            topics = []
-            for item in data[:limit]:
-                if not isinstance(item, dict):
-                    continue
-                title = str(item.get("title", "")).strip()
-                if not title:
-                    continue
-                topics.append({
-                    "title": title,
-                    "score": int(item.get("public_reactions_count", 0) or 0),
-                    "url": str(item.get("url", "")),
-                })
-            logger.info(f"[DevTo] Fetched {len(topics)} top articles")
-            if topics:
-                logger.info(f"[DevTo] Top article title: {topics[0]['title']}")
-            return topics
+        response = await asyncio.to_thread(
+            outbound_http.get_json,
+            "https://dev.to/api/articles?" + urlencode({"per_page": limit, "top": 7}),
+            headers={"Accept": "application/json"},
+            policy=RequestPolicy(follow_redirects=True),
+        )
+        data = response.json()
+        topics = []
+        for item in data[:limit]:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("title", "")).strip()
+            if not title:
+                continue
+            topics.append({
+                "title": title,
+                "score": int(item.get("public_reactions_count", 0) or 0),
+                "url": str(item.get("url", "")),
+            })
+        logger.info(f"[DevTo] Fetched {len(topics)} top articles")
+        if topics:
+            logger.info(f"[DevTo] Top article title: {topics[0]['title']}")
+        return topics
     except (httpx.HTTPError, ValueError, TypeError) as e:
         logger.error(f"[DevTo] Error: {e}")
     return []

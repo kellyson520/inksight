@@ -69,13 +69,8 @@ class TestGetWeather:
             }
         }
 
-        with patch("core.context.httpx.AsyncClient") as MockClient:
-            instance = AsyncMock()
-            instance.get = AsyncMock(return_value=mock_resp)
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
+        with patch("core.weather_service.outbound_http.get_json") as mock_get:
+            mock_get.return_value = mock_resp
             result = await get_weather(city="杭州")
             assert result["temp"] == 15
             assert result["weather_code"] == 2
@@ -93,29 +88,18 @@ class TestGetWeather:
             }
         }
 
-        with patch("core.context.httpx.AsyncClient") as MockClient:
-            instance = AsyncMock()
-            instance.get = AsyncMock(return_value=mock_resp)
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
+        with patch("core.weather_service.outbound_http.get_json") as mock_get:
+            mock_get.return_value = mock_resp
             result = await get_weather(city="杭州", lat=27.66, lon=120.56)
             assert result["temp"] == 21
-            called_params = instance.get.await_args.kwargs["params"]
-            assert called_params["latitude"] == pytest.approx(27.66)
-            assert called_params["longitude"] == pytest.approx(120.56)
+            called_url = mock_get.call_args.args[0]
+            assert "latitude=27.66" in called_url
+            assert "longitude=120.56" in called_url
 
     @pytest.mark.asyncio
     async def test_failure_returns_default(self):
-        with patch("core.context.httpx.AsyncClient") as MockClient, \
+        with patch("core.weather_service.outbound_http.get_json", side_effect=Exception("timeout")), \
              patch("core.context._qweather_current", new_callable=AsyncMock, return_value=None):
-            instance = AsyncMock()
-            instance.get = AsyncMock(side_effect=Exception("timeout"))
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
             result = await get_weather(city="杭州")
             assert result["temp"] == 0
             assert result["weather_str"] == "--°C"
@@ -142,14 +126,9 @@ class TestGetWeather:
         with (
             patch("core.context.QWEATHER_API_KEY", "test-key"),
             patch("core.context.QWEATHER_API_HOST", "devapi.qweather.com"),
-            patch("core.context.httpx.AsyncClient") as MockClient,
+            patch("core.weather_service.outbound_http.get_json", side_effect=Exception("Open-Meteo down")),
+            patch("core.weather_service._qweather_get", new_callable=AsyncMock, return_value={"code": "200", "now": {"temp": "22", "icon": "100"}}),
         ):
-            instance = AsyncMock()
-            instance.get = AsyncMock(side_effect=_routed_get)
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
             result = await get_weather(city="杭州")
             assert result["temp"] == 22
             assert result["weather_code"] == 0
@@ -209,14 +188,8 @@ class TestQWeatherHelpers:
         with (
             patch("core.context.QWEATHER_API_KEY", "test-key"),
             patch("core.context.QWEATHER_API_HOST", "devapi.qweather.com"),
-            patch("core.context.httpx.AsyncClient") as MockClient,
+            patch("core.weather_service._qweather_get", new_callable=AsyncMock, return_value=qw_resp.json.return_value),
         ):
-            instance = AsyncMock()
-            instance.get = AsyncMock(return_value=qw_resp)
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
             result = await _qweather_forecast_to_standard(39.9, 116.4, 3, "北京", "zh")
             assert result is not None
             assert result["today_high"] == "25"

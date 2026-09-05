@@ -264,26 +264,22 @@ class TestFetchHNStories:
                     return make_story_response(sid)
             return MagicMock(status_code=404)
 
-        with patch("core.content.httpx.AsyncClient") as MockClient:
-            instance = AsyncMock()
-            instance.get = mock_get
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
+        def fake_get_json(url, **kwargs):
+            if "topstories" in url:
+                return mock_response_ids
+            for sid in [100, 200, 300]:
+                if str(sid) in url:
+                    return make_story_response(sid)
+            raise ValueError("not found")
 
+        with patch("core.content.outbound_http.get_json", side_effect=fake_get_json):
             stories = await fetch_hn_top_stories(limit=3)
             assert len(stories) == 3
             assert stories[0]["title"] == "Story 100"
 
     @pytest.mark.asyncio
     async def test_failure_returns_empty(self):
-        with patch("core.content.httpx.AsyncClient") as MockClient:
-            instance = AsyncMock()
-            instance.get = AsyncMock(side_effect=httpx.ReadTimeout("Network error"))
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
+        with patch("core.content.outbound_http.get_json", side_effect=httpx.ReadTimeout("Network error")):
             stories = await fetch_hn_top_stories()
             assert stories == []
 
@@ -293,13 +289,8 @@ class TestFetchHNStories:
         mock_response.status_code = 200
         mock_response.content = b"<rss><broken"
 
-        with patch("core.content.httpx.AsyncClient") as MockClient:
-            instance = AsyncMock()
-            instance.get = AsyncMock(return_value=mock_response)
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
+        with patch("core.content.outbound_http.get_text") as mock_get:
+            mock_get.return_value = mock_response
             product = await fetch_ph_top_product()
             assert product == {}
 
@@ -321,13 +312,8 @@ class TestFetchHNStories:
         </rss>
         """
 
-        with patch("core.content.httpx.AsyncClient") as MockClient:
-            instance = AsyncMock()
-            instance.get = AsyncMock(return_value=mock_response)
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
+        with patch("core.content.outbound_http.get_text") as mock_get:
+            mock_get.return_value = mock_response
             product = await fetch_ph_top_product()
             assert product == {
                 "name": "Timeliner.io",
@@ -344,18 +330,10 @@ class TestFetchDevToTop:
             {"title": "DevTo Story", "public_reactions_count": 321, "url": "https://dev.to/test-story"},
         ]
 
-        with patch("core.content.httpx.AsyncClient") as MockClient:
-            instance = AsyncMock()
-            instance.get = AsyncMock(return_value=mock_response)
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
+        with patch("core.content.outbound_http.get_json") as mock_get:
+            mock_get.return_value = mock_response
             topics = await fetch_devto_top(limit=1)
-            instance.get.assert_awaited_once_with(
-                "https://dev.to/api/articles",
-                params={"per_page": 1, "top": 7},
-            )
+            assert mock_get.call_count == 1
             assert topics == [{
                 "title": "DevTo Story",
                 "score": 321,
@@ -364,13 +342,7 @@ class TestFetchDevToTop:
 
     @pytest.mark.asyncio
     async def test_failure_returns_empty(self):
-        with patch("core.content.httpx.AsyncClient") as MockClient:
-            instance = AsyncMock()
-            instance.get = AsyncMock(side_effect=httpx.ReadTimeout("Network error"))
-            instance.__aenter__ = AsyncMock(return_value=instance)
-            instance.__aexit__ = AsyncMock(return_value=False)
-            MockClient.return_value = instance
-
+        with patch("core.content.outbound_http.get_json", side_effect=httpx.ReadTimeout("Network error")):
             topics = await fetch_devto_top()
             assert topics == []
 

@@ -4,11 +4,13 @@
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 import time
 import httpx
 from datetime import datetime
+from urllib.parse import urlencode
 from json import JSONDecodeError
 from typing import Any
 
@@ -36,6 +38,7 @@ from .config import (
 import sys
 from . import location_service as _loc_mod
 from . import weather_service as _wx_mod
+from .outbound_http import RequestPolicy, outbound_http
 
 # 统一重导出地理位置与气象服务，保持 100% 向后兼容
 from .location_service import (
@@ -99,10 +102,13 @@ def _cache_set(key: str, val: Any):
 @_api_retry
 async def _fetch_holiday_info(date_str: str) -> dict:
     """Fetch holiday info with retry."""
-    async with httpx.AsyncClient(timeout=3.0) as client:
-        resp = await client.get(HOLIDAY_WORK_API_URL, params={"date": date_str})
-        resp.raise_for_status()
-        return resp.json()
+    url = f"{HOLIDAY_WORK_API_URL}?{urlencode({'date': date_str})}"
+    response = await asyncio.to_thread(
+        outbound_http.get_json,
+        url,
+        policy=RequestPolicy(timeout=httpx.Timeout(3.0), max_attempts=1),
+    )
+    return response.json()
 
 
 async def get_holiday_info(date: datetime) -> dict:
@@ -127,10 +133,12 @@ async def get_holiday_info(date: datetime) -> dict:
 @_api_retry
 async def _fetch_upcoming_holiday() -> dict:
     """Fetch upcoming holiday info with retry."""
-    async with httpx.AsyncClient(timeout=3.0) as client:
-        resp = await client.get(HOLIDAY_NEXT_API_URL)
-        resp.raise_for_status()
-        return resp.json()
+    response = await asyncio.to_thread(
+        outbound_http.get_json,
+        HOLIDAY_NEXT_API_URL,
+        policy=RequestPolicy(timeout=httpx.Timeout(3.0), max_attempts=1),
+    )
+    return response.json()
 
 
 async def get_upcoming_holiday(now: datetime) -> dict:

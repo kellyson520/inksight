@@ -43,6 +43,10 @@ class HttpResponse:
         return json.loads(self.content)
 
 
+class RetryableHttpError(ValueError):
+    pass
+
+
 class OutboundHttp:
     RETRYABLE_STATUS_CODES = frozenset({408, 425, 429})
 
@@ -116,12 +120,13 @@ class OutboundHttp:
         for attempt in range(1, max_attempts + 1):
             try:
                 response = self._get(url, request_headers, effective)
-                if response.status_code >= 400:
+                if response.status_code >= 300:
                     if self._retryable_status(response.status_code) and attempt < max_attempts:
                         if effective.backoff_base > 0:
                             time.sleep(effective.backoff_base * (2 ** (attempt - 1)) + random.random() * 0.05)
                         continue
-                    raise ValueError(f"HTTP {response.status_code}")
+                    error_type = RetryableHttpError if self._retryable_status(response.status_code) else ValueError
+                    raise error_type(f"HTTP {response.status_code}")
                 content = response.content
                 if len(content) > max_bytes:
                     raise ValueError(f"response too large: {len(content)} bytes")
@@ -136,7 +141,7 @@ class OutboundHttp:
                 return HttpResponse(response.status_code, dict(response.headers), content, url, attempt, elapsed)
             except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError, ValueError) as exc:
                 last_error = exc
-                if isinstance(exc, ValueError) and not str(exc).startswith("HTTP 5") and not str(exc).startswith("HTTP 4"):
+                if isinstance(exc, ValueError) and not isinstance(exc, RetryableHttpError):
                     break
                 if attempt < max_attempts and effective.backoff_base > 0:
                     time.sleep(effective.backoff_base * (2 ** (attempt - 1)) + random.random() * 0.05)
@@ -146,6 +151,7 @@ class OutboundHttp:
             "operation": "http.get",
             "url_host": urlparse(url).hostname,
             "attempts": max_attempts,
+            "retry_count": max(0, max_attempts - 1),
             "duration_ms": elapsed,
             "error_type": type(last_error).__name__ if last_error else "UnknownError",
         })
@@ -153,6 +159,26 @@ class OutboundHttp:
 
     def get_text(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
         return self.get_bytes(url, headers=headers, policy=policy)
+
+    def post_json(self, url: str, *, json_body: Any, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
+        effective = policy or self.policy
+        self._validate_url(url, effective)
+        request_headers = {"User-Agent": "InkSightOutboundHttp/1.0", "Content-Type": "application/json"}
+        request_headers.update({str(k): str(v) for k, v in (headers or {}).items()})
+        client = self.client_factory(timeout=effective.timeout, follow_redirects=effective.follow_redirects, verify=effective.verify)
+        started = time.perf_counter()
+        if hasattr(client, "__enter__"):
+            with client as managed:
+                response = managed.post(url, json=json_body, headers=request_headers, follow_redirects=effective.follow_redirects)
+        else:
+            response = client.post(url, json=json_body, headers=request_headers, follow_redirects=effective.follow_redirects)
+        if response.status_code >= 300:
+            raise ValueError(f"HTTP {response.status_code}")
+        if len(response.content) > effective.max_response_bytes:
+            raise ValueError(f"response too large: {len(response.content)} bytes")
+        elapsed = round((time.perf_counter() - started) * 1000, 2)
+        obs.emit("dependency.completed", {"operation": "http.post_json", "url_host": urlparse(url).hostname, "status": response.status_code, "attempts": 1, "retry_count": 0, "duration_ms": elapsed})
+        return HttpResponse(response.status_code, dict(response.headers), response.content, url, 1, elapsed)
 
     def get_json(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
         response = self.get_bytes(url, headers=headers, policy=policy)

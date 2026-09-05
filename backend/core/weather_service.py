@@ -10,6 +10,7 @@ import re
 import time
 import httpx
 from datetime import datetime
+from urllib.parse import urlencode, urlsplit, urlunsplit
 from json import JSONDecodeError
 from typing import Any
 
@@ -33,6 +34,7 @@ from .config import (
     DEFAULT_LONGITUDE,
 )
 from .location_service import _resolve_city, extract_location_settings, _resolve_city_coords, _clean_location_text
+from .outbound_http import RequestPolicy, outbound_http
 
 logger = logging.getLogger(__name__)
 
@@ -62,10 +64,18 @@ def _cache_set(key: str, val: Any):
 @_api_retry
 async def _fetch_weather_data(url: str, params: dict) -> dict:
     """Fetch weather data with retry."""
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        resp = await client.get(url, params=params)
-        resp.raise_for_status()
-        return resp.json()
+    response = await asyncio.to_thread(
+        outbound_http.get_json,
+        _url_with_params(url, params),
+        policy=RequestPolicy(timeout=httpx.Timeout(5.0), max_attempts=1),
+    )
+    return response.json()
+
+
+def _url_with_params(url: str, params: dict) -> str:
+    parts = urlsplit(url)
+    query = urlencode(params, doseq=True)
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
 
 
 def _qweather_jwt() -> str | None:
@@ -105,14 +115,17 @@ async def _qweather_get(path: str, params: dict) -> dict | None:
     url = f"https://{QWEATHER_API_HOST}{path}"
     headers = _qweather_auth_headers()
     try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            resp = await client.get(url, params=params, headers=headers)
-            resp.raise_for_status()
-            data = resp.json()
-            if str(data.get("code")) != "200":
-                logger.warning("[QWeather] API returned code=%s for %s", data.get("code"), path)
-                return None
-            return data
+        response = await asyncio.to_thread(
+            outbound_http.get_json,
+            _url_with_params(url, params),
+            headers=headers,
+            policy=RequestPolicy(timeout=httpx.Timeout(8.0), max_attempts=1),
+        )
+        data = response.json()
+        if str(data.get("code")) != "200":
+            logger.warning("[QWeather] API returned code=%s for %s", data.get("code"), path)
+            return None
+        return data
     except (httpx.HTTPError, TypeError, ValueError, JSONDecodeError) as e:
         logger.warning("[QWeather] Failed to call %s: %s", path, e)
         return None

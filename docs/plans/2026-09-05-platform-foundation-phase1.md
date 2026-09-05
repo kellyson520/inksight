@@ -237,7 +237,7 @@ Replace direct clients with `outbound_http.get_json/get_text/get_bytes`; preserv
 
 - [ ] **Step 4: Run source and behavior tests**
 
-Run: `PYTHONPATH=backend pytest backend/tests/test_source_http_migration.py backend/tests/test_rss_parser.py backend/tests/test_hotlist_service.py backend/tests/test_briefing_mode.py -q`
+Run: `PYTHONPATH=backend pytest backend/tests/test_source_http_migration.py backend/tests/test_rss_and_open_api.py backend/tests/test_hotlist_mode.py backend/tests/test_hotlist_extensions.py backend/tests/test_webhook_and_hotlist.py -q`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**

@@ -11,7 +11,42 @@ import logging
 import time
 from typing import Any
 
-from .http_client import get_async_client
+from urllib.parse import urlencode
+
+from .outbound_http import RequestPolicy, outbound_http
+
+
+class _OutboundAsyncAdapter:
+    async def get(self, url: str, *, headers: dict[str, str] | None = None, params: dict[str, Any] | None = None, timeout: float | None = None):
+        if params:
+            url = f"{url}{'&' if '?' in url else '?'}{urlencode(params)}"
+        policy = RequestPolicy(
+            timeout=RequestPolicy().timeout,
+            max_attempts=2,
+            max_response_bytes=2 * 1024 * 1024,
+            verify=True,
+            follow_redirects=False,
+        )
+        if timeout is not None:
+            base = policy.timeout
+            policy = RequestPolicy(
+                timeout=__import__('httpx').Timeout(connect=base.connect, read=timeout, write=base.write, pool=base.pool),
+                max_attempts=policy.max_attempts,
+                max_response_bytes=policy.max_response_bytes,
+                verify=policy.verify,
+                follow_redirects=policy.follow_redirects,
+            )
+        response = await asyncio.to_thread(outbound_http.get_json, url, headers=headers, policy=policy)
+        return _JsonResponse(response.status_code, response.json())
+
+
+class _JsonResponse:
+    def __init__(self, status_code: int, data: Any):
+        self.status_code = status_code
+        self._data = data
+
+    def json(self) -> Any:
+        return self._data
 
 logger = logging.getLogger(__name__)
 
@@ -356,7 +391,7 @@ class HotlistService:
 
     async def _fetch_platform_items(self, platform: str, limit: int) -> list[dict[str, Any]]:
         """从对应平台的真实公开接口抓取结构化热榜数据。"""
-        client = get_async_client()
+        client = _OutboundAsyncAdapter()
         plat_name = PLATFORM_NAMES.get(platform, platform)
 
         if platform == "zhihu":
@@ -567,11 +602,12 @@ class HotlistService:
         elif platform == "36kr":
             url = "https://gateway.36kr.com/api/mis/nav/home/nav/rank/hot"
             payload = json.dumps({"partner_id": "wap", "param": {"siteId": 1, "platformId": 2}})
-            r = await client.post(
+            r = await asyncio.to_thread(
+                outbound_http.post_json,
                 url,
-                content=payload,
-                headers={"User-Agent": _BROWSER_UA, "Content-Type": "application/json"},
-                timeout=4.0,
+                json_body=json.loads(payload),
+                headers={"User-Agent": _BROWSER_UA},
+                policy=RequestPolicy(timeout=__import__('httpx').Timeout(4.0), max_attempts=1),
             )
             if r.status_code == 200:
                 data = r.json()
