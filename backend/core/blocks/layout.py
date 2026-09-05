@@ -148,10 +148,10 @@ def render_spacer(ctx: RenderContext, block: dict) -> None:
 
 
 def render_two_column(ctx: RenderContext, block: dict) -> None:
-    left_blocks = block.get("left", [])
-    right_blocks = block.get("right", [])
+    left_blocks = block.get("left") or block.get("left_blocks") or []
+    right_blocks = block.get("right") or block.get("right_blocks") or []
     gap = int(block.get("gap", 16) * ctx.scale)
-    ratio = block.get("ratio", 0.5)
+    ratio = float(block.get("ratio") or block.get("left_ratio") or 0.5)
 
     _raw_mx = block.get("margin_x")
     if _raw_mx is not None:

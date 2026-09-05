@@ -184,6 +184,24 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
         mb = int(block.get("margin_bottom", 6) * ctx.scale)
         return max_width, int(72 * ctx.scale) + mb
 
+    elif btype == "two_column":
+        left_blocks = block.get("left") or block.get("left_blocks") or []
+        right_blocks = block.get("right") or block.get("right_blocks") or []
+        gap = int(block.get("gap", 16) * ctx.scale)
+        ratio = float(block.get("ratio") or block.get("left_ratio") or 0.5)
+        _raw_mx = block.get("margin_x")
+        margin_x = int(_raw_mx * ctx.scale) if _raw_mx is not None else int(ctx.screen_w * 0.06)
+
+        col_avail = max_width - margin_x * 2 - gap
+        left_w = int(col_avail * ratio)
+        right_w = col_avail - left_w
+
+        left_h = measure_column_blocks_height(ctx, left_blocks, x_offset=margin_x, available_width=left_w)
+        right_h = measure_column_blocks_height(ctx, right_blocks, x_offset=margin_x + left_w + gap, available_width=right_w)
+        max_h = max(left_h, right_h)
+        mb = int(block.get("margin_bottom", 0) * ctx.scale)
+        return max_width, max_h + mb
+
     elif btype == "qrcode":
         sz = int(block.get("size", 140) * ctx.scale)
         mb = int(block.get("margin_bottom", 6) * ctx.scale)
