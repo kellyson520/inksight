@@ -14,6 +14,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from .outbound_http import RequestPolicy, outbound_http
+from .source_result import SourceResult
 
 
 class _OutboundAsyncAdapter:
@@ -257,6 +258,7 @@ class HotlistService:
             cached_data = cached[1]
             if len(cached_data.get("items", [])) >= limit:
                 res = dict(cached_data)
+                res["source_status"] = cached_data.get("source_status", "fresh")
                 res["items"] = cached_data["items"][:limit]
                 for i in range(8):
                     res.pop(f"item_{i + 1}", None)
@@ -270,6 +272,17 @@ class HotlistService:
         except Exception as exc:
             logger.warning("[HotlistService] Failed to fetch hotlist for %s: %s", platform, exc)
 
+        source_status = "fresh" if raw_items else "fallback"
+        if not raw_items and cached:
+            stale = dict(cached[1])
+            stale["source_status"] = "stale"
+            stale["error"] = "upstream_unavailable"
+            stale["items"] = stale.get("items", [])[:limit]
+            for i in range(8):
+                stale.pop(f"item_{i + 1}", None)
+            for i, item in enumerate(stale["items"][:8]):
+                stale[f"item_{i + 1}"] = f"{i + 1}. {item.get('title', '')}"
+            return stale
         if not raw_items:
             fb = _FALLBACK_HOTLISTS.get(platform, _FALLBACK_HOTLISTS["zhihu"])
             raw_items = [
@@ -300,6 +313,7 @@ class HotlistService:
             "platform_title": title,
             "update_time": time.strftime("%H:%M"),
             "items": structured_items,
+            "source_status": source_status,
         }
         # 平铺向下兼容 item_1 ~ item_8
         for i, it in enumerate(structured_items[:8]):
@@ -321,6 +335,7 @@ class HotlistService:
             cached_data = cached[1]
             if len(cached_data.get("items", [])) >= limit:
                 res = dict(cached_data)
+                res["source_status"] = cached_data.get("source_status", "fresh")
                 res["items"] = cached_data["items"][:limit]
                 for i in range(8):
                     res.pop(f"item_{i + 1}", None)
@@ -333,10 +348,13 @@ class HotlistService:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         platform_item_lists: dict[str, list[dict[str, Any]]] = {}
+        source_statuses: list[str] = []
         for p, r in zip(platforms, results):
             if isinstance(r, dict) and "items" in r:
                 platform_item_lists[p] = r["items"]
+                source_statuses.append(r.get("source_status", "fresh"))
             else:
+                source_statuses.append("fallback")
                 fb = _FALLBACK_HOTLISTS.get(p, [])[:limit]
                 platform_item_lists[p] = [
                     {
@@ -382,6 +400,10 @@ class HotlistService:
             "platform_title": dyn_title,
             "update_time": time.strftime("%H:%M"),
             "items": merged_items,
+            "source_status": (
+                "stale" if "stale" in source_statuses else
+                "fallback" if "fallback" in source_statuses else "fresh"
+            ),
         }
         for i, it in enumerate(merged_items[:8]):
             res[f"item_{i + 1}"] = f"[{it['platform_name']}] {it['title']}"

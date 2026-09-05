@@ -12,6 +12,7 @@ from urllib.parse import urljoin
 import httpx
 
 from .outbound_http import RequestPolicy, outbound_http
+from .source_result import SourceResult
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,9 @@ async def fetch_and_parse_rss(feed_url: str, timeout: float = 12.0) -> dict[str,
     now = time.time()
     cached = _RSS_CACHE.get(feed_url)
     if cached and (now - cached[0] < _RSS_CACHE_TTL):
-        return cached[1]
+        result = dict(cached[1])
+        result["source_status"] = "fresh"
+        return result
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 InkSight/1.0",
@@ -108,15 +111,34 @@ async def fetch_and_parse_rss(feed_url: str, timeout: float = 12.0) -> dict[str,
         raw_xml = response.text
     except Exception as e:
         logger.warning("[RSS] Network error fetching %s: %s", feed_url, type(e).__name__)
-        return {"error": str(e), "items": []}
+        if cached:
+            stale = dict(cached[1])
+            stale["source_status"] = "stale"
+            stale["error"] = type(e).__name__
+            return stale
+        return {"error": str(e), "items": [], "source_status": "unavailable"}
 
     if not raw_xml:
-        return {"error": "Empty response", "items": []}
+        if cached:
+            stale = dict(cached[1])
+            stale["source_status"] = "stale"
+            stale["error"] = "empty response"
+            return stale
+        return {"error": "Empty response", "items": [], "source_status": "unavailable"}
 
     parsed = parse_rss_xml(raw_xml, base_url=feed_url)
     if parsed and parsed.get("items"):
+        parsed["source_status"] = "fresh"
         _RSS_CACHE[feed_url] = (now, parsed)
-    return parsed
+        return parsed
+    if cached:
+        stale = dict(cached[1])
+        stale["source_status"] = "stale"
+        stale["error"] = parsed.get("error", "empty feed") if parsed else "empty feed"
+        return stale
+    if parsed:
+        parsed["source_status"] = "unavailable"
+    return parsed or {"error": "unavailable", "items": [], "source_status": "unavailable"}
 
 
 def parse_rss_xml(raw_xml: str, base_url: str = "") -> dict[str, Any]:
