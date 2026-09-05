@@ -99,9 +99,10 @@ async def test_hotlist_multi_platform_aggregation():
     assert "items" in res
     assert len(res["items"]) >= 3
     # 确认存在多源标签
-    titles = [it["title"] for it in res["items"]]
-    tags = [t[:4] for t in titles if "[" in t]
+    tags = [res.get(f"item_{i + 1}", "")[:4] for i in range(len(res["items"])) if "[" in res.get(f"item_{i + 1}", "")]
     assert len(tags) > 0
+    platform_names = {it["platform_name"] for it in res["items"]}
+    assert len(platform_names) >= 2
 
     # 2. 单平台获取微博
     res_wb = await hotlist_service.get_hotlist("weibo", limit=5)

@@ -219,11 +219,19 @@ class HotlistService:
         now = time.time()
         cached = self._cache.get(platform)
         if cached and (now - cached[0] < self._ttl):
-            return cached[1]
+            cached_data = cached[1]
+            if len(cached_data.get("items", [])) >= limit:
+                res = dict(cached_data)
+                res["items"] = cached_data["items"][:limit]
+                for i in range(8):
+                    res.pop(f"item_{i + 1}", None)
+                for i, it in enumerate(res["items"][:8]):
+                    res[f"item_{i + 1}"] = f"{i + 1}. {it['title']}"
+                return res
 
         raw_items: list[dict[str, Any]] = []
         try:
-            raw_items = await self._fetch_platform_items(platform, limit)
+            raw_items = await self._fetch_platform_items(platform, max(limit, 20))
         except Exception as exc:
             logger.warning("[HotlistService] Failed to fetch hotlist for %s: %s", platform, exc)
 
@@ -275,7 +283,15 @@ class HotlistService:
         now = time.time()
         cached = self._cache.get(cache_key)
         if cached and (now - cached[0] < self._ttl):
-            return cached[1]
+            cached_data = cached[1]
+            if len(cached_data.get("items", [])) >= limit:
+                res = dict(cached_data)
+                res["items"] = cached_data["items"][:limit]
+                for i in range(8):
+                    res.pop(f"item_{i + 1}", None)
+                for i, it in enumerate(res["items"][:8]):
+                    res[f"item_{i + 1}"] = f"[{it['platform_name']}] {it['title']}"
+                return res
 
         # 并发获取各个平台热点
         tasks = [self.get_hotlist(p, limit=limit) for p in platforms]

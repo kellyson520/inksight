@@ -510,6 +510,7 @@ class TestDiscoverAPI:
                  patch("core.context.get_weather", new_callable=AsyncMock, return_value=sample_weather), \
                  patch("core.config_store.get_user_llm_config", new_callable=AsyncMock, return_value=None), \
                  patch("core.json_content.generate_json_mode_content", side_effect=mock_generate_content), \
+                 patch("api.routes.discover.asyncio.sleep", new_callable=AsyncMock), \
                  patch("core.json_renderer.render_json_mode") as mock_render:
                 
                 from PIL import Image
@@ -578,6 +579,7 @@ class TestDiscoverAPI:
             with patch("core.context.get_date_context", new_callable=AsyncMock, return_value=sample_date_ctx), \
                  patch("core.context.get_weather", new_callable=AsyncMock, return_value=sample_weather), \
                  patch("core.config_store.get_user_llm_config", new_callable=AsyncMock, return_value=None), \
+                 patch("api.routes.discover.asyncio.sleep", new_callable=AsyncMock), \
                  patch("core.json_content.generate_json_mode_content", side_effect=mock_generate_content):
                 
                 resp = await client.post(

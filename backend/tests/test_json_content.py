@@ -250,7 +250,7 @@ async def test_prefetch_missing_uploaded_image_does_not_fetch_remote():
 async def test_llm_key_missing_returns_fallback():
     """当 LLM API key 缺失时，应返回 fallback 内容而非抛出异常"""
     mode_def = {
-        "mode_id": "STOIC",
+        "mode_id": "TEST_KEY_MISSING",
         "content": {
             "type": "llm_json",
             "prompt_template": "test {context}",

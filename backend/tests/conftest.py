@@ -42,8 +42,6 @@ def pytest_sessionfinish(session, exitstatus):
             pass
     except Exception:
         pass
-    import os
-    os._exit(exitstatus)
 
 
 @pytest.fixture
