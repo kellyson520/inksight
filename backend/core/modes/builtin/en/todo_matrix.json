@@ -1,0 +1,204 @@
+{
+  "mode_id": "TODO_MATRIX",
+  "display_name": "Eisenhower Matrix",
+  "icon": "layout-grid",
+  "category": "productivity",
+  "cacheable": false,
+  "description": "Eisenhower 4-quadrant productivity matrix balancing urgency, importance and focus",
+  "settings_schema": [
+    {
+      "key": "q1_tasks",
+      "label": "Q1: Urgent & Important",
+      "type": "textarea",
+      "placeholder": "One per line, e.g.: Deploy critical fix [x]",
+      "default": "Deploy critical fix [x]\nFinalize release review [ ]"
+    },
+    {
+      "key": "q2_tasks",
+      "label": "Q2: Not Urgent & Important",
+      "type": "textarea",
+      "placeholder": "One per line, e.g.: System architecture design [ ]",
+      "default": "System architecture design [ ]\nRead 30 mins [x]"
+    },
+    {
+      "key": "q3_tasks",
+      "label": "Q3: Urgent & Not Important",
+      "type": "textarea",
+      "placeholder": "One per line, e.g.: Reply weekly email [x]",
+      "default": "Reply weekly email [x]\nClean temporary caches [x]"
+    },
+    {
+      "key": "q4_tasks",
+      "label": "Q4: Not Urgent & Not Important",
+      "type": "textarea",
+      "placeholder": "One per line, e.g.: Organize bookmarks [ ]",
+      "default": "Organize bookmarks [ ]"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "todo_matrix",
+    "fallback": {
+      "title": "Today Eisenhower Matrix",
+      "header_status": "Time Management · Eisenhower",
+      "summary_text": "Completed 4 / 7 tasks · Progress 57%",
+      "q1_title": "Q1: Urgent & Important",
+      "q1_body": "[✓] Deploy critical fix\n[ ] Finalize release review",
+      "q2_title": "Q2: Important & Long-term",
+      "q2_body": "[ ] System architecture design\n[✓] Read 30 mins",
+      "q3_title": "Q3: Delegate & Swift",
+      "q3_body": "[✓] Reply weekly email\n[✓] Clean temporary caches",
+      "q4_title": "Q4: Eliminate / Declutter",
+      "q4_body": "[ ] Organize bookmarks",
+      "progress_pct": 57,
+      "efficiency_quote": "Invest deeply in Quadrant 2 so life is not just putting out fires."
+    }
+  },
+  "layout": {
+    "status_bar": { "line_width": 1, "dashed": false },
+    "body": [
+      {
+        "type": "centered_text",
+        "field": "title",
+        "font_size": 18,
+        "font": "noto_serif_bold",
+        "margin_bottom": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "summary_text",
+        "font_size": 11,
+        "font": "noto_serif_light",
+        "color": "black",
+        "margin_bottom": 6
+      },
+      {
+        "type": "progress_bar",
+        "field": "progress_pct",
+        "max_value": 100,
+        "height": 4,
+        "margin_x": 16,
+        "margin_bottom": 10
+      },
+      {
+        "type": "two_column",
+        "ratio": 0.5,
+        "gap": 8,
+        "margin_x": 12,
+        "margin_bottom": 8,
+        "left_blocks": [
+          {
+            "type": "card",
+            "border": "solid",
+            "border_width": 1,
+            "padding": 6,
+            "margin_x": 0,
+            "margin_bottom": 6,
+            "children": [
+              {
+                "type": "text",
+                "field": "q1_title",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "field": "q1_body",
+                "font_size": 11,
+                "font": "noto_serif_regular",
+                "line_spacing": 4
+              }
+            ]
+          },
+          {
+            "type": "card",
+            "border": "dashed",
+            "border_width": 1,
+            "padding": 6,
+            "margin_x": 0,
+            "margin_bottom": 0,
+            "children": [
+              {
+                "type": "text",
+                "field": "q3_title",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "field": "q3_body",
+                "font_size": 11,
+                "font": "noto_serif_regular",
+                "line_spacing": 4
+              }
+            ]
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "card",
+            "border": "solid",
+            "border_width": 1,
+            "padding": 6,
+            "margin_x": 0,
+            "margin_bottom": 6,
+            "children": [
+              {
+                "type": "text",
+                "field": "q2_title",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "field": "q2_body",
+                "font_size": 11,
+                "font": "noto_serif_regular",
+                "line_spacing": 4
+              }
+            ]
+          },
+          {
+            "type": "card",
+            "border": "dashed",
+            "border_width": 1,
+            "padding": 6,
+            "margin_x": 0,
+            "margin_bottom": 0,
+            "children": [
+              {
+                "type": "text",
+                "field": "q4_title",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "field": "q4_body",
+                "font_size": 11,
+                "font": "noto_serif_regular",
+                "line_spacing": 4
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "centered_text",
+        "field": "efficiency_quote",
+        "font_size": 10,
+        "font": "noto_serif_light",
+        "margin_bottom": 4
+      }
+    ],
+    "footer": { "label": "Eisenhower Matrix · Focus" }
+  }
+}

@@ -91,3 +91,25 @@ def test_antigravity_quota_missing_segment_is_unknown_not_full(tmp_path):
 
     assert auth["remaining_pct_num"] is None
     assert auth["remaining_pct"] == "未知"
+
+
+def test_remote_cpa_keeper_override_and_health():
+    """验证远程配置覆盖生效与健康检查标志。"""
+    from core.cpa_keeper_service import CpaKeeperService
+
+    service = CpaKeeperService()
+    ov = {
+        "cpa_url": "https://remote.cpa.example.com:8443",
+        "keeper_url": "http://remote.keeper.example.com:8082",
+        "keeper_password": "secret_password",
+    }
+    health = service.check_health(config_override=ov)
+    assert health["cpa_is_remote"] is True
+    assert health["keeper_is_remote"] is True
+    assert health["cpa_url"] == "https://remote.cpa.example.com:8443"
+    assert health["keeper_url"] == "http://remote.keeper.example.com:8082"
+
+    # 获取渲染内容，标题与标签应能反映模式视图
+    content = service.get_mode_content(config_override={"view": "auths", **ov})
+    assert "title" in content
+    assert "header_status" in content

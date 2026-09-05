@@ -1,0 +1,204 @@
+{
+  "mode_id": "TODO_MATRIX",
+  "display_name": "四象限待办矩阵",
+  "icon": "layout-grid",
+  "category": "productivity",
+  "cacheable": false,
+  "description": "艾森豪威尔四象限时间管理矩阵，清晰统揽重要紧急度与今日任务攻坚",
+  "settings_schema": [
+    {
+      "key": "q1_tasks",
+      "label": "第一象限：重要且紧急",
+      "type": "textarea",
+      "placeholder": "每行一条，如：完成关键算法提测 [x]",
+      "default": "完成关键算法提测 [x]\n上线生产更新 [ ]"
+    },
+    {
+      "key": "q2_tasks",
+      "label": "第二象限：重要不紧急",
+      "type": "textarea",
+      "placeholder": "每行一条，如：规划下阶段核心架构 [ ]",
+      "default": "规划下阶段核心架构 [ ]\n深度阅读30分钟 [x]"
+    },
+    {
+      "key": "q3_tasks",
+      "label": "第三象限：紧急不重要",
+      "type": "textarea",
+      "placeholder": "每行一条，如：确认团队周报 [x]",
+      "default": "确认团队周报 [x]\n清理服务器临时缓存 [x]"
+    },
+    {
+      "key": "q4_tasks",
+      "label": "第四象限：不重要不紧急",
+      "type": "textarea",
+      "placeholder": "每行一条，如：整理旧书签 [ ]",
+      "default": "整理桌面与旧书签 [ ]"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "todo_matrix",
+    "fallback": {
+      "title": "今日四象限待办矩阵",
+      "header_status": "时间管理 · 艾森豪威尔矩阵",
+      "summary_text": "已完成 4 / 7 项任务 · 今日达成率 57%",
+      "q1_title": "重要且紧急 · 立即攻坚",
+      "q1_body": "[✓] 完成关键算法提测\n[ ] 上线生产更新",
+      "q2_title": "重要不紧急 · 长期规划",
+      "q2_body": "[ ] 规划下阶段核心架构\n[✓] 深度阅读30分钟",
+      "q3_title": "紧急不重要 · 授权速办",
+      "q3_body": "[✓] 确认团队周报\n[✓] 清理服务器临时缓存",
+      "q4_title": "不重要不紧急 · 尽量断舍离",
+      "q4_body": "[ ] 整理桌面与旧书签",
+      "progress_pct": 57,
+      "efficiency_quote": "把时间大量投资在第二象限，生活才不会总是疲于奔命。"
+    }
+  },
+  "layout": {
+    "status_bar": { "line_width": 1, "dashed": false },
+    "body": [
+      {
+        "type": "centered_text",
+        "field": "title",
+        "font_size": 18,
+        "font": "noto_serif_bold",
+        "margin_bottom": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "summary_text",
+        "font_size": 11,
+        "font": "noto_serif_light",
+        "color": "black",
+        "margin_bottom": 6
+      },
+      {
+        "type": "progress_bar",
+        "field": "progress_pct",
+        "max_value": 100,
+        "height": 4,
+        "margin_x": 16,
+        "margin_bottom": 10
+      },
+      {
+        "type": "two_column",
+        "ratio": 0.5,
+        "gap": 8,
+        "margin_x": 12,
+        "margin_bottom": 8,
+        "left_blocks": [
+          {
+            "type": "card",
+            "border": "solid",
+            "border_width": 1,
+            "padding": 6,
+            "margin_x": 0,
+            "margin_bottom": 6,
+            "children": [
+              {
+                "type": "text",
+                "field": "q1_title",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "field": "q1_body",
+                "font_size": 11,
+                "font": "noto_serif_regular",
+                "line_spacing": 4
+              }
+            ]
+          },
+          {
+            "type": "card",
+            "border": "dashed",
+            "border_width": 1,
+            "padding": 6,
+            "margin_x": 0,
+            "margin_bottom": 0,
+            "children": [
+              {
+                "type": "text",
+                "field": "q3_title",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "field": "q3_body",
+                "font_size": 11,
+                "font": "noto_serif_regular",
+                "line_spacing": 4
+              }
+            ]
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "card",
+            "border": "solid",
+            "border_width": 1,
+            "padding": 6,
+            "margin_x": 0,
+            "margin_bottom": 6,
+            "children": [
+              {
+                "type": "text",
+                "field": "q2_title",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "field": "q2_body",
+                "font_size": 11,
+                "font": "noto_serif_regular",
+                "line_spacing": 4
+              }
+            ]
+          },
+          {
+            "type": "card",
+            "border": "dashed",
+            "border_width": 1,
+            "padding": 6,
+            "margin_x": 0,
+            "margin_bottom": 0,
+            "children": [
+              {
+                "type": "text",
+                "field": "q4_title",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "field": "q4_body",
+                "font_size": 11,
+                "font": "noto_serif_regular",
+                "line_spacing": 4
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "centered_text",
+        "field": "efficiency_quote",
+        "font_size": 10,
+        "font": "noto_serif_light",
+        "margin_bottom": 4
+      }
+    ],
+    "footer": { "label": "四象限待办 · 专注效能" }
+  }
+}

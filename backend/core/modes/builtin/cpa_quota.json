@@ -17,6 +17,34 @@
         { "value": "models", "label": "模型消耗分布 (Token吞吐)" }
       ],
       "default": "auths"
+    },
+    {
+      "key": "cpa_url",
+      "label": "CPA 代理地址 (支持远程)",
+      "type": "text",
+      "placeholder": "缺省自动读取 CPA_REMOTE_URL，支持如 https://cpa.example.com",
+      "default": ""
+    },
+    {
+      "key": "keeper_url",
+      "label": "Keeper 统计地址 (支持远程)",
+      "type": "text",
+      "placeholder": "缺省自动读取 KEEPER_REMOTE_URL，支持如 http://ip:8082",
+      "default": ""
+    },
+    {
+      "key": "keeper_password",
+      "label": "Keeper 登录密码 (可选)",
+      "type": "password",
+      "placeholder": "远程 Keeper 鉴权密码",
+      "default": ""
+    },
+    {
+      "key": "cpa_management_key",
+      "label": "CPA 管理密钥 (可选)",
+      "type": "password",
+      "placeholder": "远程 CPA 管理密钥",
+      "default": ""
     }
   ],
   "content": {

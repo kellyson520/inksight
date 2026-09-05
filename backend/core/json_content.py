@@ -1482,6 +1482,123 @@ async def _generate_computed_content(mode_def: dict, content_cfg: dict, fallback
             "current_ml": current_ml,
         }
 
+    if provider == "todo_matrix":
+        config = kwargs.get("config") or {}
+        lang = kwargs.get("language", "zh")
+        is_en = lang == "en"
+
+        mo = config.get("mode_overrides", {})
+        t_ov = mo.get("TODO_MATRIX", {}) if isinstance(mo, dict) else {}
+
+        def _format_quadrant(raw_text: str, default_lines: list[str]) -> tuple[str, int, int]:
+            lines = [line.strip() for line in (raw_text or "").split("\n") if line.strip()]
+            if not lines:
+                lines = default_lines
+            formatted = []
+            done_cnt = 0
+            for l in lines[:3]:
+                is_done = "[x]" in l.lower() or "[✓]" in l or "√" in l or l.startswith("x ")
+                clean_l = l.replace("[x]", "").replace("[X]", "").replace("[✓]", "").replace("[ ]", "").strip()
+                if is_done:
+                    done_cnt += 1
+                    formatted.append(f"[✓] {clean_l}")
+                else:
+                    formatted.append(f"[ ] {clean_l}")
+            return "\n".join(formatted), done_cnt, len(lines)
+
+        d_q1 = ["完成关键算法提测 [x]", "上线生产更新 [ ]"] if not is_en else ["Deploy critical fix [x]", "Finalize release review [ ]"]
+        d_q2 = ["规划下阶段核心架构 [ ]", "深度阅读30分钟 [x]"] if not is_en else ["System architecture design [ ]", "Read 30 mins [x]"]
+        d_q3 = ["确认团队周报 [x]", "清理服务器临时缓存 [x]"] if not is_en else ["Reply weekly email [x]", "Clean temporary caches [x]"]
+        d_q4 = ["整理桌面与旧书签 [ ]"] if not is_en else ["Organize bookmarks [ ]"]
+
+        q1_body, q1_done, q1_tot = _format_quadrant(t_ov.get("q1_tasks", ""), d_q1)
+        q2_body, q2_done, q2_tot = _format_quadrant(t_ov.get("q2_tasks", ""), d_q2)
+        q3_body, q3_done, q3_tot = _format_quadrant(t_ov.get("q3_tasks", ""), d_q3)
+        q4_body, q4_done, q4_tot = _format_quadrant(t_ov.get("q4_tasks", ""), d_q4)
+
+        total_done = q1_done + q2_done + q3_done + q4_done
+        total_tasks = max(1, q1_tot + q2_tot + q3_tot + q4_tot)
+        pct = int(round((total_done / total_tasks) * 100))
+
+        summary_text = f"已完成 {total_done} / {total_tasks} 项任务 · 达成率 {pct}%" if not is_en else f"Completed {total_done} / {total_tasks} Tasks · Progress {pct}%"
+        quote = "把时间大量投资在第二象限，生活才不会总是疲于奔命。" if not is_en else "Invest deeply in Quadrant 2 so life is not just putting out fires."
+
+        return {
+            "title": "今日四象限待办矩阵" if not is_en else "Today Eisenhower Matrix",
+            "header_status": "时间管理 · 艾森豪威尔矩阵" if not is_en else "Time Management · Eisenhower",
+            "summary_text": summary_text,
+            "q1_title": "重要且紧急 · 立即攻坚" if not is_en else "Q1: Urgent & Important",
+            "q1_body": q1_body,
+            "q2_title": "重要不紧急 · 长期规划" if not is_en else "Q2: Important & Long-term",
+            "q2_body": q2_body,
+            "q3_title": "紧急不重要 · 授权速办" if not is_en else "Q3: Delegate & Swift",
+            "q3_body": q3_body,
+            "q4_title": "不重要不紧急 · 尽量断舍离" if not is_en else "Q4: Eliminate / Declutter",
+            "q4_body": q4_body,
+            "progress_pct": pct,
+            "efficiency_quote": quote,
+        }
+
+    if provider == "habit_tracker":
+        config = kwargs.get("config") or {}
+        lang = kwargs.get("language", "zh")
+        is_en = lang == "en"
+
+        mo = config.get("mode_overrides", {})
+        h_ov = mo.get("HABIT_TRACKER", {}) if isinstance(mo, dict) else {}
+
+        water_c = int(h_ov.get("water_cups") or 6)
+        water_t = max(1, int(h_ov.get("water_target") or 8))
+        water_pct = min(100, int(round(water_c / water_t * 100)))
+
+        read_m = int(h_ov.get("reading_mins") or 30)
+        read_t = 30
+        read_pct = min(100, int(round(read_m / read_t * 100)))
+
+        stand_c = int(h_ov.get("stand_count") or 5)
+        stand_t = 6
+        stand_pct = min(100, int(round(stand_c / stand_t * 100)))
+
+        streak = int(h_ov.get("streak_days") or 18)
+        overall = int(round((water_pct + read_pct + stand_pct + 90) / 4))
+
+        score_text = f"今日健康指数 {overall} 分 · 状态极佳" if not is_en else f"Health Score {overall} · Great Shape"
+        header_status = f"健康打卡 · 第 {streak} 天" if not is_en else f"Habit Tracker · Day {streak}"
+
+        water_val = f"{water_c} / {water_t} 杯 ({water_c * 250}ml)" if not is_en else f"{water_c} / {water_t} Cups ({water_c * 250}ml)"
+        reading_val = f"{read_m} / {read_t} 分钟 · 达成" if read_m >= read_t else f"{read_m} / {read_t} 分钟"
+        if is_en:
+            reading_val = f"{read_m} / {read_t} Mins · Achieved" if read_m >= read_t else f"{read_m} / {read_t} Mins"
+
+        stand_val = f"{stand_c} / {stand_t} 次 · 良好" if not is_en else f"{stand_c} / {stand_t} Times · Great"
+        sleep_val = "目标 23:30 前熄灯" if not is_en else "Sleep before 23:30"
+
+        week_dots = "一 ●  二 ●  三 ●  四 ●  五 ●  六 ●  日 ○" if not is_en else "Mon ●  Tue ●  Wed ●  Thu ●  Fri ●  Sat ●  Sun ○"
+        tip = "午后适度补充温水与电解质，伏案1小时建议远眺绿色植物3分钟。" if not is_en else "Keep well hydrated in the afternoon; look into the distance every hour."
+
+        return {
+            "title": "每日生活与健康打卡" if not is_en else "Daily Habit & Health Tracker",
+            "header_status": header_status,
+            "score_text": score_text,
+            "streak_badge": f"已连续坚持 {streak} 天" if not is_en else f"{streak} Days Streak",
+            "water_label": "饮水目标" if not is_en else "Hydration Goal",
+            "water_val": water_val,
+            "water_pct": water_pct,
+            "reading_label": "专注阅读" if not is_en else "Deep Reading",
+            "reading_val": reading_val,
+            "reading_pct": read_pct,
+            "stand_label": "站立拉伸" if not is_en else "Standing Breaks",
+            "stand_val": stand_val,
+            "stand_pct": stand_pct,
+            "sleep_label": "作息规律" if not is_en else "Sleep Routine",
+            "sleep_val": sleep_val,
+            "sleep_pct": 90,
+            "week_dots_label": "近 7 天坚持轨迹" if not is_en else "Past 7 Days Streak",
+            "week_dots": week_dots,
+            "overall_progress": overall,
+            "health_tip": tip,
+        }
+
     if provider == "server_status":
         from .server_status_service import server_status_service
 

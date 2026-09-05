@@ -1,0 +1,232 @@
+{
+  "mode_id": "HABIT_TRACKER",
+  "display_name": "生活健康打卡",
+  "icon": "heart-pulse",
+  "category": "lifestyle",
+  "cacheable": false,
+  "description": "每日水分摄入、久坐站立拉伸、深度阅读与作息规律多合一健康追踪看板",
+  "settings_schema": [
+    {
+      "key": "water_cups",
+      "label": "今日已喝水杯数 (每杯250ml)",
+      "type": "number",
+      "default": 6
+    },
+    {
+      "key": "water_target",
+      "label": "目标饮水杯数",
+      "type": "number",
+      "default": 8
+    },
+    {
+      "key": "reading_mins",
+      "label": "今日阅读时长 (分钟)",
+      "type": "number",
+      "default": 30
+    },
+    {
+      "key": "stand_count",
+      "label": "今日站立活动次数",
+      "type": "number",
+      "default": 5
+    },
+    {
+      "key": "streak_days",
+      "label": "连续打卡坚持天数",
+      "type": "number",
+      "default": 18
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "habit_tracker",
+    "fallback": {
+      "title": "每日生活与健康打卡",
+      "header_status": "健康打卡 · 第 18 天",
+      "score_text": "今日健康指数 88 分 · 状态极佳",
+      "streak_badge": "已连续坚持 18 天",
+      "water_label": "饮水目标",
+      "water_val": "6 / 8 杯 (1500ml)",
+      "water_pct": 75,
+      "reading_label": "专注阅读",
+      "reading_val": "30 / 30 分钟 · 达成",
+      "reading_pct": 100,
+      "stand_label": "站立拉伸",
+      "stand_val": "5 / 6 次 · 良好",
+      "stand_pct": 83,
+      "sleep_label": "作息规律",
+      "sleep_val": "目标 23:30 前熄灯",
+      "sleep_pct": 90,
+      "week_dots_label": "近 7 天坚持轨迹",
+      "week_dots": "一 ●  二 ●  三 ●  四 ●  五 ●  六 ●  日 ○",
+      "overall_progress": 87,
+      "health_tip": "午后适度补充温水与电解质，伏案1小时建议远眺绿色植物3分钟。"
+    }
+  },
+  "layout": {
+    "status_bar": { "line_width": 1, "dashed": false },
+    "body": [
+      {
+        "type": "centered_text",
+        "field": "title",
+        "font_size": 18,
+        "font": "noto_serif_bold",
+        "margin_bottom": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "score_text",
+        "font_size": 12,
+        "font": "noto_serif_medium",
+        "color": "black",
+        "margin_bottom": 6
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "border_width": 1,
+        "padding": 8,
+        "margin_x": 12,
+        "margin_bottom": 8,
+        "children": [
+          {
+            "type": "two_column",
+            "ratio": 0.5,
+            "gap": 12,
+            "margin_x": 0,
+            "margin_bottom": 6,
+            "left_blocks": [
+              {
+                "type": "text",
+                "field": "water_label",
+                "font_size": 11,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "water_val",
+                "font_size": 12,
+                "font": "noto_serif_regular",
+                "margin_bottom": 4
+              },
+              {
+                "type": "progress_bar",
+                "field": "water_pct",
+                "max_value": 100,
+                "height": 4,
+                "margin_x": 0,
+                "margin_bottom": 8
+              },
+              {
+                "type": "text",
+                "field": "stand_label",
+                "font_size": 11,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "stand_val",
+                "font_size": 12,
+                "font": "noto_serif_regular",
+                "margin_bottom": 4
+              },
+              {
+                "type": "progress_bar",
+                "field": "stand_pct",
+                "max_value": 100,
+                "height": 4,
+                "margin_x": 0,
+                "margin_bottom": 0
+              }
+            ],
+            "right_blocks": [
+              {
+                "type": "text",
+                "field": "reading_label",
+                "font_size": 11,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "reading_val",
+                "font_size": 12,
+                "font": "noto_serif_regular",
+                "margin_bottom": 4
+              },
+              {
+                "type": "progress_bar",
+                "field": "reading_pct",
+                "max_value": 100,
+                "height": 4,
+                "margin_x": 0,
+                "margin_bottom": 8
+              },
+              {
+                "type": "text",
+                "field": "sleep_label",
+                "font_size": 11,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "sleep_val",
+                "font_size": 12,
+                "font": "noto_serif_regular",
+                "margin_bottom": 4
+              },
+              {
+                "type": "progress_bar",
+                "field": "sleep_pct",
+                "max_value": 100,
+                "height": 4,
+                "margin_x": 0,
+                "margin_bottom": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "card",
+        "border": "dashed",
+        "border_width": 1,
+        "padding": 6,
+        "margin_x": 12,
+        "margin_bottom": 8,
+        "children": [
+          {
+            "type": "text",
+            "field": "week_dots_label",
+            "font_size": 11,
+            "font": "noto_serif_bold",
+            "color": "black",
+            "margin_bottom": 3
+          },
+          {
+            "type": "text",
+            "field": "week_dots",
+            "font_size": 12,
+            "font": "noto_serif_regular",
+            "color": "black"
+          }
+        ]
+      },
+      {
+        "type": "centered_text",
+        "field": "health_tip",
+        "font_size": 10,
+        "font": "noto_serif_light",
+        "margin_bottom": 4
+      }
+    ],
+    "footer": { "label": "生活习惯 · 活力常在" }
+  }
+}

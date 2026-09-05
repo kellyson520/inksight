@@ -17,6 +17,34 @@
         { "value": "models", "label": "Model Usage Ranking" }
       ],
       "default": "auths"
+    },
+    {
+      "key": "cpa_url",
+      "label": "CPA Proxy URL (Supports Remote)",
+      "type": "text",
+      "placeholder": "Defaults to CPA_REMOTE_URL, e.g. https://cpa.example.com",
+      "default": ""
+    },
+    {
+      "key": "keeper_url",
+      "label": "Keeper URL (Supports Remote)",
+      "type": "text",
+      "placeholder": "Defaults to KEEPER_REMOTE_URL, e.g. http://ip:8082",
+      "default": ""
+    },
+    {
+      "key": "keeper_password",
+      "label": "Keeper Password (Optional)",
+      "type": "password",
+      "placeholder": "Remote Keeper login password",
+      "default": ""
+    },
+    {
+      "key": "cpa_management_key",
+      "label": "CPA Management Key (Optional)",
+      "type": "password",
+      "placeholder": "Remote CPA management key",
+      "default": ""
     }
   ],
   "content": {

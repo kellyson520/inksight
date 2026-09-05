@@ -1,0 +1,232 @@
+{
+  "mode_id": "HABIT_TRACKER",
+  "display_name": "Daily Habit & Health",
+  "icon": "heart-pulse",
+  "category": "lifestyle",
+  "cacheable": false,
+  "description": "Daily hydration, standing stretch, focused reading and sleep routine tracker",
+  "settings_schema": [
+    {
+      "key": "water_cups",
+      "label": "Water cups consumed (250ml each)",
+      "type": "number",
+      "default": 6
+    },
+    {
+      "key": "water_target",
+      "label": "Target water cups",
+      "type": "number",
+      "default": 8
+    },
+    {
+      "key": "reading_mins",
+      "label": "Reading duration (mins)",
+      "type": "number",
+      "default": 30
+    },
+    {
+      "key": "stand_count",
+      "label": "Standing breaks count",
+      "type": "number",
+      "default": 5
+    },
+    {
+      "key": "streak_days",
+      "label": "Consecutive days streak",
+      "type": "number",
+      "default": 18
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "habit_tracker",
+    "fallback": {
+      "title": "Daily Habit & Health Tracker",
+      "header_status": "Habit Tracker · Day 18",
+      "score_text": "Daily Health Score 88 · Excellent Shape",
+      "streak_badge": "18 Days Streak",
+      "water_label": "Hydration Goal",
+      "water_val": "6 / 8 Cups (1500ml)",
+      "water_pct": 75,
+      "reading_label": "Deep Reading",
+      "reading_val": "30 / 30 Mins · Achieved",
+      "reading_pct": 100,
+      "stand_label": "Standing Breaks",
+      "stand_val": "5 / 6 Times · Great",
+      "stand_pct": 83,
+      "sleep_label": "Sleep Routine",
+      "sleep_val": "Target: Sleep before 23:30",
+      "sleep_pct": 90,
+      "week_dots_label": "Past 7 Days Streak",
+      "week_dots": "Mon ●  Tue ●  Wed ●  Thu ●  Fri ●  Sat ●  Sun ○",
+      "overall_progress": 87,
+      "health_tip": "Keep well hydrated in the afternoon; look into the distance every hour."
+    }
+  },
+  "layout": {
+    "status_bar": { "line_width": 1, "dashed": false },
+    "body": [
+      {
+        "type": "centered_text",
+        "field": "title",
+        "font_size": 18,
+        "font": "noto_serif_bold",
+        "margin_bottom": 4
+      },
+      {
+        "type": "centered_text",
+        "field": "score_text",
+        "font_size": 12,
+        "font": "noto_serif_medium",
+        "color": "black",
+        "margin_bottom": 6
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "border_width": 1,
+        "padding": 8,
+        "margin_x": 12,
+        "margin_bottom": 8,
+        "children": [
+          {
+            "type": "two_column",
+            "ratio": 0.5,
+            "gap": 12,
+            "margin_x": 0,
+            "margin_bottom": 6,
+            "left_blocks": [
+              {
+                "type": "text",
+                "field": "water_label",
+                "font_size": 11,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "water_val",
+                "font_size": 12,
+                "font": "noto_serif_regular",
+                "margin_bottom": 4
+              },
+              {
+                "type": "progress_bar",
+                "field": "water_pct",
+                "max_value": 100,
+                "height": 4,
+                "margin_x": 0,
+                "margin_bottom": 8
+              },
+              {
+                "type": "text",
+                "field": "stand_label",
+                "font_size": 11,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "stand_val",
+                "font_size": 12,
+                "font": "noto_serif_regular",
+                "margin_bottom": 4
+              },
+              {
+                "type": "progress_bar",
+                "field": "stand_pct",
+                "max_value": 100,
+                "height": 4,
+                "margin_x": 0,
+                "margin_bottom": 0
+              }
+            ],
+            "right_blocks": [
+              {
+                "type": "text",
+                "field": "reading_label",
+                "font_size": 11,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "reading_val",
+                "font_size": 12,
+                "font": "noto_serif_regular",
+                "margin_bottom": 4
+              },
+              {
+                "type": "progress_bar",
+                "field": "reading_pct",
+                "max_value": 100,
+                "height": 4,
+                "margin_x": 0,
+                "margin_bottom": 8
+              },
+              {
+                "type": "text",
+                "field": "sleep_label",
+                "font_size": 11,
+                "font": "noto_serif_bold",
+                "color": "black",
+                "margin_bottom": 2
+              },
+              {
+                "type": "text",
+                "field": "sleep_val",
+                "font_size": 12,
+                "font": "noto_serif_regular",
+                "margin_bottom": 4
+              },
+              {
+                "type": "progress_bar",
+                "field": "sleep_pct",
+                "max_value": 100,
+                "height": 4,
+                "margin_x": 0,
+                "margin_bottom": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "card",
+        "border": "dashed",
+        "border_width": 1,
+        "padding": 6,
+        "margin_x": 12,
+        "margin_bottom": 8,
+        "children": [
+          {
+            "type": "text",
+            "field": "week_dots_label",
+            "font_size": 11,
+            "font": "noto_serif_bold",
+            "color": "black",
+            "margin_bottom": 3
+          },
+          {
+            "type": "text",
+            "field": "week_dots",
+            "font_size": 12,
+            "font": "noto_serif_regular",
+            "color": "black"
+          }
+        ]
+      },
+      {
+        "type": "centered_text",
+        "field": "health_tip",
+        "font_size": 10,
+        "font": "noto_serif_light",
+        "margin_bottom": 4
+      }
+    ],
+    "footer": { "label": "Habits & Health · Vitality" }
+  }
+}
