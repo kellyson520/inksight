@@ -65,6 +65,7 @@ async def start_scheduler() -> None:
     from .hotlist_diff_runner import HotlistDiffRunner
     from .hotlist_service import hotlist_service
     from .event_outbox import EventOutbox
+    from .event_dispatcher import EventDispatcher
     monitor_runner = MonitorRunner(monitor_service)
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
     hotlist_outbox = EventOutbox(os.path.join(data_dir, "event_outbox.json"))
@@ -72,6 +73,22 @@ async def start_scheduler() -> None:
         hotlist_service,
         outbox=hotlist_outbox,
         snapshot_path=os.path.join(data_dir, "hotlist_snapshots.json"),
+    )
+    async def _publish_event(event):
+        logger.info("[EventDispatcher] pending event %s/%s", event.get("event_id"), event.get("kind"))
+        return True
+    event_dispatcher = EventDispatcher(hotlist_outbox, publish=_publish_event, backoff=0)
+    async def _dispatch_events():
+        await event_dispatcher.dispatch_once()
+
+    scheduler.add_job(
+        _dispatch_events,
+        "interval",
+        seconds=15,
+        id="event_outbox_dispatch",
+        name="Event Outbox Dispatch",
+        max_instances=1,
+        coalesce=True,
     )
     async def _poll_hotlist_diff():
         for platform in ("zhihu", "weibo", "bilibili"):
