@@ -7,6 +7,10 @@
 ### [2026-09-05] - 全局暗黑模式、微信读书增强、二维码展示与 520+ 组件发布
 
 #### 新增特性 (Features)
+- **Web 端全局黑暗模式（Dark Mode）与浅色蒙版深度自愈**：
+  - 彻底修复暗夜模式下卡片框、模式列表框未变黑及半透明浅色蒙版突兀刺眼问题；
+  - 完善 `webapp/app/globals.css` 中深色模式样式体系，统一 `Card`、`Dialog`、模态弹窗与 `input/textarea/select` 表单的深暗底色与微亮边框；
+  - 保护 `.eink-paper` 墨水屏预览画纸的真实黑白对比度，优化暗色毛玻璃与悬浮微光。
 - **远程 CPA 与 Keeper 额度监控（非本地多实例架构）**：
   - `core/cpa_keeper_service.py` 全面支持远程 `cpa_url` 与 `keeper_url`，可通过环境变量或 Web 设置面板单设备动态覆盖；
   - 自动适配远程 HTTP REST API 认证、额度重置倒计时拉取与本地 SQLite 直连双重自适应回退。

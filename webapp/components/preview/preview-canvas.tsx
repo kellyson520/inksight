@@ -42,7 +42,7 @@ export function PreviewCanvas({
   const isConfigurable = Boolean(CONFIGURABLE_MODES[previewMode]);
 
   return (
-    <Card className="border-ink/20 shadow-md bg-white">
+    <Card className="border-ink/20 dark:border-zinc-800 shadow-md bg-white dark:bg-zinc-900">
       <CardHeader className="pb-3 border-b border-ink/10">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
@@ -105,20 +105,20 @@ export function PreviewCanvas({
       <CardContent className="p-4 flex flex-col items-center">
         {/* 墨水屏设备仿真画框 (带边框与阴影) */}
         <div
-          className="relative w-full rounded-sm border-2 border-ink/80 bg-paper-light p-2 shadow-inner flex flex-col items-center justify-center overflow-hidden"
+          className="relative w-full rounded-sm border-2 border-ink/80 dark:border-zinc-700 bg-paper-light dark:bg-zinc-950 p-2 shadow-inner flex flex-col items-center justify-center overflow-hidden"
           style={{ aspectRatio: `${previewWidth} / ${previewHeight}` }}
         >
           {previewLoading ? (
-            <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-2xs flex flex-col items-center justify-center">
-              <Loader2 size={32} className="animate-spin text-ink mb-2" />
-              <p className="text-xs font-medium text-ink">
+            <div className="absolute inset-0 z-10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xs flex flex-col items-center justify-center">
+              <Loader2 size={32} className="animate-spin text-ink dark:text-zinc-100 mb-2" />
+              <p className="text-xs font-medium text-ink dark:text-zinc-100">
                 {locale === "zh" ? "渲染生成中..." : "Generating preview..."}
               </p>
             </div>
           ) : null}
 
           {previewImageUrl ? (
-            <div className="relative w-full h-full bg-white flex items-center justify-center overflow-hidden rounded-xs">
+            <div className="eink-paper relative w-full h-full bg-white flex items-center justify-center overflow-hidden rounded-xs">
               <Image
                 src={previewImageUrl}
                 alt="InkSight E-Ink Preview"

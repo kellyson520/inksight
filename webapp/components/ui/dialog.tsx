@@ -53,7 +53,7 @@ export function DialogContent({
 }) {
   return (
     <div
-      className={`rounded-sm border border-gray-300 bg-white p-6 shadow-[4px_4px_0_0_#000000] overflow-y-auto max-h-[90vh] ${className}`}
+      className={`rounded-sm border border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-[4px_4px_0_0_#000000] dark:shadow-2xl overflow-y-auto max-h-[90vh] text-ink dark:text-zinc-100 ${className}`}
     >
       {children}
     </div>

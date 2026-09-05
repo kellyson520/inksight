@@ -5,7 +5,7 @@ const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     return (
       <div
         ref={ref}
-        className={`rounded-sm border border-ink/10 bg-white shadow-sm ${className}`}
+        className={`rounded-sm border border-ink/10 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 shadow-sm text-ink dark:text-zinc-100 transition-colors ${className}`}
         {...props}
       />
     );

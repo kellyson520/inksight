@@ -126,10 +126,10 @@ export function ModeConfigModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/45 backdrop-blur-2xs" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-sm border border-ink/20 bg-white shadow-2xl overflow-hidden">
+      <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-sm border border-ink/20 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden">
         {/* Modal Header */}
-        <div className="px-5 py-3.5 border-b border-ink/10 flex items-center justify-between bg-paper-dark">
+        <div className="px-5 py-3.5 border-b border-ink/10 dark:border-zinc-800 flex items-center justify-between bg-paper-dark dark:bg-zinc-950">
           <div className="text-sm font-bold text-ink flex items-center gap-2">
             <Sliders size={16} />
             <span>{getModalTitle()}</span>

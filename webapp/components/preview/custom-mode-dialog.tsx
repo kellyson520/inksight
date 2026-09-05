@@ -54,8 +54,8 @@ export function CustomModeDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/45 backdrop-blur-2xs" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-sm border border-ink/20 bg-white p-5 shadow-2xl space-y-4">
+      <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-sm border border-ink/20 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-ink dark:text-zinc-100 p-5 shadow-2xl space-y-4">
         <div className="flex items-center justify-between border-b border-ink/10 pb-3">
           <h3 className="text-sm font-bold text-ink">
             {locale === "zh" ? "AI 智能生成自定义墨水屏模式" : "Generate Custom Mode with AI"}
@@ -78,7 +78,7 @@ export function CustomModeDialog({
                 : "e.g. A minimalist reflection dashboard with progress bar..."
             }
             rows={4}
-            className="w-full rounded-sm border border-ink/20 p-2.5 text-xs bg-white"
+            className="w-full rounded-sm border border-ink/20 dark:border-zinc-700 p-2.5 text-xs bg-white dark:bg-zinc-950 text-ink dark:text-zinc-100"
           />
         </div>
 

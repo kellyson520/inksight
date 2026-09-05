@@ -52,7 +52,7 @@ export function PaginatedModeSection({
     startIndex + visibleModes.length >= modes.length;
 
   return (
-    <div className="mb-6 rounded-sm border border-ink/10 bg-white/60 p-4 shadow-sm backdrop-blur-xs">
+    <div className="mb-6 rounded-sm border border-ink/10 dark:border-zinc-800/80 bg-white/60 dark:bg-zinc-900/60 p-4 shadow-sm backdrop-blur-xs">
       {/* 容器标题栏与翻页控制 */}
       <div className="flex items-center justify-between gap-3 mb-3.5 pb-2 border-b border-ink/10">
         <div className="flex items-center gap-2">
@@ -102,8 +102,8 @@ export function PaginatedModeSection({
               key={m}
               className={`group relative rounded-sm border transition-all text-left flex flex-col justify-between overflow-hidden ${
                 isCurrent
-                  ? "border-ink bg-paper-dark shadow-sm ring-1 ring-ink"
-                  : "border-ink/15 bg-white hover:border-ink/40 hover:bg-paper-light"
+                  ? "border-ink dark:border-zinc-400 bg-paper-dark dark:bg-zinc-800 shadow-sm ring-1 ring-ink dark:ring-zinc-400"
+                  : "border-ink/15 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-ink/40 dark:hover:border-zinc-700 hover:bg-paper-light dark:hover:bg-zinc-800/60"
               }`}
             >
               {/* 卡片主体：点击即展示 */}
@@ -131,7 +131,7 @@ export function PaginatedModeSection({
               </button>
 
               {/* 操作底栏 */}
-              <div className="border-t border-ink/10 bg-white/70 px-2 py-1 flex items-center justify-between gap-1">
+              <div className="border-t border-ink/10 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 px-2 py-1 flex items-center justify-between gap-1">
                 <button
                   onClick={() => onPreview(m)}
                   className={`text-[11px] font-medium flex items-center gap-1 transition-colors ${

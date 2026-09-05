@@ -369,3 +369,80 @@ body {
   border-left: 3px solid var(--color-ink);
   background: rgba(26, 26, 26, 0.03);
 }
+
+/* ========================================
+   Dark Mode Surface, Card, Mask & Input Resiliency
+   ======================================== */
+
+.dark {
+  --color-paper-light: #1f1f23;
+}
+
+/* 1. 彻底根治“浅色蒙版”：在深色模式下，半透明白色遮罩自动转为深色毛玻璃蒙版 */
+.dark [class*="bg-white/"] {
+  background-color: rgba(24, 24, 27, 0.78) !important;
+  border-color: rgba(244, 244, 245, 0.12) !important;
+}
+
+.dark [class*="hover\\:bg-white/"]:hover,
+.dark [class*="hover:bg-white/"]:hover {
+  background-color: rgba(39, 39, 42, 0.8) !important;
+}
+
+/* 2. 框体内背景变黑：在深色模式下，卡片/面板/弹窗等带有 bg-white 的框，自动适配为深黑纸面 */
+.dark .bg-white:not(.eink-paper):not(.eink-paper *):not(.eink-canvas):not([data-keep-white="true"]) {
+  background-color: #18181b !important;
+  color: #f4f4f5;
+  border-color: rgba(244, 244, 245, 0.12);
+}
+
+.dark [class*="hover\\:bg-white"]:hover:not(.eink-paper *),
+.dark [class*="hover:bg-white"]:hover:not(.eink-paper *) {
+  background-color: #27272a !important;
+}
+
+/* 3. 输入框、文本域与下拉列表：深色模式下统一深底亮字与微发光边框 */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+.dark textarea,
+.dark select {
+  background-color: #141416 !important;
+  color: #f4f4f5 !important;
+  border-color: rgba(244, 244, 245, 0.18) !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #a1a1aa !important;
+  outline: none !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #71717a !important;
+}
+
+/* 4. 各种卡片框、浅色背景与边框自愈 */
+.dark .bg-paper {
+  background-color: #121214 !important;
+}
+
+.dark .bg-paper-dark {
+  background-color: #18181b !important;
+}
+
+.dark .bg-paper-light {
+  background-color: #1c1c20 !important;
+}
+
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: rgba(244, 244, 245, 0.12) !important;
+}
+
+/* 5. 模态框与阴影微光优化 */
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+

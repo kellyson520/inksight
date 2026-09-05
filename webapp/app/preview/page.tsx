@@ -430,7 +430,7 @@ export default function ExperiencePage() {
 
         <button
           onClick={() => setShowCustomModeModal(true)}
-          className="rounded-sm border border-dashed border-ink/30 bg-white px-3.5 py-2 text-xs font-medium flex items-center gap-2 text-ink hover:border-ink hover:bg-paper-dark transition-colors shrink-0 shadow-xs"
+          className="rounded-sm border border-dashed border-ink/30 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs font-medium flex items-center gap-2 text-ink dark:text-zinc-100 hover:border-ink dark:hover:border-zinc-500 hover:bg-paper-dark dark:hover:bg-zinc-800 transition-colors shrink-0 shadow-xs"
         >
           <Plus size={15} />
           <span>{locale === "zh" ? "新建自定义模式" : "Create Custom Mode"}</span>
@@ -443,7 +443,7 @@ export default function ExperiencePage() {
         {/* 左侧：分类导航、二级子目录与分页展示容器 */}
         <div className="space-y-6">
           {/* 一级分类导航栏 (生活、效率、资讯、全部) + 搜索 */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-paper-dark/80 p-2 rounded-sm border border-ink/10">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-paper-dark/80 dark:bg-zinc-900/80 p-2 rounded-sm border border-ink/10 dark:border-zinc-800">
             <div className="flex items-center gap-1.5 overflow-x-auto">
               {[
                 { id: "all", label: locale === "zh" ? "全部模式" : "All Modes", icon: Layers },
@@ -459,7 +459,7 @@ export default function ExperiencePage() {
                     className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
                       isActive
                         ? "bg-ink text-white shadow-xs font-semibold"
-                        : "text-ink-light hover:text-ink hover:bg-white/60"
+                        : "text-ink-light hover:text-ink hover:bg-white/60 dark:hover:bg-zinc-800/60"
                     }`}
                   >
                     <span>{tab.label}</span>
@@ -476,7 +476,7 @@ export default function ExperiencePage() {
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 placeholder={locale === "zh" ? "搜索模式..." : "Filter modes..."}
-                className="w-full pl-8 pr-3 py-1 text-xs rounded-sm border border-ink/20 bg-white focus:outline-hidden focus:border-ink transition-colors"
+                className="w-full pl-8 pr-3 py-1 text-xs rounded-sm border border-ink/20 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-ink dark:text-zinc-100 focus:outline-hidden focus:border-ink dark:focus:border-zinc-500 transition-colors"
               />
             </div>
           </div>
@@ -531,7 +531,7 @@ export default function ExperiencePage() {
             tailItem={
               <button
                 onClick={() => setShowCustomModeModal(true)}
-                className="rounded-sm border border-dashed border-ink/25 bg-white p-3 text-left flex flex-col justify-center items-center gap-1.5 hover:border-ink hover:bg-paper-dark transition-colors min-h-[78px]"
+                className="rounded-sm border border-dashed border-ink/25 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 text-left flex flex-col justify-center items-center gap-1.5 hover:border-ink dark:hover:border-zinc-500 hover:bg-paper-dark dark:hover:bg-zinc-800 transition-colors min-h-[78px]"
               >
                 <Plus size={18} className="text-ink-light" />
                 <span className="text-xs font-semibold text-ink">
