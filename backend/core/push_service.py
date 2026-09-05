@@ -73,13 +73,14 @@ class PushDispatcher:
             now = datetime.now()
             expires = now + timedelta(seconds=max(30, ttl_seconds))
             async with _device_alerts_lock:
-                _device_alerts[mac.upper()] = {
+                from api.routes.device import enqueue_device_alert
+                enqueue_device_alert(mac, {
                     "sender": sender,
                     "message": message,
                     "level": level,
                     "created_at": now,
                     "expires_at": expires,
-                }
+                })
             self._record_log("device", mac, f"{sender}: {message}", True)
             return True
         except Exception as e:

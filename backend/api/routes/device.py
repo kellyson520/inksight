@@ -56,8 +56,30 @@ from core.stats_store import (
 router = APIRouter(tags=["device"])
 
 _ALERT_TTL_SECONDS = 60
-_device_alerts: dict[str, dict] = {}
+_ALERT_QUEUE_LIMIT = 8
+_device_alerts: dict[str, list[dict]] = {}
 _device_alerts_lock = asyncio.Lock()
+
+
+def enqueue_device_alert(mac: str, alert: dict) -> None:
+    queue = _device_alerts.setdefault(mac.upper(), [])
+    queue.append(dict(alert))
+    del queue[:-_ALERT_QUEUE_LIMIT]
+
+
+def pop_device_alert(mac: str, now: Optional[datetime] = None) -> Optional[dict]:
+    now = now or datetime.now()
+    queue = _device_alerts.get(mac.upper(), [])
+    while queue:
+        alert = queue.pop(0)
+        expires_at = alert.get("expires_at")
+        if isinstance(expires_at, datetime) and expires_at < now:
+            continue
+        if not queue:
+            _device_alerts.pop(mac.upper(), None)
+        return alert
+    _device_alerts.pop(mac.upper(), None)
+    return None
 
 
 def _vocab_tts_text(word: str) -> str:
@@ -427,12 +449,12 @@ async def push_device_alert(
 
     now = datetime.now()
     async with _device_alerts_lock:
-        _device_alerts[mac] = {
+        enqueue_device_alert(mac, {
             "sender": sender,
             "message": message,
             "level": level or "info",
             "expires_at": now + timedelta(seconds=_ALERT_TTL_SECONDS),
-        }
+        })
 
     logger.info("[ALERT] Stored alert for %s (level=%s, ttl=%ss)", mac, level or "info", _ALERT_TTL_SECONDS)
     return {"ok": True}
@@ -449,18 +471,13 @@ async def check_device_alert(
     now = datetime.now()
     alert_payload: Optional[dict] = None
     async with _device_alerts_lock:
-        existing = _device_alerts.get(mac)
+        existing = pop_device_alert(mac, now=now)
         if existing:
-            expires_at = existing.get("expires_at")
-            if isinstance(expires_at, datetime) and expires_at < now:
-                _device_alerts.pop(mac, None)
-            else:
-                alert_payload = {
-                    "sender": existing.get("sender") or "",
-                    "message": existing.get("message") or "",
-                    "level": existing.get("level") or "info",
-                }
-                _device_alerts.pop(mac, None)
+            alert_payload = {
+                "sender": existing.get("sender") or "",
+                "message": existing.get("message") or "",
+                "level": existing.get("level") or "info",
+            }
     if not alert_payload:
         return {"has_alert": False}
     return {"has_alert": True, "alert": alert_payload}
@@ -506,18 +523,13 @@ async def alert_bmp(
     now = datetime.now()
     alert_payload: Optional[dict] = None
     async with _device_alerts_lock:
-        existing = _device_alerts.get(mac)
+        existing = pop_device_alert(mac, now=now)
         if existing:
-            expires_at = existing.get("expires_at")
-            if isinstance(expires_at, datetime) and expires_at < now:
-                _device_alerts.pop(mac, None)
-            else:
-                alert_payload = {
-                    "sender": existing.get("sender") or "",
-                    "message": existing.get("message") or "",
-                    "level": existing.get("level") or "info",
-                }
-                _device_alerts.pop(mac, None)
+            alert_payload = {
+                "sender": existing.get("sender") or "",
+                "message": existing.get("message") or "",
+                "level": existing.get("level") or "info",
+            }
 
     if not alert_payload:
         return Response(status_code=204)
