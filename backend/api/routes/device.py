@@ -953,6 +953,18 @@ async def push_immediate_disaster_alert(
     async with _preview_push_queue_lock:
         _preview_push_queue[mac] = {"image": normalized_bytes, "mode": "DISASTER_ALERT"}
 
+    # 联动多渠道推送系统进行广播
+    try:
+        from core.push_service import push_dispatcher
+        await push_dispatcher.push_to_device(
+            mac=mac,
+            sender="DISASTER_ALERT",
+            message=f"[{alert.get('level', '紧急')}] {alert.get('headline', '重大气象灾害预警')}",
+            level="critical",
+        )
+    except Exception:
+        pass
+
     await set_pending_refresh(mac, True)
     logger.info("[DISASTER] Forced emergency alert push queued for %s", mac)
     return {"ok": True, "message": "Emergency disaster alert pushed to device queue", "alert": alert}

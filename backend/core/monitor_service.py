@@ -233,7 +233,33 @@ class MonitorService:
         self._notices.insert(0, notice)
         self._notices = self._notices[:30]
         self._save_storage()
+
+        # 异步分发至多渠道推送系统 (PushDispatcher)
+        try:
+            from core.push_service import push_dispatcher
+            asyncio.create_task(self._dispatch_push_notification(notice))
+        except Exception as e:
+            logger.debug("[MonitorService] Dispatch push task skipped: %s", e)
+
         return notice
+
+    async def _dispatch_push_notification(self, notice: dict[str, Any]) -> None:
+        """分发监控变动至外部推送渠道。"""
+        try:
+            from core.push_service import push_dispatcher
+            title = f"【监控告警】{notice.get('site_name', '站点')}变动"
+            msg = f"{notice.get('title', '')}\n最新内容: {notice.get('new_snippet', '')[:100]}"
+            target_mac = notice.get("target_mac", "*")
+
+            if target_mac != "*":
+                await push_dispatcher.push_to_device(
+                    mac=target_mac,
+                    sender="MONITOR",
+                    message=f"{notice.get('site_name')}: 内容发生变化",
+                    level="warning",
+                )
+        except Exception as e:
+            logger.warning("[MonitorService] Failed to dispatch push notification: %s", e)
 
     async def get_pending_notice_for_device(
         self,
