@@ -22,3 +22,4 @@ async def test_scheduler_registers_monitor_poll_job(monkeypatch):
 
     assert any(call.get("id") == "monitor_poll" for call in calls)
     assert any(call.get("id") == "hotlist_diff_poll" for call in calls)
+    assert any(call.get("id") == "event_outbox_dispatch" for call in calls)
