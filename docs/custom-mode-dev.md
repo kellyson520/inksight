@@ -34,8 +34,16 @@ InkSight 使用纯 JSON 配置来定义和扩展内容模式。
 4. 补齐测试（内容生成、渲染、路由）
 5. 更新 README 与 docs
 
-## 5. 调试建议
+## 6. 底层排版组件全景
 
-- 先验证内容层是否返回预期字段
-- 再验证渲染层 block 是否按顺序落位
-- 对图像模式优先检查外部 API key 与下载链路
+墨水屏原生支持丰富的声明式排版块，详见专用手册：
+- [完整底层排版组件手册与配图](./layout-blocks.md)
+
+常用高频组件速查：
+- `stat_progress_bar`: 双端统计与任务进度条
+- `pill_tag_list`: 自适应流式胶囊标签组
+- `code_snippet_box`: 终端代码与脚本卡片
+- `alert_callout` & `change_diff_card`: 变动插播与差分对比卡片
+- `sparkline_chart`: 24小时金融分时平滑走势曲线
+- `two_column` & `image`: 左右双栏图文绕排与书封展示
+

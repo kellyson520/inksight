@@ -39,3 +39,9 @@ A mode definition typically includes:
 - First verify if the content layer returns the expected fields
 - Then verify if the rendering layer blocks are positioned correctly
 - For image modes, prioritize checking external API keys and download pipelines
+
+## 6. Layout Blocks Specification
+
+For full parameter definitions and visual screenshots of all blocks, refer to:
+- [Layout Blocks & Widgets Guide with Screenshots](./layout-blocks.md)
+
