@@ -57,13 +57,23 @@ router = APIRouter(tags=["device"])
 
 _ALERT_TTL_SECONDS = 60
 _ALERT_QUEUE_LIMIT = 8
+_ALERT_GLOBAL_KEY_LIMIT = 256
+_ALERT_MESSAGE_LIMIT = 1000
 _device_alerts: dict[str, list[dict]] = {}
 _device_alerts_lock = asyncio.Lock()
 
 
 def enqueue_device_alert(mac: str, alert: dict) -> None:
-    queue = _device_alerts.setdefault(mac.upper(), [])
-    queue.append(dict(alert))
+    key = mac.upper()
+    if key not in _device_alerts and len(_device_alerts) >= _ALERT_GLOBAL_KEY_LIMIT:
+        oldest_key = next(iter(_device_alerts), None)
+        if oldest_key is not None:
+            _device_alerts.pop(oldest_key, None)
+    item = dict(alert)
+    item["sender"] = str(item.get("sender") or "")[:80]
+    item["message"] = str(item.get("message") or "")[:_ALERT_MESSAGE_LIMIT]
+    queue = _device_alerts.setdefault(key, [])
+    queue.append(item)
     del queue[:-_ALERT_QUEUE_LIMIT]
 
 
