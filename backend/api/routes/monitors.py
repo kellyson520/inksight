@@ -4,7 +4,10 @@
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
 import logging
+import os
 from typing import Any
 from fastapi import APIRouter, Cookie, Header, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -99,10 +102,17 @@ async def push_event(
     request: Request,
     ink_session: str | None = Cookie(default=None),
     x_device_token: str | None = Header(default=None, alias="X-Device-Token"),
+    x_monitor_signature: str | None = Header(default=None, alias="X-Monitor-Signature"),
 ) -> dict[str, Any]:
     """外部 Webhook 或监控告警推送接口，直接触发插播通报卡片。"""
     target_mac = payload.target_mac
-    if target_mac != "*":
+    if target_mac == "*":
+        secret = os.environ.get("MONITOR_WEBHOOK_SECRET", "")
+        signed_body = payload.model_dump_json().encode()
+        expected = hmac.new(secret.encode(), signed_body, hashlib.sha256).hexdigest() if secret else ""
+        if not x_monitor_signature or not expected or not hmac.compare_digest(x_monitor_signature, expected):
+            raise HTTPException(status_code=403, detail="signed_monitor_webhook_required")
+    else:
         await require_membership_access(request, target_mac, ink_session, owner_only=True)
     notice = monitor_service.create_change_notice(
         target_id="webhook_event",
