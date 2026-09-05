@@ -191,6 +191,12 @@ class ContentCache:
         screen_h: int = SCREEN_HEIGHT,
     ) -> Image.Image:
         """Return cached content while coalescing concurrent misses per key."""
+        if DISABLE_CACHE:
+            result = await generator()
+            image = result[0] if isinstance(result, tuple) else result
+            if image is None:
+                raise RuntimeError("cache generator returned no image")
+            return result
         cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h)
         if cached is not None:
             return cached
@@ -199,15 +205,19 @@ class ContentCache:
             task = self._inflight.get(key)
             if task is None:
                 async def produce():
-                    image = await generator()
+                    result = await generator()
+                    image = result[0] if isinstance(result, tuple) else result
                     if image is None:
                         raise RuntimeError("cache generator returned no image")
                     await self.set(mac, persona, image, screen_w, screen_h)
-                    return image.copy()
+                    return result
                 task = asyncio.create_task(produce())
                 self._inflight[key] = task
         try:
-            return await task
+            result = await asyncio.shield(task)
+            if isinstance(result, tuple):
+                return (result[0].copy(), *result[1:])
+            return result.copy()
         finally:
             if task.done():
                 async with self._lock:

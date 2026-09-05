@@ -943,23 +943,37 @@ async def build_image(
         return img, persona, cache_hit, content_fallback, quota_exhausted, False, llm_mode_requires_quota, usage_source
 
     if not cache_hit:
-        effective_cfg = get_effective_mode_config(config, persona)
-        location_args = extract_location_settings(effective_cfg, fallback_city=DEFAULT_CITY)
-        date_ctx, weather = await asyncio.gather(
-            get_date_context(),
-            get_weather(**location_args),
-        )
-        img, content_data = await generate_and_render(
-            persona,
-            config,
-            date_ctx,
-            weather,
-            battery_pct,
-            screen_w=screen_w,
-            screen_h=screen_h,
-            mac=mac or "",
-            colors=colors,
-        )
+        async def _generate_image():
+            effective_cfg = get_effective_mode_config(config, persona)
+            location_args = extract_location_settings(effective_cfg, fallback_city=DEFAULT_CITY)
+            date_ctx, weather = await asyncio.gather(
+                get_date_context(),
+                get_weather(**location_args),
+            )
+            generated_img, generated_data = await generate_and_render(
+                persona,
+                config,
+                date_ctx,
+                weather,
+                battery_pct,
+                screen_w=screen_w,
+                screen_h=screen_h,
+                mac=mac or "",
+                colors=colors,
+            )
+            return generated_img, generated_data
+
+        if mac and config and is_mode_cacheable and not skip_cache:
+            img, content_data = await content_cache.get_or_generate(
+                mac,
+                persona,
+                config,
+                _generate_image,
+                screen_w=screen_w,
+                screen_h=screen_h,
+            )
+        else:
+            img, content_data = await _generate_image()
         if isinstance(content_data, dict):
             logger.debug(
                 "[BUILD_IMAGE] content_data keys: %s, _is_fallback=%s, _used_fallback=%s, _llm_ok=%s",
