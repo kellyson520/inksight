@@ -942,7 +942,7 @@ async def push_immediate_disaster_alert(
     ink_session: Optional[str] = Cookie(default=None),
 ):
     """立即生成并向指定设备紧急推送灾害预警画面（最高优先级入列）。"""
-    await ensure_web_or_device_access(request, mac, x_device_token, ink_session)
+    await ensure_web_or_device_access(request, mac, x_device_token, ink_session, owner_only=True)
     from core.disaster_service import simulate_disaster_alert, build_disaster_alert_mode_def
     from core.json_renderer import render_json_mode
     from core.config import SCREEN_WIDTH, SCREEN_HEIGHT

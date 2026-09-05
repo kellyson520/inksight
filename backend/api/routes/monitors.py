@@ -6,10 +6,12 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Cookie, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from core.monitor_service import monitor_service
+from api.shared import require_membership_access
+from core.auth import validate_mac_param
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +94,16 @@ async def clear_notices() -> dict[str, Any]:
 
 
 @router.post("/events")
-async def push_event(payload: EventPushSchema) -> dict[str, Any]:
+async def push_event(
+    payload: EventPushSchema,
+    request: Request,
+    ink_session: str | None = Cookie(default=None),
+    x_device_token: str | None = Header(default=None, alias="X-Device-Token"),
+) -> dict[str, Any]:
     """外部 Webhook 或监控告警推送接口，直接触发插播通报卡片。"""
+    target_mac = payload.target_mac
+    if target_mac != "*":
+        await require_membership_access(request, target_mac, ink_session, owner_only=True)
     notice = monitor_service.create_change_notice(
         target_id="webhook_event",
         site_name=payload.site_name,
@@ -102,6 +112,6 @@ async def push_event(payload: EventPushSchema) -> dict[str, Any]:
         prev_snippet=payload.prev_snippet,
         new_snippet=payload.new_snippet,
         max_presentations=payload.max_presentations,
-        target_mac=payload.target_mac,
+        target_mac=target_mac,
     )
     return {"success": True, "notice": notice}
