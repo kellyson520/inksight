@@ -31,6 +31,9 @@ data/image_cache/
 data/event_outbox.json
 data/hotlist_snapshots.json
 data/*.corrupt-*
+data/*.lock
+data/.events-*
+data/.hotlist-snapshot-*
 
 scripts\fix_ota_url.py
 scripts\query_ota.py

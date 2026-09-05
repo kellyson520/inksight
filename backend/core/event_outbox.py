@@ -5,6 +5,9 @@ import json
 import os
 import tempfile
 import time
+from contextlib import contextmanager
+
+import fcntl
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +17,17 @@ class EventOutbox:
         self.path = Path(path)
         self._events: list[dict[str, Any]] = []
         self._load()
+
+    @contextmanager
+    def _locked(self):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.with_name(self.path.name + ".lock").open("a+") as lock_file:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            try:
+                self._load()
+                yield
+            finally:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
     def _load(self) -> None:
         try:
@@ -48,30 +62,39 @@ class EventOutbox:
             raise ValueError("event_id is required")
         if any(str(item.get("event_id")) == event_id for item in self._events):
             return False
-        item = dict(event)
-        item.setdefault("created_at", time.time())
-        item.setdefault("attempts", 0)
-        self._events.append(item)
-        self._save()
-        return True
+        with self._locked():
+            event_id = str(event.get("event_id") or "").strip()
+            if not event_id:
+                raise ValueError("event_id is required")
+            if any(str(item.get("event_id")) == event_id for item in self._events):
+                return False
+            item = dict(event)
+            item.setdefault("created_at", time.time())
+            item.setdefault("attempts", 0)
+            self._events.append(item)
+            self._save()
+            return True
 
     def list_pending(self, limit: int | None = None) -> list[dict[str, Any]]:
-        events = list(self._events)
+        with self._locked():
+            events = list(self._events)
         return events if limit is None else events[: max(0, limit)]
 
     def update(self, event: dict[str, Any]) -> None:
         event_id = str(event.get("event_id") or "")
-        for index, item in enumerate(self._events):
-            if str(item.get("event_id")) == event_id:
-                self._events[index] = dict(event)
-                self._save()
-                return
-        raise KeyError(event_id)
+        with self._locked():
+            for index, item in enumerate(self._events):
+                if str(item.get("event_id")) == event_id:
+                    self._events[index] = dict(event)
+                    self._save()
+                    return
+            raise KeyError(event_id)
 
     def ack(self, event_id: str) -> bool:
-        before = len(self._events)
-        self._events = [item for item in self._events if str(item.get("event_id")) != event_id]
-        if len(self._events) == before:
-            return False
-        self._save()
-        return True
+        with self._locked():
+            before = len(self._events)
+            self._events = [item for item in self._events if str(item.get("event_id")) != event_id]
+            if len(self._events) == before:
+                return False
+            self._save()
+            return True

@@ -31,3 +31,13 @@ def test_outbox_quarantines_corrupt_file_instead_of_overwriting(tmp_path):
 
     assert outbox.list_pending() == []
     assert list(tmp_path.glob("events.json.corrupt-*"))
+
+
+def test_outbox_instances_do_not_overwrite_each_other(tmp_path):
+    path = tmp_path / "events.json"
+    first = EventOutbox(path)
+    second = EventOutbox(path)
+
+    assert first.publish({"event_id": "first", "kind": "new"}) is True
+    assert second.publish({"event_id": "second", "kind": "new"}) is True
+    assert {event["event_id"] for event in EventOutbox(path).list_pending()} == {"first", "second"}
