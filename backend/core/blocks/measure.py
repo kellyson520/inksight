@@ -184,6 +184,15 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
         mb = int(block.get("margin_bottom", 6) * ctx.scale)
         return max_width, int(72 * ctx.scale) + mb
 
+    elif btype in ("donut_chart", "bar_chart", "candlestick_chart", "area_chart"):
+        h = int(block.get("height", 50) * ctx.scale)
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, h + mb
+
+    elif btype in ("drop_cap_paragraph", "poetic_couplet_box", "docker_container_card", "matrix_key_value_grid", "flight_boarding_pass"):
+        mb = int(block.get("margin_bottom", 6) * ctx.scale)
+        return max_width, int(34 * ctx.scale) + mb
+
     else:
         measure_img = Image.new("1", (max(1, max_width), 100), EINK_BG)
         mc = RenderContext(

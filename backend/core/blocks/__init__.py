@@ -29,6 +29,16 @@ from . import disaster as _disaster_module
 from . import hotlist as _hotlist_module
 from . import monitoring as _monitoring_module
 from . import geek_widgets as _geek_widgets_module
+from . import pack_data_charts as _pack_charts_module
+from . import pack_sysops as _pack_sysops_module
+from . import pack_finance as _pack_finance_module
+from . import pack_calendar as _pack_calendar_module
+from . import pack_health as _pack_health_module
+from . import pack_typography as _pack_typography_module
+from . import pack_travel as _pack_travel_module
+from . import pack_forms_tables as _pack_forms_module
+from . import pack_frames as _pack_frames_module
+from . import pack_advanced as _pack_advanced_module
 
 from .grids import slice_calendar_rows_around_day
 
