@@ -45,6 +45,23 @@ def test_image_block_passes_url_candidates(monkeypatch):
     assert captured["urls"] == ["https://bad.test/a", "https://good.test/a"]
 
 
+def test_fetch_uses_shared_outbound_http_by_default(tmp_path, monkeypatch):
+    from core import media_fetcher as module
+
+    calls = []
+    class SharedOutbound:
+        def get_stream_bytes(self, url, *, headers, policy):
+            calls.append((url, headers, policy))
+            return type("Response", (), {"status_code": 200, "content": b"shared"})()
+
+    monkeypatch.setattr(module, "outbound_http", SharedOutbound())
+    fetcher = module.MediaFetcher(cache_dir=tmp_path, backoff_base=0)
+    result = fetcher.fetch("https://cdn.example.test/a.jpg")
+
+    assert result.data == b"shared"
+    assert calls and calls[0][0] == "https://cdn.example.test/a.jpg"
+
+
 def test_fetch_retries_transient_timeout_then_succeeds(tmp_path):
     responses = [httpx.ReadTimeout("slow"), httpx.Response(503), httpx.Response(200, content=b"ok")]
     client = Mock()

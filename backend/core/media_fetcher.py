@@ -21,6 +21,8 @@ import ipaddress
 
 import httpx
 
+from .outbound_http import RequestPolicy, outbound_http
+
 
 def _backend_root() -> Path:
     return Path(__file__).resolve().parent.parent
@@ -70,7 +72,7 @@ class MediaFetcher:
             write=self._positive_float(None, "INKSIGHT_MEDIA_TIMEOUT_WRITE", 6.0),
             pool=self._positive_float(None, "INKSIGHT_MEDIA_TIMEOUT_POOL", 6.0),
         )
-        self.client_factory = client_factory or httpx.Client
+        self.client_factory = client_factory
         self._memory_cache: dict[str, bytes] = {}
         self._failed_until: dict[str, float] = {}
 
@@ -189,6 +191,18 @@ class MediaFetcher:
 
     def _get(self, url: str, headers: dict[str, str]) -> httpx.Response:
         """Call an injected client, supporting both managed and plain clients."""
+        if self.client_factory is None:
+            response = outbound_http.get_stream_bytes(
+                url,
+                headers=headers,
+                policy=RequestPolicy(
+                    timeout=self.timeout,
+                    max_attempts=1,
+                    max_response_bytes=self.max_response_bytes,
+                    follow_redirects=False,
+                ),
+            )
+            return httpx.Response(response.status_code, headers=dict(getattr(response, "headers", {})), content=response.content, request=httpx.Request("GET", url))
         client = self.client_factory(timeout=self.timeout, follow_redirects=False)
         if hasattr(client, "__enter__"):
             with client as managed_client:
