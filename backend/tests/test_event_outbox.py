@@ -63,3 +63,21 @@ def test_outbox_returns_isolated_event_copies(tmp_path):
     pending = outbox.list_pending()
     pending[0]["meta"]["x"] = 99
     assert outbox.list_pending()[0]["meta"]["x"] == 1
+
+
+def test_claim_pending_is_exclusive_and_lease_expires(tmp_path):
+    path = tmp_path / "events.json"
+    first = EventOutbox(path)
+    second = EventOutbox(path)
+    first.publish({"event_id": "e", "kind": "new"})
+
+    claimed = first.claim_pending("worker-a", lease_seconds=30)
+    assert [event["event_id"] for event in claimed] == ["e"]
+    assert second.claim_pending("worker-b", lease_seconds=30) == []
+
+    with patch("core.event_outbox.time.time", return_value=__import__("time").time() + 31):
+        reclaimed = second.claim_pending("worker-b", lease_seconds=30)
+    assert [event["event_id"] for event in reclaimed] == ["e"]
+    assert reclaimed[0]["claimed_by"] == "worker-b"
+    assert EventOutbox(path).ack("e", worker_id="worker-a") is False
+    assert EventOutbox(path).ack("e", worker_id="worker-b") is True

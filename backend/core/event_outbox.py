@@ -92,21 +92,52 @@ class EventOutbox:
             events = copy.deepcopy(self._events)
         return events if limit is None else events[: max(0, limit)]
 
-    def update(self, event: dict[str, Any]) -> None:
+    def claim_pending(self, worker_id: str, *, lease_seconds: float = 30.0, limit: int = 100) -> list[dict[str, Any]]:
+        worker_id = str(worker_id or "").strip()
+        if not worker_id:
+            raise ValueError("worker_id is required")
+        lease_seconds = max(1.0, float(lease_seconds))
+        limit = max(0, int(limit))
+        now = time.time()
+        with self._locked():
+            claimed: list[dict[str, Any]] = []
+            changed = False
+            for event in self._events:
+                if len(claimed) >= limit:
+                    break
+                claim_until = float(event.get("claim_until", 0) or 0)
+                claimed_by = str(event.get("claimed_by") or "")
+                if claimed_by and claim_until > now:
+                    continue
+                event["claimed_by"] = worker_id
+                event["claim_until"] = now + lease_seconds
+                claimed.append(copy.deepcopy(event))
+                changed = True
+            if changed:
+                self._save()
+            return claimed
+
+    def update(self, event: dict[str, Any], *, worker_id: str | None = None) -> None:
         event_id = str(event.get("event_id") or "")
         with self._locked():
             for index, item in enumerate(self._events):
                 if str(item.get("event_id")) == event_id:
+                    if worker_id and item.get("claimed_by") != worker_id:
+                        return
                     self._events[index] = dict(event)
                     self._save()
                     return
             raise KeyError(event_id)
 
-    def ack(self, event_id: str) -> bool:
+    def ack(self, event_id: str, *, worker_id: str | None = None) -> bool:
         with self._locked():
-            before = len(self._events)
-            self._events = [item for item in self._events if str(item.get("event_id")) != event_id]
-            if len(self._events) == before:
+            for item in self._events:
+                if str(item.get("event_id")) == event_id:
+                    if worker_id and item.get("claimed_by") != worker_id:
+                        return False
+                    break
+            else:
                 return False
+            self._events = [item for item in self._events if str(item.get("event_id")) != event_id]
             self._save()
             return True
