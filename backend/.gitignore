@@ -35,6 +35,8 @@ data/*.lock
 data/.events-*
 data/.hotlist-snapshot-*
 data/monitor_nonces.sqlite
+data/device_alerts.sqlite
+data/device_alerts.sqlite-*
 
 scripts\fix_ota_url.py
 scripts\query_ota.py

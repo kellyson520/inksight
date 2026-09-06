@@ -5,6 +5,7 @@ import io
 import json
 import os
 import struct
+from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -41,6 +42,7 @@ from core.vocab_store import VOCAB_MODE_ID, get_vocab_content, handle_vocab_even
 from core.patterns.utils import apply_text_fontmode, load_font
 from core.renderer import image_to_bmp_bytes, image_to_png_bytes
 from core.schemas import DeviceHeartbeatRequest, OkResponse
+from core.device_alert_store import DeviceAlertQueue
 from core.stats_store import (
     add_favorite,
     check_habit,
@@ -61,6 +63,21 @@ _ALERT_GLOBAL_KEY_LIMIT = 256
 _ALERT_MESSAGE_LIMIT = 1000
 _device_alerts: dict[str, list[dict]] = {}
 _device_alerts_lock = asyncio.Lock()
+_DEVICE_ALERT_QUEUE = DeviceAlertQueue(Path(__file__).resolve().parents[2] / "data" / "device_alerts.sqlite", per_device_limit=_ALERT_QUEUE_LIMIT)
+
+
+async def enqueue_device_alert_async(mac: str, alert: dict) -> None:
+    normalized = dict(alert)
+    for key in ("created_at", "expires_at"):
+        if isinstance(normalized.get(key), datetime):
+            normalized[key] = normalized[key].isoformat()
+    normalized["sender"] = str(normalized.get("sender") or "")[:80]
+    normalized["message"] = str(normalized.get("message") or "")[:_ALERT_MESSAGE_LIMIT]
+    await _DEVICE_ALERT_QUEUE.enqueue(mac, normalized)
+
+
+async def pop_device_alert_async(mac: str, now: Optional[datetime] = None) -> Optional[dict]:
+    return await _DEVICE_ALERT_QUEUE.pop(mac, now=now)
 
 
 def enqueue_device_alert(mac: str, alert: dict) -> None:
@@ -458,13 +475,12 @@ async def push_device_alert(
         return JSONResponse({"error": "sender_and_message_required"}, status_code=400)
 
     now = datetime.now()
-    async with _device_alerts_lock:
-        enqueue_device_alert(mac, {
-            "sender": sender,
-            "message": message,
-            "level": level or "info",
-            "expires_at": now + timedelta(seconds=_ALERT_TTL_SECONDS),
-        })
+    await enqueue_device_alert_async(mac, {
+        "sender": sender,
+        "message": message,
+        "level": level or "info",
+        "expires_at": now + timedelta(seconds=_ALERT_TTL_SECONDS),
+    })
 
     logger.info("[ALERT] Stored alert for %s (level=%s, ttl=%ss)", mac, level or "info", _ALERT_TTL_SECONDS)
     return {"ok": True}
@@ -480,14 +496,13 @@ async def check_device_alert(
 
     now = datetime.now()
     alert_payload: Optional[dict] = None
-    async with _device_alerts_lock:
-        existing = pop_device_alert(mac, now=now)
-        if existing:
-            alert_payload = {
-                "sender": existing.get("sender") or "",
-                "message": existing.get("message") or "",
-                "level": existing.get("level") or "info",
-            }
+    existing = await pop_device_alert_async(mac, now=now)
+    if existing:
+        alert_payload = {
+            "sender": existing.get("sender") or "",
+            "message": existing.get("message") or "",
+            "level": existing.get("level") or "info",
+        }
     if not alert_payload:
         return {"has_alert": False}
     return {"has_alert": True, "alert": alert_payload}
@@ -532,14 +547,13 @@ async def alert_bmp(
 
     now = datetime.now()
     alert_payload: Optional[dict] = None
-    async with _device_alerts_lock:
-        existing = pop_device_alert(mac, now=now)
-        if existing:
-            alert_payload = {
-                "sender": existing.get("sender") or "",
-                "message": existing.get("message") or "",
-                "level": existing.get("level") or "info",
-            }
+    existing = await pop_device_alert_async(mac, now=now)
+    if existing:
+        alert_payload = {
+            "sender": existing.get("sender") or "",
+            "message": existing.get("message") or "",
+            "level": existing.get("level") or "info",
+        }
 
     if not alert_payload:
         return Response(status_code=204)

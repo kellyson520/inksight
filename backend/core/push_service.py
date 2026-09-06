@@ -67,20 +67,18 @@ class PushDispatcher:
     async def push_to_device(self, mac: str, sender: str, message: str, level: str = "info", ttl_seconds: int = 300) -> bool:
         """推送告警至指定的墨水屏设备。"""
         try:
-            from api.routes.device import _device_alerts, _device_alerts_lock
             from datetime import datetime, timedelta
+            from api.routes.device import enqueue_device_alert_async
 
             now = datetime.now()
             expires = now + timedelta(seconds=max(30, ttl_seconds))
-            async with _device_alerts_lock:
-                from api.routes.device import enqueue_device_alert
-                enqueue_device_alert(mac, {
-                    "sender": sender,
-                    "message": message,
-                    "level": level,
-                    "created_at": now,
-                    "expires_at": expires,
-                })
+            await enqueue_device_alert_async(mac, {
+                "sender": sender,
+                "message": message,
+                "level": level,
+                "created_at": now,
+                "expires_at": expires,
+            })
             self._record_log("device", mac, f"{sender}: {message}", True)
             return True
         except Exception as e:
