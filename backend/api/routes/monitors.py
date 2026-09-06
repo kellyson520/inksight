@@ -9,7 +9,7 @@ import hmac
 import logging
 import os
 import time
-from collections import OrderedDict
+from pathlib import Path
 from typing import Any
 from fastapi import APIRouter, Cookie, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -17,11 +17,13 @@ from pydantic import BaseModel, Field
 from core.monitor_service import monitor_service
 from api.shared import require_membership_access
 from core.auth import require_admin, validate_mac_param
+from core.monitor_nonce_store import MonitorNonceStore
 
 logger = logging.getLogger(__name__)
 _MONITOR_SIGNATURE_WINDOW_SECONDS = 300
-_MONITOR_NONCES: OrderedDict[str, float] = OrderedDict()
-_MONITOR_NONCE_LIMIT = 1024
+_MONITOR_NONCE_STORE = MonitorNonceStore(
+    Path(__file__).resolve().parents[2] / "data" / "monitor_nonces.sqlite"
+)
 
 router = APIRouter(prefix="/monitors", tags=["monitors"])
 
@@ -122,15 +124,20 @@ async def push_event(
         now = int(time.time())
         if not x_monitor_nonce or abs(now - timestamp) > _MONITOR_SIGNATURE_WINDOW_SECONDS:
             raise HTTPException(status_code=403, detail="signed_monitor_webhook_required")
-        if x_monitor_nonce in _MONITOR_NONCES:
-            raise HTTPException(status_code=403, detail="replayed_monitor_webhook")
         signed_body = f"{timestamp}.{x_monitor_nonce}.{payload.model_dump_json()}".encode()
         expected = hmac.new(secret.encode(), signed_body, hashlib.sha256).hexdigest() if secret else ""
         if not x_monitor_signature or not expected or not hmac.compare_digest(x_monitor_signature, expected):
             raise HTTPException(status_code=403, detail="signed_monitor_webhook_required")
-        _MONITOR_NONCES[x_monitor_nonce] = time.time()
-        while len(_MONITOR_NONCES) > _MONITOR_NONCE_LIMIT:
-            _MONITOR_NONCES.popitem(last=False)
+        try:
+            consumed = await _MONITOR_NONCE_STORE.consume(
+                x_monitor_nonce,
+                expires_at=timestamp + _MONITOR_SIGNATURE_WINDOW_SECONDS,
+            )
+        except Exception as exc:
+            logger.error("[Monitor] nonce store unavailable: %s", exc)
+            raise HTTPException(status_code=503, detail="replay_protection_unavailable") from exc
+        if not consumed:
+            raise HTTPException(status_code=403, detail="replayed_monitor_webhook")
     else:
         await require_membership_access(request, target_mac, ink_session, owner_only=True)
     notice = monitor_service.create_change_notice(

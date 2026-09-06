@@ -26,7 +26,10 @@ async def test_monitor_broadcast_rejects_invalid_signature(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_monitor_broadcast_accepts_valid_signature(monkeypatch):
+async def test_monitor_broadcast_accepts_valid_signature(monkeypatch, tmp_path):
+    import api.routes.monitors as monitors
+    from core.monitor_nonce_store import MonitorNonceStore
+    monitors._MONITOR_NONCE_STORE = MonitorNonceStore(tmp_path / "nonces.sqlite")
     import hashlib
     import hmac
     import time

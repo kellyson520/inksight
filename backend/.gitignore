@@ -34,6 +34,7 @@ data/*.corrupt-*
 data/*.lock
 data/.events-*
 data/.hotlist-snapshot-*
+data/monitor_nonces.sqlite
 
 scripts\fix_ota_url.py
 scripts\query_ota.py
