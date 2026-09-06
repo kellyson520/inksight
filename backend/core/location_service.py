@@ -368,14 +368,14 @@ async def _fetch_nominatim(
     if country_codes:
         params["countrycodes"] = country_codes
 
-    async with httpx.AsyncClient(
-        timeout=5.0,
+    response = await asyncio.to_thread(
+        outbound_http.get_json,
+        f"{_NOMINATIM_SEARCH_URL}?{urlencode(params)}",
         headers={"User-Agent": _NOMINATIM_USER_AGENT},
-    ) as client:
-        resp = await client.get(_NOMINATIM_SEARCH_URL, params=params)
-        resp.raise_for_status()
-        data = resp.json()
-        return data if isinstance(data, list) else []
+        policy=RequestPolicy(timeout=5.0, max_attempts=1, follow_redirects=False),
+    )
+    data = response.json()
+    return data if isinstance(data, list) else []
 
 
 def _pick_first_text(values: list[Any], *, max_length: int = 40) -> str:
