@@ -38,6 +38,7 @@ from .patterns.utils import (
 from .layout_presets import expand_layout_presets
 from .mode_catalog import builtin_catalog_map
 from .image_processing import convert_image_block
+from .blocks.spec import BlockSpec
 
 logger = logging.getLogger(__name__)
 
@@ -480,7 +481,7 @@ def render_json_mode(
             for block in body:
                 if measure_ctx.y >= footer_top - 10:
                     break
-                _render_block(measure_ctx, block)
+                BlockSpec.from_dict(block).measure(measure_ctx, screen_w)
             content_height = measure_ctx.y - status_bar_bottom
             available_height = footer_top - status_bar_bottom
             offset = max(0, (available_height - content_height) // 2)
@@ -494,7 +495,7 @@ def render_json_mode(
             for block in body:
                 if ctx.y >= footer_top - 10:
                     break
-                _render_block(ctx, block)
+                BlockSpec.from_dict(block).render(ctx)
         else:
             ctx = RenderContext(
                 draw=draw, img=img, content=content,
@@ -504,7 +505,7 @@ def render_json_mode(
             for block in body:
                 if ctx.y >= footer_top - 10:
                     break
-                _render_block(ctx, block)
+                BlockSpec.from_dict(block).render(ctx)
 
     _apply_decorations(img, layout.get("decorations", []), screen_w, screen_h, status_bar_bottom)
 

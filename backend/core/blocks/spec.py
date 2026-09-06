@@ -68,7 +68,10 @@ class BlockSpec:
 
     def measure(self, ctx: Any, max_width: int) -> tuple[int, int]:
         self.validate()
-        return measure_block_size(ctx, self.to_dict(), max_width)
+        size = measure_block_size(ctx, self.to_dict(), max_width)
+        if hasattr(ctx, "y"):
+            ctx.y += size[1]
+        return size
 
     def collect_resources(self) -> set[str]:
         resources: set[str] = set()
