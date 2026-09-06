@@ -46,6 +46,38 @@ def test_json_renderer_uses_block_spec_for_measure_and_render(monkeypatch):
     assert calls == ["measure", "render"]
 
 
+@pytest.mark.asyncio
+async def test_block_spec_prefetch_returns_bytes_and_records_failures():
+    spec = BlockSpec.from_dict({"type": "image", "src": "https://example.com/a.png"})
+
+    async def fetch(resource):
+        if resource.endswith("a.png"):
+            return b"image-bytes"
+        raise OSError("offline")
+
+    result = await spec.prefetch(fetch)
+    assert result == {"https://example.com/a.png": b"image-bytes"}
+    assert spec.prefetch_errors == {}
+
+
+@pytest.mark.asyncio
+async def test_block_spec_prefetch_does_not_drop_success_when_one_resource_fails():
+    spec = BlockSpec.from_dict(
+        {"type": "section", "children": [
+            {"type": "image", "src": "ok.png"},
+            {"type": "image", "src": "bad.png"},
+        ]}
+    )
+    async def fetch(resource):
+        if resource == "ok.png":
+            return b"ok"
+        raise OSError("offline")
+
+    result = await spec.prefetch(fetch)
+    assert result == {"ok.png": b"ok"}
+    assert spec.prefetch_errors == {"bad.png": "offline"}
+
+
 def test_block_spec_validation_rejects_invalid_structural_props():
     invalid_specs = [
         {"type": "section", "children": {"type": "text"}},

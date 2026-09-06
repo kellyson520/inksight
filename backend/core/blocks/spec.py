@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Awaitable, Callable
 
 from .measure import measure_block_size
 from .registry import BLOCK_RENDERERS, render_block
@@ -24,6 +24,7 @@ def _child(value: Any) -> "BlockSpec | Any":
 class BlockSpec:
     type: str
     data: dict[str, Any]
+    prefetch_errors: dict[str, str] = field(default_factory=dict, compare=False)
 
     @classmethod
     def from_dict(cls, block: dict[str, Any]) -> "BlockSpec":
@@ -88,6 +89,20 @@ class BlockSpec:
         if hasattr(ctx, "y"):
             ctx.y += size[1]
         return size
+
+    async def prefetch(self, fetcher: Callable[[str], Awaitable[bytes]]) -> dict[str, bytes]:
+        self.validate()
+        self.prefetch_errors.clear()
+        resources = {}
+        for resource in sorted(self.collect_resources()):
+            try:
+                value = await fetcher(resource)
+                if not isinstance(value, bytes):
+                    raise TypeError("prefetcher must return bytes")
+                resources[resource] = value
+            except Exception as exc:
+                self.prefetch_errors[resource] = str(exc)
+        return resources
 
     def collect_resources(self) -> set[str]:
         resources: set[str] = set()
