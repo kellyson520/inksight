@@ -104,6 +104,18 @@ async def test_block_spec_prefetch_with_sync_media_fetcher():
     assert await spec.prefetch_with_media_fetcher(fetch) == {"image.png": b"image-bytes"}
 
 
+@pytest.mark.asyncio
+async def test_block_spec_prefetch_content_fills_image_field_bytes():
+    spec = BlockSpec.from_dict({"type": "image", "field": "cover", "urls_field": "covers"})
+    content = {"cover": "https://cdn.example/a.png", "covers": ["https://cdn.example/b.png"]}
+
+    async def fetch(resource):
+        return b"bytes:" + resource.encode()
+
+    result = await spec.prefetch_content(content, fetch)
+    assert result["_prefetched_cover"] == b"bytes:https://cdn.example/a.png"
+
+
 def test_block_spec_validation_rejects_invalid_structural_props():
     invalid_specs = [
         {"type": "section", "children": {"type": "text"}},

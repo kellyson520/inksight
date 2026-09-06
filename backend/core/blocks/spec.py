@@ -106,6 +106,36 @@ class BlockSpec:
                 self.prefetch_errors[resource] = str(exc)
         return resources
 
+    async def prefetch_content(self, content: dict[str, Any], fetcher: Callable[[str], Awaitable[Any]]) -> dict[str, Any]:
+        """Prefetch image resources referenced by this block into renderer content."""
+        if self.type == "image":
+            field = str(self.data.get("field") or "image_url")
+            direct = self.data.get("src") or self.data.get("url")
+            resource = direct or content.get(field)
+            urls_field = self.data.get("urls_field")
+            candidates = content.get(urls_field) if urls_field and content.get(urls_field) else resource
+            candidate_list = [candidates] if isinstance(candidates, str) else list(candidates or [])
+            if resource and isinstance(candidates, (list, tuple)):
+                candidate_list = [resource, *candidate_list]
+            for candidate in candidate_list:
+                if isinstance(candidate, str) and candidate.startswith(("http://", "https://")):
+                    try:
+                        value = await fetcher(candidate)
+                        data = value if isinstance(value, bytes) else getattr(value, "data", None)
+                        if isinstance(data, bytes):
+                            content[f"_prefetched_{field}"] = data
+                            break
+                    except Exception as exc:
+                        self.prefetch_errors[candidate] = str(exc)
+            return content
+        for key in _NESTED_KEYS:
+            value = self.data.get(key)
+            children = value if isinstance(value, list) else [value]
+            for child in children:
+                if isinstance(child, BlockSpec):
+                    await child.prefetch_content(content, fetcher)
+        return content
+
     async def prefetch_with_media_fetcher(self, fetcher: Callable[[str], Any]) -> dict[str, bytes]:
         async def fetch(resource: str) -> Any:
             return await asyncio.to_thread(fetcher, resource)

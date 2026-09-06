@@ -579,7 +579,9 @@ async def _prefetch_images(content: dict, mode_def: dict) -> dict:
         return content
 
     from .media_fetcher import MediaFetchError, media_fetcher
+    from .blocks import BlockSpec
 
+    image_specs = [BlockSpec.from_dict(block) for block in _iter_image_blocks(body_blocks)]
     for field_name in image_fields:
         url = content.get(field_name)
         if not url or not isinstance(url, str) or not url.startswith("http"):
@@ -597,12 +599,19 @@ async def _prefetch_images(content: dict, mode_def: dict) -> dict:
              if block.get("field", "image_url") == field_name and block.get("urls_field")),
             None,
         )
-        candidates = content.get(urls_field) if urls_field else url
-        try:
-            fetched = await asyncio.to_thread(media_fetcher.fetch_image, candidates)
-            content[f"_prefetched_{field_name}"] = fetched.data
-        except MediaFetchError:
-            logger.warning("[JSONContent] Failed to prefetch image field %s", field_name, exc_info=True)
+        matching_specs = [spec for spec in image_specs if str(spec.data.get("field") or "image_url") == field_name]
+        if matching_specs:
+            async def fetch(resource: str):
+                return await asyncio.to_thread(media_fetcher.fetch_image, resource)
+            for spec in matching_specs:
+                await spec.prefetch_content(content, fetch)
+        else:
+            candidates = content.get(urls_field) if urls_field else url
+            try:
+                fetched = await asyncio.to_thread(media_fetcher.fetch_image, candidates)
+                content[f"_prefetched_{field_name}"] = fetched.data
+            except MediaFetchError:
+                logger.warning("[JSONContent] Failed to prefetch image field %s", field_name, exc_info=True)
     return content
 
 

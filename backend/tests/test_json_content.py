@@ -247,6 +247,25 @@ async def test_prefetch_missing_uploaded_image_does_not_fetch_remote():
 
 
 @pytest.mark.asyncio
+async def test_prefetch_images_uses_block_spec_content_prefetch(monkeypatch):
+    from core import json_content
+
+    calls = []
+    async def prefetch_content(self, content, fetcher):
+        calls.append((self.type, fetcher))
+        content["_prefetched_image_url"] = b"from-spec"
+        return content
+
+    monkeypatch.setattr("core.blocks.BlockSpec.prefetch_content", prefetch_content)
+    result = await json_content._prefetch_images(
+        {"image_url": "https://cdn.example/a.png"},
+        {"layout": {"body": [{"type": "image", "field": "image_url"}]}},
+    )
+    assert result["_prefetched_image_url"] == b"from-spec"
+    assert calls and calls[0][0] == "image"
+
+
+@pytest.mark.asyncio
 async def test_llm_key_missing_returns_fallback():
     """当 LLM API key 缺失时，应返回 fallback 内容而非抛出异常"""
     mode_def = {
