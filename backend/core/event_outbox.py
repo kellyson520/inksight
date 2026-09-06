@@ -1,13 +1,17 @@
 """Small durable, idempotent JSON event outbox."""
 from __future__ import annotations
 
+import copy
 import json
 import os
 import tempfile
 import time
 from contextlib import contextmanager
 
-import fcntl
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows fallback
+    fcntl = None
 from pathlib import Path
 from typing import Any
 
@@ -16,18 +20,21 @@ class EventOutbox:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self._events: list[dict[str, Any]] = []
-        self._load()
+        with self._locked():
+            pass
 
     @contextmanager
     def _locked(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.with_name(self.path.name + ".lock").open("a+") as lock_file:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            if fcntl is not None:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
             try:
                 self._load()
                 yield
             finally:
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                if fcntl is not None:
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
     def _load(self) -> None:
         try:
@@ -71,13 +78,18 @@ class EventOutbox:
             item = dict(event)
             item.setdefault("created_at", time.time())
             item.setdefault("attempts", 0)
-            self._events.append(item)
-            self._save()
+            previous = self._events
+            self._events = [*self._events, item]
+            try:
+                self._save()
+            except Exception:
+                self._events = previous
+                raise
             return True
 
     def list_pending(self, limit: int | None = None) -> list[dict[str, Any]]:
         with self._locked():
-            events = list(self._events)
+            events = copy.deepcopy(self._events)
         return events if limit is None else events[: max(0, limit)]
 
     def update(self, event: dict[str, Any]) -> None:
