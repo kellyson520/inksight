@@ -69,76 +69,61 @@ def _extract_image_url(item_elem: ET.Element, description_html: str, base_url: s
     return ""
 
 
-async def fetch_and_parse_rss(feed_url: str, timeout: float = 12.0) -> dict[str, Any]:
-    """拉取并解析 RSS 或 Atom 源，带缓存与容错。"""
+async def fetch_rss_source(feed_url: str, timeout: float = 12.0) -> SourceResult[dict[str, Any]]:
+    """Fetch RSS/Atom data using the shared SourceResult stale-if-error contract."""
     feed_url = feed_url.strip()
     if not feed_url:
-        return {"error": "Empty feed URL", "items": []}
+        return SourceResult.fallback({"error": "Empty feed URL", "items": []}, source=feed_url, reason="empty_url")
 
     now = time.time()
     cached = _RSS_CACHE.get(feed_url)
     if cached and (now - cached[0] < _RSS_CACHE_TTL):
-        result = dict(cached[1])
-        result["source_status"] = "fresh"
-        return result
+        return SourceResult.fresh(dict(cached[1]), source=feed_url, ttl_seconds=_RSS_CACHE_TTL)
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 InkSight/1.0",
         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
     }
-
-    raw_xml = ""
     try:
         base_timeout = RequestPolicy().timeout
         policy = RequestPolicy(
-            timeout=httpx.Timeout(
-                connect=base_timeout.connect,
-                read=max(1.0, timeout),
-                write=base_timeout.write,
-                pool=base_timeout.pool,
-            ),
+            timeout=httpx.Timeout(connect=base_timeout.connect, read=max(1.0, timeout), write=base_timeout.write, pool=base_timeout.pool),
             max_attempts=3,
             max_response_bytes=2 * 1024 * 1024,
             verify=True,
             follow_redirects=False,
         )
-        response = await asyncio.to_thread(
-            outbound_http.get_text,
-            feed_url,
-            headers=headers,
-            policy=policy,
-        )
+        response = await asyncio.to_thread(outbound_http.get_text, feed_url, headers=headers, policy=policy)
         raw_xml = response.text
-    except Exception as e:
-        logger.warning("[RSS] Network error fetching %s: %s", feed_url, type(e).__name__)
+    except Exception as exc:
+        logger.warning("[RSS] Network error fetching %s: %s", feed_url, type(exc).__name__)
         if cached:
-            stale = dict(cached[1])
-            stale["source_status"] = "stale"
-            stale["error"] = type(e).__name__
-            return stale
-        return {"error": str(e), "items": [], "source_status": "unavailable"}
+            return SourceResult(data=dict(cached[1]), source=feed_url, source_status="stale", error=type(exc).__name__)
+        return SourceResult.fallback({"error": str(exc), "items": []}, source=feed_url, reason=type(exc).__name__)
 
     if not raw_xml:
         if cached:
-            stale = dict(cached[1])
-            stale["source_status"] = "stale"
-            stale["error"] = "empty response"
-            return stale
-        return {"error": "Empty response", "items": [], "source_status": "unavailable"}
+            return SourceResult(data=dict(cached[1]), source=feed_url, source_status="stale", error="empty response")
+        return SourceResult.fallback({"error": "Empty response", "items": []}, source=feed_url, reason="empty response")
 
     parsed = parse_rss_xml(raw_xml, base_url=feed_url)
     if parsed and parsed.get("items"):
-        parsed["source_status"] = "fresh"
         _RSS_CACHE[feed_url] = (now, parsed)
-        return parsed
+        return SourceResult.fresh(parsed, source=feed_url, ttl_seconds=_RSS_CACHE_TTL)
+    reason = parsed.get("error", "empty feed") if parsed else "empty feed"
     if cached:
-        stale = dict(cached[1])
-        stale["source_status"] = "stale"
-        stale["error"] = parsed.get("error", "empty feed") if parsed else "empty feed"
-        return stale
-    if parsed:
-        parsed["source_status"] = "unavailable"
-    return parsed or {"error": "unavailable", "items": [], "source_status": "unavailable"}
+        return SourceResult(data=dict(cached[1]), source=feed_url, source_status="stale", error=reason)
+    return SourceResult.fallback(parsed or {"error": "unavailable", "items": []}, source=feed_url, reason=reason)
+
+
+async def fetch_and_parse_rss(feed_url: str, timeout: float = 12.0) -> dict[str, Any]:
+    """Backward-compatible dict adapter for :func:`fetch_rss_source`."""
+    result = await fetch_rss_source(feed_url, timeout=timeout)
+    payload = dict(result.data)
+    payload["source_status"] = result.source_status
+    if result.error:
+        payload["error"] = result.error
+    return payload
 
 
 def parse_rss_xml(raw_xml: str, base_url: str = "") -> dict[str, Any]:

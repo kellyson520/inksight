@@ -1,5 +1,6 @@
 import pytest
-from core.rss_parser import parse_rss_xml, get_rss_item_content, fetch_and_parse_rss
+from core.rss_parser import parse_rss_xml, get_rss_item_content, fetch_and_parse_rss, fetch_rss_source
+from core.source_result import SourceResult
 from fastapi.testclient import TestClient
 from api.index import app
 
@@ -71,6 +72,28 @@ def test_parse_atom():
     assert item0["title"] == "Quantum Computing in 2026"
     assert item0["author"] == "Dr. Turing"
     assert "1000-qubit" in item0["summary"]
+
+
+@pytest.mark.asyncio
+async def test_rss_source_result_preserves_stale_data_on_error(monkeypatch):
+    from core import rss_parser
+
+    response = type("Response", (), {"text": SAMPLE_RSS_2_0, "content": SAMPLE_RSS_2_0.encode()})()
+    monkeypatch.setattr(rss_parser.outbound_http, "get_text", lambda *args, **kwargs: response)
+    first = await fetch_rss_source("https://feed.example.test/rss")
+    assert isinstance(first, SourceResult)
+    assert first.source_status == "fresh"
+    assert first.data["title"] == "Tech News Feed"
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("upstream down")
+
+    monkeypatch.setattr(rss_parser.outbound_http, "get_text", fail)
+    monkeypatch.setattr(rss_parser, "_RSS_CACHE_TTL", 0)
+    second = await fetch_rss_source("https://feed.example.test/rss")
+    assert second.source_status == "stale"
+    assert second.data["title"] == "Tech News Feed"
+    assert second.error == "RuntimeError"
 
 
 @pytest.mark.asyncio
