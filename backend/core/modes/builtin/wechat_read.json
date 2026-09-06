@@ -122,6 +122,20 @@
           },
           {
             "type": "spacer",
+            "height": 4
+          },
+          {
+            "type": "text",
+            "field": "quote",
+            "font": "noto_serif_light",
+            "font_size": 10,
+            "line_height": 15,
+            "align": "left",
+            "max_lines": 2,
+            "color": "black"
+          },
+          {
+            "type": "spacer",
             "height": 8
           },
           {
@@ -155,8 +169,8 @@
             "type": "image",
             "field": "cover_url",
             "urls_field": "cover_urls",
-            "width": 120,
-            "height": 174,
+            "width": 128,
+            "height": 180,
             "fit": "cover",
             "photo_enhance": true,
             "margin_bottom": 4
