@@ -348,38 +348,43 @@ async def _fetch_all_poems_from_github() -> list[dict]:
     ]
 
     try:
-        async with httpx.AsyncClient(timeout=120.0, limits=httpx.Limits(max_keepalive_connections=5)) as client:
-            for dir_name, prefix, shard_indices in collections:
-                for i in shard_indices:
-                    encoded_dir = urllib.parse.quote(dir_name)
-                    url = f"{base_url}/{encoded_dir}/{prefix}{i}.json"
-                    try:
-                        resp = await client.get(url)
-                        if resp.status_code == 200:
-                            data = resp.json()
-                            for item in data:
-                                # 统一数据格式
-                                if "poet." in prefix:
-                                    # 唐诗格式：{title, author, paragraphs}
-                                    title = item.get("title", "")
-                                    author = item.get("author", "")
-                                else:
-                                    # 宋词格式：{author, paragraphs, rhythmic}
-                                    title = item.get("rhythmic", "")
-                                    author = item.get("author", "")
+        policy = RequestPolicy(timeout=httpx.Timeout(120.0), follow_redirects=False)
+        for dir_name, prefix, shard_indices in collections:
+            for i in shard_indices:
+                encoded_dir = urllib.parse.quote(dir_name)
+                url = f"{base_url}/{encoded_dir}/{prefix}{i}.json"
+                try:
+                    response = await asyncio.to_thread(
+                        outbound_http.get_json,
+                        url,
+                        headers={"Accept": "application/json"},
+                        policy=policy,
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        for item in data:
+                            # 统一数据格式
+                            if "poet." in prefix:
+                                # 唐诗格式：{title, author, paragraphs}
+                                title = item.get("title", "")
+                                author = item.get("author", "")
+                            else:
+                                # 宋词格式：{author, paragraphs, rhythmic}
+                                title = item.get("rhythmic", "")
+                                author = item.get("author", "")
 
-                                poems.append({
-                                    "title": title,
-                                    "author": author,
-                                    "dynasty": "唐" if "tang" in prefix else "宋",
-                                    "lines": item.get("paragraphs", []),
-                                    "note": _extract_poem_note(item),
-                                    "season_tag": _guess_season_from_poem(item),
-                                })
-                            logger.info("[GitHub] Fetched %s %d, total poems: %d", dir_name, i, len(poems))
-                    except Exception as e:
-                        logger.debug("[GitHub] Failed to fetch %s: %s", url, e)
-                        continue
+                            poems.append({
+                                "title": title,
+                                "author": author,
+                                "dynasty": "唐" if "tang" in prefix else "宋",
+                                "lines": item.get("paragraphs", []),
+                                "note": _extract_poem_note(item),
+                                "season_tag": _guess_season_from_poem(item),
+                            })
+                        logger.info("[GitHub] Fetched %s %d, total poems: %d", dir_name, i, len(poems))
+                except Exception as e:
+                    logger.debug("[GitHub] Failed to fetch %s: %s", url, e)
+                    continue
 
         logger.info("[GitHub] Total poems fetched: %d", len(poems))
         return poems

@@ -25,6 +25,29 @@ async def test_scheduler_wikipedia_uses_shared_outbound(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_scheduler_poetry_fetch_uses_shared_outbound_and_continues_shards(monkeypatch):
+    from core import scheduler as module
+
+    calls = []
+
+    def fake_get_json(url, *, headers=None, policy=None):
+        calls.append((url, headers, policy))
+        if "poet.tang.0.json" in url:
+            payload = [{"title": "静夜思", "author": "李白", "paragraphs": ["床前明月光"]}]
+        elif "ci.song.0.json" in url:
+            payload = [{"rhythmic": "水调歌头", "author": "苏轼", "paragraphs": ["明月几时有"]}]
+        else:
+            raise ValueError("missing shard")
+        return HttpResponse(200, {}, json.dumps(payload).encode(), url, 1, 1.0)
+
+    monkeypatch.setattr(module, "outbound_http", SimpleNamespace(get_json=fake_get_json), raising=False)
+    result = await module._fetch_all_poems_from_github()
+    assert {item["title"] for item in result} == {"静夜思", "水调歌头"}
+    assert len(calls) == 23
+    assert calls[0][1]["Accept"] == "application/json"
+
+
+@pytest.mark.asyncio
 async def test_scheduler_registers_monitor_poll_job(monkeypatch):
     from core import scheduler as module
 
