@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+import json
 import time
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -220,14 +221,38 @@ def test_monitors_api_endpoints():
         target_id = new_target["id"]
 
         # 3. 外部事件推送触发通报
-        resp_event = client.post("/api/monitors/events", json={
+        import hashlib
+        import hmac
+        import os
+        import time
+        event_payload = {
             "site_name": "Webhook推送站点",
             "url": "https://service.com/webhook",
             "title": "CI/CD 部署完成",
             "prev_snippet": "构建版本 102",
             "new_snippet": "构建版本 103 已成功部署至生产集群",
             "max_presentations": 2,
-        })
+        }
+        timestamp = str(int(time.time()))
+        nonce = "integration-test-nonce"
+        os.environ["MONITOR_WEBHOOK_SECRET"] = "integration-test-secret"
+        secret = os.environ["MONITOR_WEBHOOK_SECRET"]
+        from api.routes.monitors import EventPushSchema
+        signed_payload = EventPushSchema.model_validate(event_payload)
+        signature = hmac.new(
+            secret.encode(),
+            f"{timestamp}.{nonce}.{signed_payload.model_dump_json()}".encode(),
+            hashlib.sha256,
+        ).hexdigest()
+        resp_event = client.post(
+            "/api/monitors/events",
+            json=event_payload,
+            headers={
+                "X-Monitor-Timestamp": timestamp,
+                "X-Monitor-Nonce": nonce,
+                "X-Monitor-Signature": signature,
+            },
+        )
         assert resp_event.status_code == 200
         assert resp_event.json()["notice"]["title"] == "CI/CD 部署完成"
 

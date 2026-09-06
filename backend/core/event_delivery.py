@@ -21,6 +21,17 @@ class BroadcastEventDeliveryAdapter:
         return isinstance(result, dict) and result.get("success") == len(targets) and result.get("failed", 0) == 0
 
 
+class EventDeliveryRouter:
+    def __init__(self, *, device: Any, broadcast: Any) -> None:
+        self.device = device
+        self.broadcast = broadcast
+
+    async def publish(self, event: dict[str, Any]) -> bool:
+        if event.get("target_mac") == "*" or event.get("target_macs"):
+            return await self.broadcast.publish(event)
+        return await self.device.publish(event)
+
+
 class DeviceEventDeliveryAdapter:
     def __init__(self, push_dispatcher: Any) -> None:
         self.push_dispatcher = push_dispatcher

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from core.event_delivery import BroadcastEventDeliveryAdapter, DeviceEventDeliveryAdapter
+from core.event_delivery import BroadcastEventDeliveryAdapter, DeviceEventDeliveryAdapter, EventDeliveryRouter
 
 
 @pytest.mark.asyncio
@@ -56,3 +56,18 @@ async def test_broadcast_adapter_requires_explicit_targets():
     assert await adapter.publish({"event_id": "e", "target_mac": "*", "title": "t", "message": "m"}) is False
     assert await adapter.publish({"event_id": "e2", "target_macs": ["AA", "BB"], "title": "t", "message": "m"}) is True
     assert calls[0]["target_macs"] == ["AA", "BB"]
+
+
+@pytest.mark.asyncio
+async def test_event_delivery_router_selects_broadcast_or_device_adapter():
+    delivered = []
+
+    class Adapter:
+        async def publish(self, event):
+            delivered.append(event["event_id"])
+            return True
+
+    router = EventDeliveryRouter(device=Adapter(), broadcast=Adapter())
+    assert await router.publish({"event_id": "broadcast", "target_mac": "*"}) is True
+    assert await router.publish({"event_id": "device", "target_mac": "AA"}) is True
+    assert delivered == ["broadcast", "device"]

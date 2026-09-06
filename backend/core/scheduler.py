@@ -66,7 +66,7 @@ async def start_scheduler() -> None:
     from .hotlist_service import hotlist_service
     from .event_outbox import EventOutbox
     from .event_dispatcher import EventDispatcher
-    from .event_delivery import DeviceEventDeliveryAdapter
+    from .event_delivery import BroadcastEventDeliveryAdapter, DeviceEventDeliveryAdapter, EventDeliveryRouter
     from .push_service import push_dispatcher
     monitor_runner = MonitorRunner(monitor_service)
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -76,7 +76,10 @@ async def start_scheduler() -> None:
         outbox=hotlist_outbox,
         snapshot_path=os.path.join(data_dir, "hotlist_snapshots.json"),
     )
-    event_delivery = DeviceEventDeliveryAdapter(push_dispatcher)
+    event_delivery = EventDeliveryRouter(
+        device=DeviceEventDeliveryAdapter(push_dispatcher),
+        broadcast=BroadcastEventDeliveryAdapter(push_dispatcher),
+    )
     event_dispatcher = EventDispatcher(hotlist_outbox, publish=event_delivery.publish, backoff=0)
     async def _dispatch_events():
         await event_dispatcher.dispatch_once()
