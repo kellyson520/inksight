@@ -54,6 +54,22 @@ class BlockSpec:
     def validate(self) -> "BlockSpec":
         if self.type not in BLOCK_RENDERERS:
             raise ValueError(f"unknown block type: {self.type}")
+        children = self.data.get("children")
+        if children is not None and not isinstance(children, list):
+            raise ValueError(f"invalid children for block: {self.type}")
+        if self.type == "image" and not any(self.data.get(key) for key in ("src", "url", "resource", "field")):
+            raise ValueError("invalid image resource")
+        if self.type == "progress_bar":
+            for key in ("value", "max"):
+                if key in self.data:
+                    try:
+                        float(self.data[key])
+                    except (TypeError, ValueError) as exc:
+                        raise ValueError(f"invalid progress_bar {key}") from exc
+        if self.type == "two_column":
+            for key in ("left", "right"):
+                if key in self.data and not isinstance(self.data[key], list):
+                    raise ValueError(f"invalid two_column {key}")
         for key in _NESTED_KEYS:
             value = self.data.get(key)
             values = value if isinstance(value, list) else [value]

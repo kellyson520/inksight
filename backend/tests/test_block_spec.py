@@ -46,6 +46,24 @@ def test_json_renderer_uses_block_spec_for_measure_and_render(monkeypatch):
     assert calls == ["measure", "render"]
 
 
+def test_block_spec_validation_rejects_invalid_structural_props():
+    invalid_specs = [
+        {"type": "section", "children": {"type": "text"}},
+        {"type": "image"},
+        {"type": "progress_bar", "value": "bad", "max": 10},
+        {"type": "two_column", "left": "bad", "right": []},
+    ]
+    for block in invalid_specs:
+        with pytest.raises(ValueError, match="invalid"):
+            BlockSpec.from_dict(block).validate()
+
+
+def test_block_spec_validation_accepts_optional_legacy_props():
+    BlockSpec.from_dict(
+        {"type": "image", "url": "https://example.com/a.png", "custom_renderer_flag": True}
+    ).validate()
+
+
 def test_block_spec_render_and_measure_delegate_to_existing_dispatcher(monkeypatch):
     from core.blocks import spec as spec_module
 
