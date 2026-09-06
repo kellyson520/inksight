@@ -237,7 +237,7 @@ def test_monitors_api_endpoints():
             "max_presentations": 2,
         }
         timestamp = str(int(time.time()))
-        nonce = "integration-test-nonce"
+        nonce = f"integration-test-nonce-{time.time_ns()}"
         os.environ["MONITOR_WEBHOOK_SECRET"] = "integration-test-secret"
         secret = os.environ["MONITOR_WEBHOOK_SECRET"]
         from api.routes.monitors import EventPushSchema
