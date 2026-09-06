@@ -202,14 +202,17 @@ def test_new_blocks_rendering_and_measure():
 def test_monitors_api_endpoints():
     """测试监控模块 REST API。"""
     with TestClient(app) as client:
+        import os
+        os.environ["ADMIN_TOKEN"] = "integration-admin"
+        admin_headers = {"Authorization": "Bearer integration-admin"}
         # 1. 获取列表
-        resp_list = client.get("/api/monitors")
+        resp_list = client.get("/api/monitors", headers=admin_headers)
         assert resp_list.status_code == 200
         data = resp_list.json()
         assert "targets" in data
 
         # 2. 添加监控项
-        resp_add = client.post("/api/monitors", json={
+        resp_add = client.post("/api/monitors", headers=admin_headers, json={
             "name": "API 端点监控",
             "url": "http://127.0.0.1:8070/health",
             "check_interval": 120,
@@ -257,14 +260,14 @@ def test_monitors_api_endpoints():
         assert resp_event.json()["notice"]["title"] == "CI/CD 部署完成"
 
         # 4. 查询活跃通报
-        resp_notices = client.get("/api/monitors/notices?active_only=true")
+        resp_notices = client.get("/api/monitors/notices?active_only=true", headers=admin_headers)
         assert resp_notices.status_code == 200
         assert len(resp_notices.json()["notices"]) >= 1
 
         # 5. 清空通报
-        resp_clear = client.post("/api/monitors/notices/clear")
+        resp_clear = client.post("/api/monitors/notices/clear", headers=admin_headers)
         assert resp_clear.status_code == 200
 
         # 6. 删除监控项
-        resp_del = client.delete(f"/api/monitors/{target_id}")
+        resp_del = client.delete(f"/api/monitors/{target_id}", headers=admin_headers)
         assert resp_del.status_code == 200

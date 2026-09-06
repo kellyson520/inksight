@@ -15,9 +15,7 @@ import re
 import time
 from pathlib import Path
 from typing import Any
-import httpx
-
-from core.http_client import get_async_client
+from core.outbound_http import outbound_http
 
 logger = logging.getLogger(__name__)
 
@@ -149,13 +147,12 @@ class MonitorService:
         if not url or not target.get("enabled", True):
             return None
 
-        client = get_async_client()
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) InkSight-WebWatcher/1.0",
         }
 
         try:
-            resp = await client.get(url, headers=headers, timeout=8.0, follow_redirects=True)
+            resp = outbound_http.get_text(url, headers=headers)
             text = resp.text
             target["last_checked"] = int(time.time())
             title, summary = _extract_page_core_text(text)

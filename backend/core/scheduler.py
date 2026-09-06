@@ -41,6 +41,10 @@ async def start_scheduler() -> None:
 
     如果诗词数据库尚未初始化（为空），会自动触发首次全量加载。
     """
+    global scheduler
+    event_loop = getattr(scheduler, "_eventloop", None)
+    if event_loop is not None and event_loop.is_closed():
+        scheduler = AsyncIOScheduler()
     if scheduler.running:
         logger.warning("[Scheduler] Already running, skipping start")
         return

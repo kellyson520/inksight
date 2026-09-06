@@ -11,12 +11,12 @@ import os
 import time
 from collections import OrderedDict
 from typing import Any
-from fastapi import APIRouter, Cookie, Header, HTTPException, Request
+from fastapi import APIRouter, Cookie, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from core.monitor_service import monitor_service
 from api.shared import require_membership_access
-from core.auth import validate_mac_param
+from core.auth import require_admin, validate_mac_param
 
 logger = logging.getLogger(__name__)
 _MONITOR_SIGNATURE_WINDOW_SECONDS = 300
@@ -47,21 +47,21 @@ class EventPushSchema(BaseModel):
 
 
 @router.get("")
-async def list_targets() -> dict[str, Any]:
+async def list_targets(_: None = Depends(require_admin)) -> dict[str, Any]:
     """列出当前所有监控目标。"""
     targets = monitor_service.list_targets()
     return {"success": True, "targets": targets}
 
 
 @router.post("")
-async def create_or_update_target(payload: TargetCreateSchema) -> dict[str, Any]:
+async def create_or_update_target(payload: TargetCreateSchema, _: None = Depends(require_admin)) -> dict[str, Any]:
     """创建或更新监控目标。"""
     target = monitor_service.add_target(payload.model_dump())
     return {"success": True, "target": target}
 
 
 @router.delete("/{target_id}")
-async def delete_target(target_id: str) -> dict[str, Any]:
+async def delete_target(target_id: str, _: None = Depends(require_admin)) -> dict[str, Any]:
     """删除指定监控目标。"""
     deleted = monitor_service.delete_target(target_id)
     if not deleted:
@@ -70,7 +70,7 @@ async def delete_target(target_id: str) -> dict[str, Any]:
 
 
 @router.post("/check")
-async def trigger_check() -> dict[str, Any]:
+async def trigger_check(_: None = Depends(require_admin)) -> dict[str, Any]:
     """即时触发所有启用的监控项检测，返回触发的通知事件。"""
     targets = monitor_service.list_targets()
     triggered_notices = []
@@ -88,14 +88,14 @@ async def trigger_check() -> dict[str, Any]:
 
 
 @router.get("/notices")
-async def list_notices(active_only: bool = False) -> dict[str, Any]:
+async def list_notices(active_only: bool = False, _: None = Depends(require_admin)) -> dict[str, Any]:
     """获取变动通报列表。"""
     notices = monitor_service.list_notices(active_only=active_only)
     return {"success": True, "notices": notices}
 
 
 @router.post("/notices/clear")
-async def clear_notices() -> dict[str, Any]:
+async def clear_notices(_: None = Depends(require_admin)) -> dict[str, Any]:
     """清空所有历史与活跃变动通报。"""
     monitor_service.clear_notices()
     return {"success": True, "message": "All notices cleared"}
