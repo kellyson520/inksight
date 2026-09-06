@@ -27,19 +27,40 @@ def pytest_sessionstart(session):
     subprocess.run([sys.executable, str(script)], cwd=BACKEND_ROOT, check=True)
 
 
-def pytest_sessionfinish(session, exitstatus):
-    """Clean up any open database connections when pytest completes."""
+def _close_databases_sync():
+    """Wait for shared aiosqlite workers to close before pytest exits."""
+    import asyncio
+    from core.db import close_all
+
     try:
-        import asyncio
-        from core.db import close_all
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                loop.create_task(close_all())
-            else:
-                loop.run_until_complete(close_all())
-        except Exception:
-            pass
+        running_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        running_loop = None
+
+    if running_loop and running_loop.is_running():
+        import threading
+        error = []
+
+        def close_in_thread():
+            try:
+                asyncio.run(close_all())
+            except Exception as exc:
+                error.append(exc)
+
+        thread = threading.Thread(target=close_in_thread, name="pytest-db-cleanup")
+        thread.start()
+        thread.join(timeout=15)
+        if error:
+            raise error[0]
+        return
+
+    asyncio.run(close_all())
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Clean up open database connections before pytest completes."""
+    try:
+        _close_databases_sync()
     except Exception:
         pass
 
