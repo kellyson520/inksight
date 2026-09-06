@@ -831,7 +831,8 @@ async def seed_preload_pool(days_ahead: int = 14) -> None:
     today = date.today()
 
     # 1. 补充未来 days_ahead 天的历史事件 (THISDAY)
-    for i in range(days_ahead):
+    # Include today plus the requested number of future days.
+    for i in range(max(0, days_ahead) + 1):
         d = today + timedelta(days=i)
         d_str = d.isoformat()
         md = (d.month, d.day)

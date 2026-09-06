@@ -74,8 +74,8 @@ async def add_preload_item(
     db = await get_main_db()
     try:
         cursor = await db.execute(
-            "SELECT id FROM content_preload_pool WHERE mode_id = ? AND content_hash = ?",
-            (mode_id.upper(), c_hash),
+            "SELECT id FROM content_preload_pool WHERE mode_id = ? AND target_date = ? AND content_hash = ?",
+            (mode_id.upper(), target_date, c_hash),
         )
         if await cursor.fetchone():
             return False

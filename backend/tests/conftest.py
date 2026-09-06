@@ -65,6 +65,23 @@ def pytest_sessionfinish(session, exitstatus):
         pass
 
 
+@pytest.fixture(autouse=True)
+def isolate_persistent_interceptors():
+    """Prevent durable alert state from leaking between tests."""
+    yield
+    try:
+        from core.monitor_service import monitor_service
+        monitor_service.clear_notices()
+    except Exception:
+        pass
+    try:
+        from core import disaster_service
+        disaster_service._SIMULATED_ALERTS.clear()
+        disaster_service._ALERT_CACHE.clear()
+    except Exception:
+        pass
+
+
 @pytest.fixture
 def sample_config():
     """A typical device configuration dict."""

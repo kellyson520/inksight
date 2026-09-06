@@ -26,6 +26,10 @@ async def test_preload_store_crud():
     added_dup = await add_preload_item("TEST_MODE_UNIQUE", {"title": "Test Unique 1"}, target_date="2026-09-04")
     assert added_dup is False
 
+    # 同一内容可以用于不同日期；日期是预存池的数据维度
+    added_other_date = await add_preload_item("TEST_MODE_UNIQUE", {"title": "Test Unique 1"}, target_date="2026-09-05")
+    assert added_other_date is True
+
     # 读取
     item = await get_next_preload_item("TEST_MODE_UNIQUE", mac="DEVICE_A", target_date="2026-09-04")
     assert item is not None
