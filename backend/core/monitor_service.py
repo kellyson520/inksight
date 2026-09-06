@@ -24,6 +24,11 @@ _TARGETS_FILE = _DATA_DIR / "monitor_targets.json"
 _NOTICES_FILE = _DATA_DIR / "monitor_notices.json"
 
 
+def get_async_client():
+    """Legacy test/integration injection seam; production uses OutboundHttp."""
+    return None
+
+
 def _extract_page_core_text(html_text: str) -> tuple[str, str]:
     """提取网页主要标题与文本摘要，过滤动态脚本和易变噪声。"""
     # 提取 <title>
@@ -152,8 +157,13 @@ class MonitorService:
         }
 
         try:
-            resp = outbound_http.get_text(url, headers=headers)
-            text = resp.text
+            injected_client = get_async_client()
+            if injected_client is not None:
+                resp = await injected_client.get(url, headers=headers)
+                text = resp.text
+            else:
+                resp = outbound_http.get_text(url, headers=headers)
+                text = resp.text
             target["last_checked"] = int(time.time())
             title, summary = _extract_page_core_text(text)
             curr_hash = hashlib.sha256(summary.encode("utf-8")).hexdigest()[:16]
