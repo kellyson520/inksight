@@ -9,6 +9,8 @@ from PIL import Image
 
 from datetime import datetime
 
+from .mode_snapshot import ModeSnapshot
+
 from .config import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
@@ -101,6 +103,9 @@ async def generate_and_render(
     Returns:
         Tuple of (rendered image, content dict).
     """
+    snapshot = ModeSnapshot.capture(persona, config, {})
+    persona = snapshot.persona
+    config = snapshot.config
     time_str = date_ctx.get("time_str", "")
     weather_str = weather["weather_str"]
     weather_code = weather.get("weather_code", -1)

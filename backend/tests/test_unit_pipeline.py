@@ -185,3 +185,24 @@ class TestGenerateAndRender:
                 "STOIC", None, sample_date_ctx, sample_weather, 85.0
             )
             assert result_img is mock_img
+
+
+@pytest.mark.asyncio
+async def test_generate_and_render_uses_snapshot_config(monkeypatch):
+    from core import pipeline
+
+    observed = {}
+    async def fake_content(persona, config, *args, **kwargs):
+        observed["config"] = config
+        return {"text": "ok"}
+
+    async def fake_render(*args, **kwargs):
+        config["mode_settings"]["x"] = 9
+        return Image.new("1", (8, 8))
+
+    monkeypatch.setattr(pipeline, "_generate_content_for_persona", fake_content)
+    monkeypatch.setattr(pipeline, "_render_for_persona", fake_render)
+    config = {"mode_settings": {"x": 1}}
+    await generate_and_render("DAILY", config, {"date_str": "x"}, {"weather_str": "clear"}, 90)
+    config["mode_settings"]["x"] = 9
+    assert observed["config"]["mode_settings"]["x"] == 1
