@@ -1,6 +1,7 @@
 """Normalized block contract shared by render, measure, and resource loading."""
 from __future__ import annotations
 
+import asyncio
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable
@@ -97,12 +98,19 @@ class BlockSpec:
         for resource in sorted(self.collect_resources()):
             try:
                 value = await fetcher(resource)
-                if not isinstance(value, bytes):
-                    raise TypeError("prefetcher must return bytes")
-                resources[resource] = value
+                data = value if isinstance(value, bytes) else getattr(value, "data", None)
+                if not isinstance(data, bytes):
+                    raise TypeError("prefetcher must return bytes or MediaFetchResult")
+                resources[resource] = data
             except Exception as exc:
                 self.prefetch_errors[resource] = str(exc)
         return resources
+
+    async def prefetch_with_media_fetcher(self, fetcher: Callable[[str], Any]) -> dict[str, bytes]:
+        async def fetch(resource: str) -> Any:
+            return await asyncio.to_thread(fetcher, resource)
+
+        return await self.prefetch(fetch)
 
     def collect_resources(self) -> set[str]:
         resources: set[str] = set()

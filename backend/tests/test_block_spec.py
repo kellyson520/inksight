@@ -61,6 +61,19 @@ async def test_block_spec_prefetch_returns_bytes_and_records_failures():
 
 
 @pytest.mark.asyncio
+async def test_block_spec_prefetch_accepts_media_fetch_result():
+    spec = BlockSpec.from_dict({"type": "image", "src": "image.png"})
+
+    class Result:
+        data = b"image-bytes"
+
+    async def fetch(_resource):
+        return Result()
+
+    assert await spec.prefetch(fetch) == {"image.png": b"image-bytes"}
+
+
+@pytest.mark.asyncio
 async def test_block_spec_prefetch_does_not_drop_success_when_one_resource_fails():
     spec = BlockSpec.from_dict(
         {"type": "section", "children": [
@@ -76,6 +89,19 @@ async def test_block_spec_prefetch_does_not_drop_success_when_one_resource_fails
     result = await spec.prefetch(fetch)
     assert result == {"ok.png": b"ok"}
     assert spec.prefetch_errors == {"bad.png": "offline"}
+
+
+@pytest.mark.asyncio
+async def test_block_spec_prefetch_with_sync_media_fetcher():
+    spec = BlockSpec.from_dict({"type": "image", "src": "image.png"})
+
+    class Result:
+        data = b"image-bytes"
+
+    def fetch(_resource):
+        return Result()
+
+    assert await spec.prefetch_with_media_fetcher(fetch) == {"image.png": b"image-bytes"}
 
 
 def test_block_spec_validation_rejects_invalid_structural_props():
