@@ -11,6 +11,20 @@ def test_emit_records_structured_event_and_snapshot():
     assert event["api_key"] == "[REDACTED]"
 
 
+def test_snapshot_includes_dependency_metrics_aggregated_by_host():
+    obs = Observability()
+    obs.emit("dependency.completed", {"operation": "http.get", "url_host": "feed.example", "status": 200, "duration_ms": 12.5})
+    obs.emit("dependency.failed", {"operation": "http.get", "url_host": "feed.example", "error_type": "TimeoutError", "duration_ms": 20.0})
+
+    metrics = obs.snapshot()["dependency_metrics"]
+    assert metrics["total"] == 2
+    assert metrics["successes"] == 1
+    assert metrics["failures"] == 1
+    assert metrics["by_host"]["feed.example"]["count"] == 2
+    assert metrics["by_host"]["feed.example"]["failures"] == 1
+    assert metrics["by_host"]["feed.example"]["avg_duration_ms"] == 16.25
+
+
 def test_request_context_propagates_and_restores_request_id():
     obs = Observability()
     assert get_request_id() is None

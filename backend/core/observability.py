@@ -94,8 +94,41 @@ class Observability:
     def observe(self, operation: str, **attributes: Any) -> _Observation:
         return _Observation(self, operation, attributes)
 
+    def dependency_metrics(self) -> dict[str, Any]:
+        """Return a bounded aggregate of dependency events in the current event window."""
+        total = successes = failures = 0
+        duration_total = 0.0
+        by_host: dict[str, dict[str, Any]] = {}
+        for event in self._events:
+            name = event.get("event")
+            if name not in {"dependency.completed", "dependency.failed"}:
+                continue
+            total += 1
+            failed = name == "dependency.failed"
+            if failed:
+                failures += 1
+            else:
+                successes += 1
+            duration = float(event.get("duration_ms") or 0.0)
+            duration_total += duration
+            host = str(event.get("url_host") or "unknown")
+            bucket = by_host.setdefault(host, {"count": 0, "successes": 0, "failures": 0, "duration_ms": 0.0})
+            bucket["count"] += 1
+            bucket["failures" if failed else "successes"] += 1
+            bucket["duration_ms"] += duration
+        for bucket in by_host.values():
+            bucket["duration_ms"] = round(bucket["duration_ms"], 2)
+            bucket["avg_duration_ms"] = round(bucket["duration_ms"] / bucket["count"], 2)
+        return {
+            "total": total,
+            "successes": successes,
+            "failures": failures,
+            "avg_duration_ms": round(duration_total / total, 2) if total else 0.0,
+            "by_host": by_host,
+        }
+
     def snapshot(self) -> dict[str, Any]:
-        return {"events": list(self._events)}
+        return {"events": list(self._events), "dependency_metrics": self.dependency_metrics()}
 
 
 obs = Observability()

@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import httpx
 
 from core.outbound_http import OutboundHttp, RequestPolicy
+from core.observability import Observability
 
 
 def test_outbound_retries_503_and_returns_attempt_count():
@@ -17,6 +18,18 @@ def test_outbound_retries_503_and_returns_attempt_count():
 
     assert response.content == b"ok"
     assert response.attempts == 2
+
+
+def test_outbound_success_is_visible_in_dependency_metrics():
+    client = Mock()
+    client.get.return_value = httpx.Response(200, content=b"ok")
+    http = OutboundHttp(client_factory=lambda **_: client)
+    metrics = Observability()
+    with patch("core.outbound_http.obs", metrics), patch("core.outbound_http.socket.getaddrinfo", return_value=[(2, 1, 6, "", ("93.184.216.34", 443))]):
+        http.get_bytes("https://example.test/a", policy=RequestPolicy(max_attempts=1, backoff_base=0))
+    snapshot = metrics.snapshot()["dependency_metrics"]
+    assert snapshot["successes"] == 1
+    assert snapshot["by_host"]["example.test"]["count"] == 1
 
 
 def test_outbound_rejects_private_url_before_network():
