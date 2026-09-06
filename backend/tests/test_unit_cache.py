@@ -37,7 +37,7 @@ class TestContentCache:
     @pytest.mark.asyncio
     async def test_set_and_get(self, cache, config):
         img = _make_image()
-        await cache.set("AA:BB:CC:DD:EE:FF", "STOIC", img)
+        await cache.set("AA:BB:CC:DD:EE:FF", "STOIC", img, config=config)
         result = await cache.get("AA:BB:CC:DD:EE:FF", "STOIC", config)
         assert result is not None
         assert result.size == (400, 300)
@@ -45,10 +45,10 @@ class TestContentCache:
     @pytest.mark.asyncio
     async def test_get_expired(self, cache, config):
         img = _make_image()
-        await cache.set("AA:BB:CC:DD:EE:FF", "STOIC", img)
+        await cache.set("AA:BB:CC:DD:EE:FF", "STOIC", img, config=config)
 
         # Manually expire the entry
-        key = cache._get_cache_key("AA:BB:CC:DD:EE:FF", "STOIC")
+        key = cache._get_cache_key("AA:BB:CC:DD:EE:FF", "STOIC", config=config)
         cache._cache[key] = (img, datetime.now() - timedelta(hours=10))
 
         # Simulate persistent cache miss to validate in-memory TTL expiry behavior.
@@ -59,7 +59,7 @@ class TestContentCache:
     @pytest.mark.asyncio
     async def test_get_with_explicit_ttl(self, cache, config):
         img = _make_image()
-        await cache.set("AA:BB:CC:DD:EE:FF", "STOIC", img)
+        await cache.set("AA:BB:CC:DD:EE:FF", "STOIC", img, config=config)
 
         # Should be cached within 1000 minutes
         result = await cache.get("AA:BB:CC:DD:EE:FF", "STOIC", config, ttl_minutes=1000)
@@ -91,8 +91,8 @@ class TestContentCache:
     @pytest.mark.asyncio
     async def test_check_and_regenerate_all_skips_when_cached(self, cache, config):
         img = _make_image()
-        await cache.set("AA:BB:CC:DD:EE:FF", "STOIC", img)
-        await cache.set("AA:BB:CC:DD:EE:FF", "ROAST", img)
+        await cache.set("AA:BB:CC:DD:EE:FF", "STOIC", img, config=config)
+        await cache.set("AA:BB:CC:DD:EE:FF", "ROAST", img, config=config)
 
         with patch.object(cache, "_generate_all_modes", new_callable=AsyncMock) as mock_gen:
             result = await cache.check_and_regenerate_all(

@@ -13,7 +13,7 @@ async def test_cache_emits_miss_then_memory_hit(tmp_path):
     obs._events.clear()
 
     assert await cache.get("AA:BB", "DAILY", config) is None
-    await cache.set("AA:BB", "DAILY", Image.new("1", (8, 8)), screen_w=8, screen_h=8)
+    await cache.set("AA:BB", "DAILY", Image.new("1", (8, 8)), screen_w=8, screen_h=8, config=config)
     assert await cache.get("AA:BB", "DAILY", config, screen_w=8, screen_h=8) is not None
 
     results = [e.get("result") for e in obs.snapshot()["events"] if e["event"] == "cache.result"]

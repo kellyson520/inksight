@@ -33,8 +33,11 @@ async def test_get_or_generate_single_flight_runs_generator_once(monkeypatch):
 @pytest.mark.asyncio
 async def test_get_or_generate_cache_hit_preserves_tuple_contract():
     cache = ContentCache()
-    await cache.set("AA:BE", "DAILY", Image.new("1", (8, 8)), screen_w=8, screen_h=8)
-    result = await cache.get_or_generate("AA:BE", "DAILY", {}, lambda: None, screen_w=8, screen_h=8)
+    config = {}
+    await cache.set("AA:BE", "DAILY", Image.new("1", (8, 8)), screen_w=8, screen_h=8, config=config)
+    async def unused_generator():
+        raise AssertionError("cache hit should not generate")
+    result = await cache.get_or_generate("AA:BE", "DAILY", config, unused_generator, screen_w=8, screen_h=8)
     assert isinstance(result, tuple)
     assert result[0].size == (8, 8)
     assert result[1] is None

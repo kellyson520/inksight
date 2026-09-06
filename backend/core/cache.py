@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import hashlib
 import io
+import json
 import logging
 import os
 from datetime import datetime, timedelta
@@ -85,9 +87,15 @@ class ContentCache:
         self, mac: str, persona: str,
         screen_w: int = SCREEN_WIDTH, screen_h: int = SCREEN_HEIGHT,
         colors: int = 2,
+        config: dict | None = None,
     ) -> str:
         persona = (persona or "").upper()
-        return f"{mac}:{persona}:{screen_w}x{screen_h}:c{colors}"
+        config_hash = ""
+        if config is not None:
+            canonical = json.dumps(config, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            config_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+        suffix = f":cfg{config_hash}" if config_hash else ""
+        return f"{mac}:{persona}:{screen_w}x{screen_h}:c{colors}{suffix}"
 
     def _get_preview_cache_key(
         self, persona: str, screen_w: int, screen_h: int,
@@ -153,24 +161,29 @@ class ContentCache:
         if DISABLE_CACHE:
             obs.emit("cache.result", {"result": "disabled", "operation": "content.get"})
             return None
-        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
+        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors, config=config)
         if ttl_minutes is None:
             ttl_minutes = self._get_ttl_minutes(config)
         async with self._lock:
-            if key in self._cache:
-                img, timestamp = self._cache[key]
+            if key not in self._cache:
+                lookup_keys = ()
+            else:
+                lookup_keys = (key,)
+            for lookup_key in lookup_keys:
+                img, timestamp = self._cache[lookup_key]
                 age_minutes = (datetime.now() - timestamp).total_seconds() / 60
                 if age_minutes < ttl_minutes:
                     obs.emit("cache.result", {"result": "memory", "operation": "content.get"})
                     return img.copy()
                 else:
-                    del self._cache[key]
+                    del self._cache[lookup_key]
                     obs.emit("cache.result", {"result": "expired", "operation": "content.get"})
-            # Try SQLite persistent cache
+            # Try SQLite persistent cache, including legacy keys for migration.
             if not self._persistent_cache_available():
                 return None
             try:
                 img = await self._get_from_db(key, ttl_minutes=ttl_minutes)
+
                 self._record_db_success()
                 if img:
                     self._cache[key] = (img, datetime.now())
@@ -200,10 +213,10 @@ class ContentCache:
             if image is None:
                 raise RuntimeError("cache generator returned no image")
             return result
-        cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h, colors=colors)
+        cached = await self.get(mac, persona, config, ttl_minutes=ttl_minutes, screen_w=screen_w, screen_h=screen_h, colors=colors)
         if cached is not None:
             return cached, None
-        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
+        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors, config=config)
         async with self._lock:
             task = self._inflight.get(key)
             if task is None:
@@ -212,7 +225,7 @@ class ContentCache:
                     image = result[0] if isinstance(result, tuple) else result
                     if image is None:
                         raise RuntimeError("cache generator returned no image")
-                    await self.set(mac, persona, image, screen_w, screen_h, colors=colors)
+                    await self.set(mac, persona, image, screen_w, screen_h, colors=colors, config=config)
                     return result
                 task = asyncio.create_task(produce())
                 self._inflight[key] = task
@@ -231,11 +244,12 @@ class ContentCache:
         self, mac: str, persona: str, img: Image.Image,
         screen_w: int = SCREEN_WIDTH, screen_h: int = SCREEN_HEIGHT,
         colors: int = 2,
+        config: dict | None = None,
     ):
         """Store image in cache"""
         if DISABLE_CACHE:
             return
-        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
+        key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors, config=config)
         async with self._lock:
             img_copy = img.copy()
             self._cache[key] = (img_copy, datetime.now())
@@ -326,7 +340,7 @@ class ContentCache:
 
         needs_regeneration = False
         for persona in modes:
-            cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h, colors=colors)
+            cached = await self.get(mac, persona, config, ttl_minutes=ttl_minutes, screen_w=screen_w, screen_h=screen_h, colors=colors)
             if not cached:
                 needs_regeneration = True
                 logger.debug(f"[CACHE] {mac}:{persona} missing or expired")
@@ -457,14 +471,14 @@ class ContentCache:
         async with self._lock:
             now = datetime.now()
             for persona, img in generated_entries:
-                key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
+                key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors, config=config)
                 self._cache[key] = (img.copy(), now)
 
         if generated_entries and self._persistent_cache_available():
             try:
                 await self._save_many_to_db(
                     [
-                        (self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors), img)
+                        (self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors, config=config), img)
                         for persona, img in generated_entries
                     ]
                 )
@@ -557,7 +571,7 @@ class ContentCache:
                 except Exception as exc:
                     logger.warning(f"[CACHE] Failed to save render content for {mac}:{persona}: {exc}")
 
-            await self.set(mac, persona, img, screen_w, screen_h)
+            await self.set(mac, persona, img, screen_w, screen_h, colors=colors, config=config)
             logger.info(f"[CACHE] ✓ {mac}:{persona}")
             return True
 
