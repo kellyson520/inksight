@@ -14,6 +14,7 @@ from .context import (
 )
 from .registry import BLOCK_RENDERERS, register_block, render_block
 from .measure import measure_block_size, measure_column_blocks_height
+from .spec import BlockSpec
 
 # 导入所有组件模块以触发其自注册逻辑
 from . import text as _text_module
@@ -56,6 +57,7 @@ __all__ = [
     "render_block",
     "measure_block_size",
     "measure_column_blocks_height",
+    "BlockSpec",
     "slice_calendar_rows_around_day",
     "resolve_template",
     "resolve_named_color",
