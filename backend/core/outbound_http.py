@@ -178,6 +178,38 @@ class OutboundHttp:
         })
         raise last_error or ValueError("outbound request failed")
 
+    def get_stream_bytes(
+        self,
+        url: str,
+        *,
+        headers: Mapping[str, str] | None = None,
+        policy: RequestPolicy | None = None,
+    ) -> HttpResponse:
+        effective = policy or self.policy
+        self._validate_url(url, effective)
+        max_bytes = max(1, min(32 * 1024 * 1024, int(effective.max_response_bytes)))
+        request_headers = {"User-Agent": "InkSightOutboundHttp/1.0", "Referer": self._header_referer(url, headers)}
+        request_headers.update({str(k): str(v) for k, v in (headers or {}).items()})
+        client = self.client_factory(timeout=effective.timeout, follow_redirects=False, verify=effective.verify)
+        started = time.perf_counter()
+        chunks: list[bytes] = []
+        total = 0
+        try:
+            with client.stream("GET", url, headers=request_headers, follow_redirects=False) as response:
+                if response.status_code >= 300:
+                    raise ValueError(f"HTTP {response.status_code}")
+                for chunk in response.iter_bytes():
+                    total += len(chunk)
+                    if total > max_bytes:
+                        raise ValueError(f"response too large: {total} bytes")
+                    chunks.append(chunk)
+            elapsed = round((time.perf_counter() - started) * 1000, 2)
+            return HttpResponse(response.status_code, dict(response.headers), b"".join(chunks), url, 1, elapsed)
+        finally:
+            close = getattr(client, "close", None)
+            if close and not hasattr(client, "__enter__"):
+                close()
+
     def get_text(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
         return self.get_bytes(url, headers=headers, policy=policy)
 

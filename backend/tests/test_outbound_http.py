@@ -29,6 +29,53 @@ def test_outbound_rejects_private_url_before_network():
     client.get.assert_not_called()
 
 
+def test_outbound_stream_enforces_limit_before_consuming_all_chunks():
+    client = Mock()
+
+    class StreamResponse:
+        status_code = 200
+        headers = {}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def iter_bytes(self):
+            yield b"123"
+            yield b"45"
+
+    client.stream.return_value = StreamResponse()
+    http = OutboundHttp(client_factory=lambda **_: client)
+
+    import pytest
+    with patch("core.outbound_http.socket.getaddrinfo", return_value=[(2, 1, 6, "", ("93.184.216.34", 443))]):
+        with pytest.raises(ValueError, match="too large"):
+            http.get_stream_bytes("https://example.test/a", policy=RequestPolicy(max_response_bytes=4))
+    client.stream.assert_called_once()
+
+
+def test_outbound_stream_returns_complete_content_under_limit():
+    client = Mock()
+
+    class StreamResponse:
+        status_code = 200
+        headers = {"content-type": "image/png"}
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def iter_bytes(self):
+            yield b"12"
+            yield b"34"
+
+    client.stream.return_value = StreamResponse()
+    http = OutboundHttp(client_factory=lambda **_: client)
+    with patch("core.outbound_http.socket.getaddrinfo", return_value=[(2, 1, 6, "", ("93.184.216.34", 443))]):
+        response = http.get_stream_bytes("https://example.test/a", policy=RequestPolicy(max_response_bytes=4))
+    assert response.content == b"1234"
+    assert response.headers["content-type"] == "image/png"
+
+
 def test_outbound_enforces_response_limit():
     client = Mock()
     client.get.return_value = httpx.Response(200, content=b"12345")
