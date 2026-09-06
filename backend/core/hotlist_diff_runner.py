@@ -86,18 +86,27 @@ class HotlistDiffRunner:
         source_status = result.get("source_status", "fresh")
         if source_status != "fresh":
             return []
+        previous_snapshot = self._snapshots.get(platform)
         events = self.diff(platform, result.get("items", []))
-        self._save_snapshots()
-        for event in events:
-            event["source_status"] = source_status
-            event["is_realtime"] = source_status == "fresh"
-            event["target_mac"] = "*"
-            event["event_id"] = f"hotlist:{platform}:{event['item_id']}:{event['kind']}:{event.get('old_rank', '')}:{event.get('rank', '')}"
-            if self.outbox is not None:
-                self.outbox.publish(event)
-                published = True
+        try:
+            for event in events:
+                event["source_status"] = source_status
+                event["is_realtime"] = source_status == "fresh"
+                event["target_mac"] = "*"
+                event["event_id"] = f"hotlist:{platform}:{event['item_id']}:{event['kind']}:{event.get('old_rank', '')}:{event.get('rank', '')}"
+                if self.outbox is not None:
+                    published = self.outbox.publish(event)
+                else:
+                    published = self.publish(event)
+                if isinstance(published, Awaitable):
+                    published = await published
+                if published is False:
+                    raise RuntimeError(f"event publish rejected: {event['event_id']}")
+            self._save_snapshots()
+        except Exception:
+            if previous_snapshot is None:
+                self._snapshots.pop(platform, None)
             else:
-                published = self.publish(event)
-            if isinstance(published, Awaitable):
-                await published
+                self._snapshots[platform] = previous_snapshot
+            raise
         return events

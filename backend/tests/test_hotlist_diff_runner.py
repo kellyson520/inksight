@@ -70,6 +70,52 @@ async def test_runner_ignores_fallback_as_snapshot_or_event():
 
 
 @pytest.mark.asyncio
+async def test_runner_restores_snapshot_when_outbox_publish_fails(tmp_path):
+    snapshot_path = tmp_path / "snapshots.json"
+    calls = []
+
+    class Service:
+        count = 0
+        async def get_hotlist(self, platform, limit=8):
+            self.count += 1
+            title = "A" if self.count == 1 else "B"
+            return {"items": [{"title": title}], "source_status": "fresh"}
+
+    def fail_publish(event):
+        calls.append(event["event_id"])
+        raise OSError("outbox unavailable")
+
+    runner = HotlistDiffRunner(Service(), publish=fail_publish, snapshot_path=snapshot_path)
+    await runner.run_once("zhihu")
+    with pytest.raises(OSError):
+        await runner.run_once("zhihu")
+
+    assert json.loads(snapshot_path.read_text())["zhihu"] == {"a": 1}
+    assert calls
+
+
+@pytest.mark.asyncio
+async def test_runner_restores_snapshot_when_snapshot_save_fails(tmp_path):
+    snapshot_path = tmp_path / "snapshots.json"
+
+    class Service:
+        count = 0
+        async def get_hotlist(self, platform, limit=8):
+            self.count += 1
+            title = "A" if self.count == 1 else "B"
+            return {"items": [{"title": title}], "source_status": "fresh"}
+
+    events = []
+    runner = HotlistDiffRunner(Service(), publish=events.append, snapshot_path=snapshot_path)
+    await runner.run_once("zhihu")
+    runner._save_snapshots = lambda: (_ for _ in ()).throw(OSError("disk full"))
+    with pytest.raises(OSError):
+        await runner.run_once("zhihu")
+    assert runner._snapshots["zhihu"] == {"a": 1}
+    assert any(event["item_id"] == "b" for event in events)
+
+
+@pytest.mark.asyncio
 async def test_runner_restores_snapshot_from_disk(tmp_path):
     snapshot_path = tmp_path / "snapshots.json"
 
