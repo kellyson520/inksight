@@ -691,6 +691,7 @@ async def build_image(
             config,
             screen_w=screen_w,
             screen_h=screen_h,
+            colors=colors,
         )
         if cached_img:
             cache_hit = True
@@ -993,7 +994,7 @@ async def build_image(
                     content_fallback = not bool(content_data.get("image_url"))
 
         if mac and config and is_mode_cacheable:
-            await content_cache.set(mac, persona, img, screen_w, screen_h)
+            await content_cache.set(mac, persona, img, screen_w, screen_h, colors=colors)
 
         # ── Preview Cache: Save generated image for preview requests ──
         if not mac and is_mode_cacheable and not skip_cache and img is not None:

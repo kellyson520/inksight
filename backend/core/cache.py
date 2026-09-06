@@ -202,7 +202,7 @@ class ContentCache:
             return result
         cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h, colors=colors)
         if cached is not None:
-            return cached
+            return cached, None
         key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
         async with self._lock:
             task = self._inflight.get(key)
@@ -326,7 +326,7 @@ class ContentCache:
 
         needs_regeneration = False
         for persona in modes:
-            cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h)
+            cached = await self.get(mac, persona, config, ttl_minutes, screen_w, screen_h, colors=colors)
             if not cached:
                 needs_regeneration = True
                 logger.debug(f"[CACHE] {mac}:{persona} missing or expired")
@@ -457,14 +457,14 @@ class ContentCache:
         async with self._lock:
             now = datetime.now()
             for persona, img in generated_entries:
-                key = self._get_cache_key(mac, persona, screen_w, screen_h)
+                key = self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors)
                 self._cache[key] = (img.copy(), now)
 
         if generated_entries and self._persistent_cache_available():
             try:
                 await self._save_many_to_db(
                     [
-                        (self._get_cache_key(mac, persona, screen_w, screen_h), img)
+                        (self._get_cache_key(mac, persona, screen_w, screen_h, colors=colors), img)
                         for persona, img in generated_entries
                     ]
                 )

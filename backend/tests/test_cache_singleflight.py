@@ -17,15 +17,27 @@ async def test_get_or_generate_single_flight_runs_generator_once(monkeypatch):
         nonlocal calls
         calls += 1
         await asyncio.sleep(0.01)
-        return Image.new("1", (8, 8), 0)
+        return Image.new("1", (8, 8), 0), {"text": "generated"}
 
     results = await asyncio.gather(*[
         cache.get_or_generate("AA:BB", "DAILY", {}, generate, ttl_minutes=10, screen_w=8, screen_h=8)
         for _ in range(5)
     ])
     assert calls == 1
-    assert all(result is not None for result in results)
-    assert len({id(result) for result in results}) == 5
+    assert all(result[0] is not None for result in results)
+    assert len({id(result[0]) for result in results}) == 5
+    assert all(result[1] == {"text": "generated"} for result in results)
+    await close_all()
+
+
+@pytest.mark.asyncio
+async def test_get_or_generate_cache_hit_preserves_tuple_contract():
+    cache = ContentCache()
+    await cache.set("AA:BE", "DAILY", Image.new("1", (8, 8)), screen_w=8, screen_h=8)
+    result = await cache.get_or_generate("AA:BE", "DAILY", {}, lambda: None, screen_w=8, screen_h=8)
+    assert isinstance(result, tuple)
+    assert result[0].size == (8, 8)
+    assert result[1] is None
     await close_all()
 
 
