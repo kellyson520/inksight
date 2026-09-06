@@ -213,6 +213,42 @@ class OutboundHttp:
     def get_text(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
         return self.get_bytes(url, headers=headers, policy=policy)
 
+    def head(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
+        effective = policy or self.policy
+        self._validate_url(url, effective)
+        request_headers = {"User-Agent": "InkSightOutboundHttp/1.0"}
+        request_headers.update({str(k): str(v) for k, v in (headers or {}).items()})
+        client = self.client_factory(
+            timeout=effective.timeout,
+            follow_redirects=effective.follow_redirects,
+            verify=effective.verify,
+        )
+        started = time.perf_counter()
+        try:
+            if hasattr(client, "__enter__"):
+                with client as managed:
+                    response = managed.head(url, headers=request_headers, follow_redirects=effective.follow_redirects)
+            else:
+                response = client.head(url, headers=request_headers, follow_redirects=effective.follow_redirects)
+        finally:
+            if not hasattr(client, "__enter__"):
+                close = getattr(client, "close", None)
+                if close:
+                    close()
+        elapsed = round((time.perf_counter() - started) * 1000, 2)
+        event = {
+            "operation": "http.head",
+            "url_host": urlparse(url).hostname,
+            "status": response.status_code,
+            "attempts": 1,
+            "duration_ms": elapsed,
+        }
+        if response.status_code >= 300:
+            obs.emit("dependency.failed", {**event, "error_type": "HTTPStatusError"})
+        else:
+            obs.emit("dependency.completed", event)
+        return HttpResponse(response.status_code, dict(response.headers), response.content, str(response.url), 1, elapsed)
+
     def post_json(self, url: str, *, json_body: Any, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
         effective = policy or self.policy
         self._validate_url(url, effective)

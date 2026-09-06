@@ -1,6 +1,7 @@
 """
 Unit tests for MarketService, Custom Stocks Persistence, and Firmware Service.
 """
+import json
 import pytest
 from core.market_service import MarketService
 from core.firmware_service import (
@@ -8,7 +9,10 @@ from core.firmware_service import (
     chip_family_from_asset_name,
     pick_firmware_asset,
     expand_firmware_release_assets,
+    load_firmware_releases,
+    validate_firmware_url,
 )
+from core.outbound_http import HttpResponse
 
 
 def test_firmware_manifest_builder():
@@ -53,6 +57,63 @@ def test_expand_firmware_release_assets():
     assert expanded[0]["version"] == "1.2.0"
     assert expanded[0]["chip_family"] == "ESP32-S3"
     assert expanded[0]["download_url"] == "https://github.com/downloads/esp32s3.bin"
+
+
+@pytest.mark.asyncio
+async def test_firmware_release_loader_uses_shared_outbound(monkeypatch):
+    import core.firmware_service as firmware
+
+    payload = [{"tag_name": "v1.0.0", "assets": []}]
+    calls = []
+
+    def fake_get_json(url, *, headers=None, policy=None):
+        calls.append((url, headers))
+        return HttpResponse(200, {}, json.dumps(payload).encode(), url, 1, 1.0)
+
+    monkeypatch.setattr(firmware.outbound_http, "get_json", fake_get_json)
+    firmware._firmware_release_cache["payload"] = None
+    result = await load_firmware_releases(force_refresh=True)
+    assert result["count"] == 0
+    assert calls and calls[0][0] == firmware.GITHUB_RELEASES_API
+    assert calls[0][1]["Accept"] == "application/vnd.github+json"
+
+
+@pytest.mark.asyncio
+async def test_firmware_url_validation_uses_shared_outbound(monkeypatch):
+    import core.firmware_service as firmware
+
+    calls = []
+
+    def fake_head(url, *, headers=None, policy=None):
+        calls.append(("head", url, policy))
+        return HttpResponse(200, {"content-type": "application/octet-stream", "content-length": "12"}, b"", url, 1, 1.0)
+
+    monkeypatch.setattr(firmware.outbound_http, "head", fake_head, raising=False)
+    result = await validate_firmware_url("https://example.com/firmware.bin")
+    assert result["ok"] is True
+    assert calls and calls[0][0:2] == ("head", "https://example.com/firmware.bin")
+    assert calls[0][2].follow_redirects is True
+
+
+@pytest.mark.asyncio
+async def test_firmware_url_validation_range_fallback_preserves_redirects(monkeypatch):
+    import core.firmware_service as firmware
+
+    calls = []
+
+    def fake_head(url, *, headers=None, policy=None):
+        raise ValueError("head unavailable")
+
+    def fake_get(url, *, headers=None, policy=None):
+        calls.append((url, headers, policy))
+        return HttpResponse(200, {}, b"x", url, 1, 1.0)
+
+    monkeypatch.setattr(firmware.outbound_http, "head", fake_head, raising=False)
+    monkeypatch.setattr(firmware.outbound_http, "get_bytes", fake_get)
+    result = await validate_firmware_url("https://example.com/firmware.bin")
+    assert result["ok"] is True
+    assert calls[0][1] == {"Range": "bytes=0-0"}
+    assert calls[0][2].follow_redirects is True
 
 
 @pytest.mark.asyncio

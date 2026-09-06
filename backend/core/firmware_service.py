@@ -14,6 +14,8 @@ from urllib.parse import urlparse
 
 import httpx
 
+from .outbound_http import RequestPolicy, outbound_http
+
 logger = logging.getLogger(__name__)
 
 FIRMWARE_CHIP_FAMILY = "ESP32-C3"
@@ -117,12 +119,11 @@ async def load_firmware_releases(force_refresh: bool = False) -> dict[str, Any]:
         if github_token:
             headers["Authorization"] = f"Bearer {github_token}"
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(GITHUB_RELEASES_API, headers=headers)
-        if resp.status_code >= 400:
-            message = f"GitHub releases API error: {resp.status_code}"
+        response = await asyncio.to_thread(outbound_http.get_json, GITHUB_RELEASES_API, headers=headers)
+        if response.status_code >= 400:
+            message = f"GitHub releases API error: {response.status_code}"
             try:
-                details = resp.json().get("message")
+                details = response.json().get("message")
                 if details:
                     message = f"{message} - {details}"
             except (ValueError, TypeError, json.JSONDecodeError):
@@ -130,7 +131,7 @@ async def load_firmware_releases(force_refresh: bool = False) -> dict[str, Any]:
             raise RuntimeError(message)
 
         releases = []
-        for release in resp.json():
+        for release in response.json():
             if release.get("draft"):
                 continue
             releases.extend(expand_firmware_release_assets(release))
@@ -156,20 +157,28 @@ async def validate_firmware_url(url: str) -> dict[str, Any]:
     if not parsed.path.lower().endswith(".bin"):
         raise ValueError("firmware URL should point to a .bin file")
 
-    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-        try:
-            resp = await client.head(url)
-        except httpx.HTTPError:
-            logger.warning("[FIRMWARE] HEAD failed for %s, falling back to ranged GET", url, exc_info=True)
-            resp = await client.get(url, headers={"Range": "bytes=0-0"})
-    if resp.status_code >= 400:
-        raise RuntimeError(f"firmware URL is not reachable: {resp.status_code}")
+    try:
+        response = await asyncio.to_thread(
+            outbound_http.head,
+            url,
+            policy=RequestPolicy(timeout=httpx.Timeout(10.0), follow_redirects=True),
+        )
+    except (httpx.HTTPError, ValueError):
+        logger.warning("[FIRMWARE] HEAD failed for %s, falling back to ranged GET", url, exc_info=True)
+        response = await asyncio.to_thread(
+            outbound_http.get_bytes,
+            url,
+            headers={"Range": "bytes=0-0"},
+            policy=RequestPolicy(timeout=httpx.Timeout(10.0), follow_redirects=True),
+        )
+    if response.status_code >= 400:
+        raise RuntimeError(f"firmware URL is not reachable: {response.status_code}")
 
     return {
         "ok": True,
         "reachable": True,
-        "status_code": resp.status_code,
-        "final_url": str(resp.url),
-        "content_type": resp.headers.get("content-type"),
-        "content_length": resp.headers.get("content-length"),
+        "status_code": response.status_code,
+        "final_url": response.url,
+        "content_type": response.headers.get("content-type"),
+        "content_length": response.headers.get("content-length"),
     }

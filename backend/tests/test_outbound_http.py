@@ -89,6 +89,19 @@ def test_outbound_stream_returns_complete_content_under_limit():
     assert response.headers["content-type"] == "image/png"
 
 
+def test_outbound_head_closes_injected_client():
+    client = Mock()
+    client.head.return_value = httpx.Response(
+        200,
+        headers={"content-length": "0"},
+        request=httpx.Request("HEAD", "https://example.test/a"),
+    )
+    http = OutboundHttp(client_factory=lambda **_: client)
+    with patch("core.outbound_http.socket.getaddrinfo", return_value=[(2, 1, 6, "", ("93.184.216.34", 443))]):
+        http.head("https://example.test/a")
+    client.close.assert_called_once()
+
+
 def test_outbound_enforces_response_limit():
     client = Mock()
     client.get.return_value = httpx.Response(200, content=b"12345")
