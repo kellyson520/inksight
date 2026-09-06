@@ -8,7 +8,7 @@ import socket
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import httpx
 
@@ -80,7 +80,13 @@ class OutboundHttp:
                 raise ValueError(f"host resolution failed: {host}") from exc
             addresses = [ipaddress.ip_address(info[4][0]) for info in infos]
         for address in addresses:
-            if address.is_private or address.is_loopback or address.is_link_local or address.is_reserved:
+            if (
+                not address.is_global
+                or address.is_private
+                or address.is_loopback
+                or address.is_link_local
+                or address.is_reserved
+            ):
                 raise ValueError(f"private URL blocked: {url}")
 
     @staticmethod
@@ -97,13 +103,13 @@ class OutboundHttp:
     def _get(self, url: str, headers: dict[str, str], policy: RequestPolicy) -> httpx.Response:
         client = self.client_factory(
             timeout=policy.timeout,
-            follow_redirects=policy.follow_redirects,
+            follow_redirects=False,
             verify=policy.verify,
         )
         if hasattr(client, "__enter__"):
             with client as managed:
-                return managed.get(url, headers=headers, follow_redirects=policy.follow_redirects)
-        return client.get(url, headers=headers, follow_redirects=policy.follow_redirects)
+                return managed.get(url, headers=headers, follow_redirects=False)
+        return client.get(url, headers=headers, follow_redirects=False)
 
     def get_bytes(
         self,
@@ -124,9 +130,17 @@ class OutboundHttp:
         started = time.perf_counter()
         last_error: Exception | None = None
 
+        current_url = url
         for attempt in range(1, max_attempts + 1):
             try:
-                response = self._get(url, request_headers, effective)
+                response = self._get(current_url, request_headers, effective)
+                if 300 <= response.status_code < 400 and effective.follow_redirects:
+                    location = response.headers.get("location")
+                    if not location:
+                        raise ValueError(f"redirect missing location: HTTP {response.status_code}")
+                    current_url = urljoin(current_url, location)
+                    self._validate_url(current_url, effective)
+                    continue
                 if response.status_code >= 300:
                     if self._retryable_status(response.status_code) and attempt < max_attempts:
                         if effective.backoff_base > 0:
@@ -145,7 +159,7 @@ class OutboundHttp:
                     "attempts": attempt,
                     "duration_ms": elapsed,
                 })
-                return HttpResponse(response.status_code, dict(response.headers), content, url, attempt, elapsed)
+                return HttpResponse(response.status_code, dict(response.headers), content, current_url, attempt, elapsed)
             except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError, ValueError) as exc:
                 last_error = exc
                 if isinstance(exc, ValueError) and not isinstance(exc, RetryableHttpError):
