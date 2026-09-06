@@ -11,6 +11,7 @@ import time
 import httpx
 from json import JSONDecodeError
 from typing import Any, Literal
+from urllib.parse import urlencode
 
 from tenacity import (
     retry,
@@ -19,6 +20,7 @@ from tenacity import (
     retry_if_exception_type,
 )
 
+from .outbound_http import RequestPolicy, outbound_http
 from .config import (
     CITY_COORDINATES,
     DEFAULT_LATITUDE,
@@ -211,13 +213,13 @@ async def _fetch_geocoding(
     }
     if country_code:
         params["countryCode"] = country_code
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        resp = await client.get(
-            OPEN_METEO_GEOCODING_URL,
-            params=params,
-        )
-        resp.raise_for_status()
-        return resp.json()
+    query = urlencode(params)
+    response = await asyncio.to_thread(
+        outbound_http.get_json,
+        f"{OPEN_METEO_GEOCODING_URL}?{query}",
+        policy=RequestPolicy(max_attempts=1, follow_redirects=False),
+    )
+    return response.json()
 
 
 def _format_location_label(name: str, admin1: str = "", country: str = "") -> str:
