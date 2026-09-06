@@ -16,6 +16,7 @@
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -28,6 +29,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from .db import get_main_db
+from .outbound_http import RequestPolicy, outbound_http
 
 logger = logging.getLogger(__name__)
 
@@ -250,14 +252,18 @@ async def _fetch_wikipedia_thisday(month: int, day: int) -> list[dict]:
     }
 
     try:
-        async with httpx.AsyncClient(timeout=15.0, limits=httpx.Limits(max_keepalive_connections=5)) as client:
-            resp = await client.get(url, headers=headers)
+        response = await asyncio.to_thread(
+            outbound_http.get_json,
+            url,
+            headers=headers,
+            policy=RequestPolicy(timeout=httpx.Timeout(15.0), follow_redirects=False),
+        )
 
-        if resp.status_code != 200:
-            logger.warning("[Wikipedia] HTTP %d for %02d/%02d", resp.status_code, month, day)
+        if response.status_code != 200:
+            logger.warning("[Wikipedia] HTTP %d for %02d/%02d", response.status_code, month, day)
             return []
 
-        data = resp.json()
+        data = response.json()
         events: list[dict] = []
 
         # 解析 "selected" 字段（主要历史事件）
