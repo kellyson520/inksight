@@ -37,7 +37,8 @@
       "rank_tag": "Douban Top 250 · NO.1",
       "recommend_reason": "Hope is a good thing, maybe the best of things, and no good thing ever dies. A cinematic monument of perseverance, dignity, and redemption.",
       "quote": "Fear can hold you prisoner. Hope can set you free.",
-      "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg",
+      "cover_url": "https://img3.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg",
+      "cover_urls": ["https://img3.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg", "https://img1.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg"],
       "update_time": "Featured",
       "footer_label": "Douban Movie · Masterpieces",
       "footer_quote": "Fear can hold you prisoner. Hope can set you free."

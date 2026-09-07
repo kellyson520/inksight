@@ -27,7 +27,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 总榜 Top 1",
         "recommend_reason": "以幽默生动的现代视角重现大明三百年风云。写历史也是写人性与权谋，千万读者心中的通俗历史第一书。",
         "quote": "成功只有一个，按照自己的方式去度过人生。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/786/842786/t6_842786.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/97/yuewen_822995/t6_yuewen_8229951695023669.jpg",
     },
     {
         "id": "wr_002",
@@ -41,7 +41,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 经济榜 Top 1",
         "recommend_reason": "理解中国经济微观机制与地方政府决策的必读书，通俗透彻，兼具严谨学理与现实温度。",
         "quote": "生活过得好一点，比大多数宏大叙事都重要。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/571/36531571/t6_36531571.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/52/YueWen_40055543/t6_YueWen_40055543.jpg",
     },
     {
         "id": "wr_003",
@@ -55,7 +55,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 科幻榜 Top 1",
         "recommend_reason": "中国科幻文学的巍峨丰碑。宇宙社会学的冷酷推演与文明兴衰的壮阔画卷，给岁月以文明。",
         "quote": "弱小和无知不是生存的障碍，傲慢才是。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/354/22588354/t6_22588354.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/80/yuewen_695233/t6_yuewen_6952331784884457.jpg",
     },
     {
         "id": "wr_004",
@@ -69,7 +69,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 心理榜 Top 1",
         "recommend_reason": "借童话外壳讲述深邃的心理咨询历程，引导我们学会理解情绪、直面脆弱，完成自我救赎与重塑。",
         "quote": "没有一种批判比自我批判更强烈，也没有一个法官比我们自己更苛刻。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/892/33560892/t6_33560892.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/81/YueWen_35551088/t6_YueWen_35551088.jpg",
     },
     {
         "id": "wr_005",
@@ -83,7 +83,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 哲学榜 Top 1",
         "recommend_reason": "阿德勒个体心理学的现代对话演绎。课题分离、摆脱认可欲求，活在当下拥有自由人生的底气。",
         "quote": "所谓自由，就是被别人讨厌。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/513/853513/t6_853513.jpg",
+        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/385/25615385/t6_25615385.jpg",
     },
     {
         "id": "wr_006",
@@ -97,7 +97,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 名著榜 Top 2",
         "recommend_reason": "魔幻现实主义的传世巨作。布恩迪亚家族七代人在马孔多小镇的百年沧桑，揭示人类深沉的孤独宿命。",
         "quote": "生命中曾经有过的所有灿烂，终究都需要用寂寞来偿还。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/836/834836/t6_834836.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/49/yuewen_935536/t6_yuewen_9355361682243599.jpg",
     },
     {
         "id": "wr_007",
@@ -111,7 +111,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 财富榜 Top 2",
         "recommend_reason": "硅谷投资人纳瓦尔的智慧合集。阐述如何依靠专长与杠杆创造财富，以及如何获取内心的平静与幸福。",
         "quote": "用头脑赚钱，而不是用时间赚钱。",
-        "cover_url": "https://img1.doubanio.com/view/subject/l/public/s34164394.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/89/YueWen_44026191/t6_YueWen_44026191.jpg",
     },
     {
         "id": "wr_008",
@@ -125,7 +125,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 历史榜 Top 2",
         "recommend_reason": "宏大跨学科视角理清智人进化跃迁全过程。认知革命、农业革命与虚构故事如何塑造现代人类文明。",
         "quote": "演化从来不看个体的幸福，它只看物种的延续。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/545/802545/t6_802545.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/37/YueWen_855812/t6_YueWen_855812.jpg",
     },
     {
         "id": "wr_009",
@@ -139,7 +139,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 文学榜 Top 1",
         "recommend_reason": "鄂温克族最后一任酋长女人的百年自述。展现大兴安岭深处人与自然的生死契约与民族挽歌。",
         "quote": "我是雨和雪的老朋友了，我也看够了它们的面孔。",
-        "cover_url": "https://img1.doubanio.com/view/subject/l/public/s34047464.jpg",
+        "cover_url": "https://cdn.weread.qq.com/outpic/407/3004054407.jpg",
     },
     {
         "id": "wr_010",
@@ -153,7 +153,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 理财榜 Top 3",
         "recommend_reason": "关于财富、贪婪与幸福的19个短篇故事。理财的核心不是冷冰冰的数字，而是对自我心理行为的驾驭。",
         "quote": "最高形式的富有，是每天清晨醒来都能对自己说：今天我可以做任何我想做的事。",
-        "cover_url": "https://img1.doubanio.com/view/subject/l/public/s34079815.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/31/cpplatform_fx1z5bkdgmbwqoatwezcxp/t6_cpplatform_fx1z5bkdgmbwqoatwezcxp1778466805.jpg",
     },
     {
         "id": "wr_011",
@@ -167,7 +167,7 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 畅销总榜",
         "recommend_reason": "福贵饱经风霜的苦难一生，深刻揭示人为了活着本身而活着的坚韧力量，当代文学必读殿堂作。",
         "quote": "人是为活着本身而活着的，而不是为了活着之外的任何事物所活着。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/833/834833/t6_834833.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/1/yuewen_834464/t6_yuewen_8344641758521403.jpg",
     },
     {
         "id": "wr_012",
@@ -181,23 +181,50 @@ WECHAT_READ_BOOKS: list[dict[str, Any]] = [
         "rank_tag": "微信读书 · 个人成长榜",
         "recommend_reason": "用脑科学与心理学剖析焦虑、拖延与专注力缺失的深层根源，提供清晰具体的行动跃迁框架。",
         "quote": "焦虑的原因就两个：想得太多，做得太少。",
-        "cover_url": "https://wfqqreader-1252317822.image.myqcloud.com/cover/248/34537248/t6_34537248.jpg",
+        "cover_url": "https://cdn.weread.qq.com/weread/cover/86/YueWen_33628204/t6_YueWen_33628204.jpg",
     },
 ]
 
 # 远程书封候选源：主源失效时交由 MediaFetcher 自动切换。
 _WECHAT_COVER_FALLBACKS: dict[str, list[str]] = {
+    "wr_001": [
+        "https://cdn.weread.qq.com/weread/cover/97/yuewen_822995/s_yuewen_8229951695023669.jpg",
+        "https://wfqqreader-1252317822.image.myqcloud.com/cover/786/842786/t6_842786.jpg",
+    ],
+    "wr_002": [
+        "https://cdn.weread.qq.com/weread/cover/52/YueWen_40055543/s_YueWen_40055543.jpg",
+        "https://wfqqreader-1252317822.image.myqcloud.com/cover/571/36531571/t6_36531571.jpg",
+    ],
+    "wr_003": [
+        "https://cdn.weread.qq.com/weread/cover/80/yuewen_695233/s_yuewen_6952331784884457.jpg",
+        "https://wfqqreader-1252317822.image.myqcloud.com/cover/354/22588354/t6_22588354.jpg",
+    ],
+    "wr_004": [
+        "https://cdn.weread.qq.com/weread/cover/81/YueWen_35551088/s_YueWen_35551088.jpg",
+    ],
+    "wr_005": [
+        "https://wfqqreader-1252317822.image.myqcloud.com/cover/385/25615385/s_25615385.jpg",
+    ],
+    "wr_006": [
+        "https://cdn.weread.qq.com/weread/cover/49/yuewen_935536/s_yuewen_9355361682243599.jpg",
+    ],
     "wr_007": [
-        "https://img9.doubanio.com/view/subject/l/public/s34164394.jpg",
-        "https://img1.doubanio.com/view/subject/m/public/s34164394.jpg",
+        "https://cdn.weread.qq.com/weread/cover/89/YueWen_44026191/s_YueWen_44026191.jpg",
+    ],
+    "wr_008": [
+        "https://cdn.weread.qq.com/weread/cover/37/YueWen_855812/s_YueWen_855812.jpg",
     ],
     "wr_009": [
-        "https://img9.doubanio.com/view/subject/l/public/s34047464.jpg",
-        "https://img1.doubanio.com/view/subject/m/public/s34047464.jpg",
+        "https://cdn.weread.qq.com/weread/cover/56/cpplatform_pxdcpye4umtlndzeqdkyws/t6_cpplatform_pxdcpye4umtlndzeqdkyws1755678528.jpg",
     ],
     "wr_010": [
-        "https://img9.doubanio.com/view/subject/l/public/s34079815.jpg",
-        "https://img1.doubanio.com/view/subject/m/public/s34079815.jpg",
+        "https://cdn.weread.qq.com/weread/cover/31/cpplatform_fx1z5bkdgmbwqoatwezcxp/s_cpplatform_fx1z5bkdgmbwqoatwezcxp1778466805.jpg",
+    ],
+    "wr_011": [
+        "https://cdn.weread.qq.com/weread/cover/1/yuewen_834464/s_yuewen_8344641758521403.jpg",
+    ],
+    "wr_012": [
+        "https://cdn.weread.qq.com/weread/cover/86/YueWen_33628204/s_YueWen_33628204.jpg",
     ],
 }
 for _book in WECHAT_READ_BOOKS:

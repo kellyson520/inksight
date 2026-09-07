@@ -30,8 +30,8 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "希望是美好的东西，也许是人间至善，而美好的东西永不消逝。二十年如一日的坚忍与信念，在暴雨雷鸣中张开双臂迎接真正的自由。",
         "quote": "恐惧囚禁灵魂，希望赐予自由。",
         "category": "TOP250",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg",
-        "cover_urls": ["https://img9.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg", "https://img1.doubanio.com/view/subject/l/public/s1316831.jpg"],
+        "cover_url": "https://img3.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg",
+        "cover_urls": ["https://img3.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg", "https://img1.doubanio.com/view/photo/m_ratio_poster/public/p480747492.jpg"],
     },
     {
         "id": "db_002",
@@ -46,7 +46,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "不疯魔不成活。半个世纪的时代波澜跌宕，舞台上的霸王与虞姬，化作中国影史难以逾越的悲壮绝响。",
         "quote": "说好的一辈子，差一年，差一个月，差一个时辰，都不是一辈子。",
         "category": "TOP250",
-        "cover_url": "https://img3.doubanio.com/view/subject/l/public/s1441962.jpg",
+        "cover_url": "https://img1.doubanio.com/view/photo/m_ratio_poster/public/p2911205318.jpg",
     },
     {
         "id": "db_003",
@@ -61,7 +61,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "纯真与执着的奇迹。奔跑穿过时代的风雨，用最质朴的善良化解生活的莫测，羽毛飘荡处，是温暖而有力的生命之歌。",
         "quote": "生活就像一盒巧克力，你永远不知道下一块是什么味道。",
         "category": "TOP250",
-        "cover_url": "https://img3.doubanio.com/view/subject/l/public/s1332822.jpg",
+        "cover_url": "https://img3.doubanio.com/view/photo/m_ratio_poster/public/p510876253.jpg",
     },
     {
         "id": "db_004",
@@ -76,7 +76,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "爱是唯一可以超越时间与空间维度的事物。黑洞视界边缘的壮丽苍凉与五维空间的书架，构筑了人类对浩瀚星海最浪漫的探索。",
         "quote": "不要温和地走进那个良夜，怒斥、怒斥光明的消逝。",
         "category": "SCI_FI",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p2614988097.jpg",
+        "cover_url": "https://img3.doubanio.com/view/photo/m_ratio_poster/public/p2614988097.jpg",
     },
     {
         "id": "db_005",
@@ -91,7 +91,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "不要忘记自己的名字，不要在欲望中迷失自我。宫崎骏笔下充满哲思的奇幻汤屋，温暖抚慰每一个步入成人世界的灵魂。",
         "quote": "人生就是一列开往坟墓的列车，路途上会有很多站，很难有人自始至终陪你走完。",
         "category": "HEALING",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p2557573348.jpg",
+        "cover_url": "https://img1.doubanio.com/view/photo/m_ratio_poster/public/p2557573348.jpg",
     },
     {
         "id": "db_006",
@@ -106,7 +106,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "冰冷北大西洋深处的不朽绝唱。跨越阶级藩篱的纯粹爱恋与危难之际人性的光辉，造就世界影史永恒的丰碑。",
         "quote": "赢得船票是我一生中最幸运的事，它让我遇见了你。",
         "category": "TOP250",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p457760035.jpg",
+        "cover_url": "https://img1.doubanio.com/view/photo/m_ratio_poster/public/p457760035.jpg",
     },
     {
         "id": "db_007",
@@ -121,7 +121,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "梦境与现实的多重交织，思维植入的精密架构。旋转不倒的陀螺，成为世界影史最令人着迷的开放式结局。",
         "quote": "最坚韧的寄生虫是什么？是想法。一个想法能改变世界。",
         "category": "SCI_FI",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p513344864.jpg",
+        "cover_url": "https://img1.doubanio.com/view/photo/m_ratio_poster/public/p513344864.jpg",
     },
     {
         "id": "db_008",
@@ -136,7 +136,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "三十年的巨大真人秀，虚假世界的尽头是一扇通往真实的门。面对风暴与未知，他微笑着鞠躬致意，迈向属于自己的真实人生。",
         "quote": "假如再碰不见你，祝你早安、午安，还有晚安。",
         "category": "TOP250",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p479682972.jpg",
+        "cover_url": "https://img3.doubanio.com/view/photo/m_ratio_poster/public/p479682972.jpg",
     },
     {
         "id": "db_009",
@@ -151,7 +151,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "一盆无根的银皇后盆栽，一个喝牛奶的职业杀手，一个倔强绝望的小女孩。孤独灵魂之间的相互救赎与无声守护。",
         "quote": "生活总是这么痛苦吗？还是只有童年是这样？——总是如此。",
         "category": "TOP250",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p511118051.jpg",
+        "cover_url": "https://img1.doubanio.com/view/photo/m_ratio_poster/public/p2913554676.jpg",
     },
     {
         "id": "db_010",
@@ -166,7 +166,7 @@ DOUBAN_CLASSIC_MOVIES: list[dict[str, Any]] = [
         "recommend_reason": "火车站台前漫长十载的守候，春夏秋冬轮回不改的等待。用一生的忠诚与思念，诠释爱与陪伴的终极意义。",
         "quote": "它们以为你永远不会回来了，但你一直在那里等他。",
         "category": "HEALING",
-        "cover_url": "https://img9.doubanio.com/view/photo/m_ratio_poster/public/p524964016.jpg",
+        "cover_url": "https://img1.doubanio.com/view/photo/m_ratio_poster/public/p2587099240.jpg",
     },
 ]
 
@@ -219,7 +219,9 @@ class DoubanMovieService:
                         rating_val = str(it.get("rating", {}).get("value") or "9.0")
                         rating_cnt = it.get("rating", {}).get("count")
                         people_str = f"{rating_cnt:,}人评价" if rating_cnt else "高分推荐"
-                        cover = it.get("cover", {}).get("url") or (it.get("photos") or [None])[0] or ""
+                        cover = str(it.get("cover_url") or (it.get("pic") or {}).get("large") or (it.get("photos") or [None])[0] or "")
+                        if "img9.doubanio.com" in cover:
+                            cover = cover.replace("img9.doubanio.com", "img1.doubanio.com")
                         info_str = str(it.get("info") or "")
                         
                         comment = ""

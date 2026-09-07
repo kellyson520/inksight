@@ -121,9 +121,16 @@ class MediaFetcher:
         result: list[str] = []
         for url in candidates:
             value = str(url or "").strip()
-            if value and value not in result:
-                MediaFetcher._validate_url(value)
-                result.append(value)
+            if not value:
+                continue
+            expanded = [value]
+            if "img9.doubanio.com" in value:
+                expanded.insert(0, value.replace("img9.doubanio.com", "img1.doubanio.com"))
+                expanded.append(value.replace("img9.doubanio.com", "img3.doubanio.com"))
+            for u in expanded:
+                if u and u not in result:
+                    MediaFetcher._validate_url(u)
+                    result.append(u)
         if not result:
             raise MediaFetchError("No media URL candidates provided")
         return result
@@ -133,6 +140,11 @@ class MediaFetcher:
         parsed = urlparse(url)
         if not parsed.scheme or not parsed.netloc:
             return ""
+        host = parsed.netloc.lower()
+        if "doubanio.com" in host or "douban.com" in host:
+            return "https://movie.douban.com/"
+        if "weread.qq.com" in host or "myqcloud.com" in host:
+            return "https://weread.qq.com/"
         return f"{parsed.scheme}://{parsed.netloc}/"
 
     @staticmethod
