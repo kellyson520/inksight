@@ -2064,6 +2064,33 @@ async def _generate_external_data_content(mode_def: dict, content_cfg: dict, fal
             logger.warning(f"[JSONContent] Failed to get weather forecast: {e}", exc_info=True)
             return dict(fallback)
 
+    if provider == "github_pulse":
+        from .github_service import get_github_pulse
+        config = kwargs.get("config") or {}
+        mo = config.get("mode_overrides", {})
+        gh_ov = mo.get("GITHUB_PULSE", {}) if isinstance(mo, dict) else {}
+        username = gh_ov.get("username") or content_cfg.get("username") or "torvalds"
+        token = gh_ov.get("token") or content_cfg.get("token")
+        pulse = await get_github_pulse(username=username, token=token)
+        merged = dict(fallback)
+        merged.update(pulse)
+        return merged
+
+    if provider == "element_day":
+        from .periodic_table import get_element_of_the_day
+        date_str = kwargs.get("date_str")
+        element_data = get_element_of_the_day(date_str)
+        merged = dict(fallback)
+        merged.update(element_data)
+        return merged
+
+    if provider == "xkcd_comic":
+        from .xkcd_service import get_daily_xkcd
+        comic = await get_daily_xkcd()
+        merged = dict(fallback)
+        merged.update(comic)
+        return merged
+
     return dict(fallback)
 
 

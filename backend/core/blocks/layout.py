@@ -151,7 +151,19 @@ def render_two_column(ctx: RenderContext, block: dict) -> None:
     left_blocks = block.get("left") or block.get("left_blocks") or []
     right_blocks = block.get("right") or block.get("right_blocks") or []
     gap = int(block.get("gap", 16) * ctx.scale)
-    ratio = float(block.get("ratio") or block.get("left_ratio") or 0.5)
+    raw_ratio = block.get("ratio") or block.get("left_ratio") or 0.5
+    if isinstance(raw_ratio, str) and ":" in raw_ratio:
+        parts = raw_ratio.split(":")
+        try:
+            r1, r2 = float(parts[0]), float(parts[1])
+            ratio = r1 / (r1 + r2) if (r1 + r2) > 0 else 0.5
+        except (ValueError, IndexError, ZeroDivisionError):
+            ratio = 0.5
+    else:
+        try:
+            ratio = float(raw_ratio)
+        except (ValueError, TypeError):
+            ratio = 0.5
 
     _raw_mx = block.get("margin_x")
     if _raw_mx is not None:

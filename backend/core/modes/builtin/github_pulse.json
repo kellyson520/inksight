@@ -1,0 +1,125 @@
+{
+  "mode_id": "GITHUB_PULSE",
+  "display_name": "GitHub 脉搏",
+  "icon": "github",
+  "cacheable": true,
+  "description": "展示 GitHub 开发者贡献热力图矩阵、连续提交天数与精选开源仓库",
+  "settings_schema": [
+    {
+      "key": "username",
+      "label": "GitHub 用户名",
+      "type": "text",
+      "default": "torvalds",
+      "placeholder": "如 torvalds 或 octocat"
+    },
+    {
+      "key": "token",
+      "label": "GitHub Token (可选)",
+      "type": "password",
+      "placeholder": "ghp_xxxxxxxx"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "github_pulse",
+    "fallback": {
+      "username": "developer",
+      "name": "Developer",
+      "total_contributions": 842,
+      "current_streak": 14,
+      "longest_streak": 45,
+      "today_contributions": 3,
+      "contributions": [0, 1, 2, 3, 0, 1, 2],
+      "top_repos": [
+        { "name": "developer/core", "stars": "1.2k", "lang": "TypeScript" },
+        { "name": "developer/tools", "stars": "380", "lang": "Python" }
+      ]
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 6,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "flex_row",
+            "align_items": "center",
+            "children": [
+              {
+                "type": "text",
+                "template": "@{username}",
+                "font": "noto_serif_bold",
+                "font_size": 14,
+                "align": "left"
+              },
+              {
+                "type": "badge",
+                "template": "{current_streak} DAY STREAK",
+                "align": "right"
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "style": "dashed",
+            "margin_top": 4,
+            "margin_bottom": 6
+          },
+          {
+            "type": "key_value",
+            "font_size": 10,
+            "items": [
+              { "label": "YEAR COMMITS", "field": "total_contributions" },
+              { "label": "TODAY", "field": "today_contributions" },
+              { "label": "BEST STREAK", "field": "longest_streak" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "contrib_matrix",
+        "field": "contributions",
+        "weeks": 17,
+        "show_weekday_labels": true,
+        "margin_x": 12,
+        "margin_bottom": 6
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 12,
+        "margin_top": 2,
+        "margin_bottom": 4
+      },
+      {
+        "type": "list",
+        "field": "top_repos",
+        "max_items": 2,
+        "field_template": "★ {stars}  {name}  [{lang}]",
+        "font_size": 10,
+        "numbered": false,
+        "margin_x": 12
+      }
+    ],
+    "footer": {
+      "left": "GitHub Pulse",
+      "right": "Activity & Heatmap"
+    }
+  }
+}

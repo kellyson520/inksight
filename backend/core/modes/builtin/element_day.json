@@ -1,0 +1,155 @@
+{
+  "mode_id": "ELEMENT_DAY",
+  "display_name": "每日一素",
+  "icon": "atom",
+  "cacheable": true,
+  "description": "每日认识一种化学元素：原子序数、相对质量、电子排布与科学趣闻",
+  "settings_schema": [],
+  "content": {
+    "type": "computed",
+    "provider": "element_day",
+    "fallback": {
+      "atomic_number": 26,
+      "symbol": "Fe",
+      "name_zh": "铁",
+      "name_en": "Iron",
+      "atomic_mass": "55.845",
+      "category": "过渡金属",
+      "period": 4,
+      "group": 8,
+      "electron_config": "[Ar] 3d⁶ 4s²",
+      "phase": "固态",
+      "discoverer": "古代已知",
+      "summary": "地壳中最丰富的过渡金属元素，是血红蛋白的核心载体，也是人类工业与建筑文明的基石。",
+      "fun_fact": "铁-56 是全宇宙核结合能最高、最稳定的核素之一。大质量恒星演化到了聚变产生铁阶段就走到了生命尽头。",
+      "date": "2026-09-07"
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 6,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "two_column",
+            "ratio": "3:5",
+            "left": [
+              {
+                "type": "card",
+                "border": "solid",
+                "radius": 3,
+                "padding": 4,
+                "children": [
+                  {
+                    "type": "text",
+                    "template": "{atomic_number}",
+                    "font": "noto_serif_bold",
+                    "font_size": 11,
+                    "align": "left"
+                  },
+                  {
+                    "type": "text",
+                    "template": "{symbol}",
+                    "font": "noto_serif_bold",
+                    "font_size": 32,
+                    "align": "center"
+                  },
+                  {
+                    "type": "text",
+                    "template": "{atomic_mass}",
+                    "font": "noto_serif_regular",
+                    "font_size": 9,
+                    "align": "center"
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "type": "text",
+                "template": "{name_zh} · {name_en}",
+                "font": "noto_serif_bold",
+                "font_size": 16,
+                "align": "left"
+              },
+              {
+                "type": "badge",
+                "template": "{category}  |  {phase}",
+                "align": "left"
+              },
+              {
+                "type": "text",
+                "template": "电子排布: {electron_config}",
+                "font": "noto_serif_regular",
+                "font_size": 10,
+                "align": "left"
+              },
+              {
+                "type": "text",
+                "template": "发现: {discoverer}",
+                "font": "noto_serif_regular",
+                "font_size": 9,
+                "align": "left"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "section",
+        "title": "科学概貌",
+        "margin_x": 12,
+        "children": [
+          {
+            "type": "text",
+            "field": "summary",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "line_spacing": 2
+          }
+        ]
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 12,
+        "margin_top": 4,
+        "margin_bottom": 4
+      },
+      {
+        "type": "section",
+        "title": "硬核趣闻",
+        "margin_x": 12,
+        "children": [
+          {
+            "type": "text",
+            "field": "fun_fact",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "line_spacing": 2
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "left": "Periodic Table",
+      "right": "Element of the Day"
+    }
+  }
+}

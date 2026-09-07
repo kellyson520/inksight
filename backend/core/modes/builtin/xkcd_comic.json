@@ -1,0 +1,91 @@
+{
+  "mode_id": "XKCD_COMIC",
+  "display_name": "XKCD 极客漫画",
+  "icon": "smile",
+  "cacheable": true,
+  "description": "每日精选 XKCD 极客科学四格漫画，高对比度 1-bit 墨水屏二值化呈现",
+  "settings_schema": [],
+  "content": {
+    "type": "computed",
+    "provider": "xkcd_comic",
+    "fallback": {
+      "num": 927,
+      "title": "Standards",
+      "alt": "Fortunately, the charging one has been solved now that we've all standardized on mini-USB. Wait, micro-USB. No, wait, USB-C.",
+      "date": "2026-09-07",
+      "img_url": "https://imgs.xkcd.com/comics/standards.png"
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 4,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "flex_row",
+            "align_items": "center",
+            "children": [
+              {
+                "type": "text",
+                "template": "XKCD #{num}: {title}",
+                "font": "noto_serif_bold",
+                "font_size": 13,
+                "align": "left"
+              },
+              {
+                "type": "badge",
+                "template": "GEEK COMIC",
+                "align": "right"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "image",
+        "field": "comic_image",
+        "width": 370,
+        "height": 135,
+        "fit": "contain",
+        "align_x": "center",
+        "align_y": "center",
+        "margin_bottom": 4
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 10,
+        "margin_top": 2,
+        "margin_bottom": 4
+      },
+      {
+        "type": "text",
+        "field": "alt",
+        "font": "noto_serif_regular",
+        "font_size": 9,
+        "line_spacing": 2,
+        "margin_x": 12
+      }
+    ],
+    "footer": {
+      "left": "xkcd.com",
+      "right": "{date}"
+    }
+  }
+}

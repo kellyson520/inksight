@@ -377,9 +377,7 @@ def _draw_image_placeholder(ctx: RenderContext, x: int, y: int, width: int, heig
 
 def render_image(ctx: RenderContext, block: dict) -> None:
     field_name = block.get("field", "image_url")
-    image_url = str(ctx.get_field(field_name) or "")
-    if not image_url:
-        return
+    raw_field_val = ctx.get_field(field_name)
     width = int(block.get("width", 220) * ctx.scale)
     height = int(block.get("height", 140) * ctx.scale)
     default_x = ctx.x_offset + max(0, (ctx.available_width - width) // 2)
@@ -390,6 +388,24 @@ def render_image(ctx: RenderContext, block: dict) -> None:
     align_y = str(block.get("align_y", "center") or "center")
     photo_enhance = bool(block.get("photo_enhance", False))
     margin_bottom = int(block.get("margin_bottom", 6) * ctx.scale)
+
+    if isinstance(raw_field_val, Image.Image):
+        try:
+            img = convert_image_block(
+                raw_field_val,
+                width, height, ctx.colors,
+                fit=fit, align_x=align_x, align_y=align_y,
+                photo_enhance=photo_enhance,
+            )
+            _paste_converted_image(ctx, img, x, y)
+            ctx.y = y + height + margin_bottom
+            return
+        except Exception as e:
+            logger.warning("[JSONRenderer] Direct PIL image render failed: %s", e)
+
+    image_url = str(raw_field_val or "")
+    if not image_url:
+        return
 
     urls_field = block.get("urls_field")
     candidate_urls = image_url

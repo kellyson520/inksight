@@ -245,6 +245,24 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         zh=CatalogText(name="相框", tip="上传本地照片（至多6张），循环播放"),
         en=CatalogText(name="Photo Frame", tip="Upload up to 6 photos, cycle on each refresh"),
     ),
+    CatalogItem(
+        mode_id="GITHUB_PULSE",
+        category="productivity",
+        zh=CatalogText(name="GitHub 脉搏", tip="GitHub 开发者贡献热力矩阵、连续提交天数与精选仓库"),
+        en=CatalogText(name="GitHub Pulse", tip="GitHub commit activity heatmap matrix, streak, and top repositories"),
+    ),
+    CatalogItem(
+        mode_id="ELEMENT_DAY",
+        category="knowledge",
+        zh=CatalogText(name="每日一素", tip="每日认识一种化学元素：原子结构、相对质量与硬核科学趣闻"),
+        en=CatalogText(name="Element of the Day", tip="Discover a chemical element daily: atomic specs, structure, and science trivia"),
+    ),
+    CatalogItem(
+        mode_id="XKCD_COMIC",
+        category="fun",
+        zh=CatalogText(name="XKCD 极客漫画", tip="每日精选 XKCD 科学极客四格漫画，高对比度 1-bit 二值化呈现"),
+        en=CatalogText(name="XKCD Geek Comic", tip="Daily XKCD science & geek comics with 1-bit dithered rendering"),
+    ),
 ]
 
 
