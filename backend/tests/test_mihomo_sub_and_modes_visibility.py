@@ -1,3 +1,4 @@
+import time
 import pytest
 from unittest.mock import patch
 from PIL import Image, ImageDraw
@@ -217,6 +218,59 @@ async def test_wechat_read_dynamic_fetch():
     assert res is not None
     assert "cover_url" in res
     assert "recommend_reason" in res
+
+
+@pytest.mark.asyncio
+async def test_mihomo_sub_reset_badge_color_and_expire_format():
+    """验证重置倒计时徽章、余量消耗程度颜色(黑/黄/红)以及'剩余X天（到期日YYYY-MM-DD）'格式。"""
+    with patch.object(mihomo_service, "fetch_all_controller_subscriptions") as mock_api:
+        mock_api.return_value = (
+            {
+                "version": "Mihomo alpha-test",
+                "active_node": "TEST-OUTLET",
+                "status_pill": "在线 · 运行中",
+            },
+            [
+                {
+                    "name": "main-channel",
+                    "upload": 10 * 1024 * 1024 * 1024,
+                    "download": 170 * 1024 * 1024 * 1024, # 180G used / 200G total = 90% (red)
+                    "total": 200 * 1024 * 1024 * 1024,
+                    "expire": int(time.time()) + 86400 * 347,
+                    "node_count": 2,
+                    "source": "api",
+                },
+                {
+                    "name": "backup-channel",
+                    "upload": 2 * 1024 * 1024 * 1024,
+                    "download": 20 * 1024 * 1024 * 1024, # 22G used / 100G total = 22% (black)
+                    "total": 100 * 1024 * 1024 * 1024,
+                    "expire": int(time.time()) + 86400 * 1097,
+                    "node_count": 21,
+                    "reset_days": 1,
+                    "source": "api",
+                },
+            ],
+        )
+
+        data = await mihomo_service.get_dashboard_data(force_refresh=True)
+
+        # 1. 到期日格式检验：剩余 347 天（到期日 2027-xx-xx）
+        assert "剩余 347 天（到期日" in data["sub_1_expire_badge"]
+        assert "剩余 1097 天（到期日" in data["sub_2_expire_badge"]
+
+        # 2. 渠道重置徽章检验
+        assert "还有" in data["sub_1_reset_badge"] and "天重置" in data["sub_1_reset_badge"]
+        assert data["sub_2_reset_badge"] == "还有 1 天重置"
+
+        # 3. 余量消耗程度颜色
+        # sub_1 使用 90% -> red
+        assert data["sub_1_rem_color"] == "red"
+        # sub_2 使用 22% -> black
+        assert data["sub_2_rem_color"] == "black"
+
+
+
 
 
 @pytest.mark.asyncio

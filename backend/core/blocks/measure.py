@@ -29,11 +29,24 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
             font_key = pick_cjk_font(font_key)
         font = load_font(font_key, font_size)
         bbox = font.getbbox(text)
-        pad_x = int(block.get("padding_x", 8) * ctx.scale)
-        pad_y = int(block.get("padding_y", 3) * ctx.scale)
+        pad_x_prop = block.get("padding_x", 8)
+        pad_y_prop = block.get("padding_y", 3)
+        pad_x = int(pad_x_prop * ctx.scale)
+        pad_y = int(pad_y_prop * ctx.scale)
         w = bbox[2] - bbox[0] + pad_x * 2
-        h = max(bbox[3], font_size) + pad_y * 2
+        h = max(bbox[3] - bbox[1], font_size) + pad_y * 2
         return w, h
+
+    elif btype == "flex_row":
+        items = block.get("items", [])
+        gap = int(block.get("gap", 8) * ctx.scale)
+        margin_x = int(block.get("margin_x", 0) * ctx.scale)
+        avail = max(10, max_width - margin_x * 2)
+        item_sizes = [measure_block_size(ctx, it, avail) for it in items]
+        total_w = sum(s[0] for s in item_sizes) + max(0, len(items) - 1) * gap
+        max_h = max([s[1] for s in item_sizes], default=0)
+        mb = int(block.get("margin_bottom", 0) * ctx.scale)
+        return min(total_w, max_width), max_h + mb
 
     elif btype in ("text", "centered_text"):
         text = str(ctx.get_field(block.get("field", "")) if block.get("field") else ctx.resolve(block.get("template", block.get("text", ""))))

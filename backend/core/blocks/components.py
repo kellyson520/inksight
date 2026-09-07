@@ -100,8 +100,12 @@ def render_badge(ctx: RenderContext, block: dict) -> None:
     by = ctx.y
     variant = block.get("variant", "solid")
     bg_color_name = block.get("bg_color", "red" if ctx.colors >= 3 else "black")
+    if bg_color_name and "{" in str(bg_color_name):
+        bg_color_name = ctx.resolve(str(bg_color_name))
     text_color_name = block.get("color")
-    bg_fill = ctx.color_index(bg_color_name, default=EINK_FG)
+    if text_color_name and "{" in str(text_color_name):
+        text_color_name = ctx.resolve(str(text_color_name))
+    bg_fill = ctx.color_index(str(bg_color_name), default=EINK_FG)
 
     if variant == "solid":
         ctx.draw.rounded_rectangle([bx, by, bx + badge_w, by + badge_h], radius=radius, fill=bg_fill)

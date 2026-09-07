@@ -115,11 +115,13 @@ class RenderContext:
         return EINK_COLOR_NAME_MAP.get(name, default)
 
     def resolve_color(self, block: dict, default: int = EINK_FG) -> int:
-        """解析 block 中的 'color' 属性。"""
+        """解析 block 中的 'color' 属性（支持变量模板解析，如 {sub_1_rem_color}）。"""
         name = block.get("color")
         if not name:
             return default
-        return self.color_index(name, default)
+        if "{" in str(name):
+            name = self.resolve(str(name))
+        return self.color_index(str(name), default)
 
     def paste_icon(self, icon: Image.Image, pos: tuple[int, int], fill: int = EINK_FG) -> None:
         """将 1-bit 图标粘贴到画布上，妥善处理透明度和调色板模式。"""

@@ -311,7 +311,12 @@ def render_flex_row(ctx: RenderContext, block: dict) -> None:
                 font_key = pick_cjk_font(font_key)
             font = load_font(font_key, font_size)
             bbox = font.getbbox(text)
-            color = ctx.color_index(item.get("color", "black"), default=EINK_FG)
+            color_prop = item.get("color")
+            if color_prop and "{" in str(color_prop):
+                color_name = ctx.resolve(str(color_prop))
+            else:
+                color_name = str(color_prop or "black")
+            color = ctx.color_index(color_name, default=EINK_FG)
             ctx.draw.text((cur_x - bbox[0], item_y - bbox[1] + (h - (bbox[3] - bbox[1])) // 2), text, fill=color, font=font)
         else:
             item_ctx = RenderContext(

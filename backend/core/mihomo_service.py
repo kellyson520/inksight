@@ -214,6 +214,18 @@ class MihomoService:
                             if px.get("now"):
                                 active_node_name = _clean_node_name(str(px.get("now")))
 
+                        # 尝试从节点名中解析重置剩余天数（例如：距离下次重置剩余：1 天 / 还有 3 天重置）
+                        reset_days = None
+                        for px in proxies:
+                            px_name = str(px.get("name", ""))
+                            m_reset = re.search(r"(?:重置.*?|剩余[^\d]*)(\d+)\s*天", px_name)
+                            if m_reset:
+                                try:
+                                    reset_days = int(m_reset.group(1))
+                                    break
+                                except Exception:
+                                    pass
+
                         sub_info = pinfo.get("subscriptionInfo") or {}
                         tot = int(sub_info.get("Total", 0))
                         if sub_info and tot > 0:
@@ -224,6 +236,7 @@ class MihomoService:
                                 "total": tot,
                                 "expire": int(sub_info.get("Expire", 0)),
                                 "node_count": len(proxies),
+                                "reset_days": reset_days,
                                 "source": "controller_api",
                             })
 
@@ -326,8 +339,31 @@ class MihomoService:
             if exp > 0 and (earliest_exp == 0 or exp < earliest_exp):
                 earliest_exp = exp
 
+            # 消耗程度预警色（黑、黄、红）
+            # 已用占比 >= 85% 飘红；>= 60% 预警黄；其余正常黑
+            if pct >= 85.0:
+                rem_color = "red"
+            elif pct >= 60.0:
+                rem_color = "yellow"
+            else:
+                rem_color = "black"
+
+            # 渠道重置天数徽章（优先使用节点或提供商解析出的重置倒计时，其次按月份自然重置推算）
+            reset_days = s.get("reset_days")
+            if reset_days is None:
+                # 若未显式提供重置天数，按自然月推算距离下月 1 日重置天数
+                # 下个月第一天
+                if now_dt.month == 12:
+                    next_month_first = datetime.date(now_dt.year + 1, 1, 1)
+                else:
+                    next_month_first = datetime.date(now_dt.year, now_dt.month + 1, 1)
+                reset_days = max(1, (next_month_first - now_dt.date()).days)
+
+            reset_badge = f"还有 {reset_days} 天重置"
+
             exp_str = "长期有效"
             days_badge = "长期有效"
+            expire_badge = "长期有效"
             if exp > 0:
                 try:
                     exp_dt = datetime.datetime.fromtimestamp(exp)
@@ -335,10 +371,13 @@ class MihomoService:
                     days = (exp_dt.date() - now_dt.date()).days
                     if days < 0:
                         days_badge = "已过期"
+                        expire_badge = f"已过期（到期日 {exp_str}）"
                     elif days == 0:
                         days_badge = "今日到期"
+                        expire_badge = f"今日到期（到期日 {exp_str}）"
                     else:
                         days_badge = f"剩余 {days} 天"
+                        expire_badge = f"剩余 {days} 天（到期日 {exp_str}）"
                 except Exception:
                     pass
 
@@ -353,6 +392,9 @@ class MihomoService:
                 "progress_percent": prog,
                 "expire_str": exp_str,
                 "days_left_badge": days_badge,
+                "expire_badge": expire_badge,
+                "reset_badge": reset_badge,
+                "rem_color": rem_color,
                 "node_count": f"{s.get('node_count', 0)} 节点",
             })
 
@@ -401,6 +443,9 @@ class MihomoService:
             "progress_percent": primary_sub["progress_percent"],
             "expire_str": primary_sub["expire_str"],
             "days_left_badge": primary_sub["days_left_badge"],
+            "expire_badge": primary_sub["expire_badge"],
+            "reset_badge": primary_sub["reset_badge"],
+            "rem_color": primary_sub["rem_color"],
 
             # 多订阅全局聚合指标
             "total_all_str": _format_bytes(tot_all),
@@ -424,6 +469,9 @@ class MihomoService:
                 res[f"sub_{i}_progress"] = cur["progress_percent"]
                 res[f"sub_{i}_expire_str"] = cur["expire_str"]
                 res[f"sub_{i}_days_badge"] = cur["days_left_badge"]
+                res[f"sub_{i}_expire_badge"] = cur["expire_badge"]
+                res[f"sub_{i}_reset_badge"] = cur["reset_badge"]
+                res[f"sub_{i}_rem_color"] = cur["rem_color"]
             else:
                 res[f"sub_{i}_name"] = ""
                 res[f"sub_{i}_used_str"] = ""
@@ -433,6 +481,9 @@ class MihomoService:
                 res[f"sub_{i}_progress"] = 0
                 res[f"sub_{i}_expire_str"] = ""
                 res[f"sub_{i}_days_badge"] = ""
+                res[f"sub_{i}_expire_badge"] = ""
+                res[f"sub_{i}_reset_badge"] = ""
+                res[f"sub_{i}_rem_color"] = "black"
 
         self._cached_data = res
         self._cached_time = now_ts

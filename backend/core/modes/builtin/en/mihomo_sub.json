@@ -161,30 +161,71 @@
                     "margin_x": 0,
                     "items": [
                       {
-                        "type": "text",
-                        "template": "{sub_1_name}",
-                        "font": "noto_serif_bold",
-                        "font_size": 13,
-                        "align": "left",
-                        "margin_x": 0
+                        "type": "flex_row",
+                        "justify": "left",
+                        "align_items": "center",
+                        "gap": 5,
+                        "margin_x": 0,
+                        "items": [
+                          {
+                            "type": "text",
+                            "template": "{sub_1_name}",
+                            "font": "noto_serif_bold",
+                            "font_size": 11,
+                            "align": "left",
+                            "margin_x": 0
+                          },
+                          {
+                            "type": "badge",
+                            "template": "{sub_1_reset_badge}",
+                            "font": "noto_serif_regular",
+                            "font_size": 8,
+                            "variant": "outline",
+                            "padding_x": 4,
+                            "padding_y": 1,
+                            "align": "left",
+                            "margin_x": 0
+                          }
+                        ]
                       },
                       {
                         "type": "badge",
-                        "template": "{sub_1_expire_str} · {sub_1_days_badge}",
-                        "font_size": 10,
+                        "template": "{sub_1_expire_badge}",
+                        "font": "noto_serif_regular",
+                        "font_size": 8,
+                        "padding_x": 4,
+                        "padding_y": 1,
                         "align": "right",
                         "margin_x": 0
                       }
                     ]
                   },
                   {
-                    "type": "text",
-                    "template": "Rem: {sub_1_remaining_str}  ·  Used: {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})",
-                    "font": "noto_serif_regular",
-                    "font_size": 10,
-                    "align": "left",
+                    "type": "flex_row",
+                    "justify": "left",
+                    "align_items": "center",
+                    "gap": 6,
                     "margin_x": 0,
-                    "margin_bottom": 3
+                    "margin_bottom": 3,
+                    "items": [
+                      {
+                        "type": "text",
+                        "template": "Rem: {sub_1_remaining_str}",
+                        "color": "{sub_1_rem_color}",
+                        "font": "noto_serif_bold",
+                        "font_size": 10,
+                        "align": "left",
+                        "margin_x": 0
+                      },
+                      {
+                        "type": "text",
+                        "template": "· Used: {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})",
+                        "font": "noto_serif_regular",
+                        "font_size": 10,
+                        "align": "left",
+                        "margin_x": 0
+                      }
+                    ]
                   },
                   {
                     "type": "progress_bar",
@@ -214,30 +255,71 @@
                     "margin_x": 0,
                     "items": [
                       {
-                        "type": "text",
-                        "template": "{sub_2_name}",
-                        "font": "noto_serif_bold",
-                        "font_size": 13,
-                        "align": "left",
-                        "margin_x": 0
+                        "type": "flex_row",
+                        "justify": "left",
+                        "align_items": "center",
+                        "gap": 5,
+                        "margin_x": 0,
+                        "items": [
+                          {
+                            "type": "text",
+                            "template": "{sub_2_name}",
+                            "font": "noto_serif_bold",
+                            "font_size": 11,
+                            "align": "left",
+                            "margin_x": 0
+                          },
+                          {
+                            "type": "badge",
+                            "template": "{sub_2_reset_badge}",
+                            "font_size": 8,
+                            "font": "noto_serif_regular",
+                            "variant": "outline",
+                            "padding_x": 4,
+                            "padding_y": 1,
+                            "align": "left",
+                            "margin_x": 0
+                          }
+                        ]
                       },
                       {
                         "type": "badge",
-                        "template": "{sub_2_expire_str} · {sub_2_days_badge}",
-                        "font_size": 10,
+                        "template": "{sub_2_expire_badge}",
+                        "font_size": 8,
+                        "font": "noto_serif_regular",
+                        "padding_x": 4,
+                        "padding_y": 1,
                         "align": "right",
                         "margin_x": 0
                       }
                     ]
                   },
                   {
-                    "type": "text",
-                    "template": "Rem: {sub_2_remaining_str}  ·  Used: {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})",
-                    "font": "noto_serif_regular",
-                    "font_size": 10,
-                    "align": "left",
+                    "type": "flex_row",
+                    "justify": "left",
+                    "align_items": "center",
+                    "gap": 6,
                     "margin_x": 0,
-                    "margin_bottom": 3
+                    "margin_bottom": 3,
+                    "items": [
+                      {
+                        "type": "text",
+                        "template": "Rem: {sub_2_remaining_str}",
+                        "color": "{sub_2_rem_color}",
+                        "font": "noto_serif_bold",
+                        "font_size": 10,
+                        "align": "left",
+                        "margin_x": 0
+                      },
+                      {
+                        "type": "text",
+                        "template": "· Used: {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})",
+                        "font": "noto_serif_regular",
+                        "font_size": 10,
+                        "align": "left",
+                        "margin_x": 0
+                      }
+                    ]
                   },
                   {
                     "type": "progress_bar",
@@ -305,6 +387,7 @@
                   {
                     "type": "text",
                     "template": "{remaining_str}",
+                    "color": "{rem_color}",
                     "font": "noto_serif_bold",
                     "font_size": 26,
                     "align": "left",
