@@ -26,7 +26,13 @@ def test_console_and_static_assets_serve_correctly():
     assert "javascript" in resp_js.headers.get("content-type", "")
     assert "observability" in resp_js.text
 
+    resp_js_head = client.head("/static/console/console.js")
+    assert resp_js_head.status_code == 200
+
     resp_css = client.get("/static/console/console.css")
     assert resp_css.status_code == 200
     assert "css" in resp_css.headers.get("content-type", "")
     assert ".mini-metrics.quad" in resp_css.text
+
+    resp_css_head = client.head("/static/console/console.css")
+    assert resp_css_head.status_code == 200

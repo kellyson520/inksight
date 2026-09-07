@@ -45,6 +45,8 @@ function isBypassPath(pathname: string): boolean {
   return (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
+    pathname.startsWith("/console") ||
+    pathname.startsWith("/static") ||
     pathname.startsWith("/images") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/manifest")

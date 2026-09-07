@@ -73,3 +73,19 @@ test("proxy allows kellson.dpdns.org domain with port", () => {
   assert.equal(res.status, 307);
   assert.equal(res.headers.get("location"), "https://kellson.dpdns.org:3001/zh/config");
 });
+
+test("proxy bypasses console and static assets", () => {
+  const reqConsole = new NextRequest("https://kellson.dpdns.org:3001/console", {
+    headers: {
+      host: "kellson.dpdns.org:3001",
+    },
+  });
+  assert.equal(proxy(reqConsole).status, 200);
+
+  const reqStatic = new NextRequest("https://kellson.dpdns.org:3001/static/console/console.js", {
+    headers: {
+      host: "kellson.dpdns.org:3001",
+    },
+  });
+  assert.equal(proxy(reqStatic).status, 200);
+});

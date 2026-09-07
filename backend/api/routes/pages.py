@@ -122,8 +122,8 @@ def _legacy_removed_html(title: str, target_url: str) -> str:
 </html>"""
 
 
-@router.get("/", response_class=HTMLResponse)
-@router.get("/console", response_class=HTMLResponse)
+@router.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@router.api_route("/console", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def backend_landing_page():
     return FileResponse(_console_index_path(), media_type="text/html")
 
@@ -176,7 +176,7 @@ async def webconfig_asset(asset_path: str):
     return _read_file_response(_project_root() / "webconfig", asset_path, "Webconfig asset not found")
 
 
-@router.get("/static/{asset_path:path}")
+@router.api_route("/static/{asset_path:path}", methods=["GET", "HEAD"])
 async def static_asset(asset_path: str):
     return _read_file_response(_backend_root() / "static", asset_path, "Static asset not found")
 
