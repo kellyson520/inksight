@@ -45,33 +45,40 @@
           {
             "type": "two_column",
             "ratio": "3:5",
+            "margin_x": 0,
+            "gap": 10,
             "left": [
               {
                 "type": "card",
                 "border": "solid",
                 "radius": 3,
                 "padding": 4,
+                "margin_x": 0,
+                "margin_bottom": 0,
                 "children": [
                   {
                     "type": "text",
                     "template": "{atomic_number}",
                     "font": "noto_serif_bold",
                     "font_size": 11,
-                    "align": "left"
+                    "align": "left",
+                    "margin_x": 4
                   },
                   {
                     "type": "text",
                     "template": "{symbol}",
                     "font": "noto_serif_bold",
                     "font_size": 32,
-                    "align": "center"
+                    "align": "center",
+                    "margin_x": 0
                   },
                   {
                     "type": "text",
                     "template": "{atomic_mass}",
                     "font": "noto_serif_regular",
                     "font_size": 9,
-                    "align": "center"
+                    "align": "center",
+                    "margin_x": 0
                   }
                 ]
               }
@@ -82,26 +89,30 @@
                 "template": "{name_en} ({symbol})",
                 "font": "noto_serif_bold",
                 "font_size": 16,
-                "align": "left"
+                "align": "left",
+                "margin_x": 0
               },
               {
                 "type": "badge",
                 "template": "{category}  |  {phase}",
-                "align": "left"
+                "align": "left",
+                "margin_x": 0
               },
               {
                 "type": "text",
                 "template": "Electrons: {electron_config}",
                 "font": "noto_serif_regular",
                 "font_size": 10,
-                "align": "left"
+                "align": "left",
+                "margin_x": 0
               },
               {
                 "type": "text",
                 "template": "Discovery: {discoverer}",
                 "font": "noto_serif_regular",
                 "font_size": 9,
-                "align": "left"
+                "align": "left",
+                "margin_x": 0
               }
             ]
           }

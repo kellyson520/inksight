@@ -3,13 +3,13 @@
   "display_name": "Mihomo 订阅",
   "icon": "activity",
   "cacheable": true,
-  "description": "Mihomo 容器监控、代理订阅有效期、剩余天数与流量额度进度看板",
+  "description": "Mihomo 容器监控、代理订阅有效期、剩余天数与流量额度进度看板，支持单订阅与多订阅切换",
   "settings_schema": [
     {
       "key": "subscription_url",
-      "label": "订阅链接 (可选)",
+      "label": "订阅链接 (支持多行/多个)",
       "type": "text",
-      "placeholder": "https://sub.domain.com/api/v1/client/subscribe?token=..."
+      "placeholder": "留空自动探测本地容器；多订阅可换行填写（支持 备注|链接）"
     },
     {
       "key": "api_url",
@@ -26,9 +26,9 @@
     },
     {
       "key": "name",
-      "label": "订阅服务商备注",
+      "label": "订阅备注名称 (单订阅生效)",
       "type": "text",
-      "placeholder": "如 My Airport / Mihomo Proxy"
+      "placeholder": "如 我的主力机场 / Mihomo Proxy"
     }
   ],
   "content": {
@@ -36,9 +36,16 @@
     "provider": "mihomo_sub",
     "fallback": {
       "title": "MIHOMO 容器与订阅看板",
-      "provider_name": "Mihomo Proxy",
+      "sub_count": 2,
+      "has_multiple_subs": true,
+      "provider_name": "backup-channel",
       "core_version": "Mihomo Meta alpha",
       "status_pill": "在线 · 运行中",
+      "active_node": "CHANNEL",
+      "node_count": "14 个节点",
+      "update_time": "12:00",
+      "footer_label": "Clash.Meta · 订阅与容器监控",
+      "footer_right": "同步于 12:00",
       "total_str": "300.0 GB",
       "used_str": "205.0 GB",
       "remaining_str": "95.0 GB",
@@ -48,11 +55,28 @@
       "progress_percent": 68,
       "expire_str": "2027-08-20",
       "days_left_badge": "剩余 347 天",
-      "node_count": "14 个节点",
-      "active_node": "CHANNEL",
-      "update_time": "12:00",
-      "footer_label": "Clash.Meta · 订阅与容器监控",
-      "footer_right": "同步于 12:00"
+      "total_all_str": "600.0 GB",
+      "used_all_str": "410.0 GB",
+      "remaining_all_str": "190.0 GB",
+      "used_all_percent_str": "68.3%",
+      "progress_all_percent": 68,
+      "earliest_days_badge": "剩余 347 天",
+      "sub_1_name": "backup-channel",
+      "sub_1_used_str": "205.0 GB",
+      "sub_1_total_str": "300.0 GB",
+      "sub_1_remaining_str": "95.0 GB",
+      "sub_1_percent_str": "68.3%",
+      "sub_1_progress": 68,
+      "sub_1_expire_str": "2027-08-20",
+      "sub_1_days_badge": "剩余 347 天",
+      "sub_2_name": "main-channel",
+      "sub_2_used_str": "205.0 GB",
+      "sub_2_total_str": "300.0 GB",
+      "sub_2_remaining_str": "95.0 GB",
+      "sub_2_percent_str": "68.3%",
+      "sub_2_progress": 68,
+      "sub_2_expire_str": "2027-08-20",
+      "sub_2_days_badge": "剩余 347 天"
     }
   },
   "layout": {
@@ -63,119 +87,301 @@
     "body": [
       {
         "type": "spacer",
-        "height": 4
+        "height": 3
       },
       {
-        "type": "card",
-        "border": "solid",
-        "radius": 4,
-        "padding": 6,
-        "margin_x": 10,
-        "children": [
+        "type": "conditional",
+        "field": "sub_count",
+        "conditions": [
           {
-            "type": "flex_row",
-            "align_items": "center",
+            "op": "gt",
+            "value": 1,
             "children": [
               {
-                "type": "text",
-                "template": "{provider_name}",
-                "font": "noto_serif_bold",
-                "font_size": 15,
-                "align": "left"
+                "type": "card",
+                "border": "solid",
+                "radius": 4,
+                "padding": 5,
+                "margin_x": 10,
+                "children": [
+                  {
+                    "type": "flex_row",
+                    "align_items": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "template": "MIHOMO 多订阅看板",
+                        "font": "noto_serif_bold",
+                        "font_size": 13,
+                        "align": "left",
+                        "margin_x": 2
+                      },
+                      {
+                        "type": "badge",
+                        "template": "共 {sub_count} 个订阅",
+                        "align": "right"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "separator",
+                    "style": "dashed",
+                    "margin_top": 3,
+                    "margin_bottom": 3
+                  },
+                  {
+                    "type": "text",
+                    "template": "总余量: {remaining_all_str}  ·  已用: {used_all_str} / {total_all_str} ({used_all_percent_str})",
+                    "font": "noto_serif_regular",
+                    "font_size": 10,
+                    "align": "left",
+                    "margin_x": 2
+                  }
+                ]
               },
               {
-                "type": "badge",
-                "template": "{status_pill}",
-                "align": "right"
+                "type": "spacer",
+                "height": 3
+              },
+              {
+                "type": "card",
+                "border": "solid",
+                "radius": 4,
+                "padding": 5,
+                "margin_x": 10,
+                "children": [
+                  {
+                    "type": "flex_row",
+                    "align_items": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "template": "{sub_1_name}",
+                        "font": "noto_serif_bold",
+                        "font_size": 13,
+                        "align": "left",
+                        "margin_x": 2
+                      },
+                      {
+                        "type": "badge",
+                        "template": "{sub_1_days_badge}",
+                        "align": "right"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "template": "余 {sub_1_remaining_str}  ·  用 {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})  ·  至 {sub_1_expire_str}",
+                    "font": "noto_serif_regular",
+                    "font_size": 10,
+                    "align": "left",
+                    "margin_x": 2,
+                    "margin_bottom": 3
+                  },
+                  {
+                    "type": "progress_bar",
+                    "field": "sub_1_progress",
+                    "max_value": 100,
+                    "height": 6,
+                    "margin_x": 0,
+                    "margin_bottom": 1
+                  }
+                ]
+              },
+              {
+                "type": "spacer",
+                "height": 3
+              },
+              {
+                "type": "card",
+                "border": "solid",
+                "radius": 4,
+                "padding": 5,
+                "margin_x": 10,
+                "children": [
+                  {
+                    "type": "flex_row",
+                    "align_items": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "template": "{sub_2_name}",
+                        "font": "noto_serif_bold",
+                        "font_size": 13,
+                        "align": "left",
+                        "margin_x": 2
+                      },
+                      {
+                        "type": "badge",
+                        "template": "{sub_2_days_badge}",
+                        "align": "right"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "template": "余 {sub_2_remaining_str}  ·  用 {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})  ·  至 {sub_2_expire_str}",
+                    "font": "noto_serif_regular",
+                    "font_size": 10,
+                    "align": "left",
+                    "margin_x": 2,
+                    "margin_bottom": 3
+                  },
+                  {
+                    "type": "progress_bar",
+                    "field": "sub_2_progress",
+                    "max_value": 100,
+                    "height": 6,
+                    "margin_x": 0,
+                    "margin_bottom": 1
+                  }
+                ]
+              },
+              {
+                "type": "spacer",
+                "height": 3
+              },
+              {
+                "type": "card",
+                "border": "solid",
+                "radius": 4,
+                "padding": 4,
+                "margin_x": 10,
+                "children": [
+                  {
+                    "type": "key_value",
+                    "font_size": 10,
+                    "items": [
+                      { "label": "内核版本", "template": "{core_version} · {status_pill}" },
+                      { "label": "出站出口", "template": "{active_node} · {node_count}" }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "fallback_children": [
+          {
+            "type": "card",
+            "border": "solid",
+            "radius": 4,
+            "padding": 6,
+            "margin_x": 10,
+            "children": [
+              {
+                "type": "flex_row",
+                "align_items": "center",
+                "children": [
+                  {
+                    "type": "text",
+                    "template": "{provider_name}",
+                    "font": "noto_serif_bold",
+                    "font_size": 15,
+                    "align": "left",
+                    "margin_x": 2
+                  },
+                  {
+                    "type": "badge",
+                    "template": "{status_pill}",
+                    "align": "right"
+                  }
+                ]
+              },
+              {
+                "type": "separator",
+                "style": "dashed",
+                "margin_top": 4,
+                "margin_bottom": 6
+              },
+              {
+                "type": "two_column",
+                "ratio": "5:5",
+                "margin_x": 0,
+                "gap": 10,
+                "left": [
+                  {
+                    "type": "text",
+                    "text": "剩余可用流量",
+                    "font": "noto_serif_regular",
+                    "font_size": 10,
+                    "align": "left",
+                    "margin_x": 0
+                  },
+                  {
+                    "type": "text",
+                    "template": "{remaining_str}",
+                    "font": "noto_serif_bold",
+                    "font_size": 26,
+                    "align": "left",
+                    "margin_x": 0,
+                    "margin_bottom": 4
+                  },
+                  {
+                    "type": "badge",
+                    "template": "{days_left_badge}",
+                    "align": "left",
+                    "margin_x": 0
+                  }
+                ],
+                "right": [
+                  {
+                    "type": "key_value",
+                    "font_size": 10,
+                    "items": [
+                      { "label": "已用流量", "template": "{used_str} ({used_percent_str})" },
+                      { "label": "总额度", "template": "{total_str}" },
+                      { "label": "有效期至", "template": "{expire_str}" },
+                      { "label": "节点规模", "template": "{node_count}" }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "separator",
+                "style": "dashed",
+                "margin_top": 6,
+                "margin_bottom": 4
+              },
+              {
+                "type": "text",
+                "template": "流量额度进度 · 已用 {used_str} / 总计 {total_str} ({used_percent_str})",
+                "font": "noto_serif_regular",
+                "font_size": 10,
+                "align": "left",
+                "margin_x": 0,
+                "margin_bottom": 3
+              },
+              {
+                "type": "progress_bar",
+                "field": "progress_percent",
+                "max_value": 100,
+                "height": 7,
+                "margin_x": 0,
+                "margin_bottom": 2
               }
             ]
           },
           {
-            "type": "separator",
-            "style": "dashed",
-            "margin_top": 4,
-            "margin_bottom": 6
+            "type": "spacer",
+            "height": 4
           },
           {
-            "type": "two_column",
-            "ratio": "5:5",
-            "left": [
-              {
-                "type": "text",
-                "text": "剩余可用流量",
-                "font": "noto_serif_regular",
-                "font_size": 10,
-                "align": "left"
-              },
-              {
-                "type": "text",
-                "template": "{remaining_str}",
-                "font": "noto_serif_bold",
-                "font_size": 26,
-                "align": "left",
-                "margin_bottom": 4
-              },
-              {
-                "type": "badge",
-                "template": "{days_left_badge}",
-                "align": "left"
-              }
-            ],
-            "right": [
+            "type": "card",
+            "border": "solid",
+            "radius": 4,
+            "padding": 5,
+            "margin_x": 10,
+            "children": [
               {
                 "type": "key_value",
                 "font_size": 10,
                 "items": [
-                  { "label": "已用流量", "template": "{used_str} ({used_percent_str})" },
-                  { "label": "总额度", "template": "{total_str}" },
-                  { "label": "有效期至", "template": "{expire_str}" },
-                  { "label": "节点规模", "template": "{node_count}" }
+                  { "label": "内核版本", "template": "{core_version}" },
+                  { "label": "优选出口", "template": "{active_node}" },
+                  { "label": "流量上下行", "template": "{upload_str} 上传 · {download_str} 下载" }
                 ]
               }
-            ]
-          },
-          {
-            "type": "separator",
-            "style": "dashed",
-            "margin_top": 6,
-            "margin_bottom": 4
-          },
-          {
-            "type": "text",
-            "template": "流量额度进度 · 已用 {used_str} / 总计 {total_str} ({used_percent_str})",
-            "font": "noto_serif_regular",
-            "font_size": 10,
-            "align": "left",
-            "margin_bottom": 3
-          },
-          {
-            "type": "progress_bar",
-            "field": "progress_percent",
-            "max_value": 100,
-            "height": 7,
-            "margin_x": 0,
-            "margin_bottom": 2
-          }
-        ]
-      },
-      {
-        "type": "spacer",
-        "height": 4
-      },
-      {
-        "type": "card",
-        "border": "solid",
-        "radius": 4,
-        "padding": 5,
-        "margin_x": 10,
-        "children": [
-          {
-            "type": "key_value",
-            "font_size": 10,
-            "items": [
-              { "label": "内核版本", "template": "{core_version}" },
-              { "label": "优选出口", "template": "{active_node}" },
-              { "label": "流量上下行", "template": "{upload_str} 上传 · {download_str} 下载" }
             ]
           }
         ]

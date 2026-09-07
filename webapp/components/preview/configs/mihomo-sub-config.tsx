@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Activity, ShieldCheck, Link2, Server } from "lucide-react";
+import { Activity, ShieldCheck, Link2, Server, Layers } from "lucide-react";
 
 interface MihomoSubConfigProps {
   initialSubscriptionUrl?: string;
@@ -45,12 +45,12 @@ export function MihomoSubConfig({
       <div className="rounded-lg border border-border/70 bg-muted/40 p-3.5 space-y-2">
         <div className="flex items-center gap-2 font-medium text-foreground">
           <Activity className="h-4 w-4 text-emerald-500" />
-          <span>{isEn ? "Mihomo (Clash.Meta) Container & Subscription" : "Mihomo (Clash.Meta) 容器与订阅监控"}</span>
+          <span>{isEn ? "Mihomo (Clash.Meta) Container & Subscription Dashboard" : "Mihomo (Clash.Meta) 容器与订阅监控看板"}</span>
         </div>
         <p className="text-muted-foreground leading-relaxed text-[11px]">
           {isEn
-            ? "Monitors Mihomo container connectivity, proxy subscription quota usage, total bandwidth, and expiration date directly on your e-ink screen."
-            : "为墨水屏提供 Mihomo 容器状态监控与代理订阅流量额度、有效期、剩余天数、节点状态看板。默认自动探测本地运行的容器。"}
+            ? "Monitors Mihomo container connectivity, proxy subscription quota, remaining days, and active nodes. Automatically detects and displays multiple subscriptions seamlessly."
+            : "为墨水屏提供 Mihomo 容器与订阅监控看板，支持单订阅精细视图与多订阅聚合卡片自动切换。默认自动探测本地运行的 Mihomo 容器及所有订阅服务商。"}
         </p>
       </div>
 
@@ -58,17 +58,24 @@ export function MihomoSubConfig({
         <div>
           <label className="text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
             <Link2 className="h-3.5 w-3.5 text-blue-500" />
-            {isEn ? "Subscription Link (Optional)" : "代理订阅链接 (可选)"}
+            {isEn ? "Subscription Links (Optional, supports multiple)" : "代理订阅链接 (可选，支持多个换行填写)"}
           </label>
-          <input
-            type="text"
-            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-            placeholder={isEn ? "https://sub.domain.com/api/v1/client/subscribe?token=..." : "机场订阅链接 (支持 Subscription-Userinfo 响应头)"}
+          <textarea
+            rows={2}
+            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring font-mono leading-relaxed"
+            placeholder={
+              isEn
+                ? "Leave empty to auto-discover local Mihomo subscriptions;\nOr enter: Name | https://sub.domain.com/api/v1/client/subscribe?token=..."
+                : "留空则自动探测本地 Mihomo 容器的所有订阅；\n也可手动填写（一行一个，支持 备注|订阅链接）：\n主力机场 | https://sub1.com/api...\n备用节点 | https://sub2.com/api..."
+            }
             value={subUrl}
             onChange={(e) => setSubUrl(e.target.value)}
           />
-          <p className="text-[10px] text-muted-foreground mt-1">
-            {isEn ? "Directly fetches quota from the subscription provider header." : "若填写订阅链接，优先从服务商响应头解析流量与到期时间。"}
+          <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+            <Layers className="h-3 w-3 text-muted-foreground/70" />
+            {isEn
+              ? "Single subscription shows high-density details; multiple subscriptions automatically show card lists & total usage."
+              : "单订阅展示大字剩余余量与状态，多个订阅自动呈现多卡片列表与总量聚合。"}
           </p>
         </div>
 
@@ -102,7 +109,7 @@ export function MihomoSubConfig({
 
         <div>
           <label className="text-[11px] font-medium text-muted-foreground mb-1">
-            {isEn ? "Display Name (Optional)" : "订阅服务商备注名称 (可选)"}
+            {isEn ? "Display Name (Single subscription override)" : "订阅备注名称 (单订阅时生效)"}
           </label>
           <input
             type="text"

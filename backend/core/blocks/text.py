@@ -111,6 +111,8 @@ def render_text(ctx: RenderContext, block: dict) -> None:
     margin_x = block.get("margin_x")
     if margin_x is not None:
         margin_x = int(margin_x * ctx.scale)
+    elif ctx.available_width < int(ctx.screen_w * 0.85):
+        margin_x = 0
     else:
         margin_x = int(ctx.screen_w * 0.06)
     max_lines = block.get("max_lines", 3)

@@ -1,6 +1,7 @@
 """
 Mihomo (Clash.Meta) 容器与代理订阅额度及有效期服务 (Mihomo Service)
 提供 Mihomo 容器状态监控与代理订阅流量额度、有效期、剩余天数、节点状态解析。
+支持单订阅与多订阅（One or Multiple Subscriptions）展示与聚合统计。
 【规范约束】：严格禁止 Emoji。
 """
 from __future__ import annotations
@@ -71,6 +72,15 @@ def _parse_userinfo_header(header_val: str) -> dict[str, int]:
     return res
 
 
+def _clean_node_name(name: str) -> str:
+    """清理节点名称中的 Emoji 或非法字符，确保墨水屏安全排版。"""
+    if not name:
+        return ""
+    # 去除常见 Emoji 符号及国旗字符
+    cleaned = re.sub(r"[\U00010000-\U0010ffff]", "", name).strip()
+    return cleaned or name.strip()
+
+
 class MihomoService:
     """Mihomo 容器监控与订阅额度服务。"""
 
@@ -99,23 +109,46 @@ class MihomoService:
 
         return ""
 
-    async def fetch_subscription_url_info(self, sub_url: str) -> dict[str, Any]:
-        """通过订阅链接 HEAD/GET 请求解析 Subscription-Userinfo 头。"""
+    async def fetch_subscription_url_item(self, line: str, index: int = 1) -> Optional[dict[str, Any]]:
+        """从单行配置或链接中拉取单个订阅信息。"""
+        line = line.strip()
+        if not line:
+            return None
+
+        custom_name = ""
+        url = line
+        if "|" in line:
+            custom_name, url = [p.strip() for p in line.split("|", 1)]
+        elif ":" in line and not line.startswith("http://") and not line.startswith("https://"):
+            custom_name, url = [p.strip() for p in line.split(":", 1)]
+
+        if not url.startswith("http://") and not url.startswith("https://"):
+            return None
+
         headers = {
             "User-Agent": "ClashMeta/alpha Mihomo/1.18.0",
             "Accept": "*/*",
         }
         try:
             async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
-                resp = await client.get(sub_url, headers=headers)
+                resp = await client.get(url, headers=headers)
                 userinfo_header = resp.headers.get("subscription-userinfo") or resp.headers.get("Subscription-Userinfo") or ""
                 if userinfo_header:
                     parsed = _parse_userinfo_header(userinfo_header)
-                    # 尝试统计节点数
                     node_cnt = 0
                     if resp.text:
                         node_cnt = len(re.findall(r"-\s*name:\s*", resp.text)) or len(re.findall(r"proxies:\s*", resp.text))
+                    
+                    if not custom_name:
+                        # 尝试从 URL 域名提取简短名称
+                        try:
+                            host = httpx.URL(url).host
+                            custom_name = host.split(".")[0].upper()
+                        except Exception:
+                            custom_name = f"订阅 {index}"
+
                     return {
+                        "name": custom_name,
                         "upload": parsed["upload"],
                         "download": parsed["download"],
                         "total": parsed["total"],
@@ -124,16 +157,16 @@ class MihomoService:
                         "source": "sub_header",
                     }
         except Exception as e:
-            logger.debug("[MihomoService] fetch_subscription_url_info error: %s", e)
+            logger.debug("[MihomoService] fetch_subscription_url_item error: %s", e)
 
-        return {}
+        return None
 
-    async def fetch_controller_info(
+    async def fetch_all_controller_subscriptions(
         self,
         api_url: Optional[str] = None,
         secret: Optional[str] = None,
-    ) -> dict[str, Any]:
-        """从 Mihomo 外部控制接口拉取版本与各 Provider 订阅额度。"""
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        """从 Mihomo 外部控制接口拉取所有 Proxy Provider 订阅列表及全局节点状态。"""
         token = self._discover_secret(secret)
         headers = {"Authorization": f"Bearer {token}"} if token else {}
 
@@ -145,20 +178,19 @@ class MihomoService:
             base = base_url.rstrip("/")
             try:
                 async with httpx.AsyncClient(timeout=3.0) as client:
-                    # 1. 查询版本与健康
+                    # 1. 查询版本
                     v_resp = await client.get(f"{base}/version", headers=headers)
                     if v_resp.status_code != 200:
                         continue
                     v_data = v_resp.json()
                     version_str = f"Mihomo {v_data.get('version', 'Meta')}"
 
-                    # 2. 查询各 Proxy Provider 订阅额度与节点
+                    # 2. 查询各 Proxy Provider
                     p_resp = await client.get(f"{base}/providers/proxies", headers=headers)
                     p_data = p_resp.json() if p_resp.status_code == 200 else {}
                     providers = p_data.get("providers", {})
 
-                    best_sub: dict[str, Any] = {}
-                    best_provider_name = ""
+                    collected_subs: list[dict[str, Any]] = []
                     total_nodes = 0
                     active_node_name = ""
 
@@ -167,34 +199,36 @@ class MihomoService:
                         total_nodes += len(proxies)
                         for px in proxies:
                             if px.get("now"):
-                                active_node_name = str(px.get("now"))
+                                active_node_name = _clean_node_name(str(px.get("now")))
 
                         sub_info = pinfo.get("subscriptionInfo") or {}
-                        if sub_info and (sub_info.get("Total", 0) > best_sub.get("Total", 0)):
-                            best_sub = sub_info
-                            best_provider_name = pname
+                        tot = int(sub_info.get("Total", 0))
+                        if sub_info and tot > 0:
+                            collected_subs.append({
+                                "name": pname,
+                                "upload": int(sub_info.get("Upload", 0)),
+                                "download": int(sub_info.get("Download", 0)),
+                                "total": tot,
+                                "expire": int(sub_info.get("Expire", 0)),
+                                "node_count": len(proxies),
+                                "source": "controller_api",
+                            })
 
-                    up = int(best_sub.get("Upload", 0))
-                    down = int(best_sub.get("Download", 0))
-                    tot = int(best_sub.get("Total", 0))
-                    exp = int(best_sub.get("Expire", 0))
+                    # 按总额度降序排序
+                    collected_subs.sort(key=lambda s: s["total"], reverse=True)
 
-                    return {
+                    meta = {
                         "version": version_str,
                         "controller_url": base,
-                        "provider_name": best_provider_name or "Mihomo-Proxy",
-                        "upload": up,
-                        "download": down,
-                        "total": tot,
-                        "expire": exp,
                         "node_count": total_nodes,
-                        "active_node": active_node_name,
-                        "source": "controller_api",
+                        "active_node": active_node_name or "DIRECT",
+                        "status_pill": "在线 · 运行中",
                     }
+                    return meta, collected_subs
             except Exception as exc:
                 logger.debug("[MihomoService] Controller probe failed for %s: %s", base_url, exc)
 
-        return {}
+        return {}, []
 
     async def get_dashboard_data(
         self,
@@ -203,83 +237,183 @@ class MihomoService:
         api_secret: Optional[str] = None,
         name: Optional[str] = None,
     ) -> dict[str, Any]:
-        """获取并格式化对齐墨水屏排版的完整数据字典。"""
+        """获取并格式化对齐墨水屏排版的完整多订阅数据字典。"""
         now_ts = time.time()
         cache_key = f"{sub_url}_{api_url}_{name}"
         if self._cached_data and self._cached_key == cache_key and (now_ts - self._cached_time < 300):
             return dict(self._cached_data)
 
-        # 优先读取直连订阅 URL，若无则探查控制器
-        info: dict[str, Any] = {}
-        if sub_url:
-            info = await self.fetch_subscription_url_info(sub_url)
+        meta: dict[str, Any] = {}
+        subs: list[dict[str, Any]] = []
 
-        if not info or not info.get("total"):
-            ctrl_info = await self.fetch_controller_info(api_url=api_url, secret=api_secret)
-            if ctrl_info:
-                info = ctrl_info
+        # 1. 尝试解析自定义订阅 URL（支持多行/逗号分隔）
+        if sub_url and sub_url.strip():
+            raw_lines = [l.strip() for l in re.split(r"[\n,]+", sub_url) if l.strip()]
+            for idx, line in enumerate(raw_lines):
+                item = await self.fetch_subscription_url_item(line, index=idx + 1)
+                if item:
+                    subs.append(item)
 
-        # 默认典藏与回退数据
-        fallback_total = 322122547200  # 300 GB
-        fallback_down = 220127666176   # 205.0 GB
-        fallback_up = 0
-        fallback_exp = int(now_ts) + 86400 * 347
+        # 2. 若未提供订阅链接或部分订阅未拉到，尝试从本地 Mihomo 外部控制接口获取
+        ctrl_meta, ctrl_subs = await self.fetch_all_controller_subscriptions(api_url=api_url, secret=api_secret)
+        if ctrl_meta:
+            meta = ctrl_meta
+        if not subs and ctrl_subs:
+            subs = ctrl_subs
+        elif ctrl_subs:
+            # 合并去重
+            existing_names = {s["name"].lower() for s in subs}
+            for cs in ctrl_subs:
+                if cs["name"].lower() not in existing_names:
+                    subs.append(cs)
 
-        upload = info.get("upload", fallback_up)
-        download = info.get("download", fallback_down)
-        total = info.get("total", fallback_total)
-        expire = info.get("expire", fallback_exp)
-        provider_name = name or info.get("provider_name") or "Mihomo Core"
-        node_count = info.get("node_count") or 2
-        active_node = info.get("active_node") or "DMIT EB - LaxHyper"
-        version = info.get("version") or "Mihomo Meta"
+        # 3. 兜底默认值
+        now_dt = datetime.datetime.now()
+        if not subs:
+            fallback_tot = 322122547200
+            fallback_down = 220127666176
+            subs = [{
+                "name": name or "Mihomo Core",
+                "upload": 0,
+                "download": fallback_down,
+                "total": fallback_tot,
+                "expire": int(now_ts) + 86400 * 347,
+                "node_count": 14,
+                "source": "fallback",
+            }]
 
-        used = upload + download
-        remaining = max(0, total - used)
-        used_pct = (used / total * 100) if total > 0 else 0.0
-        progress_pct = max(0, min(100, int(round(used_pct))))
+        # 若用户指定了自定义名称且只有一个订阅，应用该名称
+        if name and len(subs) == 1:
+            subs[0]["name"] = name.strip()
 
-        # 有效期格式化与剩余天数
-        days_left_badge = "长期有效"
-        expire_str = "长期有效"
-        if expire > 0:
+        # 4. 富化每个订阅的数据
+        enriched_subs: list[dict[str, Any]] = []
+        tot_all = 0
+        used_all = 0
+        earliest_exp = 0
+
+        for s in subs:
+            up = s.get("upload", 0)
+            down = s.get("download", 0)
+            tot = s.get("total", 0)
+            exp = s.get("expire", 0)
+            used = up + down
+            rem = max(0, tot - used)
+            pct = (used / tot * 100) if tot > 0 else 0.0
+            prog = max(0, min(100, int(round(pct))))
+
+            tot_all += tot
+            used_all += used
+            if exp > 0 and (earliest_exp == 0 or exp < earliest_exp):
+                earliest_exp = exp
+
+            exp_str = "长期有效"
+            days_badge = "长期有效"
+            if exp > 0:
+                try:
+                    exp_dt = datetime.datetime.fromtimestamp(exp)
+                    exp_str = exp_dt.strftime("%Y-%m-%d")
+                    days = (exp_dt.date() - now_dt.date()).days
+                    if days < 0:
+                        days_badge = "已过期"
+                    elif days == 0:
+                        days_badge = "今日到期"
+                    else:
+                        days_badge = f"剩余 {days} 天"
+                except Exception:
+                    pass
+
+            enriched_subs.append({
+                "name": s.get("name", "Proxy Sub"),
+                "upload_str": _format_bytes(up),
+                "download_str": _format_bytes(down),
+                "total_str": _format_bytes(tot),
+                "used_str": _format_bytes(used),
+                "remaining_str": _format_bytes(rem),
+                "used_percent_str": f"{pct:.1f}%",
+                "progress_percent": prog,
+                "expire_str": exp_str,
+                "days_left_badge": days_badge,
+                "node_count": f"{s.get('node_count', 0)} 节点",
+            })
+
+        rem_all = max(0, tot_all - used_all)
+        pct_all = (used_all / tot_all * 100) if tot_all > 0 else 0.0
+        prog_all = max(0, min(100, int(round(pct_all))))
+
+        earliest_badge = "长期有效"
+        if earliest_exp > 0:
             try:
-                exp_dt = datetime.datetime.fromtimestamp(expire)
-                expire_str = exp_dt.strftime("%Y-%m-%d")
-                now_dt = datetime.datetime.now()
+                exp_dt = datetime.datetime.fromtimestamp(earliest_exp)
                 days = (exp_dt.date() - now_dt.date()).days
-                if days < 0:
-                    days_left_badge = "已过期"
-                elif days == 0:
-                    days_left_badge = "今日到期"
-                else:
-                    days_left_badge = f"剩余 {days} 天"
+                earliest_badge = "已过期" if days < 0 else (f"近期 {days} 天到期" if days <= 30 else f"剩余 {days} 天")
             except Exception:
-                expire_str = "2027-08-20"
-                days_left_badge = "剩余 347 天"
+                pass
 
-        status_pill = "在线 · 运行中" if info.get("source") == "controller_api" else "已同步"
+        sub_count = len(enriched_subs)
+        has_multiple = sub_count > 1
+        primary_sub = enriched_subs[0]
 
-        res = {
+        version = meta.get("version") or "Mihomo Meta"
+        active_node = meta.get("active_node") or "DMIT EB - LaxHyper"
+        status_pill = meta.get("status_pill") or "在线 · 运行中"
+        total_nodes = meta.get("node_count") or sum(s.get("node_count", 0) for s in subs) or 14
+
+        res: dict[str, Any] = {
             "title": "MIHOMO 容器与订阅看板",
-            "provider_name": provider_name,
+            "sub_count": sub_count,
+            "has_multiple_subs": has_multiple,
+            "provider_name": primary_sub["name"],
             "core_version": version,
             "status_pill": status_pill,
-            "total_str": _format_bytes(total),
-            "used_str": _format_bytes(used),
-            "remaining_str": _format_bytes(remaining),
-            "upload_str": _format_bytes(upload),
-            "download_str": _format_bytes(download),
-            "used_percent_str": f"{used_pct:.1f}%",
-            "progress_percent": progress_pct,
-            "expire_str": expire_str,
-            "days_left_badge": days_left_badge,
-            "node_count": f"{node_count} 个节点",
             "active_node": active_node,
+            "node_count": f"{total_nodes} 个节点",
             "update_time": time.strftime("%H:%M"),
             "footer_label": "Clash.Meta · 订阅与容器监控",
             "footer_right": f"同步于 {time.strftime('%m/%d %H:%M')}",
+
+            # 单订阅兼容视图指标（以主订阅为主）
+            "total_str": primary_sub["total_str"],
+            "used_str": primary_sub["used_str"],
+            "remaining_str": primary_sub["remaining_str"],
+            "upload_str": primary_sub["upload_str"],
+            "download_str": primary_sub["download_str"],
+            "used_percent_str": primary_sub["used_percent_str"],
+            "progress_percent": primary_sub["progress_percent"],
+            "expire_str": primary_sub["expire_str"],
+            "days_left_badge": primary_sub["days_left_badge"],
+
+            # 多订阅全局聚合指标
+            "total_all_str": _format_bytes(tot_all),
+            "used_all_str": _format_bytes(used_all),
+            "remaining_all_str": _format_bytes(rem_all),
+            "used_all_percent_str": f"{pct_all:.1f}%",
+            "progress_all_percent": prog_all,
+            "earliest_days_badge": earliest_badge,
         }
+
+        # 铺平前 3 个订阅供模板便捷取用
+        for i in range(1, 4):
+            idx = i - 1
+            if idx < len(enriched_subs):
+                cur = enriched_subs[idx]
+                res[f"sub_{i}_name"] = cur["name"]
+                res[f"sub_{i}_used_str"] = cur["used_str"]
+                res[f"sub_{i}_total_str"] = cur["total_str"]
+                res[f"sub_{i}_remaining_str"] = cur["remaining_str"]
+                res[f"sub_{i}_percent_str"] = cur["used_percent_str"]
+                res[f"sub_{i}_progress"] = cur["progress_percent"]
+                res[f"sub_{i}_expire_str"] = cur["expire_str"]
+                res[f"sub_{i}_days_badge"] = cur["days_left_badge"]
+            else:
+                res[f"sub_{i}_name"] = ""
+                res[f"sub_{i}_used_str"] = ""
+                res[f"sub_{i}_total_str"] = ""
+                res[f"sub_{i}_remaining_str"] = ""
+                res[f"sub_{i}_percent_str"] = ""
+                res[f"sub_{i}_progress"] = 0
+                res[f"sub_{i}_expire_str"] = ""
+                res[f"sub_{i}_days_badge"] = ""
 
         self._cached_data = res
         self._cached_time = now_ts

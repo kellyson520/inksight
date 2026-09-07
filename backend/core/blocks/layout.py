@@ -168,6 +168,8 @@ def render_two_column(ctx: RenderContext, block: dict) -> None:
     _raw_mx = block.get("margin_x")
     if _raw_mx is not None:
         margin_x = int(_raw_mx * ctx.scale)
+    elif ctx.available_width < int(ctx.screen_w * 0.85):
+        margin_x = 0
     else:
         margin_x = int(ctx.screen_w * 0.06)
 
