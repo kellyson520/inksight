@@ -252,6 +252,10 @@ th {
   margin-top: 16px;
 }
 
+.mini-metrics.quad {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .mini-metrics div {
   border: 1px solid #eee2ce;
   border-radius: 18px;
@@ -312,4 +316,15 @@ th {
   .grid { grid-template-columns: 1fr; }
   .wide { grid-column: auto; }
   input { width: 100%; }
+
+  .mini-metrics.quad {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .mini-metrics,
+  .mini-metrics.quad {
+    grid-template-columns: 1fr;
+  }
 }

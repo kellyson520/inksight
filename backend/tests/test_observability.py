@@ -110,6 +110,7 @@ def test_operational_summary_structure():
     assert "dependencies" in summary
     assert "renders" in summary
     assert "cache" in summary
+    assert "source_health" in summary
     assert "recent_failures" in summary
     assert summary["requests"]["total"] == 1
     assert summary["dependencies"]["total"] == 1

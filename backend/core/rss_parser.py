@@ -12,6 +12,7 @@ from urllib.parse import urljoin
 import httpx
 
 from .outbound_http import RequestPolicy, outbound_http
+from .source_health import source_health
 from .source_result import SourceResult
 
 logger = logging.getLogger(__name__)
@@ -80,6 +81,12 @@ async def fetch_rss_source(feed_url: str, timeout: float = 12.0) -> SourceResult
     if cached and (now - cached[0] < _RSS_CACHE_TTL):
         return SourceResult.fresh(dict(cached[1]), source=feed_url, ttl_seconds=_RSS_CACHE_TTL)
 
+    if not source_health.should_allow_request(feed_url):
+        logger.warning("[RSS] Source %s in cooldown, fast-falling back to stale/fallback", feed_url)
+        if cached:
+            return SourceResult(data=dict(cached[1]), source=feed_url, source_status="stale", error="circuit_breaker_cooldown")
+        return SourceResult.fallback({"error": "circuit_breaker_cooldown", "items": []}, source=feed_url, reason="circuit_breaker_cooldown")
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 InkSight/1.0",
         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
@@ -96,21 +103,25 @@ async def fetch_rss_source(feed_url: str, timeout: float = 12.0) -> SourceResult
         response = await asyncio.to_thread(outbound_http.get_text, feed_url, headers=headers, policy=policy)
         raw_xml = response.text
     except Exception as exc:
+        source_health.record_failure(feed_url, type(exc).__name__)
         logger.warning("[RSS] Network error fetching %s: %s", feed_url, type(exc).__name__)
         if cached:
             return SourceResult(data=dict(cached[1]), source=feed_url, source_status="stale", error=type(exc).__name__)
         return SourceResult.fallback({"error": str(exc), "items": []}, source=feed_url, reason=type(exc).__name__)
 
     if not raw_xml:
+        source_health.record_failure(feed_url, "empty response")
         if cached:
             return SourceResult(data=dict(cached[1]), source=feed_url, source_status="stale", error="empty response")
         return SourceResult.fallback({"error": "Empty response", "items": []}, source=feed_url, reason="empty response")
 
     parsed = parse_rss_xml(raw_xml, base_url=feed_url)
     if parsed and parsed.get("items"):
+        source_health.record_success(feed_url)
         _RSS_CACHE[feed_url] = (now, parsed)
         return SourceResult.fresh(parsed, source=feed_url, ttl_seconds=_RSS_CACHE_TTL)
     reason = parsed.get("error", "empty feed") if parsed else "empty feed"
+    source_health.record_failure(feed_url, reason)
     if cached:
         return SourceResult(data=dict(cached[1]), source=feed_url, source_status="stale", error=reason)
     return SourceResult.fallback(parsed or {"error": "unavailable", "items": []}, source=feed_url, reason=reason)

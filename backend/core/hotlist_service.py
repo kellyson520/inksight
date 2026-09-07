@@ -14,6 +14,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from .outbound_http import RequestPolicy, outbound_http
+from .source_health import source_health
 from .source_result import SourceResult
 
 
@@ -267,10 +268,18 @@ class HotlistService:
                 return res
 
         raw_items: list[dict[str, Any]] = []
-        try:
-            raw_items = await self._fetch_platform_items(platform, max(limit, 20))
-        except Exception as exc:
-            logger.warning("[HotlistService] Failed to fetch hotlist for %s: %s", platform, exc)
+        if source_health.should_allow_request(platform):
+            try:
+                raw_items = await self._fetch_platform_items(platform, max(limit, 20))
+                if raw_items:
+                    source_health.record_success(platform)
+                else:
+                    source_health.record_failure(platform, "empty_items")
+            except Exception as exc:
+                source_health.record_failure(platform, type(exc).__name__)
+                logger.warning("[HotlistService] Failed to fetch hotlist for %s: %s", platform, exc)
+        else:
+            logger.warning("[HotlistService] Platform %s in cooldown, skipping network fetch", platform)
 
         source_status = "fresh" if raw_items else "fallback"
         if not raw_items and cached:

@@ -40,6 +40,7 @@ def test_stats_observability_endpoint_returns_operational_summary():
     assert "dependencies" in data
     assert "renders" in data
     assert "cache" in data
+    assert "source_health" in data
     assert "recent_failures" in data
 
     # Test without auth override: should return 401 or 403

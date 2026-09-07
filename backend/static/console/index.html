@@ -61,6 +61,19 @@
             <div id="eventSummaryTable" class="table-wrap"></div>
           </div>
         </article>
+
+        <article class="card wide">
+          <h2 class="section-title" data-i18n="observabilityTitle" style="margin-top: 0">System Pulse & Observability</h2>
+          <div class="mini-metrics quad">
+            <div><p data-i18n="metricLatency">Latency p50 / p95</p><strong id="reqLatency">--</strong><span id="reqLatencyNote">--</span></div>
+            <div><p data-i18n="metricDependencies">Dependencies</p><strong id="depCalls">--</strong><span id="depCallsNote">--</span></div>
+            <div><p data-i18n="metricCacheHealth">Cache Hit Rate</p><strong id="cacheHitRate">--</strong><span id="cacheHitNote">--</span></div>
+            <div><p data-i18n="metricFailures">Recent Failures</p><strong id="recentFailures">--</strong><span id="recentFailuresNote">--</span></div>
+          </div>
+        </article>
+        <article class="card wide"><p class="metric-label" data-i18n="metricDependencyHealth">External Dependencies (Hosts)</p><div id="depTable" class="table-wrap"></div></article>
+        <article class="card wide"><p class="metric-label" data-i18n="metricSourceHealth">Data Sources & Circuit Breakers</p><div id="sourceTable" class="table-wrap"></div></article>
+        <article class="card wide"><p class="metric-label" data-i18n="metricRecentFailuresList">Recent Diagnostics & Errors</p><div id="diagTable" class="table-wrap"></div></article>
       </section>
 
       <section class="card footnote">

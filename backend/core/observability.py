@@ -264,7 +264,9 @@ class Observability:
         }
 
     def operational_summary(self) -> dict[str, Any]:
-        """Combine requests, dependencies, rendering, cache, and recent failure diagnostics."""
+        """Combine requests, dependencies, rendering, cache, source health, and recent failure diagnostics."""
+        from .source_health import source_health
+
         recent_failures = [
             e for e in self._events
             if (e.get("event") in {"device.request.failed", "dependency.failed", "exception"})
@@ -278,6 +280,7 @@ class Observability:
             "dependencies": self.dependency_metrics(),
             "renders": self.render_metrics(),
             "cache": self.cache_metrics(),
+            "source_health": source_health.summary(),
             "recent_failures": recent_failures,
         }
 

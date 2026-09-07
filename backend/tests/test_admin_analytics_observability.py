@@ -13,5 +13,6 @@ async def test_admin_analytics_overview_includes_observability():
     assert "dependencies" in obs_data
     assert "renders" in obs_data
     assert "cache" in obs_data
+    assert "source_health" in obs_data
     assert "recent_failures" in obs_data
     assert obs_data["requests"]["total"] >= 1

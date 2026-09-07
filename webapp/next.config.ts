@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         destination: `${backend}/api/:path*`,
       },
+      {
+        source: "/console",
+        destination: `${backend}/`,
+      },
+      {
+        source: "/console/:path*",
+        destination: `${backend}/:path*`,
+      },
+      {
+        source: "/static/:path*",
+        destination: `${backend}/static/:path*`,
+      },
     ];
   },
 };

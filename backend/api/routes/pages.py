@@ -123,6 +123,7 @@ def _legacy_removed_html(title: str, target_url: str) -> str:
 
 
 @router.get("/", response_class=HTMLResponse)
+@router.get("/console", response_class=HTMLResponse)
 async def backend_landing_page():
     return FileResponse(_console_index_path(), media_type="text/html")
 

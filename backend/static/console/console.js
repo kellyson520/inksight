@@ -69,6 +69,32 @@ const I18N = {
     periodToday: "今日",
     period7d: "7 日",
     periodTotal: "历史",
+    observabilityTitle: "系统运行脉搏与可观测性",
+    metricLatency: "请求延迟 p50 / p95",
+    metricDependencies: "外部网络依赖",
+    metricCacheHealth: "缓存命中率",
+    metricFailures: "近期异常事件",
+    metricDependencyHealth: "外部依赖服务健康度",
+    metricRecentFailuresList: "近期异常与排障事件",
+    reqLatencyNote: "总请求 {total} / 错误率 {errorRate}",
+    depCallsNote: "请求 {total} / 失败 {failures} / 均耗时 {avg}ms",
+    cacheHitNote: "渲染均耗时 {avg}ms / 缓存总计 {total}",
+    recentFailuresNote: "保留事件 {retained} / 包含设备告警与 4xx/5xx",
+    colHost: "目标域名",
+    colRequests: "调用次数",
+    colSuccessRate: "成功率",
+    colAvgLatency: "平均耗时",
+    colTime: "时间",
+    colRoute: "接口路径 / 事件",
+    colStatus: "状态",
+    colDevice: "设备 MAC",
+    colDuration: "耗时",
+    metricSourceHealth: "数据源健康与熔断恢复",
+    colSource: "数据源 / 平台",
+    colState: "健康状态",
+    colFailures: "连续异常",
+    colLastError: "最后异常原因",
+    colLastSuccess: "最近成功时间",
   },
   en: {
     pageTitle: "InkSight Console",
@@ -138,6 +164,32 @@ const I18N = {
     periodToday: "Today",
     period7d: "7d",
     periodTotal: "All time",
+    observabilityTitle: "System Pulse & Observability",
+    metricLatency: "Latency p50 / p95",
+    metricDependencies: "Outbound Dependencies",
+    metricCacheHealth: "Cache Hit Rate",
+    metricFailures: "Recent Failures",
+    metricDependencyHealth: "External Dependencies Health",
+    metricRecentFailuresList: "Recent Diagnostics & Failures",
+    reqLatencyNote: "{total} requests / {errorRate} error rate",
+    depCallsNote: "{total} calls / {failures} failed / {avg}ms avg",
+    cacheHitNote: "{avg}ms avg render / {total} cache lookups",
+    recentFailuresNote: "{retained} events retained / includes device errors",
+    colHost: "Host",
+    colRequests: "Requests",
+    colSuccessRate: "Success Rate",
+    colAvgLatency: "Avg Latency",
+    colTime: "Time",
+    colRoute: "Route / Event",
+    colStatus: "Status",
+    colDevice: "Device MAC",
+    colDuration: "Latency",
+    metricSourceHealth: "Data Sources & Circuit Breakers",
+    colSource: "Source / Platform",
+    colState: "Status",
+    colFailures: "Failures",
+    colLastError: "Last Error",
+    colLastSuccess: "Last Success",
   },
 };
 
@@ -326,6 +378,96 @@ function render(data) {
       events: fmt(data.activity.events_total),
     },
   ]);
+
+  // Render Observability section
+  const obs = data.observability;
+  if (obs) {
+    const reqs = obs.requests || {};
+    $("reqLatency").textContent = `${fmt(reqs.p50_duration_ms)}ms / ${fmt(reqs.p95_duration_ms)}ms`;
+    $("reqLatencyNote").textContent = t("reqLatencyNote", {
+      total: fmt(reqs.total),
+      errorRate: pct(Number(reqs.client_errors || 0) + Number(reqs.server_errors || 0), reqs.total),
+    });
+
+    const deps = obs.dependencies || {};
+    $("depCalls").textContent = fmt(deps.total);
+    $("depCallsNote").textContent = t("depCallsNote", {
+      total: fmt(deps.total),
+      failures: fmt(deps.failures),
+      avg: fmt(deps.avg_duration_ms),
+    });
+
+    const cache = obs.cache || {};
+    const renders = obs.renders || {};
+    $("cacheHitRate").textContent = pct(Number(cache.memory_hits || 0) + Number(cache.persistent_hits || 0), cache.total);
+    $("cacheHitNote").textContent = t("cacheHitNote", {
+      avg: fmt(renders.avg_duration_ms),
+      total: fmt(cache.total),
+    });
+
+    const recentFails = obs.recent_failures || [];
+    $("recentFailures").textContent = fmt(recentFails.length);
+    $("recentFailuresNote").textContent = t("recentFailuresNote", {
+      retained: fmt(obs.events_retained),
+    });
+
+    // Dependency Hosts table
+    const byHost = deps.by_host || {};
+    const depRows = Object.entries(byHost).map(([host, info]) => ({
+      host,
+      count: fmt(info.count),
+      rate: pct(info.successes, info.count),
+      avg: `${fmt(info.avg_duration_ms)}ms`,
+    }));
+    $("depTable").innerHTML = renderTable(depRows, [
+      { key: "host", label: t("colHost") },
+      { key: "count", label: t("colRequests") },
+      { key: "rate", label: t("colSuccessRate") },
+      { key: "avg", label: t("colAvgLatency") },
+    ]);
+
+    // Source health table
+    const srcHealth = obs.source_health || {};
+    const sources = srcHealth.sources || {};
+    const srcRows = Object.entries(sources).map(([name, info]) => {
+      const state = info.state || "healthy";
+      const stateBadge = state === "healthy" ? "🟢 healthy" : (state === "cooldown" ? "🔴 cooldown" : "🟡 " + state);
+      const lastSucc = info.last_success_time ? new Date(info.last_success_time * 1000).toLocaleTimeString() : "--";
+      const err = info.last_error || "--";
+      return {
+        source: name,
+        state: stateBadge,
+        failures: fmt(info.consecutive_failures),
+        last_error: err,
+        last_success: lastSucc,
+      };
+    });
+    $("sourceTable").innerHTML = renderTable(srcRows, [
+      { key: "source", label: t("colSource") },
+      { key: "state", label: t("colState") },
+      { key: "failures", label: t("colFailures") },
+      { key: "last_error", label: t("colLastError") },
+      { key: "last_success", label: t("colLastSuccess") },
+    ]);
+
+    // Diagnostics table
+    const failRows = [...recentFails].reverse().map((f) => {
+      const ts = f.timestamp ? new Date(f.timestamp * 1000).toLocaleTimeString() : "--";
+      const route = f.route || f.operation || f.event || "--";
+      const status = f.status || f.error_type || "--";
+      const mac = f.mac || "--";
+      const dur = f.duration_ms ? `${fmt(f.duration_ms)}ms` : "--";
+      return { time: ts, route, status: String(status), mac, duration: dur };
+    });
+    $("diagTable").innerHTML = renderTable(failRows, [
+      { key: "time", label: t("colTime") },
+      { key: "route", label: t("colRoute") },
+      { key: "status", label: t("colStatus") },
+      { key: "mac", label: t("colDevice") },
+      { key: "duration", label: t("colDuration") },
+    ]);
+  }
+
   setStatus(t("statusLoaded", { time: new Date().toLocaleString(lang === "zh" ? "zh-CN" : "en-US") }));
 }
 
