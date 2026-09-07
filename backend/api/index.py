@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 import uuid
 from urllib.parse import urlsplit
@@ -130,11 +131,27 @@ class OriginValidationMiddleware(BaseHTTPMiddleware):
         return JSONResponse({"error": "origin_not_allowed"}, status_code=403)
 
 
+_MAC_PATH_PATTERN = re.compile(r"/device/([0-9A-Fa-f:]{11,17})(/|$)", re.IGNORECASE)
+
+
 class RequestObservabilityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         incoming = request.headers.get("x-request-id", "").strip()
         request_id = incoming[:128] if incoming and all(ch.isalnum() or ch in "-_." for ch in incoming) else str(uuid.uuid4())
         started = time.perf_counter()
+
+        # 提取下游设备追踪元数据
+        mac = request.query_params.get("mac")
+        if not mac:
+            match = _MAC_PATH_PATTERN.search(request.url.path)
+            if match:
+                mac = match.group(1)
+        if mac:
+            mac = mac.strip().upper()
+
+        user_agent = request.headers.get("user-agent", "")
+        has_token = bool(request.headers.get("x-device-token"))
+
         with obs.start_request(request_id):
             status_code = 500
             try:
@@ -142,12 +159,31 @@ class RequestObservabilityMiddleware(BaseHTTPMiddleware):
                 status_code = response.status_code
                 return response
             finally:
-                obs.emit("request.completed", {
+                duration_ms = round((time.perf_counter() - started) * 1000, 2)
+                event_data = {
                     "method": request.method,
                     "route": request.url.path,
                     "status": status_code,
-                    "duration_ms": round((time.perf_counter() - started) * 1000, 2),
-                })
+                    "duration_ms": duration_ms,
+                }
+                if mac:
+                    event_data["mac"] = mac
+                    event_data["has_token"] = has_token
+                    if user_agent:
+                        event_data["user_agent"] = user_agent[:128]
+                obs.emit("request.completed", event_data)
+
+                if mac and status_code >= 400:
+                    obs.emit("device.request.failed", {
+                        "mac": mac,
+                        "method": request.method,
+                        "route": request.url.path,
+                        "status": status_code,
+                        "duration_ms": duration_ms,
+                        "has_token": has_token,
+                        "user_agent": user_agent[:128],
+                    })
+
                 if "response" in locals():
                     response.headers["X-Request-ID"] = request_id
 
@@ -155,13 +191,31 @@ class RequestObservabilityMiddleware(BaseHTTPMiddleware):
 class _AccessLogFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         full_path = ""
-        if isinstance(record.args, tuple) and len(record.args) >= 3:
-            full_path = str(record.args[2] or "")
+        status_code = 200
+        if isinstance(record.args, tuple):
+            if len(record.args) >= 5:
+                full_path = str(record.args[2] or "")
+                try:
+                    status_code = int(record.args[4])
+                except (TypeError, ValueError):
+                    status_code = 200
+            elif len(record.args) >= 3:
+                full_path = str(record.args[2] or "")
+                if len(record.args) >= 4:
+                    try:
+                        status_code = int(record.args[3])
+                    except (TypeError, ValueError):
+                        status_code = 200
         if not full_path:
             try:
                 full_path = record.getMessage()
             except Exception:
                 full_path = ""
+
+        # 仅过滤正常轮询（200/304），发生 4xx/5xx 时必须保留日志以供故障排查
+        if status_code >= 400:
+            return True
+
         return not (
             full_path.startswith("/api/device/")
             and (full_path.endswith("/state") or "/state?" in full_path)

@@ -21,6 +21,8 @@ def get_request_id() -> str | None:
 
 
 def _redact(value: Any, key: str = "") -> Any:
+    if isinstance(value, bool):
+        return value
     key_lower = key.lower()
     if any(part in key_lower for part in _REDACT_KEYS):
         return "[REDACTED]"
