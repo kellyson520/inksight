@@ -248,27 +248,6 @@
                     "margin_bottom": 1
                   }
                 ]
-              },
-              {
-                "type": "spacer",
-                "height": 4
-              },
-              {
-                "type": "card",
-                "border": "solid",
-                "radius": 4,
-                "padding": 4,
-                "margin_x": 10,
-                "children": [
-                  {
-                    "type": "key_value",
-                    "font_size": 10,
-                    "items": [
-                      { "label": "内核版本", "template": "{core_version} · {status_pill}" },
-                      { "label": "出站出口", "template": "{active_node} · {node_count}" }
-                    ]
-                  }
-                ]
               }
             ]
           }
@@ -376,35 +355,12 @@
                 "margin_bottom": 2
               }
             ]
-          },
-          {
-            "type": "spacer",
-            "height": 4
-          },
-          {
-            "type": "card",
-            "border": "solid",
-            "radius": 4,
-            "padding": 5,
-            "margin_x": 10,
-            "children": [
-              {
-                "type": "key_value",
-                "font_size": 10,
-                "items": [
-                  { "label": "内核版本", "template": "{core_version}" },
-                  { "label": "优选出口", "template": "{active_node}" },
-                  { "label": "流量上下行", "template": "{upload_str} 上传 · {download_str} 下载" }
-                ]
-              }
-            ]
           }
         ]
       }
     ],
     "footer": {
-      "left": "{footer_label}",
-      "right": "{footer_right}"
+      "attribution_template": "{core_version} · {active_node}"
     }
   }
 }

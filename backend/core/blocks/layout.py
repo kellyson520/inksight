@@ -351,10 +351,15 @@ def render_card(ctx: RenderContext, block: dict) -> None:
     inner_w = card_w - padding * 2
 
     start_y = ctx.y
+    if start_y >= ctx.footer_top - 25:
+        return
+
     inner_h = measure_column_blocks_height(ctx, children, x_offset=card_x + padding, available_width=inner_w)
     card_h = inner_h + padding * 2
-    max_card_h = max(20, ctx.footer_top - start_y - 4)
+    max_card_h = max(10, ctx.footer_top - start_y - 4)
     if card_h > max_card_h:
+        if max_card_h < 25:
+            return
         card_h = max_card_h
     if border_type == "solid":
         ctx.draw.rounded_rectangle([card_x, start_y, card_x + card_w, start_y + card_h], radius=radius, outline=border_color, width=border_width)
