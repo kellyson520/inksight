@@ -16,6 +16,13 @@ async def stats_overview(admin_auth: None = Depends(require_admin)):
     return await get_stats_overview()
 
 
+@router.get("/stats/observability")
+async def stats_observability(admin_auth: None = Depends(require_admin)):
+    """Return operational observability summary (latency percentiles, dependencies, cache, failures)."""
+    from core.observability import obs
+    return obs.operational_summary()
+
+
 @router.get("/stats/{mac}")
 async def stats_device(
     mac: str,

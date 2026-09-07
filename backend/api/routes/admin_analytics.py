@@ -6,6 +6,7 @@ from fastapi import APIRouter, Cookie, Depends, Request
 from core.activity_store import log_user_activity
 from core.auth import decode_session_token, get_current_root_user
 from core.db import get_main_db
+from core.observability import obs
 
 router = APIRouter(tags=["admin-analytics"])
 
@@ -68,6 +69,7 @@ async def _rows(sql: str, params: tuple = ()) -> list[dict]:
 async def _analytics_overview_payload() -> dict:
     """Root-only analytics summary for the operations dashboard."""
     return {
+        "observability": obs.operational_summary(),
         "users": {
             "total": await _scalar("SELECT COUNT(*) FROM users"),
             "today_new": await _scalar("SELECT COUNT(*) FROM users WHERE date(created_at)=date('now','localtime')"),
