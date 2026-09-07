@@ -270,15 +270,24 @@ def render_segmented_row(ctx: RenderContext, block: dict) -> None:
 
 def render_progress_bar(ctx: RenderContext, block: dict) -> None:
     value = _num(ctx.get_field(block.get("field", "")))
-    max_value = max(_num(ctx.get_field(block.get("max_field", ""))), 1)
+    max_literal = block.get("max_value") if block.get("max_value") is not None else block.get("max")
+    if max_literal is not None:
+        max_value = max(_num(max_literal), 1.0)
+    else:
+        max_field_name = block.get("max_field", "")
+        max_val = _num(ctx.get_field(max_field_name)) if max_field_name else 100.0
+        max_value = max(max_val, 1.0)
     ratio = max(0.0, min(1.0, value / max_value))
-    width = int(block.get("width", 80) * ctx.scale)
     height = int(block.get("height", 6) * ctx.scale)
     _raw_margin = block.get("margin_x")
     if _raw_margin is not None:
         margin_x = int(_raw_margin * ctx.scale)
     else:
         margin_x = int(ctx.screen_w * 0.06)
+    if block.get("width") is not None:
+        width = int(block.get("width") * ctx.scale)
+    else:
+        width = max(int(ctx.available_width - margin_x * 2), 20)
     x = ctx.x_offset + margin_x
     y = ctx.y
     ctx.draw.rectangle([x, y, x + width, y + height], outline=EINK_FG, width=1)

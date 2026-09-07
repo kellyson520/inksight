@@ -222,7 +222,21 @@ class DoubanMovieService:
                         cover = str(it.get("cover_url") or (it.get("pic") or {}).get("large") or (it.get("photos") or [None])[0] or "")
                         if "img9.doubanio.com" in cover:
                             cover = cover.replace("img9.doubanio.com", "img1.doubanio.com")
-                        info_str = str(it.get("info") or "")
+                        
+                        subtitle = str(it.get("card_subtitle") or it.get("info") or "").strip()
+                        parts = [p.strip() for p in subtitle.split("/") if p.strip()]
+                        
+                        year = ""
+                        genre = "经典佳作"
+                        director = ""
+                        if len(parts) >= 1 and parts[0].isdigit():
+                            year = parts[0]
+                        if len(parts) >= 3:
+                            genre = parts[2]
+                        if len(parts) >= 4:
+                            director = parts[3]
+                        elif len(parts) >= 2 and not director:
+                            director = parts[-1]
                         
                         comment = ""
                         if it.get("comment"):
@@ -230,18 +244,21 @@ class DoubanMovieService:
                         elif it.get("description"):
                             comment = str(it.get("description"))
 
+                        rank_name = "Top 250" if "top250" in collection_type else "实时榜"
+                        rank_str = f"豆瓣电影 {rank_name} · NO.{idx + 1}"
+
                         res.append({
                             "id": f"online_{idx + 1}",
                             "title": title,
-                            "director": info_str.split("/")[0].strip() if "/" in info_str else info_str,
-                            "year": info_str.split("/")[-1].strip() if "/" in info_str else "",
-                            "genre": "高分佳作",
+                            "director": director or "经典名导",
+                            "year": year or "影史",
+                            "genre": genre,
                             "rating": rating_val,
                             "rating_people": people_str,
-                            "rank_tag": f"豆瓣电影 · Top {idx + 1}",
+                            "rank_tag": rank_str,
                             "recommend_reason": comment or f"豆瓣高分影视精选推荐，深刻探讨人性与生活，备受百万影迷推崇。",
-                            "quote": f"好电影如同一盏灯，照亮我们内心的角落。",
-                            "category": "HOT",
+                            "quote": comment or f"好电影如同一盏灯，照亮我们内心的角落。",
+                            "category": "HOT" if "hot" in collection_type else "TOP250",
                             "cover_url": cover,
                             "cover_urls": [cover] if cover else [],
                         })

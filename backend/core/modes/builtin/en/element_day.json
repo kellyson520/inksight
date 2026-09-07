@@ -1,0 +1,155 @@
+{
+  "mode_id": "ELEMENT_DAY",
+  "display_name": "Element of the Day",
+  "icon": "atom",
+  "cacheable": true,
+  "description": "Discover a chemical element daily: atomic specs, structure, and science trivia",
+  "settings_schema": [],
+  "content": {
+    "type": "computed",
+    "provider": "element_day",
+    "fallback": {
+      "atomic_number": 26,
+      "symbol": "Fe",
+      "name_zh": "Iron",
+      "name_en": "Iron",
+      "atomic_mass": "55.845",
+      "category": "Transition Metal",
+      "period": 4,
+      "group": 8,
+      "electron_config": "[Ar] 3d⁶ 4s²",
+      "phase": "Solid",
+      "discoverer": "Known since antiquity",
+      "summary": "The most common transition metal in Earth's crust, central to hemoglobin and human engineering civilization.",
+      "fun_fact": "Iron-56 has one of the highest nuclear binding energies. Once a massive star's core turns into iron, fusion ceases and supernova follows.",
+      "date": "2026-09-07"
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 6,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "two_column",
+            "ratio": "3:5",
+            "left": [
+              {
+                "type": "card",
+                "border": "solid",
+                "radius": 3,
+                "padding": 4,
+                "children": [
+                  {
+                    "type": "text",
+                    "template": "{atomic_number}",
+                    "font": "noto_serif_bold",
+                    "font_size": 11,
+                    "align": "left"
+                  },
+                  {
+                    "type": "text",
+                    "template": "{symbol}",
+                    "font": "noto_serif_bold",
+                    "font_size": 32,
+                    "align": "center"
+                  },
+                  {
+                    "type": "text",
+                    "template": "{atomic_mass}",
+                    "font": "noto_serif_regular",
+                    "font_size": 9,
+                    "align": "center"
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "type": "text",
+                "template": "{name_en} ({symbol})",
+                "font": "noto_serif_bold",
+                "font_size": 16,
+                "align": "left"
+              },
+              {
+                "type": "badge",
+                "template": "{category}  |  {phase}",
+                "align": "left"
+              },
+              {
+                "type": "text",
+                "template": "Electrons: {electron_config}",
+                "font": "noto_serif_regular",
+                "font_size": 10,
+                "align": "left"
+              },
+              {
+                "type": "text",
+                "template": "Discovery: {discoverer}",
+                "font": "noto_serif_regular",
+                "font_size": 9,
+                "align": "left"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 6
+      },
+      {
+        "type": "section",
+        "title": "Scientific Overview",
+        "margin_x": 12,
+        "children": [
+          {
+            "type": "text",
+            "field": "summary",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "line_spacing": 2
+          }
+        ]
+      },
+      {
+        "type": "separator",
+        "style": "dashed",
+        "margin_x": 12,
+        "margin_top": 4,
+        "margin_bottom": 4
+      },
+      {
+        "type": "section",
+        "title": "Hardcore Trivia",
+        "margin_x": 12,
+        "children": [
+          {
+            "type": "text",
+            "field": "fun_fact",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "line_spacing": 2
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "left": "Periodic Table",
+      "right": "Element of the Day"
+    }
+  }
+}

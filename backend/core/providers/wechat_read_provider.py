@@ -47,7 +47,7 @@ async def generate_wechat_read(
     seed = f"{device_mac}_{date_str}_{category}" if device_mac else None
 
     try:
-        data = wechat_read_service.get_recommended_book(
+        data = await wechat_read_service.get_online_or_curated_book(
             category=category,
             book_id=book_id,
             seed=seed,

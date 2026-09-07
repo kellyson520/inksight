@@ -1,0 +1,189 @@
+{
+  "mode_id": "MIHOMO_SUB",
+  "display_name": "Mihomo Subscription",
+  "icon": "activity",
+  "cacheable": true,
+  "description": "Mihomo container monitor, proxy subscription validity, remaining days, and quota dashboard",
+  "settings_schema": [
+    {
+      "key": "subscription_url",
+      "label": "Subscription URL (Optional)",
+      "type": "text",
+      "placeholder": "https://sub.domain.com/api/v1/client/subscribe?token=..."
+    },
+    {
+      "key": "api_url",
+      "label": "Mihomo API URL",
+      "type": "text",
+      "default": "http://mihomo-cliproxy:9090",
+      "placeholder": "http://mihomo-cliproxy:9090 or http://127.0.0.1:9090"
+    },
+    {
+      "key": "api_secret",
+      "label": "Mihomo Secret (Optional)",
+      "type": "password",
+      "placeholder": "Leave empty for auto-discovery"
+    },
+    {
+      "key": "name",
+      "label": "Subscription Name",
+      "type": "text",
+      "placeholder": "e.g. My Airport / Mihomo Proxy"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "mihomo_sub",
+    "fallback": {
+      "title": "MIHOMO Dashboard",
+      "provider_name": "Mihomo Proxy",
+      "core_version": "Mihomo Meta alpha",
+      "status_pill": "Online",
+      "total_str": "300.0 GB",
+      "used_str": "205.0 GB",
+      "remaining_str": "95.0 GB",
+      "upload_str": "0 B",
+      "download_str": "205.0 GB",
+      "used_percent_str": "68.3%",
+      "progress_percent": 68,
+      "expire_str": "2027-08-20",
+      "days_left_badge": "347 Days Left",
+      "node_count": "14 Nodes",
+      "active_node": "CHANNEL",
+      "update_time": "12:00",
+      "footer_label": "Clash.Meta · Subscription Monitor",
+      "footer_right": "Synced at 12:00"
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 6,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "flex_row",
+            "align_items": "center",
+            "children": [
+              {
+                "type": "text",
+                "template": "{provider_name}",
+                "font": "noto_serif_bold",
+                "font_size": 15,
+                "align": "left"
+              },
+              {
+                "type": "badge",
+                "template": "{status_pill}",
+                "align": "right"
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "style": "dashed",
+            "margin_top": 4,
+            "margin_bottom": 6
+          },
+          {
+            "type": "two_column",
+            "ratio": "5:5",
+            "left": [
+              {
+                "type": "text",
+                "text": "Remaining Data",
+                "font": "noto_serif_regular",
+                "font_size": 10,
+                "align": "left"
+              },
+              {
+                "type": "text",
+                "template": "{remaining_str}",
+                "font": "noto_serif_bold",
+                "font_size": 26,
+                "align": "left",
+                "margin_bottom": 4
+              },
+              {
+                "type": "badge",
+                "template": "{days_left_badge}",
+                "align": "left"
+              }
+            ],
+            "right": [
+              {
+                "type": "key_value",
+                "font_size": 10,
+                "items": [
+                  { "label": "Used", "template": "{used_str} ({used_percent_str})" },
+                  { "label": "Total", "template": "{total_str}" },
+                  { "label": "Expires", "template": "{expire_str}" },
+                  { "label": "Nodes", "template": "{node_count}" }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "style": "dashed",
+            "margin_top": 6,
+            "margin_bottom": 4
+          },
+          {
+            "type": "text",
+            "template": "Data Usage: {used_str} / {total_str} ({used_percent_str})",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "align": "left",
+            "margin_bottom": 3
+          },
+          {
+            "type": "progress_bar",
+            "field": "progress_percent",
+            "max_value": 100,
+            "height": 7,
+            "margin_x": 0,
+            "margin_bottom": 2
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 5,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "key_value",
+            "font_size": 10,
+            "items": [
+              { "label": "Core Version", "template": "{core_version}" },
+              { "label": "Active Outlet", "template": "{active_node}" },
+              { "label": "Traffic", "template": "{upload_str} Up · {download_str} Down" }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "left": "{footer_label}",
+      "right": "{footer_right}"
+    }
+  }
+}

@@ -2409,7 +2409,7 @@ function ConfigPageInner() {
     [catalogItems],
   );
   const extraModes = useMemo(
-    () => catalogItems.filter((m) => m.category === "more").map((m) => m.mode_id.toUpperCase()),
+    () => catalogItems.filter((m) => m.category !== "core" && m.category !== "custom").map((m) => m.mode_id.toUpperCase()),
     [catalogItems],
   );
   const customModes = useMemo(

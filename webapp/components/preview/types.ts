@@ -34,6 +34,8 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   WECHAT_READ: "life",
   DOUBAN_MOVIE: "life",
   SMZDM: "life",
+  ELEMENT_DAY: "life",
+  XKCD_COMIC: "life",
 
   // 效率 (Productivity)
   COUNTDOWN: "productivity",
@@ -48,6 +50,9 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   POMODORO: "productivity",
   SERVER_STATUS: "productivity",
   CPA_QUOTA: "productivity",
+  TECH_RADAR: "productivity",
+  GITHUB_PULSE: "productivity",
+  MIHOMO_SUB: "productivity",
 
   // 资讯 (News & Alerts)
   BRIEFING: "news",
@@ -60,6 +65,7 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   THISDAY: "news",
   BIAS: "news",
   DISASTER_ALERT: "news",
+  WEB_NOTICE: "news",
 };
 
 export const CONFIGURABLE_MODES: Record<string, string> = {
@@ -86,6 +92,8 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   WECHAT_READ: "wechat_read",
   DOUBAN_MOVIE: "douban_movie",
   SMZDM: "smzdm",
+  GITHUB_PULSE: "github_pulse",
+  MIHOMO_SUB: "mihomo_sub",
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [

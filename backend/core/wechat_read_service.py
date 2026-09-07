@@ -9,6 +9,7 @@ import hashlib
 import logging
 import time
 from typing import Any
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -248,6 +249,8 @@ class WeChatReadService:
 
     def __init__(self) -> None:
         self._books = WECHAT_READ_BOOKS
+        self._cache_online: dict[str, list[dict[str, Any]]] = {}
+        self._cache_time: dict[str, float] = {}
 
     def list_categories(self) -> list[dict[str, str]]:
         return CATEGORIES
@@ -258,6 +261,113 @@ class WeChatReadService:
             return self._books
         filtered = [b for b in self._books if b.get("category", "").upper() == cat]
         return filtered or self._books
+
+    async def fetch_online_books(self, category: str = "ALL") -> list[dict[str, Any]]:
+        """从微信读书官方公开检索与趋势接口动态获取实时书单。"""
+        cat = category.strip().upper() or "ALL"
+        now = time.time()
+        if cat in self._cache_online and (now - self._cache_time.get(cat, 0) < 1800):
+            return self._cache_online[cat]
+
+        query_map = {
+            "ALL": "微信读书神作",
+            "LITERATURE": "名著经典",
+            "HISTORY": "历史经典",
+            "BUSINESS": "商业经典",
+            "GROWTH": "个人成长",
+        }
+        kw = query_map.get(cat, "微信读书精选")
+        url = f"https://weread.qq.com/web/search/global?keyword={kw}&maxIdx=0"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://weread.qq.com/",
+        }
+
+        category_labels = {
+            "ALL": "精选好书",
+            "LITERATURE": "文学名著",
+            "HISTORY": "历史社科",
+            "BUSINESS": "商业财经",
+            "GROWTH": "认知成长",
+        }
+        cat_label = category_labels.get(cat, "深度阅读")
+
+        res: list[dict[str, Any]] = []
+        try:
+            async with httpx.AsyncClient(timeout=4.5, follow_redirects=True) as client:
+                resp = await client.get(url, headers=headers)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    books = data.get("books", [])
+                    for idx, item in enumerate(books):
+                        info = item.get("bookInfo", {})
+                        title = str(info.get("title") or "").strip()
+                        if not title:
+                            continue
+                        author = str(info.get("author") or "精选作者").strip()
+                        cover = str(info.get("cover") or "").strip()
+                        if not cover:
+                            continue
+                        # 将缩略小图升级为 t6 高清竖版大图
+                        t6_cover = cover.replace("/s_", "/t6_")
+                        intro = str(info.get("intro") or item.get("searchReason") or f"微信读书热门好书推荐，汇聚百万读者深度思考与精选批注。").strip()
+                        # 过滤多余换行与空格
+                        intro = " ".join(intro.split())
+                        if len(intro) > 90:
+                            intro = intro[:88] + "..."
+
+                        reading_cnt = info.get("readingCount")
+                        reading_str = f"{max(1, reading_cnt // 10000)} 万人在读" if reading_cnt else "万人热读"
+                        rating_val = info.get("star")
+                        rating_str = f"{rating_val}%" if rating_val else "94.5%"
+
+                        res.append({
+                            "id": f"wr_online_{idx + 1}",
+                            "title": title,
+                            "author": author,
+                            "category": cat,
+                            "category_name": cat_label,
+                            "rating": rating_str,
+                            "rating_label": f"神作 · {rating_str} 推荐",
+                            "reading_count": reading_str,
+                            "rank_tag": f"微信读书 · {cat_label} Top {idx + 1}",
+                            "recommend_reason": intro,
+                            "quote": f"阅读是心灵的栖息地，在文字中遇见更辽阔的自己。",
+                            "cover_url": t6_cover,
+                            "cover_urls": [t6_cover, cover],
+                        })
+                    if res:
+                        self._cache_online[cat] = res
+                        self._cache_time[cat] = now
+                        return res
+        except Exception as err:
+            logger.debug("[WeChatReadService] Failed to fetch online weread books: %s", err)
+
+        return []
+
+    async def get_online_or_curated_book(
+        self,
+        category: str = "ALL",
+        book_id: str | None = None,
+        seed: str | None = None,
+    ) -> dict[str, Any]:
+        """优先动态拉取微信读书线上热读与神作，失败平滑降级至本地典藏库。"""
+        if book_id:
+            return self.get_recommended_book(category=category, book_id=book_id, seed=seed)
+
+        try:
+            online_books = await self.fetch_online_books(category)
+            if online_books:
+                if seed:
+                    idx = int(hashlib.md5(seed.encode("utf-8")).hexdigest(), 16) % len(online_books)
+                else:
+                    t = time.localtime()
+                    idx = (t.tm_yday * 24 + t.tm_hour) % len(online_books)
+                return self._format_book(online_books[idx])
+        except Exception as exc:
+            logger.debug("[WeChatReadService] Online fetch fell back to curated books: %s", exc)
+
+        return self.get_recommended_book(category=category, book_id=book_id, seed=seed)
 
     def get_recommended_book(
         self,

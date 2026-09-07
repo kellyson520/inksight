@@ -1,0 +1,189 @@
+{
+  "mode_id": "MIHOMO_SUB",
+  "display_name": "Mihomo 订阅",
+  "icon": "activity",
+  "cacheable": true,
+  "description": "Mihomo 容器监控、代理订阅有效期、剩余天数与流量额度进度看板",
+  "settings_schema": [
+    {
+      "key": "subscription_url",
+      "label": "订阅链接 (可选)",
+      "type": "text",
+      "placeholder": "https://sub.domain.com/api/v1/client/subscribe?token=..."
+    },
+    {
+      "key": "api_url",
+      "label": "Mihomo API 地址",
+      "type": "text",
+      "default": "http://mihomo-cliproxy:9090",
+      "placeholder": "http://mihomo-cliproxy:9090 或 http://127.0.0.1:9090"
+    },
+    {
+      "key": "api_secret",
+      "label": "Mihomo Secret (可选)",
+      "type": "password",
+      "placeholder": "留空则自动从本地挂载文件探测"
+    },
+    {
+      "key": "name",
+      "label": "订阅服务商备注",
+      "type": "text",
+      "placeholder": "如 My Airport / Mihomo Proxy"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "mihomo_sub",
+    "fallback": {
+      "title": "MIHOMO 容器与订阅看板",
+      "provider_name": "Mihomo Proxy",
+      "core_version": "Mihomo Meta alpha",
+      "status_pill": "在线 · 运行中",
+      "total_str": "300.0 GB",
+      "used_str": "205.0 GB",
+      "remaining_str": "95.0 GB",
+      "upload_str": "0 B",
+      "download_str": "205.0 GB",
+      "used_percent_str": "68.3%",
+      "progress_percent": 68,
+      "expire_str": "2027-08-20",
+      "days_left_badge": "剩余 347 天",
+      "node_count": "14 个节点",
+      "active_node": "CHANNEL",
+      "update_time": "12:00",
+      "footer_label": "Clash.Meta · 订阅与容器监控",
+      "footer_right": "同步于 12:00"
+    }
+  },
+  "layout": {
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 6,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "flex_row",
+            "align_items": "center",
+            "children": [
+              {
+                "type": "text",
+                "template": "{provider_name}",
+                "font": "noto_serif_bold",
+                "font_size": 15,
+                "align": "left"
+              },
+              {
+                "type": "badge",
+                "template": "{status_pill}",
+                "align": "right"
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "style": "dashed",
+            "margin_top": 4,
+            "margin_bottom": 6
+          },
+          {
+            "type": "two_column",
+            "ratio": "5:5",
+            "left": [
+              {
+                "type": "text",
+                "text": "剩余可用流量",
+                "font": "noto_serif_regular",
+                "font_size": 10,
+                "align": "left"
+              },
+              {
+                "type": "text",
+                "template": "{remaining_str}",
+                "font": "noto_serif_bold",
+                "font_size": 26,
+                "align": "left",
+                "margin_bottom": 4
+              },
+              {
+                "type": "badge",
+                "template": "{days_left_badge}",
+                "align": "left"
+              }
+            ],
+            "right": [
+              {
+                "type": "key_value",
+                "font_size": 10,
+                "items": [
+                  { "label": "已用流量", "template": "{used_str} ({used_percent_str})" },
+                  { "label": "总额度", "template": "{total_str}" },
+                  { "label": "有效期至", "template": "{expire_str}" },
+                  { "label": "节点规模", "template": "{node_count}" }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "style": "dashed",
+            "margin_top": 6,
+            "margin_bottom": 4
+          },
+          {
+            "type": "text",
+            "template": "流量额度进度 · 已用 {used_str} / 总计 {total_str} ({used_percent_str})",
+            "font": "noto_serif_regular",
+            "font_size": 10,
+            "align": "left",
+            "margin_bottom": 3
+          },
+          {
+            "type": "progress_bar",
+            "field": "progress_percent",
+            "max_value": 100,
+            "height": 7,
+            "margin_x": 0,
+            "margin_bottom": 2
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 4,
+        "padding": 5,
+        "margin_x": 10,
+        "children": [
+          {
+            "type": "key_value",
+            "font_size": 10,
+            "items": [
+              { "label": "内核版本", "template": "{core_version}" },
+              { "label": "优选出口", "template": "{active_node}" },
+              { "label": "流量上下行", "template": "{upload_str} 上传 · {download_str} 下载" }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "left": "{footer_label}",
+      "right": "{footer_right}"
+    }
+  }
+}

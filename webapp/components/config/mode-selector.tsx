@@ -57,6 +57,7 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   THISDAY: "news",
   BIAS: "news",
   MOYU: "news",
+  WEB_NOTICE: "news",
   // 效率工作
   TODO: "productivity",
   TIMETABLE: "productivity",
@@ -65,9 +66,12 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   HABIT: "productivity",
   FOCUS: "productivity",
   GITHUB: "productivity",
+  GITHUB_PULSE: "productivity",
   POMODORO: "productivity",
   SERVER_STATUS: "productivity",
   CPA_QUOTA: "productivity",
+  TECH_RADAR: "productivity",
+  MIHOMO_SUB: "productivity",
   // 生活日常
   CLOCK: "life",
   WEATHER: "life",
@@ -82,6 +86,8 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   WECHAT_READ: "life",
   DOUBAN_MOVIE: "life",
   SMZDM: "life",
+  ELEMENT_DAY: "life",
+  XKCD_COMIC: "life",
   // 灵感与创作
   WORD_OF_THE_DAY: "studio",
   LETTER: "studio",

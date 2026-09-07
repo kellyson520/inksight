@@ -165,7 +165,7 @@ export default function ExperiencePage() {
     [filteredModes],
   );
   const moreModes = useMemo(
-    () => filteredModes.filter((m) => m.category === "more").map((m) => m.mode_id.toUpperCase()),
+    () => filteredModes.filter((m) => m.category !== "core" && m.category !== "custom").map((m) => m.mode_id.toUpperCase()),
     [filteredModes],
   );
   const customModes = useMemo(

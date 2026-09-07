@@ -13,6 +13,7 @@ from .douban_movie_provider import generate_douban_movie
 from .smzdm_provider import generate_smzdm
 from .tech_radar_provider import generate_tech_radar
 from .qr_code_provider import generate_qr_code
+from .mihomo_sub_provider import generate_mihomo_sub
 
 __all__ = [
     "register_provider",
@@ -29,4 +30,5 @@ __all__ = [
     "generate_smzdm",
     "generate_tech_radar",
     "generate_qr_code",
+    "generate_mihomo_sub",
 ]

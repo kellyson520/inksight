@@ -47,14 +47,16 @@ async def generate_douban_movie(
     date_str = date_ctx.get("date_str", "")
     seed = f"{device_mac}_{date_str}_{category}" if device_mac else None
 
-    # 若选择了 HOT (实时热门)，尝试拉取线上 Rexxar 榜单
-    if category == "HOT":
+    # 若没有指定特定 movie_id，优先动态从豆瓣官方接口拉取最新实时/高分榜单
+    if not movie_id:
+        collection_type = "movie_real_time_hotest" if category == "HOT" else "movie_top250"
         try:
-            online_items = await douban_movie_service.fetch_douban_online_items("movie_real_time_hotest")
+            online_items = await douban_movie_service.fetch_douban_online_items(collection_type)
             if online_items:
                 import hashlib
                 idx = int(hashlib.md5((seed or "default").encode("utf-8")).hexdigest(), 16) % len(online_items)
                 sel = online_items[idx]
+                tag_label = "实时热门" if category == "HOT" else "影史精选"
                 return {
                     "id": sel["id"],
                     "title": sel["title"],
@@ -71,12 +73,12 @@ async def generate_douban_movie(
                     "quote": sel["quote"],
                     "cover_url": sel["cover_url"],
                     "cover_urls": list(sel.get("cover_urls") or [sel["cover_url"]]),
-                    "update_time": "热门",
-                    "footer_label": "豆瓣电影 · 实时热门",
+                    "update_time": "精选",
+                    "footer_label": f"豆瓣电影 · {tag_label}",
                     "footer_quote": sel["quote"],
                 }
         except Exception as err:
-            logger.debug("[DoubanMovieProvider] Failed to fetch online hot items: %s", err)
+            logger.debug("[DoubanMovieProvider] Failed to fetch online douban items: %s", err)
 
     try:
         data = douban_movie_service.get_recommended_movie(

@@ -12,6 +12,7 @@ import { DoubanMovieConfig } from "./configs/douban-movie-config";
 import { SmzdmConfig } from "./configs/smzdm-config";
 import { ServerStatusConfig } from "./configs/server-status-config";
 import { CpaQuotaConfig } from "./configs/cpa-quota-config";
+import { MihomoSubConfig } from "./configs/mihomo-sub-config";
 import {
   MemoConfig,
   RssConfig,
@@ -47,7 +48,8 @@ interface ModeConfigModalProps {
       | "cpa_quota"
       | "wechat_read"
       | "douban_movie"
-      | "smzdm";
+      | "smzdm"
+      | "mihomo_sub";
     modeId: string;
   };
   locale: string;
@@ -127,6 +129,8 @@ export function ModeConfigModal({
         return locale === "zh" ? "豆瓣高分电影设置" : "Douban Movie Settings";
       case "smzdm":
         return locale === "zh" ? "什么值得买好价设置" : "SMZDM Deals Settings";
+      case "mihomo_sub":
+        return locale === "zh" ? "Mihomo (Clash.Meta) 容器与订阅配置" : "Mihomo Container & Subscription Settings";
       default:
         return locale === "zh" ? "模式参数设置" : "Mode Settings";
     }
@@ -247,6 +251,15 @@ export function ModeConfigModal({
               onClose={onClose}
               onSubmit={async (category) => {
                 await onSubmit("SMZDM", { category });
+              }}
+            />
+          ) : modal.type === "mihomo_sub" ? (
+            <MihomoSubConfig
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (override) => {
+                await onSubmit("MIHOMO_SUB", override);
               }}
             />
           ) : modal.type === "quote" ? (

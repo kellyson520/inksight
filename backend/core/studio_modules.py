@@ -55,7 +55,9 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "HABIT": "productivity",
     "FOCUS": "productivity",
     "GITHUB": "productivity",
+    "GITHUB_PULSE": "productivity",
     "TECH_RADAR": "productivity",
+    "MIHOMO_SUB": "productivity",
     # 生活日常
     "CLOCK": "life",
     "WEATHER": "life",
@@ -63,6 +65,10 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "STOIC": "life",
     "MY_QUOTE": "life",
     "WECHAT_READ": "life",
+    "DOUBAN_MOVIE": "life",
+    "SMZDM": "life",
+    "ELEMENT_DAY": "life",
+    "XKCD_COMIC": "life",
     "HEALTH": "life",
     "AIR": "life",
     # 灵感创作
