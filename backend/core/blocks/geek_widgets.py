@@ -211,7 +211,81 @@ def render_code_snippet_box(ctx: RenderContext, block: dict[str, Any]) -> None:
     ctx.y = y2 + margin_bottom
 
 
+def render_contrib_matrix(ctx: RenderContext, block: dict[str, Any]) -> None:
+    """渲染 GitHub / 活动贡献度点阵矩阵 (7行 × N周)。"""
+    field_name = block.get("field", "contributions")
+    raw_data = ctx.get_field(field_name) or block.get("items") or []
+
+    weeks = max(4, min(30, int(block.get("weeks", 16))))
+    show_weekday = bool(block.get("show_weekday_labels", True))
+    margin_x = int(block.get("margin_x", 14) * ctx.scale)
+    margin_bottom = int(block.get("margin_bottom", 8) * ctx.scale)
+
+    values: list[int] = []
+    if isinstance(raw_data, list):
+        for item in raw_data:
+            if isinstance(item, (int, float)):
+                values.append(max(0, min(3, int(item))))
+            elif isinstance(item, dict):
+                lvl = item.get("level", item.get("count", 0))
+                values.append(max(0, min(3, int(lvl))))
+            elif isinstance(item, list):
+                for sub in item:
+                    values.append(max(0, min(3, int(sub))))
+
+    total_cells = weeks * 7
+    if len(values) < total_cells:
+        values.extend([0] * (total_cells - len(values)))
+    else:
+        values = values[-total_cells:]
+
+    label_w = int(12 * ctx.scale) if show_weekday else 0
+    avail_w = ctx.available_width - margin_x * 2 - label_w
+    cell_gap = max(1, int(block.get("cell_gap", 2) * ctx.scale))
+    calculated_cell_size = (avail_w - (weeks - 1) * cell_gap) // weeks
+    cell_size = max(3, int(block.get("cell_size", calculated_cell_size)))
+
+    start_x = ctx.x_offset + margin_x + label_w
+    start_y = ctx.y
+
+    if show_weekday:
+        lbl_font = load_font("noto_serif_regular", max(8, int(cell_size * 0.9)))
+        day_labels = {1: "M", 3: "W", 5: "F"}
+        for day_idx, lbl in day_labels.items():
+            ly = start_y + day_idx * (cell_size + cell_gap)
+            ctx.draw.text((ctx.x_offset + margin_x, ly), lbl, fill=EINK_FG, font=lbl_font)
+
+    for w in range(weeks):
+        for d in range(7):
+            idx = w * 7 + d
+            lvl = values[idx] if idx < len(values) else 0
+            cx1 = start_x + w * (cell_size + cell_gap)
+            cy1 = start_y + d * (cell_size + cell_gap)
+            cx2 = cx1 + cell_size - 1
+            cy2 = cy1 + cell_size - 1
+
+            if lvl == 0:
+                ctx.draw.rectangle((cx1, cy1, cx2, cy2), outline=EINK_FG, width=1)
+            elif lvl == 1:
+                ctx.draw.rectangle((cx1, cy1, cx2, cy2), outline=EINK_FG, width=1)
+                mid_x = (cx1 + cx2) // 2
+                mid_y = (cy1 + cy2) // 2
+                ctx.draw.point((mid_x, mid_y), fill=EINK_FG)
+            elif lvl == 2:
+                ctx.draw.rectangle((cx1, cy1, cx2, cy2), outline=EINK_FG, width=1)
+                for px in range(cx1 + 1, cx2):
+                    for py in range(cy1 + 1, cy2):
+                        if (px + py) % 2 == 0:
+                            ctx.draw.point((px, py), fill=EINK_FG)
+            else:
+                ctx.draw.rectangle((cx1, cy1, cx2, cy2), fill=EINK_FG)
+
+    total_h = 7 * (cell_size + cell_gap) - cell_gap
+    ctx.y = start_y + total_h + margin_bottom
+
+
 # 注册组件
 register_block("stat_progress_bar", render_stat_progress_bar)
 register_block("pill_tag_list", render_pill_tag_list)
 register_block("code_snippet_box", render_code_snippet_box)
+register_block("contrib_matrix", render_contrib_matrix)
