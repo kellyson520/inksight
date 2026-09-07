@@ -255,7 +255,7 @@ def render_group(ctx: RenderContext, block: dict) -> None:
 
 
 def render_flex_row(ctx: RenderContext, block: dict) -> None:
-    items = block.get("items", [])
+    items = block.get("items") or block.get("children", [])
     if not items or not isinstance(items, list):
         return
 

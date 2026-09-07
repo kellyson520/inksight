@@ -1,3 +1,10 @@
+# Local secrets & sensitive files
+*secret*
+.jwt_secret
+data/*secret*
+data/.mihomo_secret
+data/mihomo_secret
+
 # Vercel
 .vercel
 

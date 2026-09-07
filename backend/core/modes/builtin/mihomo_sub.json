@@ -2,14 +2,14 @@
   "mode_id": "MIHOMO_SUB",
   "display_name": "Mihomo 订阅",
   "icon": "activity",
-  "cacheable": true,
-  "description": "Mihomo 容器监控、代理订阅有效期、剩余天数与流量额度进度看板，支持单订阅与多订阅切换",
+  "cacheable": false,
+  "description": "Mihomo 容器监控、代理订阅有效期、剩余天数与流量额度进度看板，支持单订阅与多订阅智能切换",
   "settings_schema": [
     {
       "key": "subscription_url",
       "label": "订阅链接 (支持多行/多个)",
       "type": "text",
-      "placeholder": "留空自动探测本地容器；多订阅可换行填写（支持 备注|链接）"
+      "placeholder": "留空自动探测本地容器全部订阅；或换行填写（支持 备注|链接）"
     },
     {
       "key": "api_url",
@@ -38,45 +38,45 @@
       "title": "MIHOMO 容器与订阅看板",
       "sub_count": 2,
       "has_multiple_subs": true,
-      "provider_name": "backup-channel",
+      "provider_name": "main-channel",
       "core_version": "Mihomo Meta alpha",
       "status_pill": "在线 · 运行中",
       "active_node": "CHANNEL",
-      "node_count": "14 个节点",
+      "node_count": "23 个节点",
       "update_time": "12:00",
       "footer_label": "Clash.Meta · 订阅与容器监控",
       "footer_right": "同步于 12:00",
       "total_str": "300.0 GB",
-      "used_str": "205.0 GB",
-      "remaining_str": "95.0 GB",
+      "used_str": "206.1 GB",
+      "remaining_str": "93.9 GB",
       "upload_str": "0 B",
-      "download_str": "205.0 GB",
-      "used_percent_str": "68.3%",
+      "download_str": "206.1 GB",
+      "used_percent_str": "68.7%",
       "progress_percent": 68,
       "expire_str": "2027-08-20",
       "days_left_badge": "剩余 347 天",
-      "total_all_str": "600.0 GB",
-      "used_all_str": "410.0 GB",
-      "remaining_all_str": "190.0 GB",
-      "used_all_percent_str": "68.3%",
-      "progress_all_percent": 68,
+      "total_all_str": "800.0 GB",
+      "used_all_str": "260.0 GB",
+      "remaining_all_str": "540.0 GB",
+      "used_all_percent_str": "32.5%",
+      "progress_all_percent": 32,
       "earliest_days_badge": "剩余 347 天",
-      "sub_1_name": "backup-channel",
-      "sub_1_used_str": "205.0 GB",
+      "sub_1_name": "main-channel",
+      "sub_1_used_str": "206.1 GB",
       "sub_1_total_str": "300.0 GB",
-      "sub_1_remaining_str": "95.0 GB",
-      "sub_1_percent_str": "68.3%",
+      "sub_1_remaining_str": "93.9 GB",
+      "sub_1_percent_str": "68.7%",
       "sub_1_progress": 68,
       "sub_1_expire_str": "2027-08-20",
       "sub_1_days_badge": "剩余 347 天",
-      "sub_2_name": "main-channel",
-      "sub_2_used_str": "205.0 GB",
-      "sub_2_total_str": "300.0 GB",
-      "sub_2_remaining_str": "95.0 GB",
-      "sub_2_percent_str": "68.3%",
-      "sub_2_progress": 68,
-      "sub_2_expire_str": "2027-08-20",
-      "sub_2_days_badge": "剩余 347 天"
+      "sub_2_name": "backup-channel",
+      "sub_2_used_str": "53.8 GB",
+      "sub_2_total_str": "500.0 GB",
+      "sub_2_remaining_str": "446.2 GB",
+      "sub_2_percent_str": "10.8%",
+      "sub_2_progress": 11,
+      "sub_2_expire_str": "2029-09-08",
+      "sub_2_days_badge": "剩余 1097 天"
     }
   },
   "layout": {
@@ -106,20 +106,24 @@
                 "children": [
                   {
                     "type": "flex_row",
+                    "justify": "space-between",
                     "align_items": "center",
-                    "children": [
+                    "margin_x": 0,
+                    "items": [
                       {
                         "type": "text",
                         "template": "MIHOMO 多订阅看板",
                         "font": "noto_serif_bold",
                         "font_size": 13,
                         "align": "left",
-                        "margin_x": 2
+                        "margin_x": 0
                       },
                       {
                         "type": "badge",
                         "template": "共 {sub_count} 个订阅",
-                        "align": "right"
+                        "font_size": 10,
+                        "align": "right",
+                        "margin_x": 0
                       }
                     ]
                   },
@@ -127,7 +131,7 @@
                     "type": "separator",
                     "style": "dashed",
                     "margin_top": 3,
-                    "margin_bottom": 3
+                    "margin_bottom": 4
                   },
                   {
                     "type": "text",
@@ -135,13 +139,13 @@
                     "font": "noto_serif_regular",
                     "font_size": 10,
                     "align": "left",
-                    "margin_x": 2
+                    "margin_x": 0
                   }
                 ]
               },
               {
                 "type": "spacer",
-                "height": 3
+                "height": 4
               },
               {
                 "type": "card",
@@ -152,30 +156,34 @@
                 "children": [
                   {
                     "type": "flex_row",
+                    "justify": "space-between",
                     "align_items": "center",
-                    "children": [
+                    "margin_x": 0,
+                    "items": [
                       {
                         "type": "text",
                         "template": "{sub_1_name}",
                         "font": "noto_serif_bold",
                         "font_size": 13,
                         "align": "left",
-                        "margin_x": 2
+                        "margin_x": 0
                       },
                       {
                         "type": "badge",
-                        "template": "{sub_1_days_badge}",
-                        "align": "right"
+                        "template": "{sub_1_expire_str} · {sub_1_days_badge}",
+                        "font_size": 10,
+                        "align": "right",
+                        "margin_x": 0
                       }
                     ]
                   },
                   {
                     "type": "text",
-                    "template": "余 {sub_1_remaining_str}  ·  用 {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})  ·  至 {sub_1_expire_str}",
+                    "template": "余量: {sub_1_remaining_str}  ·  已用: {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})",
                     "font": "noto_serif_regular",
                     "font_size": 10,
                     "align": "left",
-                    "margin_x": 2,
+                    "margin_x": 0,
                     "margin_bottom": 3
                   },
                   {
@@ -190,7 +198,7 @@
               },
               {
                 "type": "spacer",
-                "height": 3
+                "height": 4
               },
               {
                 "type": "card",
@@ -201,30 +209,34 @@
                 "children": [
                   {
                     "type": "flex_row",
+                    "justify": "space-between",
                     "align_items": "center",
-                    "children": [
+                    "margin_x": 0,
+                    "items": [
                       {
                         "type": "text",
                         "template": "{sub_2_name}",
                         "font": "noto_serif_bold",
                         "font_size": 13,
                         "align": "left",
-                        "margin_x": 2
+                        "margin_x": 0
                       },
                       {
                         "type": "badge",
-                        "template": "{sub_2_days_badge}",
-                        "align": "right"
+                        "template": "{sub_2_expire_str} · {sub_2_days_badge}",
+                        "font_size": 10,
+                        "align": "right",
+                        "margin_x": 0
                       }
                     ]
                   },
                   {
                     "type": "text",
-                    "template": "余 {sub_2_remaining_str}  ·  用 {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})  ·  至 {sub_2_expire_str}",
+                    "template": "余量: {sub_2_remaining_str}  ·  已用: {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})",
                     "font": "noto_serif_regular",
                     "font_size": 10,
                     "align": "left",
-                    "margin_x": 2,
+                    "margin_x": 0,
                     "margin_bottom": 3
                   },
                   {
@@ -239,7 +251,7 @@
               },
               {
                 "type": "spacer",
-                "height": 3
+                "height": 4
               },
               {
                 "type": "card",
@@ -271,20 +283,23 @@
             "children": [
               {
                 "type": "flex_row",
+                "justify": "space-between",
                 "align_items": "center",
-                "children": [
+                "margin_x": 0,
+                "items": [
                   {
                     "type": "text",
                     "template": "{provider_name}",
                     "font": "noto_serif_bold",
                     "font_size": 15,
                     "align": "left",
-                    "margin_x": 2
+                    "margin_x": 0
                   },
                   {
                     "type": "badge",
                     "template": "{status_pill}",
-                    "align": "right"
+                    "align": "right",
+                    "margin_x": 0
                   }
                 ]
               },

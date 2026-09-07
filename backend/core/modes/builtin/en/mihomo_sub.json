@@ -2,7 +2,7 @@
   "mode_id": "MIHOMO_SUB",
   "display_name": "Mihomo Subscription",
   "icon": "activity",
-  "cacheable": true,
+  "cacheable": false,
   "description": "Mihomo container monitor, proxy subscription validity, remaining days, and quota dashboard for single and multiple subscriptions",
   "settings_schema": [
     {
@@ -38,45 +38,45 @@
       "title": "MIHOMO Subscriptions Dashboard",
       "sub_count": 2,
       "has_multiple_subs": true,
-      "provider_name": "backup-channel",
+      "provider_name": "main-channel",
       "core_version": "Mihomo Meta alpha",
       "status_pill": "Online",
       "active_node": "CHANNEL",
-      "node_count": "14 Nodes",
+      "node_count": "23 Nodes",
       "update_time": "12:00",
       "footer_label": "Clash.Meta · Subscription Monitor",
       "footer_right": "Synced at 12:00",
       "total_str": "300.0 GB",
-      "used_str": "205.0 GB",
-      "remaining_str": "95.0 GB",
+      "used_str": "206.1 GB",
+      "remaining_str": "93.9 GB",
       "upload_str": "0 B",
-      "download_str": "205.0 GB",
-      "used_percent_str": "68.3%",
+      "download_str": "206.1 GB",
+      "used_percent_str": "68.7%",
       "progress_percent": 68,
       "expire_str": "2027-08-20",
       "days_left_badge": "347 Days Left",
-      "total_all_str": "600.0 GB",
-      "used_all_str": "410.0 GB",
-      "remaining_all_str": "190.0 GB",
-      "used_all_percent_str": "68.3%",
-      "progress_all_percent": 68,
+      "total_all_str": "800.0 GB",
+      "used_all_str": "260.0 GB",
+      "remaining_all_str": "540.0 GB",
+      "used_all_percent_str": "32.5%",
+      "progress_all_percent": 32,
       "earliest_days_badge": "347 Days Left",
-      "sub_1_name": "backup-channel",
-      "sub_1_used_str": "205.0 GB",
+      "sub_1_name": "main-channel",
+      "sub_1_used_str": "206.1 GB",
       "sub_1_total_str": "300.0 GB",
-      "sub_1_remaining_str": "95.0 GB",
-      "sub_1_percent_str": "68.3%",
+      "sub_1_remaining_str": "93.9 GB",
+      "sub_1_percent_str": "68.7%",
       "sub_1_progress": 68,
       "sub_1_expire_str": "2027-08-20",
       "sub_1_days_badge": "347 Days Left",
-      "sub_2_name": "main-channel",
-      "sub_2_used_str": "205.0 GB",
-      "sub_2_total_str": "300.0 GB",
-      "sub_2_remaining_str": "95.0 GB",
-      "sub_2_percent_str": "68.3%",
-      "sub_2_progress": 68,
-      "sub_2_expire_str": "2027-08-20",
-      "sub_2_days_badge": "347 Days Left"
+      "sub_2_name": "backup-channel",
+      "sub_2_used_str": "53.8 GB",
+      "sub_2_total_str": "500.0 GB",
+      "sub_2_remaining_str": "446.2 GB",
+      "sub_2_percent_str": "10.8%",
+      "sub_2_progress": 11,
+      "sub_2_expire_str": "2029-09-08",
+      "sub_2_days_badge": "1097 Days Left"
     }
   },
   "layout": {
@@ -106,20 +106,24 @@
                 "children": [
                   {
                     "type": "flex_row",
+                    "justify": "space-between",
                     "align_items": "center",
-                    "children": [
+                    "margin_x": 0,
+                    "items": [
                       {
                         "type": "text",
                         "template": "MIHOMO Subscriptions",
                         "font": "noto_serif_bold",
                         "font_size": 13,
                         "align": "left",
-                        "margin_x": 2
+                        "margin_x": 0
                       },
                       {
                         "type": "badge",
                         "template": "{sub_count} Subscriptions",
-                        "align": "right"
+                        "font_size": 10,
+                        "align": "right",
+                        "margin_x": 0
                       }
                     ]
                   },
@@ -127,7 +131,7 @@
                     "type": "separator",
                     "style": "dashed",
                     "margin_top": 3,
-                    "margin_bottom": 3
+                    "margin_bottom": 4
                   },
                   {
                     "type": "text",
@@ -135,13 +139,13 @@
                     "font": "noto_serif_regular",
                     "font_size": 10,
                     "align": "left",
-                    "margin_x": 2
+                    "margin_x": 0
                   }
                 ]
               },
               {
                 "type": "spacer",
-                "height": 3
+                "height": 4
               },
               {
                 "type": "card",
@@ -152,30 +156,34 @@
                 "children": [
                   {
                     "type": "flex_row",
+                    "justify": "space-between",
                     "align_items": "center",
-                    "children": [
+                    "margin_x": 0,
+                    "items": [
                       {
                         "type": "text",
                         "template": "{sub_1_name}",
                         "font": "noto_serif_bold",
                         "font_size": 13,
                         "align": "left",
-                        "margin_x": 2
+                        "margin_x": 0
                       },
                       {
                         "type": "badge",
-                        "template": "{sub_1_days_badge}",
-                        "align": "right"
+                        "template": "{sub_1_expire_str} · {sub_1_days_badge}",
+                        "font_size": 10,
+                        "align": "right",
+                        "margin_x": 0
                       }
                     ]
                   },
                   {
                     "type": "text",
-                    "template": "Rem: {sub_1_remaining_str}  ·  Used: {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})  ·  Exp: {sub_1_expire_str}",
+                    "template": "Rem: {sub_1_remaining_str}  ·  Used: {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})",
                     "font": "noto_serif_regular",
                     "font_size": 10,
                     "align": "left",
-                    "margin_x": 2,
+                    "margin_x": 0,
                     "margin_bottom": 3
                   },
                   {
@@ -190,7 +198,7 @@
               },
               {
                 "type": "spacer",
-                "height": 3
+                "height": 4
               },
               {
                 "type": "card",
@@ -201,30 +209,34 @@
                 "children": [
                   {
                     "type": "flex_row",
+                    "justify": "space-between",
                     "align_items": "center",
-                    "children": [
+                    "margin_x": 0,
+                    "items": [
                       {
                         "type": "text",
                         "template": "{sub_2_name}",
                         "font": "noto_serif_bold",
                         "font_size": 13,
                         "align": "left",
-                        "margin_x": 2
+                        "margin_x": 0
                       },
                       {
                         "type": "badge",
-                        "template": "{sub_2_days_badge}",
-                        "align": "right"
+                        "template": "{sub_2_expire_str} · {sub_2_days_badge}",
+                        "font_size": 10,
+                        "align": "right",
+                        "margin_x": 0
                       }
                     ]
                   },
                   {
                     "type": "text",
-                    "template": "Rem: {sub_2_remaining_str}  ·  Used: {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})  ·  Exp: {sub_2_expire_str}",
+                    "template": "Rem: {sub_2_remaining_str}  ·  Used: {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})",
                     "font": "noto_serif_regular",
                     "font_size": 10,
                     "align": "left",
-                    "margin_x": 2,
+                    "margin_x": 0,
                     "margin_bottom": 3
                   },
                   {
@@ -239,7 +251,7 @@
               },
               {
                 "type": "spacer",
-                "height": 3
+                "height": 4
               },
               {
                 "type": "card",
@@ -271,20 +283,23 @@
             "children": [
               {
                 "type": "flex_row",
+                "justify": "space-between",
                 "align_items": "center",
-                "children": [
+                "margin_x": 0,
+                "items": [
                   {
                     "type": "text",
                     "template": "{provider_name}",
                     "font": "noto_serif_bold",
                     "font_size": 15,
                     "align": "left",
-                    "margin_x": 2
+                    "margin_x": 0
                   },
                   {
                     "type": "badge",
                     "template": "{status_pill}",
-                    "align": "right"
+                    "align": "right",
+                    "margin_x": 0
                   }
                 ]
               },

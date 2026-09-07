@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 # 本地常见 controller secret 探测路径
 _SECRET_CANDIDATE_PATHS = [
+    Path(__file__).resolve().parent.parent / "data" / "mihomo_secret",
+    Path(__file__).resolve().parent.parent / "data" / ".mihomo_secret",
     Path("/opt/mihomo-cliproxy/guardian/controller_secret"),
     Path("/root/.config/mihomo/controller_secret"),
     Path("/etc/mihomo/controller_secret"),
@@ -79,6 +81,16 @@ def _clean_node_name(name: str) -> str:
     # 去除常见 Emoji 符号及国旗字符
     cleaned = re.sub(r"[\U00010000-\U0010ffff]", "", name).strip()
     return cleaned or name.strip()
+
+
+def _mask_sensitive_url(url: str) -> str:
+    """对 URL 中的 token、secret 等敏感凭据参数进行脱敏掩码，防止日志或异常外泄。"""
+    if not url:
+        return ""
+    try:
+        return re.sub(r"([?&](?:token|secret|key|auth|password)=)[^&]+", r"\1***", url, flags=re.IGNORECASE)
+    except Exception:
+        return "***"
 
 
 class MihomoService:
@@ -157,7 +169,8 @@ class MihomoService:
                         "source": "sub_header",
                     }
         except Exception as e:
-            logger.debug("[MihomoService] fetch_subscription_url_item error: %s", e)
+            masked_url = _mask_sensitive_url(url)
+            logger.debug("[MihomoService] fetch_subscription_url_item error for %s: %s", masked_url, e)
 
         return None
 
@@ -214,8 +227,13 @@ class MihomoService:
                                 "source": "controller_api",
                             })
 
-                    # 按总额度降序排序
-                    collected_subs.sort(key=lambda s: s["total"], reverse=True)
+                    # 优先将主渠道/包含 main 的订阅排在前面，其余按额度降序
+                    def _sub_sort_key(s: dict[str, Any]) -> tuple[int, int]:
+                        n = s.get("name", "").lower()
+                        priority = 0 if ("main" in n or "主" in n) else (2 if ("backup" in n or "备" in n) else 1)
+                        return (priority, -int(s.get("total", 0)))
+
+                    collected_subs.sort(key=_sub_sort_key)
 
                     meta = {
                         "version": version_str,
@@ -236,11 +254,12 @@ class MihomoService:
         api_url: Optional[str] = None,
         api_secret: Optional[str] = None,
         name: Optional[str] = None,
+        force_refresh: bool = False,
     ) -> dict[str, Any]:
         """获取并格式化对齐墨水屏排版的完整多订阅数据字典。"""
         now_ts = time.time()
         cache_key = f"{sub_url}_{api_url}_{name}"
-        if self._cached_data and self._cached_key == cache_key and (now_ts - self._cached_time < 300):
+        if not force_refresh and self._cached_data and self._cached_key == cache_key and (now_ts - self._cached_time < 300):
             return dict(self._cached_data)
 
         meta: dict[str, Any] = {}

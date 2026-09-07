@@ -94,6 +94,71 @@ async def test_mihomo_sub_mode_render_multi_and_single():
         assert content_single["sub_count"] == 1
 
 
+@pytest.mark.asyncio
+async def test_mihomo_sub_channels_differ_and_main_first():
+    """验证主备渠道存在差异时，主渠道优先排在第一位，且各自额度与到期时间独立无误（采用通用合成测试数据）。"""
+    mock_providers = {
+        "backup-channel": {
+            "vehicleType": "HTTP",
+            "subscriptionInfo": {
+                "Upload": 1000000000,
+                "Download": 20000000000,
+                "Total": 107374182400,  # 100 GB
+                "Expire": 1900000000,
+            },
+            "proxies": [{"name": "US-1"} for _ in range(5)],
+        },
+        "main-channel": {
+            "vehicleType": "HTTP",
+            "subscriptionInfo": {
+                "Upload": 0,
+                "Download": 53687091200,  # 50 GB
+                "Total": 214748364800,  # 200 GB
+                "Expire": 1850000000,
+            },
+            "proxies": [{"name": "Node-1"}, {"name": "Node-2"}],
+        },
+    }
+
+    with patch.object(mihomo_service, "fetch_all_controller_subscriptions") as mock_fetch:
+        mock_fetch.return_value = (
+            {"version": "Mihomo Meta", "node_count": 7, "active_node": "CHANNEL", "status_pill": "在线 · 运行中"},
+            [
+                {
+                    "name": "main-channel",
+                    "upload": 0,
+                    "download": 53687091200,
+                    "total": 214748364800,
+                    "expire": 1850000000,
+                    "node_count": 2,
+                    "source": "controller_api",
+                },
+                {
+                    "name": "backup-channel",
+                    "upload": 1000000000,
+                    "download": 20000000000,
+                    "total": 107374182400,
+                    "expire": 1900000000,
+                    "node_count": 5,
+                    "source": "controller_api",
+                },
+            ],
+        )
+
+        data = await mihomo_service.get_dashboard_data(force_refresh=True)
+        assert data["sub_count"] == 2
+        # 主渠道排在第一位
+        assert data["sub_1_name"] == "main-channel"
+        assert data["sub_1_total_str"] == "200.0 GB"
+        # 备用渠道排在第二位
+        assert data["sub_2_name"] == "backup-channel"
+        assert data["sub_2_total_str"] == "100.0 GB"
+        # 两者额度与到期时间绝不相同
+        assert data["sub_1_total_str"] != data["sub_2_total_str"]
+        assert data["sub_1_expire_str"] != data["sub_2_expire_str"]
+        assert data["total_all_str"] == "300.0 GB"
+
+
 def test_element_day_fe_not_broken_across_lines():
     """验证每日一素的 Fe 符号绝不发生折行分裂。"""
     with open("backend/core/modes/builtin/element_day.json") as f:
