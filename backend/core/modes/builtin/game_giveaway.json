@@ -42,14 +42,14 @@
     "body": [
       {
         "type": "game_giveaway",
-        "width": 380,
+        "width": 400,
         "height": 220,
         "cover_field": "cover_url",
         "source_field": "source_label",
         "deadline_field": "deadline_label",
         "title_field": "game_title",
         "fit": "contain",
-        "margin": 8,
+        "margin": 5,
         "margin_bottom": 4
       }
     ],

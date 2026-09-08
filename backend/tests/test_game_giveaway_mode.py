@@ -94,6 +94,10 @@ def test_game_giveaway_layout_uses_cover_and_corner_fields():
     assert "'type': 'game_giveaway'" in serialized
     assert "'fit': 'contain'" in serialized
     assert definition["content"].get("endpoint", "").startswith("https://")
+    block = body[0]
+    assert block["width"] == 400
+    assert block["height"] == 220
+    assert block["margin"] <= 6
     assert "'cover_field': 'cover_url'" in serialized
     assert "'source_field': 'source_label'" in serialized
     assert "'deadline_field': 'deadline_label'" in serialized
