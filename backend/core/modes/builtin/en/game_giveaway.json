@@ -1,0 +1,82 @@
+{
+  "mode_id": "GAME_GIVEAWAY",
+  "display_name": "Game Giveaway",
+  "icon": "gift",
+  "cacheable": true,
+  "description": "Limited-time free games from Epic or Steam with cover art and deadline",
+  "settings_schema": [
+    {
+      "key": "source",
+      "label": "Platform",
+      "type": "select",
+      "default": "EPIC",
+      "options": [
+        { "value": "EPIC", "label": "Epic Games" },
+        { "value": "STEAM", "label": "Steam" }
+      ]
+    },
+    {
+      "key": "endpoint",
+      "label": "Public data endpoint (optional)",
+      "type": "text",
+      "placeholder": "https://example.com/giveaway.json"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "game_giveaway",
+    "fallback": {
+      "source": "EPIC",
+      "source_label": "EPIC",
+      "game_title": "The Escapists 2",
+      "deadline_label": "CLAIM WHILE AVAILABLE",
+      "cover_url": "",
+      "claim_url": "https://store.epicgames.com/",
+      "description": "Free game this week"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": { "line_width": 1, "dashed": false },
+    "body": [
+      {
+        "type": "game_giveaway",
+        "width": 380,
+        "height": 220,
+        "cover_field": "cover_url",
+        "source_field": "source_label",
+        "deadline_field": "deadline_label",
+        "title_field": "game_title",
+        "fit": "cover",
+        "margin": 8,
+        "margin_bottom": 4
+      }
+    ],
+    "footer": {
+      "label": "GAME GIVEAWAY",
+      "attribution_template": "{source_label} · {deadline_label}"
+    }
+  },
+  "layout_overrides": {
+    "296x128": {
+      "body_align": "top",
+      "body": [
+        {
+          "type": "game_giveaway",
+          "width": 284,
+          "height": 82,
+          "cover_field": "cover_url",
+          "source_field": "source_label",
+          "deadline_field": "deadline_label",
+          "title_field": "game_title",
+          "fit": "cover",
+          "margin": 5,
+          "source_font_size": 9,
+          "deadline_font_size": 8,
+          "title_font_size": 10,
+          "margin_bottom": 0
+        }
+      ]
+    }
+  }
+}

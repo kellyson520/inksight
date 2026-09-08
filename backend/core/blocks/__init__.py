@@ -46,6 +46,7 @@ from . import pack_industry as _pack_industry_module
 from . import pack_cyber as _pack_cyber_module
 from . import pack_nature as _pack_nature_module
 from . import qrcode as _qrcode_module
+from . import game_giveaway as _game_giveaway_module
 
 from .grids import slice_calendar_rows_around_day
 

@@ -15,6 +15,7 @@ from .tech_radar_provider import generate_tech_radar
 from .qr_code_provider import generate_qr_code
 from .mihomo_sub_provider import generate_mihomo_sub
 from .xkcd_provider import generate_xkcd
+from .game_giveaway_provider import generate_game_giveaway
 
 __all__ = [
     "register_provider",
@@ -33,4 +34,5 @@ __all__ = [
     "generate_qr_code",
     "generate_mihomo_sub",
     "generate_xkcd",
+    "generate_game_giveaway",
 ]

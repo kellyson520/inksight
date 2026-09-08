@@ -269,6 +269,12 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         zh=CatalogText(name="Mihomo 订阅", tip="Mihomo 容器监控、代理订阅有效期、剩余天数与流量额度进度看板"),
         en=CatalogText(name="Mihomo Subscription", tip="Mihomo container monitor, proxy subscription validity, remaining days, and quota dashboard"),
     ),
+    CatalogItem(
+        mode_id="GAME_GIVEAWAY",
+        category="more",
+        zh=CatalogText(name="喜加一", tip="Epic 或 Steam 限时免费游戏，封面背景配游戏名与领取截止时间"),
+        en=CatalogText(name="Game Giveaway", tip="Limited-time free Epic or Steam games with cover and claim deadline"),
+    ),
 ]
 
 

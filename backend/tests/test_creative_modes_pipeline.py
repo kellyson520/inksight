@@ -76,6 +76,39 @@ async def test_xkcd_comic_mode_pipeline():
 
 
 @pytest.mark.asyncio
+async def test_game_giveaway_mode_pipeline_400x300_has_visible_content():
+    img, content = await generate_and_render(
+        persona="GAME_GIVEAWAY",
+        config={"modes": ["GAME_GIVEAWAY"]},
+        date_ctx={"date_str": "2026-09-08", "time_str": "12:00"},
+        weather={"weather_str": "晴", "weather_code": 0},
+        battery_pct=90,
+        screen_w=400,
+        screen_h=300,
+        colors=2,
+    )
+    assert img.size == (400, 300)
+    assert content is not None
+    assert sum(1 for pixel in img.convert("L").getdata() if pixel < 250) > 500
+
+
+@pytest.mark.asyncio
+async def test_game_giveaway_mode_pipeline_supports_narrow_screen():
+    img, content = await generate_and_render(
+        persona="GAME_GIVEAWAY",
+        config={"modes": ["GAME_GIVEAWAY"]},
+        date_ctx={"date_str": "2026-09-08", "time_str": "12:00"},
+        weather={"weather_str": "晴", "weather_code": 0},
+        battery_pct=90,
+        screen_w=296,
+        screen_h=128,
+        colors=2,
+    )
+    assert img.size == (296, 128)
+    assert content is not None
+
+
+@pytest.mark.asyncio
 async def test_creative_modes_narrow_screen_support():
     # Test rendering on 2.9 inch (296x128) e-ink display
     for persona in ["GITHUB_PULSE", "ELEMENT_DAY", "XKCD_COMIC"]:
