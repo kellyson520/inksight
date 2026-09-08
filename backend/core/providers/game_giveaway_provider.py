@@ -16,7 +16,7 @@ _DEFAULT_FALLBACK: dict[str, Any] = {
     "source_label": "EPIC",
     "game_title": "The Escapists 2",
     "deadline_label": "限时领取",
-    "cover_url": "",
+    "cover_url": "https://dummyimage.com/640x360/e8e8e8/222222.png&text=THE+ESCAPISTS+2",
     "claim_url": "https://store.epicgames.com/",
     "description": "本周免费领取游戏",
 }
@@ -54,8 +54,7 @@ def _normalize_payload(payload: dict[str, Any], fallback: dict[str, Any]) -> dic
     title = str(payload.get("game_title", payload.get("title", payload.get("name", fallback.get("game_title", "喜加一游戏")))) or "喜加一游戏").strip()
     cover_url = _safe_https_url(payload.get("cover_url", payload.get("image", payload.get("header_image", fallback.get("cover_url")))))
     if not cover_url:
-        # 保证断网/接口失败时仍有可视封面背景；该 SVG 不含外部资源或私密信息。
-        cover_url = "https://dummyimage.com/640x360/e8e8e8/222222.png&text=GAME+GIVEAWAY"
+        cover_url = _safe_https_url(fallback.get("cover_url"))
     claim_url = _safe_https_url(payload.get("claim_url", payload.get("url", fallback.get("claim_url"))))
     return {
         "source": source,

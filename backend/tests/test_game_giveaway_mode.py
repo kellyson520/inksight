@@ -89,7 +89,10 @@ async def test_game_giveaway_mode_renders_at_400x300():
 
     assert img.size == (400, 300)
     assert content is not None
-    assert sum(1 for pixel in img.convert("L").getdata() if pixel < 250) > 500
+    gray = img.convert("L")
+    assert sum(1 for pixel in gray.getdata() if pixel < 250) > 500
+    assert sum(1 for y in range(18, 55) for x in range(8, 392) if gray.getpixel((x, y)) < 80) > 50
+    assert sum(1 for y in range(165, 245) for x in range(8, 250) if gray.getpixel((x, y)) < 80) > 50
 
 
 @pytest.mark.asyncio
