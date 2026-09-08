@@ -187,7 +187,16 @@
                             "margin_x": 0
                           }
                         ]
-                      },
+                      }
+                    ]
+                  },
+                  {
+                    "type": "flex_row",
+                    "justify": "right",
+                    "align_items": "center",
+                    "margin_x": 0,
+                    "margin_bottom": 2,
+                    "items": [
                       {
                         "type": "badge",
                         "template": "{sub_1_expire_badge}",
@@ -281,7 +290,16 @@
                             "margin_x": 0
                           }
                         ]
-                      },
+                      }
+                    ]
+                  },
+                  {
+                    "type": "flex_row",
+                    "justify": "right",
+                    "align_items": "center",
+                    "margin_x": 0,
+                    "margin_bottom": 2,
+                    "items": [
                       {
                         "type": "badge",
                         "template": "{sub_2_expire_badge}",

@@ -287,10 +287,18 @@ async def test_mihomo_sub_reset_badge_color_and_expire_format():
         assert data["sub_2_reset_badge"] == "还有 1 天重置"
 
         # 3. 余量消耗程度颜色
-        # sub_1 使用 90% -> red
         assert data["sub_1_rem_color"] == "red"
-        # sub_2 使用 22% -> black
         assert data["sub_2_rem_color"] == "black"
+
+
+def test_mihomo_expiry_badge_has_dedicated_row_in_multi_layout():
+    import json
+    mode = json.load(open("backend/core/modes/builtin/mihomo_sub.json", encoding="utf-8"))
+    cards = mode["layout"]["body"][1]["conditions"][0]["children"]
+    for card in (cards[2], cards[4]):
+        rows = [child for child in card["children"] if child.get("type") == "flex_row"]
+        assert len(rows) >= 3
+        assert any("expire_badge" in str(row) and row.get("justify") == "right" for row in rows[1:])
 
 
 
