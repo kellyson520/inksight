@@ -1,6 +1,7 @@
 """Public game giveaway data provider for the 喜加一 display mode."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import Any
@@ -55,12 +56,12 @@ def _normalize_payload(payload: dict[str, Any], fallback: dict[str, Any]) -> dic
     cover_url = _safe_https_url(payload.get("cover_url", payload.get("image", payload.get("header_image", fallback.get("cover_url")))))
     if not cover_url:
         cover_url = _safe_https_url(fallback.get("cover_url"))
-    claim_url = _safe_https_url(payload.get("claim_url", payload.get("url", fallback.get("claim_url"))))
+    claim_url = _safe_https_url(payload.get("claim_url", payload.get("url", payload.get("open_giveaway_url", fallback.get("claim_url")))))
     return {
         "source": source,
         "source_label": source,
         "game_title": title[:120],
-        "deadline_label": _deadline_label(payload.get("deadline", payload.get("expires_at", payload.get("end_time")))),
+        "deadline_label": _deadline_label(payload.get("deadline", payload.get("expires_at", payload.get("end_time", payload.get("end_date"))))),
         "cover_url": cover_url,
         "claim_url": claim_url,
         "description": str(payload.get("description", fallback.get("description", "限时免费领取")) or "限时免费领取").strip()[:180],
@@ -68,12 +69,25 @@ def _normalize_payload(payload: dict[str, Any], fallback: dict[str, Any]) -> dic
 
 
 async def _fetch_giveaway_payload(endpoint: str) -> dict[str, Any]:
-    response = await outbound_http.get_json(
+    response = await asyncio.to_thread(
+        outbound_http.get_json,
         endpoint,
         policy=RequestPolicy(max_attempts=1, follow_redirects=False),
     )
     data = response.json()
-    return data if isinstance(data, dict) else {}
+    if isinstance(data, dict):
+        return data
+    if isinstance(data, list):
+        # GamerPower returns a list; choose the first entry explicitly tagged
+        # Epic/Steam, otherwise use the first game giveaway.
+        for item in data:
+            if isinstance(item, dict) and any(
+                token in str(item.get("platforms", item.get("platform", ""))).lower()
+                for token in ("epic", "steam")
+            ):
+                return item
+        return next((item for item in data if isinstance(item, dict)), {})
+    return {}
 
 
 @register_provider("game_giveaway")

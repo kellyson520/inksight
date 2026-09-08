@@ -25,6 +25,7 @@
   "content": {
     "type": "computed",
     "provider": "game_giveaway",
+    "endpoint": "https://www.gamerpower.com/api/giveaways?type=game",
     "fallback": {
       "source": "EPIC",
       "source_label": "EPIC",

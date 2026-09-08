@@ -54,6 +54,31 @@ async def test_game_giveaway_provider_normalizes_deterministic_payload():
 
 
 @pytest.mark.asyncio
+@pytest.mark.asyncio
+async def test_game_giveaway_provider_maps_gamerpower_fields():
+    from core.providers.game_giveaway_provider import generate_game_giveaway
+
+    with patch(
+        "core.providers.game_giveaway_provider._fetch_giveaway_payload",
+        new=AsyncMock(return_value={
+            "title": "Alone With You (Epic Games) Giveaway",
+            "platforms": "PC, Epic Games Store",
+            "end_date": "2026-09-10 23:59:00",
+            "image": "https://cdn.example.test/alone.jpg",
+            "open_giveaway_url": "https://example.test/claim",
+        }),
+    ):
+        content = await generate_game_giveaway(
+            {}, {"endpoint": "https://example.test/giveaways", "fallback": {}}, {}
+        )
+
+    assert content["source_label"] == "EPIC"
+    assert content["game_title"].startswith("Alone With You")
+    assert content["deadline_label"] == "截止 2026-09-10 23:59"
+    assert content["cover_url"] == "https://cdn.example.test/alone.jpg"
+
+
+@pytest.mark.asyncio
 async def test_game_giveaway_provider_falls_back_to_safe_cover_without_endpoint():
     from core.providers.game_giveaway_provider import generate_game_giveaway
 
@@ -68,6 +93,7 @@ def test_game_giveaway_layout_uses_cover_and_corner_fields():
     serialized = str(body)
     assert "'type': 'game_giveaway'" in serialized
     assert "'fit': 'contain'" in serialized
+    assert definition["content"].get("endpoint", "").startswith("https://")
     assert "'cover_field': 'cover_url'" in serialized
     assert "'source_field': 'source_label'" in serialized
     assert "'deadline_field': 'deadline_label'" in serialized
@@ -93,6 +119,8 @@ async def test_game_giveaway_mode_renders_at_400x300():
     assert sum(1 for pixel in gray.getdata() if pixel < 250) > 500
     assert sum(1 for y in range(18, 55) for x in range(8, 392) if gray.getpixel((x, y)) < 80) > 50
     assert sum(1 for y in range(165, 245) for x in range(8, 250) if gray.getpixel((x, y)) < 80) > 50
+    assert sum(1 for y in range(15, 75) for x in range(8, 190) if gray.getpixel((x, y)) > 200) > 100
+    assert sum(1 for y in range(15, 75) for x in range(210, 392) if gray.getpixel((x, y)) > 200) > 100
 
 
 @pytest.mark.asyncio
