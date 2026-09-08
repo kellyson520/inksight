@@ -47,7 +47,7 @@
         "source_field": "source_label",
         "deadline_field": "deadline_label",
         "title_field": "game_title",
-        "fit": "cover",
+        "fit": "contain",
         "margin": 8,
         "margin_bottom": 4
       }
@@ -69,7 +69,7 @@
           "source_field": "source_label",
           "deadline_field": "deadline_label",
           "title_field": "game_title",
-          "fit": "cover",
+          "fit": "contain",
           "margin": 5,
           "source_font_size": 9,
           "deadline_font_size": 8,
