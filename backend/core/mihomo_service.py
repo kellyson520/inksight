@@ -55,6 +55,16 @@ def _format_bytes(b: int | float) -> str:
     return f"{int(val)} B"
 
 
+def _parse_reset_days_text(text: str) -> int | None:
+    """Parse provider-specific reset countdown/date markers from subscription text."""
+    if not text:
+        return None
+    match = re.search(r"(?:重置|reset)[^\d]{0,30}(\d+)\s*天", text, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    return None
+
+
 def _parse_userinfo_header(header_val: str) -> dict[str, int]:
     """解析 Subscription-Userinfo 响应头：
     upload=1234; download=5678; total=9999; expire=1735689600
@@ -141,6 +151,31 @@ class MihomoService:
         self._cached_time: float = 0.0
         self._cached_key: str = ""
 
+    def _discover_provider_urls(self) -> dict[str, str]:
+        """Read local provider URLs so reset metadata remains channel-specific."""
+        candidates = (
+            Path("/opt/mihomo-cliproxy/config/config.yaml"),
+            Path("/etc/mihomo/config.yaml"),
+        )
+        for path in candidates:
+            try:
+                text = path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            found: dict[str, str] = {}
+            current = ""
+            for line in text.splitlines():
+                section = re.match(r"^\s{2}([A-Za-z0-9_-]+):\s*$", line)
+                if section:
+                    current = section.group(1)
+                    continue
+                match = re.match(r"^\s{4}url:\s*(https?://\S+)", line)
+                if current and match:
+                    found[current] = match.group(1)
+            if found:
+                return found
+        return {}
+
     def _discover_secret(self, explicit_secret: Optional[str] = None) -> str:
         """解析控制密钥，支持显式传入、环境变量与文件挂载探测。"""
         if explicit_secret and explicit_secret.strip():
@@ -187,6 +222,7 @@ class MihomoService:
                 userinfo_header = resp.headers.get("subscription-userinfo") or resp.headers.get("Subscription-Userinfo") or ""
                 if userinfo_header:
                     parsed = _parse_userinfo_header(userinfo_header)
+                    reset_days = _parse_reset_days_text(resp.text)
                     node_cnt = 0
                     if resp.text:
                         node_cnt = len(re.findall(r"-\s*name:\s*", resp.text)) or len(re.findall(r"proxies:\s*", resp.text))
@@ -206,6 +242,7 @@ class MihomoService:
                         "total": parsed["total"],
                         "expire": parsed["expire"],
                         "node_count": node_cnt,
+                        "reset_days": reset_days,
                         "source": "sub_header",
                     }
         except Exception as e:
@@ -320,8 +357,23 @@ class MihomoService:
                 if item:
                     subs.append(item)
 
-        # 2. 若未提供订阅链接或部分订阅未拉到，尝试从本地 Mihomo 外部控制接口获取
+        # 2. 从 Controller 获取各渠道额度；重置元数据稍后按同名渠道补齐。
         ctrl_meta, ctrl_subs = await self.fetch_all_controller_subscriptions(api_url=api_url, secret=api_secret)
+
+        # 3. 读取每个渠道自己的订阅正文，只合并 reset_days，避免重复增加渠道或覆盖额度。
+        provider_urls = self._discover_provider_urls()
+        for channel_name, channel_url in provider_urls.items():
+            item = await self.fetch_subscription_url_item(f"{channel_name}|{channel_url}")
+            if not item:
+                continue
+            for existing in ctrl_subs:
+                if str(existing.get("name", "")).lower() == channel_name.lower():
+                    if existing.get("reset_days") is None and item.get("reset_days") is not None:
+                        existing["reset_days"] = item["reset_days"]
+                    break
+
+        # 4. 合并用户自定义订阅与 Controller 数据
+
         if ctrl_meta:
             meta = ctrl_meta
         if not subs and ctrl_subs:
@@ -382,18 +434,9 @@ class MihomoService:
             else:
                 rem_color = "black"
 
-            # 渠道重置天数徽章（优先使用节点或提供商解析出的重置倒计时，其次按月份自然重置推算）
+            # 渠道重置天数必须来自该渠道自己的订阅元数据；没有来源时不伪造自然月日期。
             reset_days = s.get("reset_days")
-            if reset_days is None:
-                # 若未显式提供重置天数，按自然月推算距离下月 1 日重置天数
-                # 下个月第一天
-                if now_dt.month == 12:
-                    next_month_first = datetime.date(now_dt.year + 1, 1, 1)
-                else:
-                    next_month_first = datetime.date(now_dt.year, now_dt.month + 1, 1)
-                reset_days = max(1, (next_month_first - now_dt.date()).days)
-
-            reset_badge = f"还有 {reset_days} 天重置"
+            reset_badge = f"还有 {int(reset_days)} 天重置" if reset_days is not None else "重置时间未知"
 
             exp_str = "长期有效"
             days_badge = "长期有效"

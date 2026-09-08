@@ -232,10 +232,11 @@ def test_mihomo_resolves_selector_chain_to_final_egress():
 
 
 def test_mihomo_keeps_channel_specific_reset_days():
-    from core.mihomo_service import _resolve_reset_days
+    from core.mihomo_service import _parse_reset_days_text, _resolve_reset_days
 
-    assert _resolve_reset_days({"reset": 3}, []) == 3
-    assert _resolve_reset_days({"reset": 8}, []) == 8
+    assert _parse_reset_days_text("距离下次重置剩余：29 天") == 29
+    assert _parse_reset_days_text("套餐到期：2029-09-08\n距离下次重置剩余：29 天") == 29
+    assert _parse_reset_days_text("no reset metadata") is None
     assert _resolve_reset_days({"reset": 3}, []) == 3
     assert _resolve_reset_days({"reset": int(time.time()) + 86400 * 8}, []) == 8
     assert _resolve_reset_days({}, [{"name": "普通节点"}]) is None
@@ -278,10 +279,11 @@ async def test_mihomo_sub_reset_badge_color_and_expire_format():
 
         # 1. 到期日格式检验：剩余 347 天（到期日 2027-xx-xx）
         assert "剩余 347 天（到期日" in data["sub_1_expire_badge"]
-        assert "剩余 1097 天（到期日" in data["sub_2_expire_badge"]
+        assert "到期日 205?" not in data["sub_2_expire_badge"]
+        assert "到期日" in data["sub_2_expire_badge"]
 
-        # 2. 渠道重置徽章检验
-        assert "还有" in data["sub_1_reset_badge"] and "天重置" in data["sub_1_reset_badge"]
+        # 2. 渠道重置徽章检验：无主渠道元数据时不伪造日期；备渠道保留显式值
+        assert data["sub_1_reset_badge"] == "重置时间未知"
         assert data["sub_2_reset_badge"] == "还有 1 天重置"
 
         # 3. 余量消耗程度颜色
