@@ -78,9 +78,49 @@ def _clean_node_name(name: str) -> str:
     """清理节点名称中的 Emoji 或非法字符，确保墨水屏安全排版。"""
     if not name:
         return ""
-    # 去除常见 Emoji 符号及国旗字符
     cleaned = re.sub(r"[\U00010000-\U0010ffff]", "", name).strip()
     return cleaned or name.strip()
+
+
+def _resolve_active_egress(proxies: dict[str, dict[str, Any]]) -> str:
+    """Follow selector ``now`` links until the final concrete proxy node."""
+    if not isinstance(proxies, dict):
+        return ""
+    current = ""
+    for key in ("PROXY", "CHANNEL", "MAIN", "default"):
+        info = proxies.get(key)
+        if isinstance(info, dict) and info.get("now"):
+            current = str(info["now"])
+            break
+    seen: set[str] = set()
+    while current and current not in seen:
+        seen.add(current)
+        info = proxies.get(current)
+        if not isinstance(info, dict) or not info.get("now"):
+            break
+        current = str(info["now"])
+    return _clean_node_name(current)
+
+
+def _resolve_reset_days(subscription_info: dict[str, Any], proxies: list[dict[str, Any]]) -> int | None:
+    """Extract reset countdown belonging to this subscription only."""
+    if isinstance(subscription_info, dict):
+        for key in ("Reset", "reset", "ResetDays", "reset_days"):
+            value = subscription_info.get(key)
+            try:
+                numeric = int(value)
+                if numeric > 1_000_000_000:
+                    return max(0, (datetime.datetime.fromtimestamp(numeric).date() - datetime.datetime.now().date()).days)
+                if numeric >= 0:
+                    return numeric
+            except (TypeError, ValueError, OverflowError):
+                pass
+    for proxy in proxies or []:
+        name = str(proxy.get("name", ""))
+        match = re.search(r"(?:重置.*?|剩余[^\d]*)(\d+)\s*天", name)
+        if match:
+            return int(match.group(1))
+    return None
 
 
 def _mask_sensitive_url(url: str) -> str:
@@ -206,27 +246,19 @@ class MihomoService:
                     collected_subs: list[dict[str, Any]] = []
                     total_nodes = 0
                     active_node_name = ""
+                    selector_map: dict[str, dict[str, Any]] = {}
 
                     for pname, pinfo in providers.items():
                         proxies = pinfo.get("proxies", [])
                         total_nodes += len(proxies)
                         for px in proxies:
-                            if px.get("now"):
-                                active_node_name = _clean_node_name(str(px.get("now")))
-
-                        # 尝试从节点名中解析重置剩余天数（例如：距离下次重置剩余：1 天 / 还有 3 天重置）
-                        reset_days = None
-                        for px in proxies:
                             px_name = str(px.get("name", ""))
-                            m_reset = re.search(r"(?:重置.*?|剩余[^\d]*)(\d+)\s*天", px_name)
-                            if m_reset:
-                                try:
-                                    reset_days = int(m_reset.group(1))
-                                    break
-                                except Exception:
-                                    pass
+                            selector_map[px_name] = px
+                            if px.get("type") == "Selector" and px.get("now"):
+                                selector_map[pname] = {"now": px.get("now")}
 
                         sub_info = pinfo.get("subscriptionInfo") or {}
+                        reset_days = _resolve_reset_days(sub_info, proxies)
                         tot = int(sub_info.get("Total", 0))
                         if sub_info and tot > 0:
                             collected_subs.append({
@@ -239,6 +271,8 @@ class MihomoService:
                                 "reset_days": reset_days,
                                 "source": "controller_api",
                             })
+
+                    active_node_name = _resolve_active_egress(selector_map) or "DIRECT"
 
                     # 优先将主渠道/包含 main 的订阅排在前面，其余按额度降序
                     def _sub_sort_key(s: dict[str, Any]) -> tuple[int, int]:

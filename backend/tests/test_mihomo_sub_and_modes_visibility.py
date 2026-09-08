@@ -220,6 +220,27 @@ async def test_wechat_read_dynamic_fetch():
     assert "recommend_reason" in res
 
 
+def test_mihomo_resolves_selector_chain_to_final_egress():
+    from core.mihomo_service import _resolve_active_egress
+
+    proxies = {
+        "PROXY": {"now": "CHANNEL"},
+        "CHANNEL": {"now": "MAIN"},
+        "MAIN": {"now": "DMIT EB - BageVM"},
+    }
+    assert _resolve_active_egress(proxies) == "DMIT EB - BageVM"
+
+
+def test_mihomo_keeps_channel_specific_reset_days():
+    from core.mihomo_service import _resolve_reset_days
+
+    assert _resolve_reset_days({"reset": 3}, []) == 3
+    assert _resolve_reset_days({"reset": 8}, []) == 8
+    assert _resolve_reset_days({"reset": 3}, []) == 3
+    assert _resolve_reset_days({"reset": int(time.time()) + 86400 * 8}, []) == 8
+    assert _resolve_reset_days({}, [{"name": "普通节点"}]) is None
+
+
 @pytest.mark.asyncio
 async def test_mihomo_sub_reset_badge_color_and_expire_format():
     """验证重置倒计时徽章、余量消耗程度颜色(黑/黄/红)以及'剩余X天（到期日YYYY-MM-DD）'格式。"""
