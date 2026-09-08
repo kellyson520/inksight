@@ -42,6 +42,10 @@ class EventDispatcher:
                 obs.emit("event.expired", {"event_id": event_id, "kind": event.get("kind", "")})
                 stats["expired"] += 1
                 continue
+            # 广播事件必须有实际目标；空目标属于已失效事件，不应反复重试并污染日志。
+            if event.get("target_mac") == "*" and not event.get("target_macs"):
+                self.outbox.ack(event_id, worker_id=self.worker_id)
+                continue
             success = False
             for attempt in range(1, self.max_attempts + 1):
                 event["attempts"] = attempt

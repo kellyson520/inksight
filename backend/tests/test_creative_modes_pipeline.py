@@ -70,6 +70,9 @@ async def test_xkcd_comic_mode_pipeline():
     assert "title" in content
     assert "alt" in content
     assert "num" in content
+    assert content.get("comic_image") is not None
+    assert content["comic_image"].mode == "1"
+    assert content["comic_image"].getbbox() is not None
 
 
 @pytest.mark.asyncio

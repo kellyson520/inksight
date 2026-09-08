@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import pytest
 from PIL import Image, ImageDraw
+import numpy as np
 
 from core.blocks.context import RenderContext
 from core.blocks.qrcode import render_qrcode
@@ -36,6 +37,27 @@ def test_render_qrcode_block_direct():
     render_qrcode(ctx, block)
     # y 应该已经更新增加 size + margin
     assert ctx.y > 100
+
+
+def test_qrcode_does_not_render_as_solid_black_when_pasting_to_palette_image():
+    """彩色墨水屏二维码必须保留白色背景，不能因 P 模式 paste 变成整块黑色。"""
+    img = Image.new("P", (240, 180), 1)
+    img.putpalette([
+        0, 0, 0,
+        255, 255, 255,
+        232, 176, 0,
+        200, 0, 0,
+    ] + [0, 0, 0] * 252)
+    ctx = RenderContext(
+        draw=ImageDraw.Draw(img), img=img, content={"qr_content": "https://example.com/qr"},
+        screen_w=240, screen_h=180, y=10, colors=4,
+    )
+    render_qrcode(ctx, {"type": "qrcode", "field": "qr_content", "size": 120, "border": 2})
+    crop = np.asarray(img)[10:130, 60:180]
+    black_ratio = float(np.mean(crop == 0))
+    white_ratio = float(np.mean(crop == 1))
+    assert black_ratio < 0.6, f"QR became mostly black: {black_ratio:.3f}"
+    assert white_ratio > 0.2, f"QR lost its white modules/background: {white_ratio:.3f}"
 
 
 def test_measure_qrcode_block():

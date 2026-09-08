@@ -79,8 +79,25 @@ async def test_dispatcher_claims_events_for_worker_before_publishing(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_dispatcher_does_not_retry_non_retriable_missing_target(tmp_path):
+    outbox = EventOutbox(tmp_path / "events.json")
+    outbox.publish({"event_id": "e1", "kind": "new", "target_mac": "*", "target_macs": []})
+    calls = []
+
+    async def publish(_event):
+        calls.append(1)
+        return False
+
+    result = await EventDispatcher(outbox, publish=publish, max_attempts=3, backoff=0).dispatch_once()
+    assert result["failed"] == 0
+    assert calls == []
+    assert outbox.list_pending() == []
+
+
+@pytest.mark.asyncio
 async def test_dispatcher_does_not_ack_truthy_non_boolean_result(tmp_path):
     outbox = EventOutbox(tmp_path / "events.json")
+    outbox.publish({"event_id": "e1", "kind": "new"})
     outbox.publish({"event_id": "e1", "kind": "new"})
 
     result = await EventDispatcher(outbox, publish=lambda _event: "ok", max_attempts=1, backoff=0).dispatch_once()

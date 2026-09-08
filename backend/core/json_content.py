@@ -802,7 +802,8 @@ async def generate_json_mode_content(
                 if mode_id == "HABIT" and k in {"habitItems", "habits", "summary", "week_progress", "week_total"}:
                     continue
                 content[k] = v
-        content = await _prefetch_images(content, mode_def)
+        # computed providers may return runtime-only assets (PIL images); do not
+        # normalize/drop them through URL prefetching.
         return content
     if ctype == "external_data":
         content = await _generate_external_data_content(mode_def, content_cfg, fallback, **common_args)
@@ -2087,9 +2088,8 @@ async def _generate_external_data_content(mode_def: dict, content_cfg: dict, fal
     if provider == "xkcd_comic":
         from .xkcd_service import get_daily_xkcd
         comic = await get_daily_xkcd()
-        merged = dict(fallback)
-        merged.update(comic)
-        return merged
+        # 不能只合并 JSON 可序列化字段；comic_image 是渲染阶段必需的 PIL 对象。
+        return {**fallback, **comic}
 
     return dict(fallback)
 

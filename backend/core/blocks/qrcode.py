@@ -74,10 +74,8 @@ def render_qrcode(ctx: RenderContext, block: dict) -> None:
 
     y = ctx.y
 
-    # 粘贴至画布 (使用 paste_icon 保持调色板及透明通道安全)
-    if ctx.colors >= 3:
-        ctx.img.paste(qr_resized, (x, y))
-    else:
-        ctx.paste_icon(qr_resized, (x, y))
+    # 统一使用 palette-safe 粘贴：P 模式不能直接 paste 1-bit 图像，
+    # 否则 1-bit 的 0/255 会被误当作调色板索引，白色背景可能变成黑色。
+    ctx.paste_icon(qr_resized, (x, y))
 
     ctx.y = y + size + margin_bottom
