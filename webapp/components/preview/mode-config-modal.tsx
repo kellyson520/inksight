@@ -49,7 +49,8 @@ interface ModeConfigModalProps {
       | "wechat_read"
       | "douban_movie"
       | "smzdm"
-      | "mihomo_sub";
+      | "mihomo_sub"
+       | "recommendation";
     modeId: string;
   };
   locale: string;
@@ -68,6 +69,7 @@ interface ModeConfigModalProps {
   initialServerKey?: string;
   initialCpaQuotaView?: string;
   initialWechatCategory?: string;
+  initialRecommendationStyle?: string;
 }
 
 export function ModeConfigModal({
@@ -88,6 +90,7 @@ export function ModeConfigModal({
   initialServerKey,
   initialCpaQuotaView = "overview",
   initialWechatCategory = "ALL",
+  initialRecommendationStyle = "cover_card",
 }: ModeConfigModalProps) {
   const getModalTitle = () => {
     switch (modal.type) {
@@ -253,6 +256,18 @@ export function ModeConfigModal({
                 await onSubmit("SMZDM", { category });
               }}
             />
+          ) : modal.type === "recommendation" ? (
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold">{locale === "zh" ? "展示样式" : "Display style"}</label>
+              <select
+                defaultValue={initialRecommendationStyle}
+                className="w-full rounded-sm border border-ink/20 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                onChange={(e) => { void onSubmit(modal.modeId, { layout_style: e.target.value }); }}
+              >
+                <option value="ranking">{locale === "zh" ? "排行榜" : "Ranking"}</option>
+                <option value="cover_card">{locale === "zh" ? "封面卡片" : "Cover card"}</option>
+              </select>
+            </div>
           ) : modal.type === "mihomo_sub" ? (
             <MihomoSubConfig
               locale={locale}

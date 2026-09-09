@@ -2871,6 +2871,9 @@ function ConfigPageInner() {
                     initialWechatCategory={
                       (modeOverrides["WECHAT_READ"]?.category as string) || "ALL"
                     }
+                    initialRecommendationStyle={
+                      (modeOverrides[activeConfigModal?.modeId || ""]?.layout_style as string) || "cover_card"
+                    }
                   />
                 ) : null}
 

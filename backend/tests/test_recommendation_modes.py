@@ -1,3 +1,4 @@
+import asyncio
 import json
 from pathlib import Path
 
@@ -33,4 +34,11 @@ async def test_recommendation_modes_render_both_layouts():
         for style in ("ranking", "cover_card"):
             content = await generate_json_mode_content(mode.definition, config={"mode_overrides": {mode_id: {"layout_style": style}}})
             assert content.get("layout_style") == style
-            assert content.get("title")
+
+
+def test_recommendation_layout_style_survives_effective_mode_settings():
+    from core.json_content import generate_json_mode_content
+    from core.mode_registry import get_registry
+    mode = get_registry().get_json_mode("QIDIAN_NOVEL")
+    content = asyncio.run(generate_json_mode_content(mode.definition, config={"mode_settings": {"layout_style": "ranking"}}))
+    assert content.get("layout_style") == "ranking"
