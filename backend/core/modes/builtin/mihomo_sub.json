@@ -187,22 +187,13 @@
                             "margin_x": 0
                           }
                         ]
-                      }
-                    ]
-                  },
-                  {
-                    "type": "flex_row",
-                    "justify": "right",
-                    "align_items": "center",
-                    "margin_x": 0,
-                    "margin_bottom": 2,
-                    "items": [
+                      },
                       {
                         "type": "badge",
-                        "template": "{sub_1_expire_badge}",
+                        "template": "{sub_1_expire_short_badge}",
                         "font": "noto_serif_regular",
-                        "font_size": 8,
-                        "padding_x": 4,
+                        "font_size": 7,
+                        "padding_x": 3,
                         "padding_y": 1,
                         "align": "right",
                         "margin_x": 0
@@ -211,7 +202,7 @@
                   },
                   {
                     "type": "flex_row",
-                    "justify": "left",
+                    "justify": "space-between",
                     "align_items": "center",
                     "gap": 6,
                     "margin_x": 0,
@@ -219,19 +210,21 @@
                     "items": [
                       {
                         "type": "text",
-                        "template": "余量: {sub_1_remaining_str}",
+                        "template": "余量: {sub_1_remaining_str} · 已用: {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})",
                         "color": "{sub_1_rem_color}",
                         "font": "noto_serif_bold",
-                        "font_size": 10,
+                        "font_size": 9,
                         "align": "left",
                         "margin_x": 0
                       },
                       {
-                        "type": "text",
-                        "template": "·  已用: {sub_1_used_str} / {sub_1_total_str} ({sub_1_percent_str})",
+                        "type": "badge",
+                        "template": "{sub_1_expire_short_badge}",
                         "font": "noto_serif_regular",
-                        "font_size": 10,
-                        "align": "left",
+                        "font_size": 7,
+                        "padding_x": 3,
+                        "padding_y": 1,
+                        "align": "right",
                         "margin_x": 0
                       }
                     ]
@@ -290,22 +283,13 @@
                             "margin_x": 0
                           }
                         ]
-                      }
-                    ]
-                  },
-                  {
-                    "type": "flex_row",
-                    "justify": "right",
-                    "align_items": "center",
-                    "margin_x": 0,
-                    "margin_bottom": 2,
-                    "items": [
+                      },
                       {
                         "type": "badge",
-                        "template": "{sub_2_expire_badge}",
+                        "template": "{sub_2_expire_short_badge}",
                         "font": "noto_serif_regular",
-                        "font_size": 8,
-                        "padding_x": 4,
+                        "font_size": 7,
+                        "padding_x": 3,
                         "padding_y": 1,
                         "align": "right",
                         "margin_x": 0
@@ -314,27 +298,30 @@
                   },
                   {
                     "type": "flex_row",
-                    "justify": "left",
+                    "justify": "space-between",
                     "align_items": "center",
                     "gap": 6,
+                    "margin_x": 0,
                     "margin_x": 0,
                     "margin_bottom": 3,
                     "items": [
                       {
                         "type": "text",
-                        "template": "余量: {sub_2_remaining_str}",
+                        "template": "余量: {sub_2_remaining_str} · 已用: {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})",
                         "color": "{sub_2_rem_color}",
                         "font": "noto_serif_bold",
-                        "font_size": 10,
+                        "font_size": 9,
                         "align": "left",
                         "margin_x": 0
                       },
                       {
-                        "type": "text",
-                        "template": "·  已用: {sub_2_used_str} / {sub_2_total_str} ({sub_2_percent_str})",
+                        "type": "badge",
+                        "template": "{sub_2_expire_short_badge}",
                         "font": "noto_serif_regular",
-                        "font_size": 10,
-                        "align": "left",
+                        "font_size": 7,
+                        "padding_x": 3,
+                        "padding_y": 1,
+                        "align": "right",
                         "margin_x": 0
                       }
                     ]

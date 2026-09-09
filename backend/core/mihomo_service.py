@@ -436,15 +436,17 @@ class MihomoService:
 
             # 渠道重置天数必须来自该渠道自己的订阅元数据；没有来源时不伪造自然月日期。
             reset_days = s.get("reset_days")
-            reset_badge = f"还有 {int(reset_days)} 天重置" if reset_days is not None else "重置时间未知"
+            reset_badge = f"还有 {int(reset_days)} 天重置" if reset_days is not None else "每月 1 日重置"
 
             exp_str = "长期有效"
             days_badge = "长期有效"
             expire_badge = "长期有效"
+            expire_short_badge = "长期有效"
             if exp > 0:
                 try:
                     exp_dt = datetime.datetime.fromtimestamp(exp)
                     exp_str = exp_dt.strftime("%Y-%m-%d")
+                    expire_short_badge = f"到期 {exp_str}"
                     days = (exp_dt.date() - now_dt.date()).days
                     if days < 0:
                         days_badge = "已过期"
@@ -470,6 +472,7 @@ class MihomoService:
                 "expire_str": exp_str,
                 "days_left_badge": days_badge,
                 "expire_badge": expire_badge,
+                "expire_short_badge": expire_short_badge,
                 "reset_badge": reset_badge,
                 "rem_color": rem_color,
                 "node_count": f"{s.get('node_count', 0)} 节点",
@@ -547,6 +550,7 @@ class MihomoService:
                 res[f"sub_{i}_expire_str"] = cur["expire_str"]
                 res[f"sub_{i}_days_badge"] = cur["days_left_badge"]
                 res[f"sub_{i}_expire_badge"] = cur["expire_badge"]
+                res[f"sub_{i}_expire_short_badge"] = cur["expire_short_badge"]
                 res[f"sub_{i}_reset_badge"] = cur["reset_badge"]
                 res[f"sub_{i}_rem_color"] = cur["rem_color"]
             else:
@@ -559,6 +563,7 @@ class MihomoService:
                 res[f"sub_{i}_expire_str"] = ""
                 res[f"sub_{i}_days_badge"] = ""
                 res[f"sub_{i}_expire_badge"] = ""
+                res[f"sub_{i}_expire_short_badge"] = ""
                 res[f"sub_{i}_reset_badge"] = ""
                 res[f"sub_{i}_rem_color"] = "black"
 

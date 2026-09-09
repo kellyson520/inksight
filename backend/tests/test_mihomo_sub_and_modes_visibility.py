@@ -283,22 +283,37 @@ async def test_mihomo_sub_reset_badge_color_and_expire_format():
         assert "到期日" in data["sub_2_expire_badge"]
 
         # 2. 渠道重置徽章检验：无主渠道元数据时不伪造日期；备渠道保留显式值
-        assert data["sub_1_reset_badge"] == "重置时间未知"
+        assert data["sub_1_reset_badge"] == "每月 1 日重置"
         assert data["sub_2_reset_badge"] == "还有 1 天重置"
+        assert data["sub_1_expire_short_badge"].startswith("到期 ")
+        assert data["sub_2_expire_short_badge"].startswith("到期 ")
 
         # 3. 余量消耗程度颜色
         assert data["sub_1_rem_color"] == "red"
         assert data["sub_2_rem_color"] == "black"
 
 
-def test_mihomo_expiry_badge_has_dedicated_row_in_multi_layout():
+def test_mihomo_multi_layout_channel_cards_are_compact():
+    import json
+    mode = json.load(open("backend/core/modes/builtin/mihomo_sub.json", encoding="utf-8"))
+    cards = mode["layout"]["body"][1]["conditions"][0]["children"]
+    channel_cards = [cards[2], cards[4]]
+    for card in channel_cards:
+        rows = [child for child in card["children"] if child.get("type") == "flex_row"]
+        assert len(rows) == 2
+        assert rows[0]["justify"] == "space-between"
+        assert rows[1]["justify"] == "space-between"
+        assert "expire_short_badge" in str(rows[1])
+
+
+def test_mihomo_expiry_is_kept_in_channel_header_row():
     import json
     mode = json.load(open("backend/core/modes/builtin/mihomo_sub.json", encoding="utf-8"))
     cards = mode["layout"]["body"][1]["conditions"][0]["children"]
     for card in (cards[2], cards[4]):
-        rows = [child for child in card["children"] if child.get("type") == "flex_row"]
-        assert len(rows) >= 3
-        assert any("expire_badge" in str(row) and row.get("justify") == "right" for row in rows[1:])
+        header = card["children"][0]
+        assert header["justify"] == "space-between"
+        assert "expire_short_badge" in str(header)
 
 
 
