@@ -950,6 +950,7 @@ async def test_mobile_preferences_and_push_registration_flow(client):
             "widget_mode": "POETRY",
             "locale": "en",
             "timezone": "Asia/Shanghai",
+            "global_proxy_url": "socks5://proxy.example:1080",
         },
     )
     assert update_resp.status_code == 200
@@ -957,6 +958,7 @@ async def test_mobile_preferences_and_push_registration_flow(client):
     assert updated["push_enabled"] is True
     assert updated["widget_mode"] == "POETRY"
     assert updated["locale"] == "en"
+    assert updated["global_proxy_url"] == "socks5://proxy.example:1080"
 
     register_resp = await client.post(
         "/api/push/register",

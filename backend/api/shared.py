@@ -408,6 +408,16 @@ async def build_image(
 
     battery_pct = calc_battery_pct(v)
     config = await get_active_config(mac) if mac else None
+    preference_user_id = current_user_id or (await get_device_owner(mac) or {}).get("user_id") if mac else current_user_id
+    if preference_user_id:
+        try:
+            from core.config_store import get_user_preferences
+            prefs = await get_user_preferences(int(preference_user_id))
+            if prefs.get("global_proxy_url"):
+                config = dict(config or {})
+                config["global_proxy_url"] = prefs["global_proxy_url"]
+        except Exception:
+            logger.debug("[BUILD_IMAGE] Failed to load global proxy preference", exc_info=True)
     persona = await resolve_mode(mac, config, persona_override, force_next=force_next)
     owner_user_id: Optional[int] = None
     if mac:
