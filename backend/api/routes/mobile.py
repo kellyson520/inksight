@@ -154,6 +154,8 @@ async def get_today_content(
 
     # 查询用户 LLM 配置并注入到 config 中
     base_cfg = _base_mobile_config(city=city, locale=resolved_locale, widget_mode=selected_modes[0] if selected_modes else "STOIC")
+    if prefs and prefs.get("global_proxy_url"):
+        base_cfg["global_proxy_url"] = prefs["global_proxy_url"]
     if user_id is not None:
         try:
             user_llm_cfg = await get_user_llm_config(user_id)

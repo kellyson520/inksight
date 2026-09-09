@@ -1,0 +1,5 @@
+{
+  "mode_id":"PORN_VIDEO","display_name":"P站视频推荐","icon":"video","cacheable":true,"description":"P站公开推荐视频，不需要登录","settings_schema":[{"key":"layout_style","label":"展示样式","type":"select","default":"ranking","options":[{"value":"ranking","label":"排行榜"},{"value":"cover_card","label":"缩略图卡片"}]}],
+  "content":{"type":"computed","provider":"porn_video","fallback":{"title":"P站公开视频推荐","source":"P站","items":[{"title":"公开榜单暂不可用","subtitle":"P站","rank_label":"推荐"}]}},
+  "layout":{"body":[{"type":"text","template":"{title}","font":"noto_serif_bold","font_size":15,"margin_x":10,"margin_bottom":5},{"type":"recommendation","field":"items","style_field":"layout_style","max_items":5,"font_size":10,"margin_x":0}],"footer":{"label":"P VIDEO","attribution_template":"{source}"}}
+}

@@ -63,6 +63,7 @@ async def run_main_db_migrations(db, *, defaults: dict[str, str]) -> None:
                 """
             ),
         ),
+        (18, "user_preferences.global_proxy_url", lambda: _add_column_if_missing(db, "user_preferences", "global_proxy_url", "global_proxy_url TEXT DEFAULT ''")),
         (
             17,
             "push_tokens.create",

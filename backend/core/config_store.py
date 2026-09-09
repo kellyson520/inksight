@@ -447,6 +447,7 @@ async def init_db():
                 widget_mode TEXT DEFAULT 'STOIC',
                 locale TEXT DEFAULT 'zh',
                 timezone TEXT DEFAULT 'Asia/Shanghai',
+                global_proxy_url TEXT DEFAULT '',
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
@@ -647,6 +648,7 @@ def _default_user_preferences(user_id: int) -> dict:
         "widget_mode": "STOIC",
         "locale": "zh",
         "timezone": "Asia/Shanghai",
+        "global_proxy_url": "",
         "updated_at": "",
     }
 
@@ -654,7 +656,7 @@ def _default_user_preferences(user_id: int) -> dict:
 async def get_user_preferences(user_id: int) -> dict:
     db = await get_main_db()
     cursor = await db.execute(
-        """SELECT user_id, push_enabled, push_time, push_modes, widget_mode, locale, timezone, updated_at
+        """SELECT user_id, push_enabled, push_time, push_modes, widget_mode, locale, timezone, global_proxy_url, updated_at
            FROM user_preferences WHERE user_id = ? LIMIT 1""",
         (user_id,),
     )
@@ -669,7 +671,8 @@ async def get_user_preferences(user_id: int) -> dict:
         "widget_mode": (row[4] or "STOIC").upper(),
         "locale": row[5] or "zh",
         "timezone": row[6] or "Asia/Shanghai",
-        "updated_at": row[7] or "",
+        "global_proxy_url": row[7] or "",
+        "updated_at": row[8] or "",
     }
 
 
@@ -685,13 +688,14 @@ async def save_user_preferences(user_id: int, data: dict) -> dict:
     widget_mode = str(data.get("widget_mode", current["widget_mode"]) or current["widget_mode"]).strip().upper() or "STOIC"
     locale = str(data.get("locale", current["locale"]) or current["locale"]).strip().lower() or "zh"
     timezone = str(data.get("timezone", current["timezone"]) or current["timezone"]).strip() or "Asia/Shanghai"
+    global_proxy_url = str(data.get("global_proxy_url", current.get("global_proxy_url", "")) or "").strip()[:512]
 
     db = await get_main_db()
     await db.execute(
         """
         INSERT INTO user_preferences
-            (user_id, push_enabled, push_time, push_modes, widget_mode, locale, timezone, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (user_id, push_enabled, push_time, push_modes, widget_mode, locale, timezone, global_proxy_url, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(user_id) DO UPDATE SET
             push_enabled = excluded.push_enabled,
             push_time = excluded.push_time,
@@ -699,6 +703,7 @@ async def save_user_preferences(user_id: int, data: dict) -> dict:
             widget_mode = excluded.widget_mode,
             locale = excluded.locale,
             timezone = excluded.timezone,
+            global_proxy_url = excluded.global_proxy_url,
             updated_at = excluded.updated_at
         """,
         (
@@ -709,6 +714,7 @@ async def save_user_preferences(user_id: int, data: dict) -> dict:
             widget_mode,
             locale,
             timezone,
+            global_proxy_url,
             now,
         ),
     )

@@ -1,0 +1,5 @@
+{
+  "mode_id":"IWARA_VIDEO","display_name":"iwara 视频推荐","icon":"play-circle","cacheable":true,"description":"iwara 公开推荐视频","settings_schema":[{"key":"layout_style","label":"展示样式","type":"select","default":"cover_card","options":[{"value":"ranking","label":"排行榜"},{"value":"cover_card","label":"缩略图卡片"}]}],
+  "content":{"type":"computed","provider":"iwara_video","fallback":{"title":"iwara 视频推荐","source":"iwara","items":[{"title":"公开推荐视频","subtitle":"iwara","rank_label":"推荐"}]}},
+  "layout":{"body":[{"type":"text","template":"{title}","font":"noto_serif_bold","font_size":15,"margin_x":10,"margin_bottom":5},{"type":"recommendation","field":"items","style_field":"layout_style","max_items":5,"font_size":10,"margin_x":0}],"footer":{"label":"IWARA","attribution_template":"{source}"}}
+}

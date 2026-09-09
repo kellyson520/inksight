@@ -44,7 +44,7 @@ type ModeSelectorProps = {
   onScreenSizeChange?: (w: number, h: number) => void;
 };
 
-type StudioTab = "all" | "life" | "productivity" | "news" | "studio";
+type StudioTab = "all" | "life" | "productivity" | "news" | "media" | "studio";
 
 const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   // 资讯与热点
@@ -72,6 +72,11 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   CPA_QUOTA: "productivity",
   TECH_RADAR: "productivity",
   MIHOMO_SUB: "productivity",
+  QIDIAN_NOVEL: "media",
+  PIXIV_DAILY: "media",
+  IWARA_VIDEO: "media",
+  PORN_VIDEO: "media",
+  GAME_GIVEAWAY: "media",
   // 生活日常
   CLOCK: "life",
   WEATHER: "life",
@@ -121,6 +126,8 @@ export function ModeSelector({
 }: ModeSelectorProps) {
   const [activeTab, setActiveTab] = useState<StudioTab>("all");
   const [keyword, setKeyword] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
 
   const allBuiltinModes = Array.from(new Set([...coreModes, ...extraModes]));
 
@@ -144,6 +151,7 @@ export function ModeSelector({
 
   const displayedBuiltins = filterModes(allBuiltinModes);
   const displayedCustoms = filterModes(customModes);
+  const pagedBuiltins = displayedBuiltins.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <Card className="border-ink/10 shadow-xs">
@@ -170,14 +178,15 @@ export function ModeSelector({
               { id: "life", label: tr("生活日常", "Life"), icon: Heart },
               { id: "productivity", label: tr("效率工作", "Productivity"), icon: Briefcase },
               { id: "news", label: tr("资讯热点", "News & Feeds"), icon: Newspaper },
-              { id: "studio", label: tr("灵感创作", "Studio"), icon: Sparkles },
+              { id: "media", label: tr("图片视频", "Media"), icon: LayoutGrid },
+               { id: "studio", label: tr("灵感创作", "Studio"), icon: Sparkles },
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as StudioTab)}
+                  onClick={() => { setActiveTab(tab.id as StudioTab); setPage(1); }}
                   className={`px-2.5 py-1.5 rounded-sm text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     isActive
                       ? "bg-ink text-white dark:bg-zinc-800 dark:text-zinc-100 dark:border dark:border-zinc-700 shadow-2xs font-semibold"
@@ -207,7 +216,7 @@ export function ModeSelector({
       <CardContent className="pt-4 space-y-4">
         {/* 内置组件网格 */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-          {displayedBuiltins.map((mode) => {
+          {pagedBuiltins.map((mode) => {
             const meta = modeMeta[mode] || { name: mode, tip: "" };
             const isSelected = selectedModes.has(mode);
             const isConfigurable = Boolean(CONFIGURABLE_MODES[mode.toUpperCase()]);
@@ -353,6 +362,16 @@ export function ModeSelector({
               </div>
             );
           })}
+
+          {displayedBuiltins.length > pageSize && (
+            <div className="col-span-full flex items-center justify-between border-t border-ink/10 pt-3">
+              <span className="text-xs text-ink-light">{tr(`第 ${page} 页 / 共 ${Math.ceil(displayedBuiltins.length / pageSize)} 页`, `Page ${page} / ${Math.ceil(displayedBuiltins.length / pageSize)}`)}</span>
+              <div className="flex gap-2">
+                <button type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-2 py-1 text-xs border rounded-sm disabled:opacity-40">{tr("上一页", "Previous")}</button>
+                <button type="button" disabled={page >= Math.ceil(displayedBuiltins.length / pageSize)} onClick={() => setPage((p) => Math.min(Math.ceil(displayedBuiltins.length / pageSize), p + 1))} className="px-2 py-1 text-xs border rounded-sm disabled:opacity-40">{tr("下一页", "Next")}</button>
+              </div>
+            </div>
+          )}
 
           {/* 新建自定义组件入口 */}
           <button

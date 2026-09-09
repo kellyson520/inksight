@@ -275,6 +275,10 @@ BUILTIN_CATALOG: list[CatalogItem] = [
         zh=CatalogText(name="喜加一", tip="Epic 或 Steam 限时免费游戏，封面背景配游戏名与领取截止时间"),
         en=CatalogText(name="Game Giveaway", tip="Limited-time free Epic or Steam games with cover and claim deadline"),
     ),
+    CatalogItem(mode_id="QIDIAN_NOVEL", category="more", zh=CatalogText(name="起点小说", tip="起点公开小说榜单"), en=CatalogText(name="Qidian Novels", tip="Public Qidian novel rankings")),
+    CatalogItem(mode_id="PIXIV_DAILY", category="more", zh=CatalogText(name="Pixiv 每日一图", tip="Pixiv 每日精选插画"), en=CatalogText(name="Pixiv Daily", tip="Pixiv daily illustration")),
+    CatalogItem(mode_id="IWARA_VIDEO", category="more", zh=CatalogText(name="iwara 视频", tip="iwara 公开视频推荐"), en=CatalogText(name="iwara Videos", tip="Public iwara video recommendations")),
+    CatalogItem(mode_id="PORN_VIDEO", category="more", zh=CatalogText(name="P站视频", tip="P站公开推荐视频"), en=CatalogText(name="P Video", tip="Public video recommendations")),
 ]
 
 

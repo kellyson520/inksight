@@ -100,12 +100,15 @@ class OutboundHttp:
         parsed = urlparse(url)
         return f"{parsed.scheme}://{parsed.netloc}/"
 
-    def _get(self, url: str, headers: dict[str, str], policy: RequestPolicy) -> httpx.Response:
-        client = self.client_factory(
-            timeout=policy.timeout,
-            follow_redirects=False,
-            verify=policy.verify,
-        )
+    def _get(self, url: str, headers: dict[str, str], policy: RequestPolicy, proxy_url: str | None = None) -> httpx.Response:
+        client_kwargs: dict[str, Any] = {
+            "timeout": policy.timeout,
+            "follow_redirects": False,
+            "verify": policy.verify,
+        }
+        if proxy_url:
+            client_kwargs["proxy"] = proxy_url
+        client = self.client_factory(**client_kwargs)
         if hasattr(client, "__enter__"):
             with client as managed:
                 return managed.get(url, headers=headers, follow_redirects=False)
@@ -117,6 +120,7 @@ class OutboundHttp:
         *,
         headers: Mapping[str, str] | None = None,
         policy: RequestPolicy | None = None,
+        proxy_url: str | None = None,
     ) -> HttpResponse:
         effective = policy or self.policy
         self._validate_url(url, effective)
@@ -133,7 +137,7 @@ class OutboundHttp:
         current_url = url
         for attempt in range(1, max_attempts + 1):
             try:
-                response = self._get(current_url, request_headers, effective)
+                response = self._get(current_url, request_headers, effective, proxy_url=proxy_url)
                 if 300 <= response.status_code < 400 and effective.follow_redirects:
                     location = response.headers.get("location")
                     if not location:
@@ -210,8 +214,8 @@ class OutboundHttp:
             if close and not hasattr(client, "__enter__"):
                 close()
 
-    def get_text(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
-        return self.get_bytes(url, headers=headers, policy=policy)
+    def get_text(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None, proxy_url: str | None = None) -> HttpResponse:
+        return self.get_bytes(url, headers=headers, policy=policy, proxy_url=proxy_url)
 
     def head(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
         effective = policy or self.policy
@@ -269,8 +273,8 @@ class OutboundHttp:
         obs.emit("dependency.completed", {"operation": "http.post_json", "url_host": urlparse(url).hostname, "status": response.status_code, "attempts": 1, "retry_count": 0, "duration_ms": elapsed})
         return HttpResponse(response.status_code, dict(response.headers), response.content, url, 1, elapsed)
 
-    def get_json(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None) -> HttpResponse:
-        response = self.get_bytes(url, headers=headers, policy=policy)
+    def get_json(self, url: str, *, headers: Mapping[str, str] | None = None, policy: RequestPolicy | None = None, proxy_url: str | None = None) -> HttpResponse:
+        response = self.get_bytes(url, headers=headers, policy=policy, proxy_url=proxy_url)
         response.json()
         return response
 

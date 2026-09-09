@@ -16,6 +16,10 @@ from .qr_code_provider import generate_qr_code
 from .mihomo_sub_provider import generate_mihomo_sub
 from .xkcd_provider import generate_xkcd
 from .game_giveaway_provider import generate_game_giveaway
+from .qidian_novel_provider import generate_qidian_novel
+from .pixiv_daily_provider import generate_pixiv_daily
+from .iwara_video_provider import generate_iwara_video
+from .porn_video_provider import generate_porn_video
 
 __all__ = [
     "register_provider",
@@ -35,4 +39,8 @@ __all__ = [
     "generate_mihomo_sub",
     "generate_xkcd",
     "generate_game_giveaway",
+    "generate_qidian_novel",
+    "generate_pixiv_daily",
+    "generate_iwara_video",
+    "generate_porn_video",
 ]

@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple[int, int]:
     """高性能计算 Block 的宽高，优先命中分析型快速路径。"""
     btype = block.get("type", "")
+    if btype == "recommendation":
+        items = ctx.get_field(block.get("field", "items"))
+        count = len(items) if isinstance(items, list) else 0
+        font_size = int(block.get("font_size", 10) * ctx.scale)
+        return max_width, count * (font_size + int(4 * ctx.scale))
     if btype == "badge":
         field_name = block.get("field")
         text = str(ctx.get_field(field_name)) if field_name else ctx.resolve(block.get("template", block.get("text", "")))

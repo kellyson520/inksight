@@ -94,6 +94,10 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   SMZDM: "smzdm",
   GITHUB_PULSE: "github_pulse",
   MIHOMO_SUB: "mihomo_sub",
+  QIDIAN_NOVEL: "recommendation",
+  PIXIV_DAILY: "recommendation",
+  IWARA_VIDEO: "recommendation",
+  PORN_VIDEO: "recommendation",
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [

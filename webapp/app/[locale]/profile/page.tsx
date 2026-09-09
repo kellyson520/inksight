@@ -57,6 +57,7 @@ export default function ProfilePage() {
   const [imageModel, setImageModel] = useState("");
   const [imageApiKey, setImageApiKey] = useState("");
   const [imageBaseUrl, setImageBaseUrl] = useState("");
+  const [globalProxyUrl, setGlobalProxyUrl] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -123,6 +124,11 @@ export default function ProfilePage() {
       }
       const data: ProfileData = await res.json();
       setProfileData(data);
+      const prefsRes = await fetch("/api/user/preferences", { headers: authHeaders() });
+      if (prefsRes.ok) {
+        const prefs = await prefsRes.json();
+        setGlobalProxyUrl(typeof prefs.global_proxy_url === "string" ? prefs.global_proxy_url : "");
+      }
 
       // 只要数据库里存在配置记录，就回填表单并进入 BYOK 视图。
       if (data.llm_config) {
@@ -276,6 +282,15 @@ export default function ProfilePage() {
   const doSaveLlmConfig = async () => {
     setSaving(true);
     try {
+      const proxyRes = await fetch("/api/user/preferences", {
+        method: "PUT",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ global_proxy_url: globalProxyUrl.trim() }),
+      });
+      if (!proxyRes.ok) {
+        const proxyError = await proxyRes.json().catch(() => ({}));
+        throw new Error(proxyError.detail || proxyError.error || tr("代理配置无效", "Invalid proxy configuration"));
+      }
       const effectiveProvider = llmAccessMode === "custom_openai" ? "openai_compat" : llmProvider;
       const effectiveBaseUrl = llmAccessMode === "custom_openai" ? llmBaseUrl.trim() : "";
       const res = await fetch("/api/user/profile/llm", {
@@ -772,6 +787,18 @@ export default function ProfilePage() {
                   </>
                 )}
                 
+                <div className="pt-4 border-t border-ink/10">
+                  <Field label={tr("海外内容全局代理（可选）", "Global proxy for overseas content (optional)")}>
+                    <input
+                      type="url"
+                      value={globalProxyUrl}
+                      onChange={(e) => setGlobalProxyUrl(e.target.value)}
+                      placeholder="http://127.0.0.1:7890 或 socks5://127.0.0.1:1080"
+                      className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm bg-white font-mono"
+                    />
+                  </Field>
+                  <p className="text-xs text-ink-light mt-1">{tr("支持 HTTP/HTTPS/SOCKS5；用于 Pixiv、iwara 等外站请求", "Supports HTTP/HTTPS/SOCKS5 for Pixiv, iwara, and other overseas requests")}</p>
+                </div>
                 <div className="pt-2">
                   <div className="flex items-center gap-2">
                     <Button

@@ -288,6 +288,15 @@ class UserPreferencesRequest(BaseModel):
     widget_mode: str = Field(default="STOIC", max_length=40)
     locale: str = Field(default="zh", max_length=8)
     timezone: str = Field(default="Asia/Shanghai", max_length=64)
+    global_proxy_url: str = Field(default="", max_length=512)
+
+    @field_validator("global_proxy_url")
+    @classmethod
+    def validate_global_proxy_url(cls, v: str) -> str:
+        value = v.strip()
+        if value and not value.lower().startswith(("http://", "https://", "socks5://", "socks5h://")):
+            raise ValueError("global_proxy_url 必须使用 HTTP 或 SOCKS5 协议")
+        return value
 
     @field_validator("push_time")
     @classmethod
