@@ -793,6 +793,8 @@ async def generate_json_mode_content(
         return content
     if ctype == "computed":
         content = await _generate_computed_content(mode_def, content_cfg, fallback, **common_args)
+        if isinstance(config, dict) and config.get("global_proxy_url"):
+            content["__global_proxy_url"] = config["global_proxy_url"]
         if isinstance(override, dict) and override:
             for k, v in override.items():
                 if k in {"city", "llm_provider", "llm_model", "image_provider", "image_model"}:

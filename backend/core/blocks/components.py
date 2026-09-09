@@ -469,7 +469,8 @@ def render_image(ctx: RenderContext, block: dict) -> None:
         return
 
     try:
-        fetched = media_fetcher.fetch_image(candidate_urls)
+        proxy_url = ctx.content.get("__global_proxy_url")
+        fetched = media_fetcher.fetch_image(candidate_urls, proxy_url=proxy_url)
         img = convert_image_block(
             Image.open(BytesIO(fetched.data)),
             width, height, ctx.colors,

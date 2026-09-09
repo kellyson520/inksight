@@ -201,7 +201,7 @@ class MediaFetcher:
         delay += random.uniform(0, self.backoff_base * 0.2)
         time.sleep(delay)
 
-    def _get(self, url: str, headers: dict[str, str]) -> httpx.Response:
+    def _get(self, url: str, headers: dict[str, str], *, proxy_url: str | None = None) -> httpx.Response:
         """Call an injected client, supporting both managed and plain clients."""
         if self.client_factory is None:
             response = outbound_http.get_stream_bytes(
@@ -213,6 +213,7 @@ class MediaFetcher:
                     max_response_bytes=self.max_response_bytes,
                     follow_redirects=False,
                 ),
+                proxy_url=proxy_url,
             )
             return httpx.Response(response.status_code, headers=dict(getattr(response, "headers", {})), content=response.content, request=httpx.Request("GET", url))
         client = self.client_factory(timeout=self.timeout, follow_redirects=False)
@@ -225,13 +226,13 @@ class MediaFetcher:
     def _retryable_status(cls, status: int) -> bool:
         return status in cls.RETRYABLE_STATUS_CODES or 500 <= status <= 599
 
-    def fetch_image(self, urls: str | Sequence[str], *, referer: str | None = None) -> MediaFetchResult:
+    def fetch_image(self, urls: str | Sequence[str], *, referer: str | None = None, proxy_url: str | None = None) -> MediaFetchResult:
         """Fetch an image and reject successful HTML/JSON anti-hotlink pages."""
         candidates = self._normalize_urls(urls)
         image_errors: list[str] = []
         for url in candidates:
             try:
-                result = self.fetch(url, referer=referer)
+                result = self.fetch(url, referer=referer, proxy_url=proxy_url)
             except MediaFetchError as exc:
                 image_errors.extend(exc.attempts)
                 continue
@@ -254,7 +255,7 @@ class MediaFetcher:
             return result
         raise MediaFetchError("All image URL candidates failed: " + "; ".join(image_errors), attempts=image_errors)
 
-    def fetch(self, urls: str | Sequence[str], *, referer: str | None = None) -> MediaFetchResult:
+    def fetch(self, urls: str | Sequence[str], *, referer: str | None = None, proxy_url: str | None = None) -> MediaFetchResult:
         candidates = self._normalize_urls(urls)
         errors: list[str] = []
 
@@ -274,7 +275,7 @@ class MediaFetcher:
             }
             for attempt in range(1, self.max_attempts + 1):
                 try:
-                    response = self._get(url, headers)
+                    response = self._get(url, headers, proxy_url=proxy_url)
                     if response.status_code >= 400:
                         status_error = f"HTTP {response.status_code}"
                         if self._retryable_status(response.status_code) and attempt < self.max_attempts:

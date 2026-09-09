@@ -24,11 +24,12 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
         subtitle = str(item.get("subtitle", "")).strip()
         rank = str(item.get("rank_label") or f"NO.{index}")
         if style == "cover_card":
+            image_data = item.get("image_data")
             image_url = str(item.get("thumbnail_url") or item.get("cover_url") or "").strip()
             card_height = max(font_size + int(8 * ctx.scale), int(block.get("card_height", 42) * ctx.scale))
-            if image_url:
+            if image_data is not None or image_url:
                 previous_image = ctx.content.get("__recommendation_image")
-                ctx.content["__recommendation_image"] = image_url
+                ctx.content["__recommendation_image"] = image_data if image_data is not None else image_url
                 render_image(ctx, {"field": "__recommendation_image", "width": max(20, ctx.available_width - int(20 * ctx.scale)), "height": card_height, "x": ctx.x_offset + int(10 * ctx.scale), "y": y, "fit": "contain"})
                 if previous_image is None:
                     ctx.content.pop("__recommendation_image", None)

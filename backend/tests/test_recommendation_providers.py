@@ -13,6 +13,14 @@ def test_qidian_parser_normalizes_ranked_novels():
     assert items[0]["rank_label"] == "NO.1"
 
 
+def test_pixiv_fallback_contains_renderable_public_image():
+    import asyncio
+    from core.providers.pixiv_daily_provider import generate_pixiv_daily
+    result = asyncio.run(generate_pixiv_daily({}, {"type": "computed"}, {"title": "Pixiv 每日一图"}, config={}))
+    assert result["items"]
+    assert result["items"][0].get("image_data") is not None
+
+
 def test_pixiv_parser_normalizes_daily_image():
     item = _parse_pixiv_item({"title": "Blue", "user": {"name": "Artist"}, "image": "https://i.pximg.net/a.jpg"})
     assert item["title"] == "Blue"
