@@ -1,0 +1,5 @@
+{
+  "mode_id":"QIDIAN_NOVEL","display_name":"Qidian Novels","icon":"book-open","cacheable":true,"description":"Public Qidian novel rankings","settings_schema":[{"key":"layout_style","label":"Display style","type":"select","default":"ranking","options":[{"value":"ranking","label":"Ranking"},{"value":"cover_card","label":"Cover card"}]}],
+  "content":{"type":"computed","provider":"qidian_novel","fallback":{"title":"Qidian Novels","source":"Qidian","items":[{"title":"Lord of Mysteries","subtitle":"Cuttlefish That Loves Diving","rank_label":"NO.1","source":"Qidian"}]}},
+  "layout":{"body":[{"type":"text","template":"{title}","font":"noto_serif_bold","font_size":15,"margin_x":10,"margin_bottom":5},{"type":"recommendation","field":"items","style_field":"layout_style","max_items":5,"font_size":10,"margin_x":0}],"footer":{"label":"QIDIAN","attribution_template":"{source}"}}
+}

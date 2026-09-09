@@ -1,0 +1,5 @@
+{
+  "mode_id":"PIXIV_DAILY","display_name":"Pixiv Daily","icon":"image","cacheable":true,"description":"Pixiv daily illustration","settings_schema":[{"key":"layout_style","label":"Display style","type":"select","default":"cover_card","options":[{"value":"ranking","label":"Info ranking"},{"value":"cover_card","label":"Image card"}]}],
+  "content":{"type":"computed","provider":"pixiv_daily","fallback":{"title":"Pixiv Daily","subtitle":"Daily featured illustration","source":"Pixiv","rank_label":"DAILY"}},
+  "layout":{"body":[{"type":"text","template":"{title}","font":"noto_serif_bold","font_size":15,"margin_x":10,"margin_bottom":5},{"type":"text","template":"Artist: {subtitle}","font_size":11,"margin_x":10,"margin_bottom":4},{"type":"recommendation","field":"items","style_field":"layout_style","max_items":1,"font_size":10,"margin_x":0}],"footer":{"label":"PIXIV","attribution_template":"{source} · {rank_label}"}}
+}

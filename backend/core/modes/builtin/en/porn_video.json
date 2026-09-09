@@ -1,0 +1,5 @@
+{
+  "mode_id":"PORN_VIDEO","display_name":"P Video","icon":"video","cacheable":true,"description":"Public P video recommendations without login","settings_schema":[{"key":"layout_style","label":"Display style","type":"select","default":"ranking","options":[{"value":"ranking","label":"Ranking"},{"value":"cover_card","label":"Thumbnail card"}]}],
+  "content":{"type":"computed","provider":"porn_video","fallback":{"title":"P Video Recommendations","source":"P Video","items":[{"title":"Public ranking unavailable","subtitle":"P Video","rank_label":"Recommended"}]}},
+  "layout":{"body":[{"type":"text","template":"{title}","font":"noto_serif_bold","font_size":15,"margin_x":10,"margin_bottom":5},{"type":"recommendation","field":"items","style_field":"layout_style","max_items":5,"font_size":10,"margin_x":0}],"footer":{"label":"P VIDEO","attribution_template":"{source}"}}
+}

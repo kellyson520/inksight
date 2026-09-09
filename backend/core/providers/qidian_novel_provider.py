@@ -30,7 +30,9 @@ def _parse_qidian_items(payload: Any) -> list[dict[str, Any]]:
 @register_provider("qidian_novel")
 async def generate_qidian_novel(mode_def, content_cfg, fallback, **kwargs):
     config = kwargs.get("config") or {}; override = config.get("mode_overrides", {}).get("QIDIAN_NOVEL", {})
-    endpoint = override.get("endpoint") or content_cfg.get("endpoint") or _DEFAULT_ENDPOINT
+    if not isinstance(override, dict): override = {}
+    settings = config.get("mode_settings") or {}
+    endpoint = override.get("endpoint") or settings.get("endpoint") or content_cfg.get("endpoint") or _DEFAULT_ENDPOINT
     items = []
     try:
         response = await asyncio.to_thread(outbound_http.get_json, endpoint, proxy_url=resolve_proxy_url(config.get("global_proxy_url")), policy=RequestPolicy(max_attempts=1, follow_redirects=True))

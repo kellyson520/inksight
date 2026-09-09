@@ -25,7 +25,9 @@ def _parse_pixiv_item(payload: Any) -> dict[str, Any]:
 @register_provider("pixiv_daily")
 async def generate_pixiv_daily(mode_def, content_cfg, fallback, **kwargs):
     config = kwargs.get("config") or {}; override = config.get("mode_overrides", {}).get("PIXIV_DAILY", {})
-    endpoint = override.get("endpoint") or content_cfg.get("endpoint")
+    if not isinstance(override, dict): override = {}
+    settings = config.get("mode_settings") or {}
+    endpoint = override.get("endpoint") or settings.get("endpoint") or content_cfg.get("endpoint")
     item = {}
     if endpoint:
         try:
