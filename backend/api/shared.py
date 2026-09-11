@@ -405,13 +405,13 @@ async def build_image(
     is_preview: bool = False,
 ):
     from core.mode_registry import get_registry
+    from core.config_store import get_device_owner, get_main_db, get_user_preferences
 
     battery_pct = calc_battery_pct(v)
     config = await get_active_config(mac) if mac else None
     preference_user_id = current_user_id
     if not preference_user_id and mac:
         # First check active device memberships for a user with configured global_proxy_url
-        from core.config_store import get_main_db, get_device_owner
         try:
             db = await get_main_db()
             # Order: active members who have a non-empty global_proxy_url first, then owner, then first active member
@@ -435,7 +435,6 @@ async def build_image(
     if not preference_user_id and not mac:
         # Fallback for anonymous preview when a single user has configured a global proxy
         try:
-            from core.config_store import get_main_db
             db = await get_main_db()
             cur = await db.execute("SELECT user_id FROM user_preferences WHERE global_proxy_url IS NOT NULL AND global_proxy_url != '' ORDER BY updated_at DESC LIMIT 1")
             p_row = await cur.fetchone()
@@ -445,7 +444,6 @@ async def build_image(
             pass
     if preference_user_id:
         try:
-            from core.config_store import get_user_preferences
             prefs = await get_user_preferences(int(preference_user_id))
             if prefs.get("global_proxy_url"):
                 config = dict(config or {})
