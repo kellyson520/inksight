@@ -24,6 +24,8 @@ _SECRET_CANDIDATE_PATHS = [
     Path("/opt/mihomo-cliproxy/guardian/controller_secret"),
     Path("/root/.config/mihomo/controller_secret"),
     Path("/etc/mihomo/controller_secret"),
+    Path("/app/backend/data/mihomo-providers/controller_secret"),
+    Path("/root/work/inksight/backend/data/mihomo-providers/controller_secret"),
 ]
 
 # 默认 controller 探测列表
@@ -156,6 +158,8 @@ class MihomoService:
         candidates = (
             Path("/opt/mihomo-cliproxy/config/config.yaml"),
             Path("/etc/mihomo/config.yaml"),
+            Path("/app/backend/data/mihomo-providers/config.yaml"),
+            Path("/root/work/inksight/backend/data/mihomo-providers/config.yaml"),
         )
         for path in candidates:
             try:
@@ -175,6 +179,40 @@ class MihomoService:
             if found:
                 return found
         return {}
+
+    def _discover_local_provider_reset_days(self) -> dict[str, int]:
+        """Directly parse cached provider yaml files on disk if available."""
+        directories = (
+            Path("/opt/mihomo-cliproxy/providers"),
+            Path("/app/backend/data/mihomo-providers"),
+            Path("/root/work/inksight/backend/data/mihomo-providers"),
+            Path("/root/.config/mihomo/providers"),
+        )
+        res: dict[str, int] = {}
+        for directory in directories:
+            if not directory.exists() or not directory.is_dir():
+                continue
+            try:
+                for file_path in directory.glob("*.yaml"):
+                    channel_name = file_path.stem
+                    try:
+                        # Scan first 500 lines for efficiency
+                        lines = []
+                        with file_path.open("r", encoding="utf-8", errors="ignore") as f:
+                            for _ in range(500):
+                                l = f.readline()
+                                if not l:
+                                    break
+                                lines.append(l)
+                        text = "".join(lines)
+                        days = _parse_reset_days_text(text)
+                        if days is not None:
+                            res[channel_name.lower()] = days
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+        return res
 
     def _discover_secret(self, explicit_secret: Optional[str] = None) -> str:
         """解析控制密钥，支持显式传入、环境变量与文件挂载探测。"""
@@ -360,9 +398,19 @@ class MihomoService:
         # 2. 从 Controller 获取各渠道额度；重置元数据稍后按同名渠道补齐。
         ctrl_meta, ctrl_subs = await self.fetch_all_controller_subscriptions(api_url=api_url, secret=api_secret)
 
-        # 3. 读取每个渠道自己的订阅正文，只合并 reset_days，避免重复增加渠道或覆盖额度。
+        # 3. 补齐重置天数：优先从本地订阅文件内容扫描，其次从 Provider URL 在线抓取
+        local_resets = self._discover_local_provider_reset_days()
+        for existing in ctrl_subs:
+            cname = str(existing.get("name", "")).lower()
+            if existing.get("reset_days") is None and cname in local_resets:
+                existing["reset_days"] = local_resets[cname]
+
         provider_urls = self._discover_provider_urls()
         for channel_name, channel_url in provider_urls.items():
+            # If already resolved via local file, skip network fetch
+            existing_match = next((s for s in ctrl_subs if str(s.get("name", "")).lower() == channel_name.lower()), None)
+            if existing_match and existing_match.get("reset_days") is not None:
+                continue
             item = await self.fetch_subscription_url_item(f"{channel_name}|{channel_url}")
             if not item:
                 continue
@@ -434,9 +482,21 @@ class MihomoService:
             else:
                 rem_color = "black"
 
-            # 渠道重置天数必须来自该渠道自己的订阅元数据；没有来源时不伪造自然月日期。
+            # 渠道重置天数解析：
+            # 1. 若订阅元数据显式声明 reset_days，则显示倒计时 "还有 X 天重置"
+            # 2. 若未显式声明，则为 "每月 1 日重置"；若为当天则显示 "今日重置"
             reset_days = s.get("reset_days")
-            reset_badge = f"还有 {int(reset_days)} 天重置" if reset_days is not None else "每月 1 日重置"
+            if reset_days is not None:
+                reset_badge = f"还有 {int(reset_days)} 天重置"
+            else:
+                curr_y = now_dt.year
+                curr_m = now_dt.month
+                next_m_1st = datetime.datetime(curr_y + (1 if curr_m == 12 else 0), 1 if curr_m == 12 else curr_m + 1, 1)
+                days_to_1st = max(0, (next_m_1st.date() - now_dt.date()).days)
+                if now_dt.day == 1:
+                    reset_badge = "今日重置 (1日)"
+                else:
+                    reset_badge = f"每月 1 日重置 (剩{days_to_1st}天)"
 
             exp_str = "长期有效"
             days_badge = "长期有效"

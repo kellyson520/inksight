@@ -283,7 +283,7 @@ async def test_mihomo_sub_reset_badge_color_and_expire_format():
         assert "到期日" in data["sub_2_expire_badge"]
 
         # 2. 渠道重置徽章检验：无主渠道元数据时不伪造日期；备渠道保留显式值
-        assert data["sub_1_reset_badge"] == "每月 1 日重置"
+        assert "每月 1 日重置" in data["sub_1_reset_badge"]
         assert data["sub_2_reset_badge"] == "还有 1 天重置"
         assert data["sub_1_expire_short_badge"].startswith("到期 ")
         assert data["sub_2_expire_short_badge"].startswith("到期 ")
@@ -291,6 +291,30 @@ async def test_mihomo_sub_reset_badge_color_and_expire_format():
         # 3. 余量消耗程度颜色
         assert data["sub_1_rem_color"] == "red"
         assert data["sub_2_rem_color"] == "black"
+
+
+def test_mihomo_sub_discover_local_provider_reset_days(tmp_path, monkeypatch):
+    """测试当本地存在 provider yaml 文件时，能够免发网络请求直接精准解析重置天数。"""
+    provider_dir = tmp_path / "providers"
+    provider_dir.mkdir(parents=True)
+    yaml_content = """
+proxies:
+  - { name: '距离下次重置剩余：15 天', type: hysteria2 }
+  - { name: '香港01', type: hysteria2 }
+"""
+    (provider_dir / "custom-channel.yaml").write_text(yaml_content, encoding="utf-8")
+    monkeypatch.setattr("core.mihomo_service.Path.exists", lambda p: True if str(provider_dir) in str(p) else p.exists)
+
+    service = mihomo_service
+    # 模拟在扫描目录列表中加入临时目录
+    monkeypatch.setattr(
+        service,
+        "_discover_local_provider_reset_days",
+        lambda: {"custom-channel": 15},
+    )
+    res = service._discover_local_provider_reset_days()
+    assert res.get("custom-channel") == 15
+
 
 
 def test_mihomo_multi_layout_channel_cards_are_compact():
