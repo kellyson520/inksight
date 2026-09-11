@@ -22,7 +22,7 @@ def normalize_recommendation_item(payload: dict[str, Any] | None, *, source: str
     title = str(payload.get("title") or payload.get("name") or "未命名推荐").strip()
     cover_url = str(payload.get("cover_url") or payload.get("cover") or payload.get("image") or "").strip()
     thumbnail_url = str(payload.get("thumbnail_url") or payload.get("thumbnail") or cover_url).strip()
-    return {
+    res = {
         "title": title,
         "subtitle": str(payload.get("subtitle") or payload.get("author") or payload.get("uploader") or "").strip(),
         "source": str(payload.get("source") or source).strip(),
@@ -33,3 +33,6 @@ def normalize_recommendation_item(payload: dict[str, Any] | None, *, source: str
         "detail_url": str(payload.get("detail_url") or payload.get("url") or "").strip(),
         "description": str(payload.get("description") or payload.get("summary") or "").strip(),
     }
+    if "image_data" in payload and payload["image_data"] is not None:
+        res["image_data"] = payload["image_data"]
+    return res

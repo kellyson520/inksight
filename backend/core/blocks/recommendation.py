@@ -18,7 +18,8 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
     font = load_font("noto_serif_regular", font_size)
     bold = load_font("noto_serif_bold", font_size)
     y = ctx.y
-    for index, item in enumerate(items[:max_items], 1):
+    items_to_render = items[:1] if style == "cover_card" else items[:max_items]
+    for index, item in enumerate(items_to_render, 1):
         if not isinstance(item, dict): continue
         title = str(item.get("title", "推荐")).strip()
         subtitle = str(item.get("subtitle", "")).strip()
@@ -26,13 +27,12 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
         if style == "cover_card":
             image_data = item.get("image_data")
             image_url = str(item.get("thumbnail_url") or item.get("cover_url") or "").strip()
-            # If card_height isn't explicitly configured large in the block, calculate available vertical space
-            default_h = max(font_size + int(8 * ctx.scale), int(block.get("card_height", 0) * ctx.scale))
-            if default_h <= 0:
+            card_h_prop = int(block.get("card_height", 0) * ctx.scale)
+            if card_h_prop > 0:
+                card_height = card_h_prop
+            else:
                 remaining_h = ctx.screen_h - ctx.footer_height - y - int(10 * ctx.scale)
                 card_height = max(100, remaining_h)
-            else:
-                card_height = default_h
             if image_data is not None or image_url:
                 previous_image = ctx.content.get("__recommendation_image")
                 ctx.content["__recommendation_image"] = image_data if image_data is not None else image_url

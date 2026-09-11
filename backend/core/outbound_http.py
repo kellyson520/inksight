@@ -61,33 +61,38 @@ class OutboundHttp:
         self.policy = policy or RequestPolicy()
 
     @staticmethod
-    def _validate_url(url: str, policy: RequestPolicy) -> None:
+    def _validate_url(url: str, policy: RequestPolicy, proxy_url: str | None = None) -> None:
         parsed = urlparse(url)
         if parsed.scheme not in {"http", "https"} or not parsed.hostname:
             raise ValueError(f"unsupported URL: {url}")
         host = parsed.hostname.lower().rstrip(".")
         if policy.allowed_hosts and host not in policy.allowed_hosts:
             raise ValueError(f"host not allowed: {host}")
-        if host in {"localhost", "metadata.google.internal"}:
+        if host in {"localhost", "metadata.google.internal"} or host.endswith(".local"):
             raise ValueError(f"private URL blocked: {url}")
         try:
             address = ipaddress.ip_address(host)
             addresses = [address]
         except ValueError:
+            if proxy_url:
+                return
             try:
                 infos = socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), type=socket.SOCK_STREAM)
             except socket.gaierror as exc:
                 raise ValueError(f"host resolution failed: {host}") from exc
             addresses = [ipaddress.ip_address(info[4][0]) for info in infos]
-        for address in addresses:
-            if (
-                not address.is_global
-                or address.is_private
-                or address.is_loopback
-                or address.is_link_local
-                or address.is_reserved
-            ):
-                raise ValueError(f"private URL blocked: {url}")
+
+        def _is_private_or_blocked(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+            if addr.is_loopback or addr.is_link_local or addr.is_unspecified:
+                return True
+            if isinstance(addr, ipaddress.IPv4Address):
+                return addr.is_private or addr.is_reserved
+            else:
+                return addr in ipaddress.IPv6Network("fc00::/7") or addr in ipaddress.IPv6Network("fe80::/10")
+
+        # Block if all resolved addresses are private/local
+        if addresses and all(_is_private_or_blocked(a) for a in addresses):
+            raise ValueError(f"private URL blocked: {url}")
 
     @staticmethod
     def _retryable_status(status: int) -> bool:
@@ -144,7 +149,7 @@ class OutboundHttp:
         proxy_url: str | None = None,
     ) -> HttpResponse:
         effective = policy or self.policy
-        self._validate_url(url, effective)
+        self._validate_url(url, effective, proxy_url=proxy_url)
         max_attempts = min(5, max(1, int(effective.max_attempts)))
         max_bytes = max(1, min(32 * 1024 * 1024, int(effective.max_response_bytes)))
         request_headers = {
@@ -164,7 +169,7 @@ class OutboundHttp:
                     if not location:
                         raise ValueError(f"redirect missing location: HTTP {response.status_code}")
                     current_url = urljoin(current_url, location)
-                    self._validate_url(current_url, effective)
+                    self._validate_url(current_url, effective, proxy_url=proxy_url)
                     continue
                 if response.status_code >= 300:
                     if self._retryable_status(response.status_code) and attempt < max_attempts:
@@ -212,7 +217,7 @@ class OutboundHttp:
         proxy_url: str | None = None,
     ) -> HttpResponse:
         effective = policy or self.policy
-        self._validate_url(url, effective)
+        self._validate_url(url, effective, proxy_url=proxy_url)
         max_bytes = max(1, min(32 * 1024 * 1024, int(effective.max_response_bytes)))
         request_headers = {"User-Agent": "InkSightOutboundHttp/1.0", "Referer": self._header_referer(url, headers)}
         request_headers.update({str(k): str(v) for k, v in (headers or {}).items()})

@@ -4,6 +4,7 @@ import asyncio
 from io import BytesIO
 from typing import Any
 from PIL import Image, ImageDraw
+import httpx
 from ..outbound_http import RequestPolicy, outbound_http
 
 _PRIMARY_ENDPOINT = "https://www.pixiv.net/ranking.php?mode=daily&content=illust&format=json"
@@ -122,12 +123,17 @@ async def generate_pixiv_daily(mode_def, content_cfg, fallback, **kwargs):
             continue
         try:
             headers = {"Accept": "application/json", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "Referer": "https://www.pixiv.net/"}
+            policy = RequestPolicy(
+                timeout=httpx.Timeout(connect=2.5, read=5.0, write=3.0, pool=2.5),
+                max_attempts=1 if not proxy_url else 2,
+                follow_redirects=True,
+            )
             response = await asyncio.to_thread(
                 outbound_http.get_json,
                 ep,
                 headers=headers,
                 proxy_url=proxy_url,
-                policy=RequestPolicy(max_attempts=2, follow_redirects=True),
+                policy=policy,
             )
             items = _parse_pixiv_items(response.json())
             if items:

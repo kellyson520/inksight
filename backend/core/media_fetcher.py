@@ -145,8 +145,12 @@ class MediaFetcher:
             return "https://movie.douban.com/"
         if "weread.qq.com" in host or "myqcloud.com" in host:
             return "https://weread.qq.com/"
-        if "pximg.net" in host or "pixiv.net" in host:
+        if "pximg.net" in host or "pixiv.net" in host or "pixiv.re" in host:
             return "https://www.pixiv.net/"
+        if "iwara.tv" in host:
+            return "https://www.iwara.tv/"
+        if "yuewen.com" in host or "qidian.com" in host or "qpic.cn" in host:
+            return "https://m.qidian.com/"
         return f"{parsed.scheme}://{parsed.netloc}/"
 
     @staticmethod
@@ -302,7 +306,7 @@ class MediaFetcher:
                         self._sleep_before_retry(attempt)
                         continue
                     break
-                except (httpx.HTTPError, OSError) as exc:
+                except (httpx.HTTPError, OSError, ValueError) as exc:
                     errors.append(f"{url}: {type(exc).__name__}")
                     break
             self._failed_until[url] = time.monotonic() + self.failure_cooldown
