@@ -46,9 +46,22 @@ def fit_image_to_box(
     return base.convert("RGB")
 
 
+def _flatten_alpha_to_white(im: Image.Image) -> Image.Image:
+    """Flatten any transparent channels (RGBA, LA, P with transparency) onto a white background."""
+    if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+        rgba = im.convert("RGBA")
+        base = Image.new("RGBA", rgba.size, (255, 255, 255, 255))
+        base.alpha_composite(rgba)
+        return base.convert("RGB")
+    if im.mode != "RGB":
+        return im.convert("RGB")
+    return im
+
+
 def enhance_photo_for_eink(rgb: Image.Image) -> Image.Image:
     """Conservative photo preparation before e-ink quantization."""
-    img = ImageOps.autocontrast(rgb.convert("RGB"), cutoff=1)
+    flattened = _flatten_alpha_to_white(rgb)
+    img = ImageOps.autocontrast(flattened, cutoff=1)
     img = ImageEnhance.Contrast(img).enhance(1.12)
     img = ImageEnhance.Sharpness(img).enhance(1.25)
     return img.filter(ImageFilter.UnsharpMask(radius=0.8, percent=80, threshold=3))
@@ -61,7 +74,8 @@ def quantize_image_for_eink(
     photo_enhance: bool = False,
 ) -> Image.Image:
     """Quantize RGB image data for 2-, 3-, or 4-color e-ink output with Atkinson dithering."""
-    prepared = enhance_photo_for_eink(rgb) if photo_enhance else rgb.convert("RGB")
+    rgb_flattened = _flatten_alpha_to_white(rgb)
+    prepared = enhance_photo_for_eink(rgb_flattened) if photo_enhance else rgb_flattened
 
     if colors < 3:
         gray = ImageOps.autocontrast(prepared.convert("L"), cutoff=1)

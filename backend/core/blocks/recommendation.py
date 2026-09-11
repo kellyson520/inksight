@@ -27,32 +27,37 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
         if style == "cover_card":
             image_data = item.get("image_data")
             image_url = str(item.get("thumbnail_url") or item.get("cover_url") or "").strip()
+            max_allowed = max(40, ctx.screen_h - ctx.footer_height - y - int(4 * ctx.scale))
             card_h_prop = int(block.get("card_height", 0) * ctx.scale)
             if card_h_prop > 0:
-                card_height = card_h_prop
+                card_height = min(card_h_prop, max_allowed)
             else:
-                remaining_h = ctx.screen_h - ctx.footer_height - y - int(10 * ctx.scale)
-                card_height = max(100, remaining_h)
+                card_height = max_allowed
+
             if image_data is not None or image_url:
                 previous_image = ctx.content.get("__recommendation_image")
                 ctx.content["__recommendation_image"] = image_data if image_data is not None else image_url
                 # Draw image: reserve space for text and margins below image
-                text_block_h = font_size + int(6 * ctx.scale)
-                img_h = max(20, card_height - text_block_h - int(4 * ctx.scale))
+                text_block_h = font_size + int(4 * ctx.scale)
+                img_h = max(16, card_height - text_block_h - int(2 * ctx.scale))
                 render_image(ctx, {"field": "__recommendation_image", "width": max(20, ctx.available_width - int(20 * ctx.scale)), "height": img_h, "x": ctx.x_offset + int(10 * ctx.scale), "y": y, "fit": "contain"})
                 if previous_image is None:
                     ctx.content.pop("__recommendation_image", None)
                 else:
                     ctx.content["__recommendation_image"] = previous_image
+
             line = f"{rank}  {title}"
-            if subtitle: line += f" · {subtitle}"
+            if subtitle and len(line) < 30 and ctx.available_width > 240:
+                line += f" · {subtitle}"
             # Render title/author line directly below image area, well within card_height
-            text_y = y + card_height - font_size - int(4 * ctx.scale)
-            ctx.draw.text((ctx.x_offset + int(10 * ctx.scale), text_y), line[:48], fill=EINK_FG, font=bold)
-            y += card_height + int(4 * ctx.scale)
+            text_y = y + card_height - font_size - int(2 * ctx.scale)
+            max_chars = max(10, int((ctx.available_width - int(20 * ctx.scale)) / (font_size * 0.72)))
+            ctx.draw.text((ctx.x_offset + int(10 * ctx.scale), text_y), line[:max_chars], fill=EINK_FG, font=bold)
+            y += card_height + int(2 * ctx.scale)
         else:
             line = f"{rank}  {title}"
             if subtitle: line += f" · {subtitle}"
-            ctx.draw.text((ctx.x_offset + int(10 * ctx.scale), y), line[:52], fill=EINK_FG, font=font)
+            max_chars = max(10, int((ctx.available_width - int(20 * ctx.scale)) / (font_size * 0.72)))
+            ctx.draw.text((ctx.x_offset + int(10 * ctx.scale), y), line[:max_chars], fill=EINK_FG, font=font)
             y += font_size + int(3 * ctx.scale)
     ctx.y = y

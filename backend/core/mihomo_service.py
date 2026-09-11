@@ -6,6 +6,7 @@ Mihomo (Clash.Meta) 容器与代理订阅额度及有效期服务 (Mihomo Servic
 """
 from __future__ import annotations
 
+import calendar
 import datetime
 import logging
 import os
@@ -57,14 +58,139 @@ def _format_bytes(b: int | float) -> str:
     return f"{int(val)} B"
 
 
-def _parse_reset_days_text(text: str) -> int | None:
+def _parse_reset_days_text(text: str, now_dt: datetime.datetime | None = None) -> int | None:
     """Parse provider-specific reset countdown/date markers from subscription text."""
     if not text:
         return None
-    match = re.search(r"(?:重置|reset)[^\d]{0,30}(\d+)\s*天", text, re.IGNORECASE)
-    if match:
-        return int(match.group(1))
+    # 1. "还有 5 天重置", "剩余 5 天重置"
+    m_before = re.search(r"(?:还有|剩余)[^\d]{0,10}(\d+)\s*天\s*重置", text)
+    if m_before:
+        return int(m_before.group(1))
+
+    # 2. "重置还有 5 天", "reset in 5 days", "重置: 5天"
+    m_after = re.search(r"(?:重置|reset)[^\d]{0,30}(\d+)\s*(?:天|day|days)?", text, re.IGNORECASE)
+    if m_after:
+        return int(m_after.group(1))
+
+    # 3. "reset in 5 days"
+    m_en = re.search(r"reset\s+in\s+(\d+)\s*day", text, re.IGNORECASE)
+    if m_en:
+        return int(m_en.group(1))
+
+    # 4. "每月 15 日重置" 或 "每月15号重置"
+    m_monthly = re.search(r"每月\s*(\d{1,2})\s*(?:日|号)\s*重置", text)
+    if m_monthly:
+        target_day = int(m_monthly.group(1))
+        if 1 <= target_day <= 31:
+            now = now_dt or datetime.datetime.now()
+            curr_y = now.year
+            curr_m = now.month
+            try:
+                cand = datetime.date(curr_y, curr_m, target_day)
+            except ValueError:
+                _, max_day = calendar.monthrange(curr_y, curr_m)
+                cand = datetime.date(curr_y, curr_m, min(target_day, max_day))
+            if cand >= now.date():
+                return (cand - now.date()).days
+            else:
+                next_y = curr_y + (1 if curr_m == 12 else 0)
+                next_m = 1 if curr_m == 12 else curr_m + 1
+                try:
+                    cand = datetime.date(next_y, next_m, target_day)
+                except ValueError:
+                    _, max_day = calendar.monthrange(next_y, next_m)
+                    cand = datetime.date(next_y, next_m, min(target_day, max_day))
+                return (cand - now.date()).days
     return None
+
+
+def format_subscription_summary(
+    *,
+    upload_bytes: int = 0,
+    download_bytes: int = 0,
+    total_bytes: int = 0,
+    expire_timestamp: int | float = 0,
+    reset_days: int | None = None,
+    now_dt: datetime.datetime | None = None,
+    name: str = "Proxy Sub",
+    node_count: int = 0,
+) -> dict[str, Any]:
+    """格式化单条订阅信息，包含流量、占比、剩余量、有效期与重置周期。"""
+    now_dt = now_dt or datetime.datetime.now()
+    up = max(0, int(upload_bytes or 0))
+    down = max(0, int(download_bytes or 0))
+    tot = max(0, int(total_bytes or 0))
+    exp = float(expire_timestamp or 0)
+    # 兼容毫秒级时间戳 (如 1778803200000)
+    if exp > 1e11:
+        exp /= 1000.0
+    if exp < 0:
+        exp = 0
+
+    used = up + down
+    rem = max(0, tot - used)
+    pct = (used / tot * 100) if tot > 0 else 0.0
+    prog = max(0, min(100, int(round(pct))))
+
+    if pct >= 85.0:
+        rem_color = "red"
+    elif pct >= 60.0:
+        rem_color = "yellow"
+    else:
+        rem_color = "black"
+
+    if reset_days is not None:
+        reset_badge = f"还有 {int(reset_days)} 天重置"
+    else:
+        curr_y = now_dt.year
+        curr_m = now_dt.month
+        next_m_1st = datetime.datetime(curr_y + (1 if curr_m == 12 else 0), 1 if curr_m == 12 else curr_m + 1, 1)
+        days_to_1st = max(0, (next_m_1st.date() - now_dt.date()).days)
+        if now_dt.day == 1:
+            reset_badge = "今日重置 (1日)"
+        else:
+            reset_badge = f"每月 1 日重置 (剩{days_to_1st}天)"
+
+    exp_str = "长期有效"
+    days_badge = "长期有效"
+    expire_badge = "长期有效"
+    expire_short_badge = "长期有效"
+    if exp > 0:
+        try:
+            exp_dt = datetime.datetime.fromtimestamp(exp)
+            exp_str = exp_dt.strftime("%Y-%m-%d")
+            expire_short_badge = f"到期 {exp_str}"
+            days = (exp_dt.date() - now_dt.date()).days
+            if days < 0:
+                days_badge = "已过期"
+                expire_badge = f"已过期（到期日 {exp_str}）"
+            elif days == 0:
+                days_badge = "今日到期"
+                expire_badge = f"今日到期（到期日 {exp_str}）"
+            else:
+                days_badge = f"剩余 {days} 天"
+                expire_badge = f"剩余 {days} 天（到期日 {exp_str}）"
+        except Exception:
+            pass
+
+    return {
+        "name": name,
+        "upload_str": _format_bytes(up),
+        "download_str": _format_bytes(down),
+        "total_str": _format_bytes(tot),
+        "used_str": _format_bytes(used),
+        "remaining_str": _format_bytes(rem),
+        "used_percent_str": f"{pct:.1f}%",
+        "progress_percent": prog,
+        "expire_str": exp_str,
+        "days_badge": days_badge,
+        "days_left_badge": days_badge,
+        "expire_badge": expire_badge,
+        "expire_short_badge": expire_short_badge,
+        "reset_badge": reset_badge,
+        "rem_color": rem_color,
+        "node_count": f"{node_count} 节点",
+    }
 
 
 def _parse_userinfo_header(header_val: str) -> dict[str, int]:
@@ -462,81 +588,29 @@ class MihomoService:
             up = s.get("upload", 0)
             down = s.get("download", 0)
             tot = s.get("total", 0)
-            exp = s.get("expire", 0)
+            exp = float(s.get("expire", 0) or 0)
+            if exp > 1e11:
+                exp /= 1000.0
+            if exp < 0:
+                exp = 0
             used = up + down
-            rem = max(0, tot - used)
-            pct = (used / tot * 100) if tot > 0 else 0.0
-            prog = max(0, min(100, int(round(pct))))
 
             tot_all += tot
             used_all += used
             if exp > 0 and (earliest_exp == 0 or exp < earliest_exp):
                 earliest_exp = exp
 
-            # 消耗程度预警色（黑、黄、红）
-            # 已用占比 >= 85% 飘红；>= 60% 预警黄；其余正常黑
-            if pct >= 85.0:
-                rem_color = "red"
-            elif pct >= 60.0:
-                rem_color = "yellow"
-            else:
-                rem_color = "black"
-
-            # 渠道重置天数解析：
-            # 1. 若订阅元数据显式声明 reset_days，则显示倒计时 "还有 X 天重置"
-            # 2. 若未显式声明，则为 "每月 1 日重置"；若为当天则显示 "今日重置"
-            reset_days = s.get("reset_days")
-            if reset_days is not None:
-                reset_badge = f"还有 {int(reset_days)} 天重置"
-            else:
-                curr_y = now_dt.year
-                curr_m = now_dt.month
-                next_m_1st = datetime.datetime(curr_y + (1 if curr_m == 12 else 0), 1 if curr_m == 12 else curr_m + 1, 1)
-                days_to_1st = max(0, (next_m_1st.date() - now_dt.date()).days)
-                if now_dt.day == 1:
-                    reset_badge = "今日重置 (1日)"
-                else:
-                    reset_badge = f"每月 1 日重置 (剩{days_to_1st}天)"
-
-            exp_str = "长期有效"
-            days_badge = "长期有效"
-            expire_badge = "长期有效"
-            expire_short_badge = "长期有效"
-            if exp > 0:
-                try:
-                    exp_dt = datetime.datetime.fromtimestamp(exp)
-                    exp_str = exp_dt.strftime("%Y-%m-%d")
-                    expire_short_badge = f"到期 {exp_str}"
-                    days = (exp_dt.date() - now_dt.date()).days
-                    if days < 0:
-                        days_badge = "已过期"
-                        expire_badge = f"已过期（到期日 {exp_str}）"
-                    elif days == 0:
-                        days_badge = "今日到期"
-                        expire_badge = f"今日到期（到期日 {exp_str}）"
-                    else:
-                        days_badge = f"剩余 {days} 天"
-                        expire_badge = f"剩余 {days} 天（到期日 {exp_str}）"
-                except Exception:
-                    pass
-
-            enriched_subs.append({
-                "name": s.get("name", "Proxy Sub"),
-                "upload_str": _format_bytes(up),
-                "download_str": _format_bytes(down),
-                "total_str": _format_bytes(tot),
-                "used_str": _format_bytes(used),
-                "remaining_str": _format_bytes(rem),
-                "used_percent_str": f"{pct:.1f}%",
-                "progress_percent": prog,
-                "expire_str": exp_str,
-                "days_left_badge": days_badge,
-                "expire_badge": expire_badge,
-                "expire_short_badge": expire_short_badge,
-                "reset_badge": reset_badge,
-                "rem_color": rem_color,
-                "node_count": f"{s.get('node_count', 0)} 节点",
-            })
+            sub_summary = format_subscription_summary(
+                upload_bytes=up,
+                download_bytes=down,
+                total_bytes=tot,
+                expire_timestamp=exp,
+                reset_days=s.get("reset_days"),
+                now_dt=now_dt,
+                name=s.get("name", "Proxy Sub"),
+                node_count=s.get("node_count", 0),
+            )
+            enriched_subs.append(sub_summary)
 
         rem_all = max(0, tot_all - used_all)
         pct_all = (used_all / tot_all * 100) if tot_all > 0 else 0.0
