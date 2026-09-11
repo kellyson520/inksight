@@ -107,8 +107,29 @@ class OutboundHttp:
             "verify": policy.verify,
         }
         if proxy_url:
-            client_kwargs["proxy"] = proxy_url
-        client = self.client_factory(**client_kwargs)
+            # Check if client_factory accepts 'proxy' or 'proxies' (httpx <= 0.25 uses proxies, >= 0.26 uses proxy)
+            try:
+                import inspect
+                sig = inspect.signature(self.client_factory)
+                if "proxy" in sig.parameters:
+                    client_kwargs["proxy"] = proxy_url
+                else:
+                    client_kwargs["proxies"] = proxy_url
+            except Exception:
+                client_kwargs["proxies"] = proxy_url
+        try:
+            client = self.client_factory(**client_kwargs)
+        except TypeError as e:
+            if "proxies" in str(e) and proxy_url:
+                client_kwargs.pop("proxies", None)
+                client_kwargs["proxy"] = proxy_url
+                client = self.client_factory(**client_kwargs)
+            elif "proxy" in str(e) and proxy_url:
+                client_kwargs.pop("proxy", None)
+                client_kwargs["proxies"] = proxy_url
+                client = self.client_factory(**client_kwargs)
+            else:
+                raise
         if hasattr(client, "__enter__"):
             with client as managed:
                 return managed.get(url, headers=headers, follow_redirects=False)
@@ -188,13 +209,38 @@ class OutboundHttp:
         *,
         headers: Mapping[str, str] | None = None,
         policy: RequestPolicy | None = None,
+        proxy_url: str | None = None,
     ) -> HttpResponse:
         effective = policy or self.policy
         self._validate_url(url, effective)
         max_bytes = max(1, min(32 * 1024 * 1024, int(effective.max_response_bytes)))
         request_headers = {"User-Agent": "InkSightOutboundHttp/1.0", "Referer": self._header_referer(url, headers)}
         request_headers.update({str(k): str(v) for k, v in (headers or {}).items()})
-        client = self.client_factory(timeout=effective.timeout, follow_redirects=False, verify=effective.verify)
+        client_kwargs = {"timeout": effective.timeout, "follow_redirects": False, "verify": effective.verify}
+        if proxy_url:
+            # Check if client_factory accepts 'proxy' or 'proxies' (httpx <= 0.25 uses proxies, >= 0.26 uses proxy)
+            try:
+                import inspect
+                sig = inspect.signature(self.client_factory)
+                if "proxy" in sig.parameters:
+                    client_kwargs["proxy"] = proxy_url
+                else:
+                    client_kwargs["proxies"] = proxy_url
+            except Exception:
+                client_kwargs["proxies"] = proxy_url
+        try:
+            client = self.client_factory(**client_kwargs)
+        except TypeError as e:
+            if "proxies" in str(e) and proxy_url:
+                client_kwargs.pop("proxies", None)
+                client_kwargs["proxy"] = proxy_url
+                client = self.client_factory(**client_kwargs)
+            elif "proxy" in str(e) and proxy_url:
+                client_kwargs.pop("proxy", None)
+                client_kwargs["proxies"] = proxy_url
+                client = self.client_factory(**client_kwargs)
+            else:
+                raise
         started = time.perf_counter()
         chunks: list[bytes] = []
         total = 0

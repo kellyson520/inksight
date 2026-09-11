@@ -408,7 +408,41 @@ async def build_image(
 
     battery_pct = calc_battery_pct(v)
     config = await get_active_config(mac) if mac else None
-    preference_user_id = current_user_id or (await get_device_owner(mac) or {}).get("user_id") if mac else current_user_id
+    preference_user_id = current_user_id
+    if not preference_user_id and mac:
+        # First check active device memberships for a user with configured global_proxy_url
+        from core.config_store import get_main_db, get_device_owner
+        try:
+            db = await get_main_db()
+            # Order: active members who have a non-empty global_proxy_url first, then owner, then first active member
+            cur = await db.execute("""
+                SELECT dm.user_id 
+                FROM device_memberships dm
+                LEFT JOIN user_preferences up ON up.user_id = dm.user_id
+                WHERE dm.mac = ? AND dm.status = 'active'
+                ORDER BY (up.global_proxy_url IS NOT NULL AND up.global_proxy_url != '') DESC,
+                         (dm.role = 'owner') DESC,
+                         dm.id ASC
+                LIMIT 1
+            """, (mac.upper(),))
+            m_row = await cur.fetchone()
+            if m_row:
+                preference_user_id = m_row[0]
+        except Exception:
+            owner = await get_device_owner(mac)
+            if owner and owner.get("user_id"):
+                preference_user_id = owner.get("user_id")
+    if not preference_user_id and not mac:
+        # Fallback for anonymous preview when a single user has configured a global proxy
+        try:
+            from core.config_store import get_main_db
+            db = await get_main_db()
+            cur = await db.execute("SELECT user_id FROM user_preferences WHERE global_proxy_url IS NOT NULL AND global_proxy_url != '' ORDER BY updated_at DESC LIMIT 1")
+            p_row = await cur.fetchone()
+            if p_row:
+                preference_user_id = p_row[0]
+        except Exception:
+            pass
     if preference_user_id:
         try:
             from core.config_store import get_user_preferences
@@ -421,8 +455,6 @@ async def build_image(
     persona = await resolve_mode(mac, config, persona_override, force_next=force_next)
     owner_user_id: Optional[int] = None
     if mac:
-        from core.config_store import get_device_owner
-
         owner = await get_device_owner(mac)
         if owner:
             try:

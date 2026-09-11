@@ -145,6 +145,8 @@ class MediaFetcher:
             return "https://movie.douban.com/"
         if "weread.qq.com" in host or "myqcloud.com" in host:
             return "https://weread.qq.com/"
+        if "pximg.net" in host or "pixiv.net" in host:
+            return "https://www.pixiv.net/"
         return f"{parsed.scheme}://{parsed.netloc}/"
 
     @staticmethod

@@ -26,8 +26,9 @@ def test_image_block_passes_url_candidates(monkeypatch):
 
     captured = {}
     class FakeFetcher:
-        def fetch_image(self, urls):
+        def fetch_image(self, urls, **kwargs):
             captured["urls"] = urls
+            captured["proxy_url"] = kwargs.get("proxy_url")
             out = Image.new("RGB", (4, 4), "white")
             import io
             buf = io.BytesIO()
@@ -39,10 +40,27 @@ def test_image_block_passes_url_candidates(monkeypatch):
     ctx = RenderContext(draw=__import__("PIL").ImageDraw.Draw(img), img=img, content={
         "cover_url": "https://bad.test/a",
         "cover_urls": ["https://bad.test/a", "https://good.test/a"],
+        "__global_proxy_url": "http://proxy.example:8080",
     }, screen_w=80, screen_h=80, y=0, footer_height=0)
     components.render_image(ctx, {"field": "cover_url", "urls_field": "cover_urls", "width": 4, "height": 4})
 
     assert captured["urls"] == ["https://bad.test/a", "https://good.test/a"]
+    assert captured["proxy_url"] == "http://proxy.example:8080"
+
+
+def test_recommendation_cover_card_pastes_pil_image():
+    from PIL import Image, ImageDraw
+    from core.blocks.context import RenderContext
+    from core.blocks.recommendation import render_recommendation
+
+    canvas = Image.new("1", (120, 100), 1)
+    source = Image.new("RGB", (40, 30), (0, 0, 0))
+    ctx = RenderContext(draw=ImageDraw.Draw(canvas), img=canvas, content={
+        "layout_style": "cover_card",
+        "items": [{"title": "Blue", "image_data": source}],
+    }, screen_w=120, screen_h=100, y=0, footer_height=0)
+    render_recommendation(ctx, {"field": "items", "style_field": "layout_style", "max_items": 1, "card_height": 30})
+    assert sum(1 for pixel in canvas.getdata() if pixel == 0) > 100
 
 
 def test_fetch_uses_shared_outbound_http_by_default(tmp_path, monkeypatch):
@@ -50,7 +68,7 @@ def test_fetch_uses_shared_outbound_http_by_default(tmp_path, monkeypatch):
 
     calls = []
     class SharedOutbound:
-        def get_stream_bytes(self, url, *, headers, policy):
+        def get_stream_bytes(self, url, *, headers, policy, proxy_url=None):
             calls.append((url, headers, policy))
             return type("Response", (), {"status_code": 200, "content": b"shared"})()
 

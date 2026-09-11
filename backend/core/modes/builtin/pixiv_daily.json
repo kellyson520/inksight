@@ -1,5 +1,5 @@
 {
   "mode_id":"PIXIV_DAILY","display_name":"Pixiv 每日一图","icon":"image","cacheable":true,"description":"Pixiv 每日精选插画","settings_schema":[{"key":"layout_style","label":"展示样式","type":"select","default":"cover_card","options":[{"value":"ranking","label":"榜单信息"},{"value":"cover_card","label":"图片卡片"}]}],
   "content":{"type":"computed","provider":"pixiv_daily","fallback":{"title":"Pixiv 每日一图","subtitle":"每日精选插画","source":"Pixiv","rank_label":"DAILY"}},
-  "layout":{"body":[{"type":"text","template":"{title}","font":"noto_serif_bold","font_size":15,"margin_x":10,"margin_bottom":5},{"type":"text","template":"作者：{subtitle}","font_size":11,"margin_x":10,"margin_bottom":4},{"type":"recommendation","field":"items","style_field":"layout_style","max_items":1,"font_size":10,"margin_x":0}],"footer":{"label":"PIXIV","attribution_template":"{source} · {rank_label}"}}
+  "layout":{"body":[{"type":"recommendation","field":"items","style_field":"layout_style","max_items":1,"font_size":11,"card_height":210,"margin_x":0}],"footer":{"label":"PIXIV","attribution_template":"{source} · {rank_label}"}}
 }
