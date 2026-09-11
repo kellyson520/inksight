@@ -42,10 +42,18 @@ async def generate_douban_movie(
     elif content_cfg.get("category"):
         category = str(content_cfg["category"])
 
-    device_mac = kwargs.get("device_mac")
+    device_mac = kwargs.get("device_mac") or kwargs.get("mac")
     date_ctx = kwargs.get("date_ctx") or {}
     date_str = date_ctx.get("date_str", "")
-    seed = f"{device_mac}_{date_str}_{category}" if device_mac else None
+    time_str = date_ctx.get("time_str", "")
+    cycle_idx = kwargs.get("cycle_index")
+    if cycle_idx is not None:
+        seed = f"{device_mac}_{date_str}_{cycle_idx}_{category}"
+    elif time_str:
+        # 提取当前小时以支持不同时段自然轮换，避免全天死锁在同一部电影
+        seed = f"{device_mac}_{date_str}_{time_str[:5]}_{category}"
+    else:
+        seed = f"{device_mac}_{date_str}_{category}" if device_mac else None
 
     # 若没有指定特定 movie_id，优先动态从豆瓣官方接口拉取最新实时/高分榜单
     if not movie_id:
