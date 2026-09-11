@@ -22,8 +22,16 @@ def measure_block_size(ctx: RenderContext, block: dict, max_width: int) -> tuple
     btype = block.get("type", "")
     if btype == "recommendation":
         items = ctx.get_field(block.get("field", "items"))
-        count = len(items) if isinstance(items, list) else 0
+        count = min(len(items) if isinstance(items, list) else 0, int(block.get("max_items", 5)))
+        style = str(ctx.get_field(block.get("style_field", "layout_style")) or "ranking")
         font_size = int(block.get("font_size", 10) * ctx.scale)
+        if style == "cover_card":
+            card_h_prop = int(block.get("card_height", 0) * ctx.scale)
+            if card_h_prop <= 0:
+                card_h = max(100, ctx.screen_h - ctx.footer_height - ctx.y - int(10 * ctx.scale))
+            else:
+                card_h = card_h_prop
+            return max_width, count * (card_h + int(4 * ctx.scale))
         return max_width, count * (font_size + int(4 * ctx.scale))
     if btype == "badge":
         field_name = block.get("field")

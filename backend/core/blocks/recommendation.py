@@ -36,8 +36,9 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
             if image_data is not None or image_url:
                 previous_image = ctx.content.get("__recommendation_image")
                 ctx.content["__recommendation_image"] = image_data if image_data is not None else image_url
-                # Draw image
-                img_h = max(20, card_height - font_size - int(10 * ctx.scale))
+                # Draw image: reserve space for text and margins below image
+                text_block_h = font_size + int(6 * ctx.scale)
+                img_h = max(20, card_height - text_block_h - int(4 * ctx.scale))
                 render_image(ctx, {"field": "__recommendation_image", "width": max(20, ctx.available_width - int(20 * ctx.scale)), "height": img_h, "x": ctx.x_offset + int(10 * ctx.scale), "y": y, "fit": "contain"})
                 if previous_image is None:
                     ctx.content.pop("__recommendation_image", None)
@@ -45,7 +46,9 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
                     ctx.content["__recommendation_image"] = previous_image
             line = f"{rank}  {title}"
             if subtitle: line += f" · {subtitle}"
-            ctx.draw.text((ctx.x_offset + int(10 * ctx.scale), y + card_height - font_size - int(2 * ctx.scale)), line[:48], fill=EINK_FG, font=bold)
+            # Render title/author line directly below image area, well within card_height
+            text_y = y + card_height - font_size - int(4 * ctx.scale)
+            ctx.draw.text((ctx.x_offset + int(10 * ctx.scale), text_y), line[:48], fill=EINK_FG, font=bold)
             y += card_height + int(4 * ctx.scale)
         else:
             line = f"{rank}  {title}"
