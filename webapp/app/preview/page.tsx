@@ -444,10 +444,10 @@ export default function ExperiencePage() {
       </div>
 
       {/* 左右分栏现代响应式架构 */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_500px] 2xl:grid-cols-[1fr_540px] gap-6 xl:gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_440px] 2xl:grid-cols-[minmax(0,1fr)_480px] gap-6 xl:gap-8 items-start min-w-0 max-w-full">
         
         {/* 左侧：分类导航、二级子目录与分页展示容器 */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0 max-w-full">
           {/* 一级分类导航栏 (生活、效率、资讯、全部) + 搜索 */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-paper-dark/80 dark:bg-zinc-900/80 p-2 rounded-sm border border-ink/10 dark:border-zinc-800">
             <div className="flex items-center gap-1.5 overflow-x-auto">
@@ -549,7 +549,7 @@ export default function ExperiencePage() {
         </div>
 
         {/* 右侧：横向固定墨水屏实时预览窗口 (Sticky) */}
-        <div className="sticky top-6 z-20 space-y-4">
+        <div className="sticky top-6 z-20 space-y-4 w-full min-w-0 max-w-full">
           <PreviewCanvas
             previewMode={previewMode}
             previewModeName={previewModeName}

@@ -42,7 +42,7 @@ export function PreviewCanvas({
   const isConfigurable = Boolean(CONFIGURABLE_MODES[previewMode]);
 
   return (
-    <Card className="border-ink/20 dark:border-zinc-800 shadow-md bg-white dark:bg-zinc-900">
+    <Card className="w-full min-w-0 max-w-full border-ink/20 dark:border-zinc-800 shadow-md bg-white dark:bg-zinc-900 overflow-hidden">
       <CardHeader className="pb-3 border-b border-ink/10">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>

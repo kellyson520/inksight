@@ -2483,7 +2483,7 @@ function ConfigPageInner() {
     : TABS;
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-10">
+    <div className="mx-auto max-w-7xl xl:max-w-[1440px] px-4 sm:px-6 py-6 sm:py-10 min-w-0 max-w-full">
       {/* Hidden file picker for MY_ADAPTIVE multi-image upload */}
       <input
         ref={adaptiveFileInputRef}
@@ -2752,11 +2752,11 @@ function ConfigPageInner() {
           </div>
 
             {/* Content */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 max-w-full">
             {/* Modes Tab */}
             {activeTab === "modes" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_480px] gap-6 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_460px] gap-6 items-start">
                   <ModeSelector
                     tr={tr}
                     selectedModes={selectedModes}
@@ -2777,7 +2777,7 @@ function ConfigPageInner() {
                     onScreenSizeChange={(w, h) => { setPreviewWidth(w); setPreviewHeight(h); }}
                   />
 
-                  <div ref={previewPanelRef}>
+                  <div ref={previewPanelRef} className="w-full min-w-0 lg:sticky lg:top-24">
                   <EInkPreviewPanel
                     screenW={previewWidth}
                     screenH={previewHeight}

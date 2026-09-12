@@ -154,7 +154,7 @@ export function ModeSelector({
   const pagedBuiltins = displayedBuiltins.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <Card className="border-ink/10 shadow-xs">
+    <Card className="w-full min-w-0 max-w-full border-ink/10 shadow-xs overflow-hidden">
       <CardHeader className="pb-3 border-b border-ink/10">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-lg font-serif">
