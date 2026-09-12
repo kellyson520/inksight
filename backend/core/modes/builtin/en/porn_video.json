@@ -1,5 +1,62 @@
 {
-  "mode_id":"PORN_VIDEO","display_name":"P Video","icon":"video","cacheable":true,"description":"Public P video recommendations without login","settings_schema":[{"key":"layout_style","label":"Display style","type":"select","default":"ranking","options":[{"value":"ranking","label":"Ranking"},{"value":"cover_card","label":"Thumbnail card"}]}],
-  "content":{"type":"computed","provider":"porn_video","fallback":{"title":"P Video Recommendations","source":"P Video","items":[{"title":"Public ranking unavailable","subtitle":"P Video","rank_label":"Recommended"}]}},
-  "layout":{"body":[{"type":"text","template":"{title}","font":"noto_serif_bold","font_size":15,"margin_x":10,"margin_bottom":5},{"type":"recommendation","field":"items","style_field":"layout_style","max_items":5,"font_size":10,"margin_x":0}],"footer":{"label":"P VIDEO","attribution_template":"{source}"}}
+  "mode_id": "PORN_VIDEO",
+  "display_name": "P Video",
+  "icon": "video",
+  "cacheable": true,
+  "description": "Public P video recommendations with elegant video player card",
+  "settings_schema": [
+    {
+      "key": "layout_style",
+      "label": "Display style",
+      "type": "select",
+      "default": "cover_card",
+      "options": [
+        {"value": "cover_card", "label": "Video Card"},
+        {"value": "ranking", "label": "Ranking"}
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "porn_video",
+    "fallback": {
+      "title": "P Video Recommendations",
+      "source": "P Video",
+      "items": [
+        {
+          "title": "Public recommended video",
+          "subtitle": "P Video",
+          "rank_label": "Recommended",
+          "duration": "14:28",
+          "views_label": "1.2M views",
+          "rating_label": "98% rating"
+        }
+      ]
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "text",
+        "template": "{title}",
+        "font": "noto_serif_bold",
+        "font_size": 15,
+        "margin_x": 10,
+        "margin_bottom": 4
+      },
+      {
+        "type": "recommendation",
+        "field": "items",
+        "style_field": "layout_style",
+        "max_items": 5,
+        "font_size": 10,
+        "margin_x": 0
+      }
+    ],
+    "footer": {
+      "label": "P VIDEO",
+      "attribution_template": "{source}"
+    }
+  }
 }

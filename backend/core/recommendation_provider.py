@@ -32,6 +32,9 @@ def normalize_recommendation_item(payload: dict[str, Any] | None, *, source: str
         "published_at": str(payload.get("published_at") or payload.get("date") or "").strip(),
         "detail_url": str(payload.get("detail_url") or payload.get("url") or "").strip(),
         "description": str(payload.get("description") or payload.get("summary") or "").strip(),
+        "duration": str(payload.get("duration") or "").strip(),
+        "views_label": str(payload.get("views_label") or "").strip(),
+        "rating_label": str(payload.get("rating_label") or "").strip(),
     }
     if "image_data" in payload and payload["image_data"] is not None:
         res["image_data"] = payload["image_data"]

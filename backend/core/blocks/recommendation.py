@@ -93,24 +93,59 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
 
                 y += card_height + int(2 * ctx.scale)
             else:
-                # ── 纵向布局：上图下文 ──
+                # ── 纵向布局：上图下文（视频/插画全幅精美卡片） ──
+                duration = str(item.get("duration") or "").strip()
+                views = str(item.get("views_label") or "").strip()
+                rating = str(item.get("rating_label") or "").strip()
+
+                # 下方信息栏预留高度：若有视频标签（时长/播放量/好评），预留两行高度；否则预留单行高度
+                has_video_meta = bool(duration or views or rating)
+                text_block_h = (font_size * 2 + int(10 * ctx.scale)) if has_video_meta else (font_size + int(4 * ctx.scale))
+                img_h = max(16, card_height - text_block_h - int(2 * ctx.scale))
+
                 if image_data is not None or image_url:
                     previous_image = ctx.content.get("__recommendation_image")
                     ctx.content["__recommendation_image"] = image_data if image_data is not None else image_url
-                    text_block_h = font_size + int(4 * ctx.scale)
-                    img_h = max(16, card_height - text_block_h - int(2 * ctx.scale))
-                    render_image(ctx, {"field": "__recommendation_image", "width": max(20, ctx.available_width - int(20 * ctx.scale)), "height": img_h, "x": ctx.x_offset + int(10 * ctx.scale), "y": y, "fit": "contain"})
+                    render_image(ctx, {
+                        "field": "__recommendation_image",
+                        "width": max(20, ctx.available_width - int(20 * ctx.scale)),
+                        "height": img_h,
+                        "x": ctx.x_offset + int(10 * ctx.scale),
+                        "y": y,
+                        "fit": "contain",
+                    })
                     if previous_image is None:
                         ctx.content.pop("__recommendation_image", None)
                     else:
                         ctx.content["__recommendation_image"] = previous_image
 
+                # 底部文字排版
+                content_x = ctx.x_offset + int(10 * ctx.scale)
+                max_chars = max(10, int((ctx.available_width - int(20 * ctx.scale)) / (font_size * 0.72)))
                 line = f"{rank}  {title}"
                 if subtitle and len(line) < 30 and ctx.available_width > 240:
                     line += f" · {subtitle}"
-                text_y = y + card_height - font_size - int(2 * ctx.scale)
-                max_chars = max(10, int((ctx.available_width - int(20 * ctx.scale)) / (font_size * 0.72)))
-                ctx.draw.text((ctx.x_offset + int(10 * ctx.scale), text_y), line[:max_chars], fill=EINK_FG, font=bold)
+
+                if has_video_meta:
+                    # 第一行：标题
+                    title_y = y + card_height - text_block_h + int(2 * ctx.scale)
+                    ctx.draw.text((content_x, title_y), line[:max_chars], fill=EINK_FG, font=bold)
+
+                    # 第二行：视频元数据胶囊标签（时长、播放量、好评率）
+                    meta_y = title_y + font_size + int(4 * ctx.scale)
+                    meta_badges = []
+                    if duration:
+                        meta_badges.append(f"⏱ {duration}")
+                    if views:
+                        meta_badges.append(f"▶ {views}播放")
+                    if rating:
+                        meta_badges.append(f"★ {rating}好评")
+                    meta_line = "   ".join(meta_badges)
+                    ctx.draw.text((content_x, meta_y), meta_line[:max_chars + 6], fill=EINK_FG, font=small_font)
+                else:
+                    text_y = y + card_height - font_size - int(2 * ctx.scale)
+                    ctx.draw.text((content_x, text_y), line[:max_chars], fill=EINK_FG, font=bold)
+
                 y += card_height + int(2 * ctx.scale)
         else:
             line = f"{rank}  {title}"

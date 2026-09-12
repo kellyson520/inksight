@@ -5,6 +5,7 @@ from typing import Any
 import httpx
 from PIL import Image, ImageDraw
 from ..outbound_http import RequestPolicy, outbound_http
+from ..patterns.utils import load_font
 from ..recommendation_provider import normalize_recommendation_item, resolve_proxy_url
 from .base import register_provider
 
@@ -12,12 +13,129 @@ _DEFAULT_ENDPOINT = "https://www.pornhub.com/webmasters/search?thumbsize=large"
 _FALLBACK_COVER = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80"
 
 
-def _local_fallback_image() -> Image.Image:
-    image = Image.new("RGB", (600, 340), (20, 20, 25))
+def _format_duration(val: Any) -> str:
+    if not val:
+        return ""
+    if isinstance(val, str) and ":" in val:
+        return val.strip()
+    try:
+        sec = int(float(val))
+        m, s = divmod(sec, 60)
+        h, m = divmod(m, 60)
+        if h > 0:
+            return f"{h:02d}:{m:02d}:{s:02d}"
+        return f"{m:02d}:{s:02d}"
+    except (ValueError, TypeError):
+        return str(val)
+
+
+def _format_views(val: Any) -> str:
+    if not val:
+        return ""
+    try:
+        v = float(val)
+        if v >= 100000000:
+            formatted = f"{v / 100000000:.1f}".rstrip("0").rstrip(".")
+            return f"{formatted}亿"
+        if v >= 10000:
+            formatted = f"{v / 10000:.1f}".rstrip("0").rstrip(".")
+            return f"{formatted}万"
+        if v >= 1000:
+            formatted = f"{v / 1000:.1f}".rstrip("0").rstrip(".")
+            return f"{formatted}k"
+        return str(int(v))
+    except (ValueError, TypeError):
+        s = str(val).strip()
+        return s
+
+
+def _format_rating(val: Any) -> str:
+    if not val:
+        return ""
+    try:
+        r = float(val)
+        return f"{int(round(r))}%"
+    except (ValueError, TypeError):
+        return f"{val}%" if "%" not in str(val) else str(val)
+
+
+def _build_video_fallback_image(
+    title: str = "精选推荐视频",
+    author: str = "Official",
+    duration: str = "12:45",
+    views_label: str = "128万次播放",
+    rating_label: str = "98%好评",
+    rank_label: str = "NO.1",
+    width: int = 640,
+    height: int = 360,
+) -> Image.Image:
+    """Render a clean, high-contrast e-ink video card with player button and badges."""
+    image = Image.new("RGB", (width, height), (248, 248, 250))
     draw = ImageDraw.Draw(image)
-    draw.rectangle([200, 130, 400, 210], fill=(255, 153, 0))
-    draw.text((230, 155), "PORNHUB", fill=(0, 0, 0))
+
+    # 1. 拟物化优雅外框与深色底纹
+    draw.rounded_rectangle([4, 4, width - 5, height - 5], radius=16, outline=(170, 170, 175), width=2)
+    # 内边距边框线，呈现微立体卡片质感
+    draw.rounded_rectangle([10, 10, width - 11, height - 11], radius=12, outline=(225, 225, 230), width=1)
+
+    # 2. 顶部左侧：P-HUB 标志性品牌徽章
+    badge_x, badge_y = 24, 20
+    draw.rounded_rectangle([badge_x, badge_y, badge_x + 138, badge_y + 42], radius=8, fill=(22, 22, 26))
+    badge_font = load_font("noto_serif_bold", 22)
+    draw.text((badge_x + 10, badge_y + 6), "PORN", fill=(255, 255, 255), font=badge_font)
+    draw.rounded_rectangle([badge_x + 82, badge_y + 5, badge_x + 130, badge_y + 37], radius=5, fill=(255, 153, 0))
+    draw.text((badge_x + 86, badge_y + 6), "HUB", fill=(0, 0, 0), font=badge_font)
+
+    # 3. 顶部右侧：排名标签 (例如 NO.1)
+    if rank_label:
+        rank_font = load_font("noto_serif_bold", 20)
+        draw.rounded_rectangle([width - 110, badge_y, width - 24, badge_y + 40], radius=8, fill=(230, 230, 235), outline=(180, 180, 185), width=1)
+        draw.text((width - 98, badge_y + 7), rank_label, fill=(20, 20, 25), font=rank_font)
+
+    # 4. 画面正中心：微立体视频播放大按钮 (Play Circle)
+    cx, cy = width // 2, height // 2 - 6
+    r = min(width, height) // 7
+    # 按钮外圈高对比度深色圆环与金色描边
+    draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(24, 24, 28), outline=(255, 153, 0), width=4)
+    # 中心实心播放三角 (Triangle)
+    tri_w = int(r * 0.6)
+    tri_h = int(r * 0.75)
+    tri = [(cx - tri_w // 2 + 3, cy - tri_h // 2), (cx - tri_w // 2 + 3, cy + tri_h // 2), (cx + tri_w // 2 + 5, cy)]
+    draw.polygon(tri, fill=(255, 255, 255))
+
+    # 5. 底部右侧：高对比度时长标签 (Duration Badge, 如 12:45)
+    tag_font = load_font("noto_serif_bold", 20)
+    if duration:
+        dur_text = duration if ":" in duration else f"{duration}"
+        dur_w = max(80, int(len(dur_text) * 13 + 24))
+        draw.rounded_rectangle([width - dur_w - 24, height - 58, width - 24, height - 20], radius=8, fill=(20, 20, 24))
+        draw.text((width - dur_w - 12, height - 52), dur_text, fill=(255, 255, 255), font=tag_font)
+
+    # 6. 底部左侧：播放量与好评率徽章 (如 128万次播放 · 98%好评)
+    info_parts = []
+    if views_label:
+        info_parts.append(f"▶ {views_label}")
+    if rating_label:
+        info_parts.append(f"★ {rating_label}")
+    if info_parts:
+        info_str = "  ".join(info_parts)
+        info_font = load_font("noto_serif_regular", 18)
+        info_w = int(len(info_str) * 11 + 30)
+        draw.rounded_rectangle([24, height - 58, min(width - 150, 24 + info_w), height - 20], radius=8, fill=(232, 234, 238), outline=(175, 178, 185), width=1)
+        draw.text((34, height - 50), info_str, fill=(35, 35, 42), font=info_font)
+
     return image
+
+
+def _local_fallback_image() -> Image.Image:
+    return _build_video_fallback_image(
+        title="P站精选视频推荐",
+        author="Verified",
+        duration="14:28",
+        views_label="128万次播放",
+        rating_label="98%好评",
+        rank_label="NO.1",
+    )
 
 
 _FALLBACK = [
@@ -26,6 +144,9 @@ _FALLBACK = [
         "subtitle": "精选公开热门",
         "source": "P站",
         "rank_label": "推荐",
+        "duration": "14:28",
+        "views_label": "128万次播放",
+        "rating_label": "98%好评",
         "cover_url": _FALLBACK_COVER,
         "thumbnail_url": _FALLBACK_COVER,
         "image_data": _local_fallback_image(),
@@ -43,14 +164,35 @@ def _parse_porn_items(payload: Any) -> list[dict[str, Any]]:
             continue
         thumbs = item.get("thumbs") or []
         thumb_url = item.get("default_thumb") or (thumbs[0].get("src") if thumbs and isinstance(thumbs[0], dict) else "")
+        title = item.get("title") or f"热门视频 #{index}"
+        author = item.get("username") or item.get("uploader") or "P站"
+        duration_str = _format_duration(item.get("duration"))
+        views_str = _format_views(item.get("views"))
+        rating_str = _format_rating(item.get("rating"))
+        rank_str = f"NO.{index}"
+
+        # 预先为视频条目生成精美微立体带播放器封面的矢量卡片，保障离线与弱网环境的高质感显示
+        generated_cover = _build_video_fallback_image(
+            title=title,
+            author=author,
+            duration=duration_str,
+            views_label=f"{views_str}播放" if views_str else "",
+            rating_label=f"{rating_str}好评" if rating_str else "",
+            rank_label=rank_str,
+        )
+
         result.append(
             normalize_recommendation_item(
                 {
-                    "title": item.get("title"),
-                    "subtitle": item.get("username") or item.get("uploader"),
+                    "title": title,
+                    "subtitle": author,
                     "thumbnail": thumb_url or item.get("thumbnail") or item.get("thumb"),
                     "detail_url": item.get("url"),
-                    "rank_label": f"NO.{index}",
+                    "rank_label": rank_str,
+                    "duration": duration_str,
+                    "views_label": views_str,
+                    "rating_label": rating_str,
+                    "image_data": generated_cover,
                 },
                 source="P站",
             )
@@ -92,5 +234,5 @@ async def generate_porn_video(mode_def, content_cfg, fallback, **kwargs):
         "title": "P站视频推荐",
         "source": "P站",
         "items": items or _FALLBACK,
-        "layout_style": override.get("layout_style", "ranking"),
+        "layout_style": override.get("layout_style", "cover_card"),
     }
