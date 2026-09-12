@@ -745,8 +745,8 @@ export function MobileAppShowcase({ locale }: { locale: Locale }) {
   const activeTab = appTabs.find((tab) => tab.id === activeTabId) ?? appTabs[0];
 
   return (
-    <div className="bg-[radial-gradient(circle_at_top,#f7f4ea_0%,#fafaf8_45%,#ffffff_100%)]">
-      <section className="mx-auto max-w-7xl px-6 pb-10 pt-14">
+    <div className="bg-[radial-gradient(circle_at_top,#f7f4ea_0%,#fafaf8_45%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top,#18181b_0%,#121214_45%,#09090b_100%)] min-w-0 max-w-full overflow-x-hidden">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-10 pt-10 sm:pt-14 min-w-0 max-w-full">
         <div className="max-w-3xl">
           <span className="inline-flex rounded-full border border-ink/10 bg-white/80 px-4 py-1.5 text-xs uppercase tracking-[0.28em] text-ink-light">
             {locale === "en" ? "Mobile App Prototype" : "移动端原型实现"}
@@ -786,7 +786,7 @@ export function MobileAppShowcase({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-6 pb-18 lg:grid-cols-[420px_minmax(0,1fr)]">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 pb-18 grid-cols-1 lg:grid-cols-[minmax(0,390px)_minmax(0,1fr)] min-w-0 max-w-full">
         <div className="lg:sticky lg:top-24 lg:self-start">
           <PhoneShell
             locale={locale}

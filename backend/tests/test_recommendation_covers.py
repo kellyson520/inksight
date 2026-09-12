@@ -52,6 +52,9 @@ def test_iwara_parse_items_extracts_full_thumbnail_url():
     assert "file_abc_789" in first["cover_url"]
     assert "thumbnail-02.jpg" in first["cover_url"]
     assert first["cover_url"].startswith("https://files.iwara.tv/image/")
+    # 确保同时携带本地高质量 fallback_image
+    assert first.get("fallback_image") is not None
+    assert isinstance(first["fallback_image"], Image.Image)
 
 
 def test_qidian_parse_items_from_html_page_data():
@@ -81,7 +84,7 @@ async def test_all_recommendation_providers_have_non_empty_covers_on_fallback():
         iwara_res = await generate_iwara_video({}, {}, {}, config={})
         iwara_items = iwara_res.get("items", [])
         assert len(iwara_items) > 0
-        assert iwara_items[0].get("cover_url") or iwara_items[0].get("image_data"), "Iwara 兜底缺少封面"
+        assert iwara_items[0].get("cover_url") or iwara_items[0].get("image_data") or iwara_items[0].get("fallback_image"), "Iwara 兜底缺少封面"
 
     # 2. Qidian
     with patch("core.outbound_http.outbound_http.get_text", side_effect=RuntimeError("offline")):
