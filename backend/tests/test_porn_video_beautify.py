@@ -36,7 +36,7 @@ def test_parse_porn_items_extracts_duration_views_and_rating():
     assert "12.5万" in item1["views_label"] or "125K" in item1["views_label"] or "125000" in item1["views_label"]
     assert "96%" in item1["rating_label"]
     assert item1["thumbnail_url"] == "https://example.com/thumb1.jpg"
-    assert item1["image_data"] is not None  # Generated high-quality vector cover
+    assert item1["fallback_image"] is not None  # Generated high-quality vector cover for offline fallback
     
     item2 = items[1]
     assert item2["title"] == "Tokyo Night Cyberpunk Street Tour"

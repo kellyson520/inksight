@@ -30,6 +30,7 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
         if style == "cover_card":
             image_data = item.get("image_data")
             image_url = str(item.get("thumbnail_url") or item.get("cover_url") or "").strip()
+            fallback_image = item.get("fallback_image")
             max_allowed = max(40, ctx.screen_h - ctx.footer_height - y - int(4 * ctx.scale))
             card_h_prop = int(block.get("card_height", 0) * ctx.scale)
             if card_h_prop > 0:
@@ -103,11 +104,16 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
                 text_block_h = (font_size * 2 + int(10 * ctx.scale)) if has_video_meta else (font_size + int(4 * ctx.scale))
                 img_h = max(16, card_height - text_block_h - int(2 * ctx.scale))
 
-                if image_data is not None or image_url:
+                if image_data is not None or image_url or fallback_image is not None:
                     previous_image = ctx.content.get("__recommendation_image")
-                    ctx.content["__recommendation_image"] = image_data if image_data is not None else image_url
+                    previous_fallback = ctx.content.get("__recommendation_fallback")
+                    # 若存在优先远程 url 则由 media_fetcher 抓取，抓取失败则回退到 fallback_image
+                    ctx.content["__recommendation_image"] = image_data if image_data is not None else (image_url or fallback_image)
+                    if fallback_image is not None:
+                        ctx.content["__recommendation_fallback"] = fallback_image
                     render_image(ctx, {
                         "field": "__recommendation_image",
+                        "fallback_field": "__recommendation_fallback",
                         "width": max(20, ctx.available_width - int(20 * ctx.scale)),
                         "height": img_h,
                         "x": ctx.x_offset + int(10 * ctx.scale),
@@ -118,6 +124,10 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
                         ctx.content.pop("__recommendation_image", None)
                     else:
                         ctx.content["__recommendation_image"] = previous_image
+                    if previous_fallback is None:
+                        ctx.content.pop("__recommendation_fallback", None)
+                    else:
+                        ctx.content["__recommendation_fallback"] = previous_fallback
 
                 # 底部文字排版
                 content_x = ctx.x_offset + int(10 * ctx.scale)

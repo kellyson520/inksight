@@ -470,6 +470,9 @@ def render_image(ctx: RenderContext, block: dict) -> None:
 
     try:
         proxy_url = ctx.content.get("__global_proxy_url")
+        if not proxy_url:
+            from core.recommendation_provider import resolve_proxy_url
+            proxy_url = resolve_proxy_url(None, auto_detect=True)
         fetched = media_fetcher.fetch_image(candidate_urls, proxy_url=proxy_url)
         img = convert_image_block(
             Image.open(BytesIO(fetched.data)),
@@ -481,7 +484,18 @@ def render_image(ctx: RenderContext, block: dict) -> None:
         ctx.y = y + height + margin_bottom
     except Exception as exc:
         logger.warning("[JSONRenderer] Image block download failed: %s", exc)
-        _draw_image_placeholder(ctx, x, y, width, height, "Image not available")
+        fallback_field = block.get("fallback_field")
+        fallback_val = ctx.content.get(fallback_field) if fallback_field else None
+        if isinstance(fallback_val, Image.Image):
+            img = convert_image_block(
+                fallback_val,
+                width, height, ctx.colors,
+                fit=fit, align_x=align_x, align_y=align_y,
+                photo_enhance=photo_enhance,
+            )
+            _paste_converted_image(ctx, img, x, y)
+        else:
+            _draw_image_placeholder(ctx, x, y, width, height, "Image not available")
         ctx.y = y + height + margin_bottom
 
 

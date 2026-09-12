@@ -192,7 +192,7 @@ def _parse_porn_items(payload: Any) -> list[dict[str, Any]]:
                     "duration": duration_str,
                     "views_label": views_str,
                     "rating_label": rating_str,
-                    "image_data": generated_cover,
+                    "fallback_image": generated_cover,
                 },
                 source="P站",
             )
@@ -208,7 +208,7 @@ async def generate_porn_video(mode_def, content_cfg, fallback, **kwargs):
         override = {}
     settings = config.get("mode_settings") or {}
     endpoint = override.get("endpoint") or settings.get("endpoint") or content_cfg.get("endpoint") or _DEFAULT_ENDPOINT
-    proxy_url = resolve_proxy_url(config.get("global_proxy_url"))
+    proxy_url = resolve_proxy_url(config.get("global_proxy_url"), auto_detect=True)
     items = []
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",

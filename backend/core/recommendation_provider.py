@@ -5,16 +5,43 @@ from typing import Any
 from urllib.parse import urlparse
 
 
-def resolve_proxy_url(value: Any) -> str | None:
-    if not isinstance(value, str):
+def resolve_proxy_url(value: Any, *, auto_detect: bool = False) -> str | None:
+    if isinstance(value, str) and value.strip():
+        val = value.strip()
+        parsed = urlparse(val)
+        if parsed.scheme.lower() in {"http", "https", "socks5", "socks5h"} and parsed.hostname:
+            return val
+
+    if not auto_detect:
         return None
-    value = value.strip()
-    if not value:
-        return None
-    parsed = urlparse(value)
-    if parsed.scheme.lower() not in {"http", "https", "socks5", "socks5h"} or not parsed.hostname:
-        return None
-    return value
+
+    # 自动环境探测与本地代理回退（支持 Docker 容器互联 mihomo 与宿主机标准代理）
+    import os
+    import socket
+
+    env_proxy = os.getenv("INKSIGHT_GLOBAL_PROXY_URL") or os.getenv("HTTP_PROXY") or os.getenv("http_proxy")
+    if env_proxy and isinstance(env_proxy, str):
+        parsed = urlparse(env_proxy.strip())
+        if parsed.scheme.lower() in {"http", "https", "socks5", "socks5h"} and parsed.hostname:
+            return env_proxy.strip()
+
+    # 尝试探测常见的内置代理端点（mihomo-cliproxy 或 127.0.0.1:7891 / 7890）
+    candidate_endpoints = [
+        ("socks5://mihomo-cliproxy:7890", "mihomo-cliproxy", 7890),
+        ("http://mihomo-cliproxy:7890", "mihomo-cliproxy", 7890),
+        ("http://127.0.0.1:7891", "127.0.0.1", 7891),
+        ("http://127.0.0.1:7890", "127.0.0.1", 7890),
+    ]
+    for proxy_str, host, port in candidate_endpoints:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(0.15)
+                if s.connect_ex((host, port)) == 0:
+                    return proxy_str
+        except Exception:
+            continue
+
+    return None
 
 
 def normalize_recommendation_item(payload: dict[str, Any] | None, *, source: str = "") -> dict[str, Any]:
@@ -38,4 +65,6 @@ def normalize_recommendation_item(payload: dict[str, Any] | None, *, source: str
     }
     if "image_data" in payload and payload["image_data"] is not None:
         res["image_data"] = payload["image_data"]
+    if "fallback_image" in payload and payload["fallback_image"] is not None:
+        res["fallback_image"] = payload["fallback_image"]
     return res
