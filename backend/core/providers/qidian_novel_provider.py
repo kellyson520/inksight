@@ -157,7 +157,7 @@ async def generate_qidian_novel(mode_def, content_cfg, fallback, **kwargs):
         override = {}
     settings = config.get("mode_settings") or {}
     endpoint = override.get("endpoint") or settings.get("endpoint") or content_cfg.get("endpoint") or _DEFAULT_ENDPOINT
-    proxy_url = resolve_proxy_url(config.get("global_proxy_url"))
+    proxy_url = resolve_proxy_url(config.get("global_proxy_url"), auto_detect=True)
     items = []
     headers = {
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",

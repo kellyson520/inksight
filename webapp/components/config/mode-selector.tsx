@@ -272,7 +272,7 @@ export function ModeSelector({
                   <button
                     type="button"
                     onClick={() => handleModePreview(mode)}
-                    className="text-ink-light hover:text-ink flex items-center gap-1 font-medium transition-colors"
+                    className="text-ink-light hover:text-ink dark:hover:text-zinc-100 flex items-center gap-1 font-medium transition-colors"
                   >
                     <Eye size={12} />
                     <span>{tr("预览", "Preview")}</span>
@@ -285,7 +285,7 @@ export function ModeSelector({
                       className={`px-2 py-0.5 rounded-sm text-[11px] font-semibold transition-colors ${
                         isSelected
                           ? "bg-ink/10 text-ink hover:bg-red-100 hover:text-red-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-950/60 dark:hover:text-red-400"
-                          : "bg-ink text-white hover:bg-ink-light dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 dark:border dark:border-zinc-700"
+                          : "bg-ink text-white hover:bg-ink-light dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white dark:border dark:border-zinc-300"
                       }`}
                     >
                       {isSelected ? tr("移除", "Remove") : tr("加入轮播", "Add")}

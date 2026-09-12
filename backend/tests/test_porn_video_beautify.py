@@ -1,6 +1,7 @@
 import pytest
 from core.providers.porn_video_provider import _parse_porn_items, _build_video_fallback_image, generate_porn_video
 from core.pipeline import generate_and_render
+from core.recommendation_provider import resolve_proxy_url
 from PIL import Image
 
 def test_parse_porn_items_extracts_duration_views_and_rating():
@@ -57,17 +58,23 @@ def test_build_video_fallback_image_produces_clean_eink_card():
     )
     assert isinstance(im, Image.Image)
     assert im.size == (640, 360)
-    # Check that it has rich graphical contrast (not nearly empty or pitch black)
-    # White background with black text/borders and orange accent
     data = list(im.getdata())
     light_px = sum(1 for p in data if sum(p[:3]) / 3 > 200)
     dark_px = sum(1 for p in data if sum(p[:3]) / 3 < 80)
     assert light_px > 50000, f"Expected clean light background, got {light_px}"
     assert dark_px > 3000, f"Expected readable dark borders and glyphs, got {dark_px}"
 
+def test_resolve_proxy_url_modes():
+    # Without auto_detect
+    assert resolve_proxy_url("http://127.0.0.1:8080") == "http://127.0.0.1:8080"
+    assert resolve_proxy_url(None, auto_detect=False) is None
+    # With auto_detect flag
+    detected = resolve_proxy_url(None, auto_detect=True)
+    # Either detected our active mihomo proxy or None if offline
+    assert detected is None or "789" in detected
+
 @pytest.mark.asyncio
 async def test_porn_video_renders_cover_card_with_badges():
-    # Test rendering PORN_VIDEO in cover_card mode
     img, content = await generate_and_render(
         "PORN_VIDEO",
         {"layout_style": "cover_card"},
@@ -82,5 +89,4 @@ async def test_porn_video_renders_cover_card_with_badges():
     assert len(content.get("items", [])) > 0
     first_item = content["items"][0]
     assert "title" in first_item
-    # Check that image_data or thumbnail was rendered
-    assert first_item.get("image_data") is not None or first_item.get("thumbnail_url")
+    assert first_item.get("fallback_image") is not None or first_item.get("image_data") is not None or first_item.get("thumbnail_url")

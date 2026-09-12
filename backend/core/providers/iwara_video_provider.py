@@ -82,7 +82,7 @@ async def generate_iwara_video(mode_def, content_cfg, fallback, **kwargs):
         override = {}
     settings = config.get("mode_settings") or {}
     endpoint = override.get("endpoint") or settings.get("endpoint") or content_cfg.get("endpoint") or _DEFAULT_ENDPOINT
-    proxy_url = resolve_proxy_url(config.get("global_proxy_url"))
+    proxy_url = resolve_proxy_url(config.get("global_proxy_url"), auto_detect=True)
 
     items = []
     headers = {
