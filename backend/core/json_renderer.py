@@ -416,6 +416,9 @@ def render_json_mode(
         screen_h=screen_h,
         colors=colors,
         language=language,
+        lunar_str=content.get("lunar_str", "") if isinstance(content, dict) else "",
+        festival_str=content.get("festival", "") if isinstance(content, dict) else "",
+        solar_term=content.get("solar_term", "") if isinstance(content, dict) else "",
     )
     if screen_h <= 128:
         _dsb_kw["separator_y"] = status_bar_bottom

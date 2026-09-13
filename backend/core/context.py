@@ -27,6 +27,7 @@ from .config import (
     MONTH_CN,
     SOLAR_FESTIVALS,
     LUNAR_FESTIVALS,
+    SOLAR_TERMS,
     IDIOMS,
     POEMS,
     HOLIDAY_WORK_API_URL,
@@ -177,12 +178,28 @@ async def get_date_context() -> dict:
     
     festival = SOLAR_FESTIVALS.get((now.month, now.day), "")
     
+    lunar_str = ""
+    solar_term = SOLAR_TERMS.get((now.year, now.month, now.day), "")
+    if solar_term and not festival:
+        festival = solar_term
+
     try:
         lunar = ZhDate.from_datetime(now)
+        # 格式化农历月日，例如 "八月初四"、"正月初一"
+        _LUNAR_MONTHS = ["正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "冬", "腊"]
+        _LUNAR_DAYS = [
+            "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+            "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+            "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
+        ]
+        if 1 <= lunar.lunar_month <= 12 and 1 <= lunar.lunar_day <= len(_LUNAR_DAYS):
+            m_prefix = "闰" if getattr(lunar, "leap_month", False) else ""
+            lunar_str = f"{m_prefix}{_LUNAR_MONTHS[lunar.lunar_month - 1]}月{_LUNAR_DAYS[lunar.lunar_day - 1]}"
+        
         lunar_festival = LUNAR_FESTIVALS.get((lunar.lunar_month, lunar.lunar_day), "")
         if lunar_festival and not festival:
             festival = lunar_festival
-    except ValueError:
+    except (ValueError, TypeError, Exception):
         logger.warning("[Context] Failed to resolve lunar date for %s", now.isoformat(), exc_info=True)
     
     holiday_info = await get_holiday_info(now)
@@ -203,6 +220,8 @@ async def get_date_context() -> dict:
         "day": now.day,
         "month_cn": MONTH_CN[now.month - 1],
         "weekday_cn": WEEKDAY_CN[now.weekday()],
+        "lunar_str": lunar_str,
+        "solar_term": solar_term,
         "day_of_year": day_of_year,
         "days_in_year": days_in_year,
         "festival": festival,

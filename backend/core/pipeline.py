@@ -349,6 +349,15 @@ async def _render_for_persona(
             weather_str_for_bar = weather_str
             weather_code_for_bar = weather_code
 
+        # 丰富 context 基础字段至 content，供 status_bar 与模版取用
+        if isinstance(content, dict) and date_ctx:
+            if "lunar_str" not in content and date_ctx.get("lunar_str"):
+                content["lunar_str"] = date_ctx["lunar_str"]
+            if "solar_term" not in content and date_ctx.get("solar_term"):
+                content["solar_term"] = date_ctx["solar_term"]
+            if "festival" not in content and date_ctx.get("festival"):
+                content["festival"] = date_ctx["festival"]
+
         return render_json_mode(
             jm.definition, content,
             date_str=date_str, weather_str=weather_str_for_bar, battery_pct=battery_pct,

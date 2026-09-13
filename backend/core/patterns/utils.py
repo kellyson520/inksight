@@ -350,8 +350,11 @@ def draw_status_bar(
     colors: int = 2,
     language: str = "zh",
     separator_y: int | None = None,
+    lunar_str: str = "",
+    festival_str: str = "",
+    solar_term: str = "",
 ):
-    """绘制顶部状态栏"""
+    """绘制顶部状态栏（支持农历、节气、节日、天气与电池图形信息）"""
     is_en = language == "en"
     scale = screen_w / 400.0
     if is_en:
@@ -364,6 +367,8 @@ def draw_status_bar(
         if period_font is None:
             period_font = load_font("noto_serif_regular", period_font_size)
     font_en = load_font("inter_medium", int(FONT_SIZES["status_bar"]["en"] * scale))
+    badge_font_size = max(9, int(9 * scale))
+    badge_font = load_font("noto_serif_regular", badge_font_size) if not is_en else load_font("inter_medium", badge_font_size)
 
     match = re.match(r"^\s*(\d{1,2})\s*:", time_str or "")
     hour = datetime.now().hour
@@ -407,20 +412,44 @@ def draw_status_bar(
     pad_x = int(screen_w * pad_pct)
     y = pad_y
     x = pad_x
+
+    # 1. 绘制左侧时段标签与日期
     draw.text((x, y), period_label, fill=EINK_FG, font=period_font)
     bbox_period = draw.textbbox((0, 0), period_label, font=period_font)
-    x += (bbox_period[2] - bbox_period[0]) + int(8 * scale)
+    x += (bbox_period[2] - bbox_period[0]) + int(6 * scale)
     draw.text((x, y), date_str, fill=EINK_FG, font=font_date)
+    bbox_date = draw.textbbox((0, 0), date_str, font=font_date)
+    x += (bbox_date[2] - bbox_date[0]) + int(6 * scale)
 
-    wx = screen_w // 2 - int(28 * scale)
+    # 2. 如果屏幕宽度允许（>=360px 且中文模式），绘制农历与节日/节气徽章
+    if not is_en and screen_w >= 360:
+        badge_text = festival_str or solar_term or ""
+        # 农历月日
+        if lunar_str:
+            draw.text((x, y), lunar_str, fill=EINK_FG, font=period_font)
+            bbox_lunar = draw.textbbox((0, 0), lunar_str, font=period_font)
+            x += (bbox_lunar[2] - bbox_lunar[0]) + int(6 * scale)
+        # 节日或节气小胶囊
+        if badge_text:
+            bbox_badge = draw.textbbox((0, 0), badge_text, font=badge_font)
+            bw = (bbox_badge[2] - bbox_badge[0]) + int(6 * scale)
+            bh = (bbox_badge[3] - bbox_badge[1]) + int(2 * scale)
+            badge_fill = EINK_COLOR_NAME_MAP.get("red", EINK_FG) if colors >= 3 else EINK_FG
+            draw.rounded_rectangle([x, y, x + bw, y + bh], radius=3, outline=badge_fill, width=1)
+            draw.text((x + int(3 * scale), y), badge_text, fill=badge_fill, font=badge_font)
+
+    # 3. 中间天气图标与信息（动态居中计算，避免与左侧重叠）
     weather_icon = get_weather_icon(weather_code) if weather_code >= 0 else None
-    if weather_icon:
-        icon_fill = EINK_COLOR_NAME_MAP.get("red", EINK_FG) if colors >= 3 else EINK_FG
-        paste_icon_onto(img, weather_icon, (wx, y - 1), fill=icon_fill)
-        draw.text((wx + int(18 * scale), y), weather_str, fill=EINK_FG, font=font_date)
-    else:
-        draw.text((wx, y), weather_str, fill=EINK_FG, font=font_date)
+    wx = max(x + int(10 * scale), screen_w // 2 - int(24 * scale))
+    if weather_str:
+        if weather_icon:
+            icon_fill = EINK_COLOR_NAME_MAP.get("red", EINK_FG) if colors >= 3 else EINK_FG
+            paste_icon_onto(img, weather_icon, (wx, y - 1), fill=icon_fill)
+            draw.text((wx + int(18 * scale), y), weather_str, fill=EINK_FG, font=font_date)
+        else:
+            draw.text((wx, y), weather_str, fill=EINK_FG, font=font_date)
 
+    # 4. 右侧精确电量（电池框 + 电量条 + 百分比）
     batt_text = f"{battery_pct}%"
     bbox = draw.textbbox((0, 0), batt_text, font=font_en)
     batt_text_w = bbox[2] - bbox[0]
@@ -436,9 +465,10 @@ def draw_status_bar(
     batt_box_h = int(11 * scale)
     bx = screen_w - pad_x - batt_text_w - int(6 * scale) - batt_box_w
     by = y + 1
+    # 电池外框与正极凸起
     draw.rectangle([bx, by, bx + batt_box_w, by + batt_box_h], outline=batt_fill, width=1)
     draw.rectangle([bx + batt_box_w, by + int(3 * scale), bx + batt_box_w + int(2 * scale), by + int(8 * scale)], fill=batt_fill)
-    fill_w = int((batt_box_w - 4) * battery_pct / 100)
+    fill_w = int((batt_box_w - 4) * max(0, min(100, battery_pct)) / 100)
     if fill_w > 0:
         draw.rectangle([bx + 2, by + 2, bx + 2 + fill_w, by + batt_box_h - 2], fill=batt_fill)
 
