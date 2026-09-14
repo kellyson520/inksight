@@ -747,3 +747,40 @@ def render_quote_body(
         bbox = safe_font_bbox(font, line)
         x = (screen_w - (bbox[2] - bbox[0])) // 2
         draw.text((x, y_start + i * line_h), line, fill=EINK_FG, font=font)
+
+
+def format_compact_number(val: Any) -> str:
+    """将数值格式化为紧凑中文单位表达（例如 1254000 -> 125.4万，350000000 -> 3.5亿）。
+    对非数值或已有单位的字符串保持不变。
+    """
+    if val is None or val == "":
+        return ""
+
+    if isinstance(val, (int, float)):
+        num = float(val)
+    else:
+        s = str(val).strip()
+        # 如果包含百分比或已有非数字字符且不是纯数字
+        if "%" in s or "万" in s or "亿" in s or "k" in s.lower():
+            return s
+        try:
+            num = float(s)
+        except ValueError:
+            return s
+
+    abs_num = abs(num)
+    sign = "-" if num < 0 else ""
+
+    if abs_num >= 100_000_000:
+        val_yi = abs_num / 100_000_000
+        formatted = f"{val_yi:.1f}".rstrip("0").rstrip(".") if f"{val_yi:.1f}".endswith(".0") else f"{val_yi:.1f}"
+        return f"{sign}{formatted}亿"
+    elif abs_num >= 10_000:
+        val_wan = abs_num / 10_000
+        formatted = f"{val_wan:.1f}".rstrip("0").rstrip(".") if f"{val_wan:.1f}".endswith(".0") else f"{val_wan:.1f}"
+        return f"{sign}{formatted}万"
+    elif abs_num.is_integer():
+        return f"{sign}{int(abs_num)}"
+    else:
+        return f"{sign}{abs_num:.2f}".rstrip("0").rstrip(".")
+

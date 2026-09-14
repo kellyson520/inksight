@@ -1,0 +1,98 @@
+{
+  "mode_id": "OIL_PRICE",
+  "display_name": "今日油价",
+  "icon": "fuel",
+  "cacheable": true,
+  "description": "全国各省市最新油价看板：92#/95#/98#/0# 实时油价与新一轮调价倒计时走势预测",
+  "settings_schema": [
+    {
+      "key": "province",
+      "label": "选择省份/地区",
+      "type": "select",
+      "default": "山东",
+      "options": [
+        { "value": "山东", "label": "山东" },
+        { "value": "北京", "label": "北京" },
+        { "value": "上海", "label": "上海" },
+        { "value": "广东", "label": "广东" },
+        { "value": "江苏", "label": "江苏" },
+        { "value": "浙江", "label": "浙江" },
+        { "value": "四川", "label": "四川" },
+        { "value": "湖北", "label": "湖北" },
+        { "value": "河南", "label": "河南" },
+        { "value": "河北", "label": "河北" },
+        { "value": "福建", "label": "福建" },
+        { "value": "湖南", "label": "湖南" },
+        { "value": "陕西", "label": "陕西" },
+        { "value": "安徽", "label": "安徽" },
+        { "value": "辽宁", "label": "辽宁" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "oil_price",
+    "province": "山东",
+    "fallback": {
+      "title": "今日油价 · 山东",
+      "province": "山东",
+      "countdown_str": "第19轮调价倒计时: 3 天",
+      "trend_badge": "下调预期 🔻",
+      "trend_text": "预计每升下调 0.12 元 (↓140元/吨)",
+      "is_drop": true,
+      "gas_92": "7.78",
+      "gas_95": "8.35",
+      "gas_98": "9.42",
+      "diesel_0": "7.41",
+      "change_92": "-0.12",
+      "change_95": "-0.13",
+      "change_98": "-0.15",
+      "change_diesel": "-0.12",
+      "update_date": "9月14日"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 8,
+        "items": [
+          {
+            "type": "text",
+            "template": "{title}",
+            "font": "noto_serif_bold",
+            "font_size": 14
+          },
+          {
+            "type": "badge",
+            "template": "发改委调价窗口",
+            "variant": "outline",
+            "font_size": 10,
+            "padding_x": 6,
+            "padding_y": 1,
+            "radius": 3
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "oil_price_board",
+        "margin_x": 8
+      }
+    ],
+    "footer": {
+      "label": "OIL",
+      "attribution_template": "全国油价行情 · 更新于 {update_date}"
+    }
+  }
+}

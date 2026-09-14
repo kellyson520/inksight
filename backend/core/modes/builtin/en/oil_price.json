@@ -1,0 +1,87 @@
+{
+  "mode_id": "OIL_PRICE",
+  "display_name": "Fuel Prices",
+  "icon": "fuel",
+  "cacheable": true,
+  "description": "Daily gasoline and diesel retail prices and adjustment trend forecast",
+  "settings_schema": [
+    {
+      "key": "province",
+      "label": "Region/Province",
+      "type": "select",
+      "default": "Shandong",
+      "options": [
+        { "value": "山东", "label": "Shandong" },
+        { "value": "北京", "label": "Beijing" },
+        { "value": "上海", "label": "Shanghai" },
+        { "value": "广东", "label": "Guangdong" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "oil_price",
+    "province": "山东",
+    "fallback": {
+      "title": "Fuel Prices · Shandong",
+      "province": "Shandong",
+      "countdown_str": "Next Revision: 3 Days",
+      "trend_badge": "Expected Drop",
+      "trend_text": "Expected drop ~¥0.12 / L",
+      "is_drop": true,
+      "gas_92": "7.78",
+      "gas_95": "8.35",
+      "gas_98": "9.42",
+      "diesel_0": "7.41",
+      "change_92": "-0.12",
+      "change_95": "-0.13",
+      "change_98": "-0.15",
+      "change_diesel": "-0.12",
+      "update_date": "Sep 14"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 8,
+        "items": [
+          {
+            "type": "text",
+            "template": "{title}",
+            "font": "inter_bold",
+            "font_size": 14
+          },
+          {
+            "type": "badge",
+            "template": "National Pricing Window",
+            "variant": "outline",
+            "font_size": 10,
+            "padding_x": 6,
+            "padding_y": 1,
+            "radius": 3
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "oil_price_board",
+        "margin_x": 8
+      }
+    ],
+    "footer": {
+      "label": "OIL",
+      "attribution_template": "Fuel Market · {update_date}"
+    }
+  }
+}

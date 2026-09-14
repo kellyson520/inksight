@@ -17,6 +17,7 @@ from core.patterns.utils import (
     EINK_FG,
     EINK_COLOR_NAME_MAP,
     draw_dashed_line,
+    format_compact_number,
     has_cjk,
     load_font,
     wrap_text,
@@ -155,11 +156,12 @@ def _render_dense_grid(ctx: RenderContext, block: dict[str, Any], items: list[di
             hot_val = str(it.get("hot_value", "")).strip()
 
             # 1. 绘制顶部信息行：[Rank] [来源] [热度]
-            pill_fill = accent_color if (is_top and ctx.colors >= 3) else EINK_FG
+            pill_fill = accent_color if (rank == 1 and ctx.colors >= 3) else EINK_FG
             rank_str = f"{rank:02d}" if rank < 10 else str(rank)
+            solid_badge = rank in (1, 2)
             rw, rh = _draw_badge_pill(
                 ctx.draw, col_x, cur_y, rank_str, font_rank,
-                solid=is_top, fill_color=pill_fill, text_color=EINK_BG,
+                solid=solid_badge, fill_color=pill_fill, text_color=EINK_BG if solid_badge else EINK_FG,
                 pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
             )
 
@@ -173,10 +175,11 @@ def _render_dense_grid(ctx: RenderContext, block: dict[str, Any], items: list[di
 
             # 热度值（靠右）
             if hot_val:
-                if any(x in hot_val for x in ("♪", "★", "🔥", "★")):
+                if any(x in hot_val for x in ("♪", "★", "🔥")):
                     hot_str = hot_val
                 else:
-                    hot_str = f"🔥{hot_val}"
+                    compact_val = format_compact_number(hot_val)
+                    hot_str = f"🔥{compact_val}"
                 hw = font_hot.getbbox(hot_str)[2] - font_hot.getbbox(hot_str)[0]
                 if col_x + col_w - hw > col_x + rw + pw + int(10 * scale):
                     ctx.draw.text((col_x + col_w - hw, cur_y + int(1 * scale)), hot_str, fill=EINK_FG, font=font_hot)
@@ -333,10 +336,11 @@ def _render_classic(ctx: RenderContext, block: dict[str, Any], items: list[dict[
         hot_val = str(it.get("hot_value", "")).strip()
 
         row_y = ctx.y
-        pill_fill = accent_color if (is_top and ctx.colors >= 3) else EINK_FG
+        pill_fill = accent_color if (rank == 1 and ctx.colors >= 3) else EINK_FG
+        solid_badge = rank in (1, 2)
         rw, rh = _draw_badge_pill(
             ctx.draw, ctx.x_offset + margin_x, row_y, f"{rank:02d}", font_rank,
-            solid=is_top, fill_color=pill_fill, text_color=EINK_BG, pad_x=int(4 * scale), pad_y=int(1 * scale), radius=3,
+            solid=solid_badge, fill_color=pill_fill, text_color=EINK_BG if solid_badge else EINK_FG, pad_x=int(4 * scale), pad_y=int(1 * scale), radius=3,
         )
 
         pw, ph = _draw_badge_pill(
@@ -344,15 +348,17 @@ def _render_classic(ctx: RenderContext, block: dict[str, Any], items: list[dict[
             solid=False, fill_color=EINK_FG, text_color=EINK_FG, pad_x=int(4 * scale), pad_y=int(1 * scale), radius=2,
         )
 
-        hot_w = (font_meta.getbbox(f"🔥 {hot_val}")[2] - font_meta.getbbox(f"🔥 {hot_val}")[0] + int(8 * scale)) if hot_val else 0
+        compact_hot = format_compact_number(hot_val) if hot_val else ""
+        hot_label = f"🔥 {compact_hot}" if compact_hot else ""
+        hot_w = (font_meta.getbbox(hot_label)[2] - font_meta.getbbox(hot_label)[0] + int(8 * scale)) if hot_label else 0
         title_x = ctx.x_offset + margin_x + rw + pw + int(10 * scale)
         max_t_w = ctx.available_width - margin_x * 2 - (rw + pw + int(10 * scale)) - hot_w
 
         short_t = _truncate_text_to_width(title, font_title, max_t_w)
         ctx.draw.text((title_x, row_y - int(1 * scale)), short_t, fill=EINK_FG, font=font_title)
 
-        if hot_val:
-            ctx.draw.text((ctx.x_offset + ctx.available_width - margin_x - hot_w + int(4 * scale), row_y + int(1 * scale)), f"🔥 {hot_val}", fill=EINK_FG, font=font_meta)
+        if hot_label:
+            ctx.draw.text((ctx.x_offset + ctx.available_width - margin_x - hot_w + int(4 * scale), row_y + int(1 * scale)), hot_label, fill=EINK_FG, font=font_meta)
 
         ctx.y += max(rh, ph) + int(5 * scale)
         draw_dashed_line(

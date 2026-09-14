@@ -92,6 +92,7 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   WECHAT_READ: "life",
   DOUBAN_MOVIE: "life",
   SMZDM: "life",
+  OIL_PRICE: "life",
   ELEMENT_DAY: "life",
   XKCD_COMIC: "life",
   // 灵感与创作

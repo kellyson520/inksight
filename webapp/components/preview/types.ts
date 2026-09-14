@@ -99,6 +99,7 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   IWARA_VIDEO: "recommendation",
   PORN_VIDEO: "recommendation",
   CURRENCY: "recommendation",
+  OIL_PRICE: "recommendation",
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [
