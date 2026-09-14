@@ -252,16 +252,51 @@ _SMART_TIME_SLOTS = [
 ]
 
 
-async def choose_persona_from_config(config: dict, peek_next: bool = False) -> str:
-    modes = config.get("modes", DEFAULT_MODES) or DEFAULT_MODES
+async def filter_silent_event_modes(
+    modes: list[str],
+    mac: Optional[str] = None,
+    config: Optional[dict] = None,
+) -> list[str]:
+    """过滤处于静默状态的事件驱动模式（如 DISASTER_ALERT）。
+    当未发生自然灾害且无模拟演练时，静默跳过此类模式，绝不打扰用户日常轮播。
+    """
+    if not modes:
+        return list(DEFAULT_MODES)
+
+    active_modes = []
+    has_alert: Optional[bool] = None
+
+    for m in modes:
+        if m.upper() == "DISASTER_ALERT":
+            if has_alert is None:
+                try:
+                    from core.disaster_service import check_device_disaster_alert
+                    target_mac = mac or (config.get("mac") if isinstance(config, dict) else "")
+                    alert = await check_device_disaster_alert(target_mac, config)
+                    has_alert = bool(alert)
+                except Exception:
+                    has_alert = False
+            if has_alert:
+                active_modes.append(m)
+            else:
+                logger.debug("[MODE_ROTATION] Silently skipping DISASTER_ALERT as no active disaster exists for mac=%s", mac)
+        else:
+            active_modes.append(m)
+
+    return active_modes or [m for m in DEFAULT_MODES if m != "DISASTER_ALERT"]
+
+
+async def choose_persona_from_config(config: dict, peek_next: bool = False, mac: Optional[str] = None) -> str:
+    target_mac = mac or config.get("mac", "default")
+    raw_modes = config.get("modes", DEFAULT_MODES) or DEFAULT_MODES
+    modes = await filter_silent_event_modes(raw_modes, target_mac, config)
     strategy = config.get("refresh_strategy", "random")
 
     if strategy == "cycle":
-        mac = config.get("mac", "default")
-        idx = await get_cycle_index(mac)
+        idx = await get_cycle_index(target_mac)
         persona = modes[idx % len(modes)]
         if not peek_next:
-            await set_cycle_index(mac, idx + 1)
+            await set_cycle_index(target_mac, idx + 1)
         return persona
 
     if strategy == "time_slot":
@@ -290,7 +325,8 @@ async def choose_persona_from_config(config: dict, peek_next: bool = False) -> s
 
 
 async def advance_to_next_mode(mac: Optional[str], config: dict) -> str:
-    modes = config.get("modes", DEFAULT_MODES)
+    raw_modes = config.get("modes", DEFAULT_MODES)
+    modes = await filter_silent_event_modes(raw_modes, mac, config)
     if not modes:
         return "STOIC"
 
@@ -321,6 +357,7 @@ async def resolve_mode(
     persona_override: Optional[str],
     *,
     force_next: bool = False,
+    is_device_request: bool = False,
 ) -> str:
     from core.mode_registry import get_registry
 
@@ -331,13 +368,25 @@ async def resolve_mode(
         if pending and registry.is_supported(pending.upper(), mac):
             return pending.upper()
 
-    if persona_override and registry.is_supported(persona_override.upper(), mac):
-        return persona_override.upper()
+    effective_override = persona_override
+    # 如果设备请求被指定为 DISASTER_ALERT，检查是否有活跃自然灾害；若无活跃灾害，静默跳过该模式
+    if effective_override and effective_override.upper() == "DISASTER_ALERT" and (is_device_request or (mac and not force_next)):
+        try:
+            from core.disaster_service import check_device_disaster_alert
+            alert = await check_device_disaster_alert(mac, config)
+            if not alert:
+                logger.info("[RESOLVE_MODE] Device %s hit DISASTER_ALERT but no active disaster warning exists; silently skipping to normal rotation", mac)
+                effective_override = None
+        except Exception:
+            effective_override = None
+
+    if effective_override and registry.is_supported(effective_override.upper(), mac):
+        return effective_override.upper()
 
     if config:
         if force_next:
             return await advance_to_next_mode(mac, config)
-        return await choose_persona_from_config(config)
+        return await choose_persona_from_config(config, mac=mac)
 
     return random.choice(["STOIC", "ROAST", "ZEN", "DAILY"])
 
@@ -450,7 +499,8 @@ async def build_image(
                 config["global_proxy_url"] = prefs["global_proxy_url"]
         except Exception:
             logger.debug("[BUILD_IMAGE] Failed to load global proxy preference", exc_info=True)
-    persona = await resolve_mode(mac, config, persona_override, force_next=force_next)
+    is_device_req = bool(mac and not is_preview)
+    persona = await resolve_mode(mac, config, persona_override, force_next=force_next, is_device_request=is_device_req)
     owner_user_id: Optional[int] = None
     if mac:
         owner = await get_device_owner(mac)
