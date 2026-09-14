@@ -58,7 +58,28 @@ def draw_disaster_vector_icon(
     r = size // 2
     h_type = (hazard or "typhoon").lower()
 
-    if "typhoon" in h_type or "hurricane" in h_type or "台风" in h_type or "飓风" in h_type:
+    if "safe" in h_type or "安全" in h_type or "平稳" in h_type or "shield" in h_type:
+        # 安全盾牌 + 对勾
+        top_y = cy - r + 2
+        mid_y = cy
+        bot_y = cy + r - 2
+        shield_pts = [
+            (cx, top_y),
+            (cx + r - 3, top_y + 4),
+            (cx + r - 5, mid_y + 2),
+            (cx, bot_y),
+            (cx - r + 5, mid_y + 2),
+            (cx - r + 3, top_y + 4),
+        ]
+        draw.polygon(shield_pts, outline=color, width=2)
+        chk_pts = [
+            (cx - r // 2 + 2, cy),
+            (cx - 2, cy + r // 3),
+            (cx + r // 2 - 1, cy - r // 3),
+        ]
+        draw.line(chk_pts, fill=accent_color, width=3)
+
+    elif "typhoon" in h_type or "hurricane" in h_type or "台风" in h_type or "飓风" in h_type:
         # 台风双螺旋风眼
         draw.arc([(cx - r, cy - r), (cx + r, cy + r)], start=30, end=170, fill=color, width=3)
         draw.arc([(cx - r, cy - r), (cx + r, cy + r)], start=210, end=350, fill=color, width=3)
@@ -426,7 +447,10 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     acc_col = ctx.color_index("red") if (is_red and ctx.colors >= 3) else EINK_FG
 
     # 1. 级别徽章文字与尺寸
-    if "红" in level:
+    if clean_level in ("平稳", "安全", "正常", "无"):
+        badge_text = "气象平稳 · 暂无预警"
+        badge_red = False
+    elif "红" in level:
         badge_text = "红色预警 · I级 特别严重"
         badge_red = True
     elif "橙" in level:
@@ -454,7 +478,9 @@ def render_disaster_hero(ctx: RenderContext, block: dict) -> None:
     badge_h = bh + pad_y * 2
 
     # 2. 规范主标题文字与尺寸
-    if clean_level and clean_level not in type_name:
+    if clean_level in ("平稳", "安全", "正常", "无"):
+        title_text = "【气象安全 · 暂无预警】"
+    elif clean_level and clean_level not in type_name:
         title_text = f"【{type_name}{clean_level}预警】"
     elif "预警" not in type_name:
         title_text = f"【{type_name}预警】"

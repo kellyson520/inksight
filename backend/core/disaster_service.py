@@ -216,9 +216,30 @@ async def fetch_active_alerts(lat: float, lon: float, city: str = "") -> list[di
             data = await _qweather_get("/v7/warning/now", {"location": location_str})
             if data and "warning" in data and isinstance(data["warning"], list):
                 for item in data["warning"]:
+                    # 1.1 过滤已取消、已解除或非生效状态的预警
+                    status = str(item.get("status") or "").lower()
+                    if status in ("cancel", "cancelled", "inactive", "0"):
+                        continue
                     lvl = item.get("level", "黄色")
                     t_name = item.get("typeName", "灾害")
                     title = item.get("title") or f"{t_name}{lvl}预警"
+                    if "解除" in title or "取消" in title:
+                        continue
+
+                    # 1.2 检查是否过期
+                    end_time_str = item.get("endTime")
+                    if end_time_str:
+                        try:
+                            # 预警结束时间例如 2026-09-14T18:00+08:00
+                            # 提取时间戳对比，若已过则跳过
+                            from datetime import datetime
+                            # 支持 ISO 格式解析
+                            end_dt = datetime.fromisoformat(end_time_str)
+                            if end_dt.timestamp() < time.time():
+                                continue
+                        except Exception:
+                            pass
+
                     h_key = _map_hazard_to_key(t_name, title)
                     txt = item.get("text") or ""
                     adv = _generate_default_advice(h_key)
@@ -243,6 +264,27 @@ async def fetch_active_alerts(lat: float, lon: float, city: str = "") -> list[di
     alerts.sort(key=lambda x: x.get("severity_score", 4))
     _ALERT_CACHE[cache_key] = (now, alerts)
     return alerts
+
+
+def build_calm_weather_status(city: str = "") -> dict[str, Any]:
+    """构建无灾害预警时的常态平稳安全状态数据。"""
+    display_city = city or "当地"
+    return {
+        "level": "平稳",
+        "type_name": "气象安全",
+        "hazard_key": "safe",
+        "title": "【气象平稳 · 暂无预警】",
+        "sender": f"{display_city}气象台",
+        "pub_time": time.strftime("%H:%M"),
+        "text": f"{display_city}当前无生效中气象自然灾害预警信号。气象环境平稳，各项指标正常，请安心生活与出行。",
+        "advice": [
+            "关注日常天气与温差变化，适时增减衣物与做好出行安排。",
+            "定期检查家庭用电、用气与门窗安全，防范未然。",
+            "常备适量家庭应急物资，保持生活环境整洁安全。",
+        ],
+        "theme_color": "black",
+        "is_calm": True,
+    }
 
 
 def simulate_disaster_alert(mac: str, alert_override: dict[str, Any] | None = None) -> dict[str, Any]:
