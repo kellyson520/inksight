@@ -50,6 +50,7 @@ from . import game_giveaway as _game_giveaway_module
 from . import recommendation as _recommendation_module
 from . import currency as _currency_module
 from . import oil_price as _oil_price_module
+from . import space_watch as _space_watch_module
 
 from .grids import slice_calendar_rows_around_day
 

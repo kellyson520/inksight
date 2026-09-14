@@ -1,0 +1,93 @@
+{
+  "mode_id": "SPACE_WATCH",
+  "display_name": "Space Station & Astrometry",
+  "icon": "orbit",
+  "cacheable": true,
+  "description": "Tiangong and ISS visual pass predictions, orbital telemetry, and deep sky astronomical event updates",
+  "settings_schema": [
+    {
+      "key": "target",
+      "label": "Target Station",
+      "type": "select",
+      "default": "CSS",
+      "options": [
+        { "value": "CSS", "label": "Tiangong Space Station (CSS)" },
+        { "value": "ISS", "label": "International Space Station (ISS)" }
+      ]
+    },
+    {
+      "key": "city",
+      "label": "Observation City",
+      "type": "string",
+      "default": "Beijing"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "space_watch",
+    "target": "CSS",
+    "city": "Beijing",
+    "fallback": {
+      "title": "Space Station Pass · Beijing",
+      "city": "Beijing",
+      "target": "CSS",
+      "target_name": "Tiangong Space Station (CSS)",
+      "orbit_altitude": "398.5 km",
+      "orbit_velocity": "7.68 km/s",
+      "orbit_inclination": "41.5°",
+      "crew_info": "Shenzhou-19 Crew · 3 Astronauts in Orbit",
+      "next_pass_time": "Tonight 20:38",
+      "next_pass_elevation": "64° (Optimal View)",
+      "next_pass_duration": "5m 40s",
+      "pass_direction": "SW ➔ NE",
+      "brightness": "Mag -2.3 (Naked Eye Visible)",
+      "astronomy_event_title": "Venus-Moon Conjunction",
+      "astronomy_event_desc": "Venus shines beside the crescent moon in the western dusk sky, angular separation 2.5°.",
+      "update_date": "Sep 14"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 8,
+        "items": [
+          {
+            "type": "text",
+            "template": "{title}",
+            "font": "inter_bold",
+            "font_size": 14
+          },
+          {
+            "type": "badge",
+            "template": "AEROSPACE Telemetry",
+            "variant": "outline",
+            "font_size": 10,
+            "padding_x": 6,
+            "padding_y": 1,
+            "radius": 3
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "space_watch_board",
+        "margin_x": 8
+      }
+    ],
+    "footer": {
+      "label": "SPACE",
+      "attribution_template": "Spaceflight & Astrometry · {update_date}"
+    }
+  }
+}

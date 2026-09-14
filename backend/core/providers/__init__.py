@@ -22,6 +22,7 @@ from .iwara_video_provider import generate_iwara_video
 from .porn_video_provider import generate_porn_video
 from .currency_provider import generate_currency
 from .oil_price_provider import generate_oil_price
+from .space_watch_provider import generate_space_watch
 
 __all__ = [
     "register_provider",

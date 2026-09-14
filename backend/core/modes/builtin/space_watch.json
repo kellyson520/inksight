@@ -1,0 +1,93 @@
+{
+  "mode_id": "SPACE_WATCH",
+  "display_name": "空间站与深空速报",
+  "icon": "orbit",
+  "cacheable": true,
+  "description": "中国空间站天宫/国际空间站肉眼可见过境窗口预报、轨道遥测与焦点深空天文事件速报",
+  "settings_schema": [
+    {
+      "key": "target",
+      "label": "观测目标空间站",
+      "type": "select",
+      "default": "CSS",
+      "options": [
+        { "value": "CSS", "label": "中国空间站 (天宫)" },
+        { "value": "ISS", "label": "国际空间站 (ISS)" }
+      ]
+    },
+    {
+      "key": "city",
+      "label": "所在观测城市",
+      "type": "string",
+      "default": "北京"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "space_watch",
+    "target": "CSS",
+    "city": "北京",
+    "fallback": {
+      "title": "空间站过境 · 北京",
+      "city": "北京",
+      "target": "CSS",
+      "target_name": "中国空间站 (天宫)",
+      "orbit_altitude": "398.5 km",
+      "orbit_velocity": "7.68 km/s",
+      "orbit_inclination": "41.5°",
+      "crew_info": "神舟十九号乘组 · 3名航天员在轨",
+      "next_pass_time": "今晚 20:38",
+      "next_pass_elevation": "64° (极佳观测)",
+      "next_pass_duration": "5 分 40 秒",
+      "pass_direction": "西南 ➔ 东北",
+      "brightness": "-2.3 等 (肉眼清晰可见)",
+      "astronomy_event_title": "金星伴月 · 黄昏天象",
+      "astronomy_event_desc": "黄昏西方天空可见金星与娥眉月相映成趣，角距离仅 2.5°，肉眼可见。",
+      "update_date": "9月14日"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 8,
+        "items": [
+          {
+            "type": "text",
+            "template": "{title}",
+            "font": "noto_serif_bold",
+            "font_size": 14
+          },
+          {
+            "type": "badge",
+            "template": "AEROSPACE 遥测",
+            "variant": "outline",
+            "font_size": 10,
+            "padding_x": 6,
+            "padding_y": 1,
+            "radius": 3
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "space_watch_board",
+        "margin_x": 8
+      }
+    ],
+    "footer": {
+      "label": "SPACE",
+      "attribution_template": "中国载人航天与深空天象 · 更新于 {update_date}"
+    }
+  }
+}
