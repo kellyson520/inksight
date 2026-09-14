@@ -53,6 +53,7 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   RSS: "news",
   CRYPTO: "news",
   GOLD: "news",
+  CURRENCY: "news",
   MARKET: "news",
   THISDAY: "news",
   BIAS: "news",

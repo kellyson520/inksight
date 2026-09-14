@@ -1,0 +1,96 @@
+{
+  "mode_id": "CURRENCY",
+  "display_name": "全球汇率",
+  "icon": "dollar-sign",
+  "cacheable": true,
+  "description": "全球主要外汇牌价与实时汇率看板，监控美元、欧元、日元、英镑、港币等对人民币比价",
+  "settings_schema": [
+    {
+      "key": "base_currency",
+      "label": "基准法币",
+      "type": "select",
+      "default": "CNY",
+      "options": [
+        { "value": "CNY", "label": "人民币 (CNY)" },
+        { "value": "USD", "label": "美元 (USD)" },
+        { "value": "EUR", "label": "欧元 (EUR)" },
+        { "value": "HKD", "label": "港币 (HKD)" }
+      ]
+    },
+    {
+      "key": "layout_style",
+      "label": "排版布局",
+      "type": "select",
+      "default": "grid",
+      "options": [
+        { "value": "grid", "label": "双列网格对比卡片" },
+        { "value": "list", "label": "单列紧凑列表" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "currency",
+    "base_currency": "CNY",
+    "layout_style": "grid",
+    "fallback": {
+      "title": "全球主要外汇牌价",
+      "base_currency": "CNY",
+      "update_time": "12:00",
+      "items": [
+        { "currency": "USD", "name": "美元", "symbol": "$", "rate": 7.2385, "rate_str": "7.2385", "change_pct": 0.05, "change_str": "+0.05%", "is_up": true, "calc_tip": "100 USD ≈ 723.85 CNY" },
+        { "currency": "EUR", "name": "欧元", "symbol": "€", "rate": 7.8920, "rate_str": "7.8920", "change_pct": -0.12, "change_str": "-0.12%", "is_up": false, "calc_tip": "100 EUR ≈ 789.20 CNY" },
+        { "currency": "JPY", "name": "日元", "symbol": "¥", "rate": 0.0468, "rate_str": "0.0468", "change_pct": 0.18, "change_str": "+0.18%", "is_up": true, "calc_tip": "1000 JPY ≈ 46.80 CNY" },
+        { "currency": "HKD", "name": "港币", "symbol": "HK$", "rate": 0.9255, "rate_str": "0.9255", "change_pct": 0.02, "change_str": "+0.02%", "is_up": true, "calc_tip": "100 HKD ≈ 92.55 CNY" },
+        { "currency": "GBP", "name": "英镑", "symbol": "£", "rate": 9.3850, "rate_str": "9.3850", "change_pct": -0.08, "change_str": "-0.08%", "is_up": false, "calc_tip": "100 GBP ≈ 938.50 CNY" },
+        { "currency": "AUD", "name": "澳元", "symbol": "A$", "rate": 4.7820, "rate_str": "4.7820", "change_pct": 0.10, "change_str": "+0.10%", "is_up": true, "calc_tip": "100 AUD ≈ 478.20 CNY" }
+      ]
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 8,
+        "items": [
+          {
+            "type": "text",
+            "template": "全球主要外汇牌价",
+            "font": "noto_serif_bold",
+            "font_size": 14
+          },
+          {
+            "type": "badge",
+            "template": "基准: {base_currency}",
+            "variant": "outline",
+            "font_size": 10,
+            "padding_x": 6,
+            "padding_y": 1,
+            "radius": 3
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "currency_board",
+        "field": "items",
+        "max_items": 6,
+        "margin_x": 8
+      }
+    ],
+    "footer": {
+      "label": "FOREX",
+      "attribution_template": "外汇市场 · 更新于 {update_time}"
+    }
+  }
+}

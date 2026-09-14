@@ -5,7 +5,13 @@ from .context import RenderContext
 from .registry import register_block
 from .text import pick_cjk_font
 from .components import render_image
-from ..patterns.utils import load_font, EINK_FG
+from ..patterns.utils import (
+    load_font,
+    EINK_FG,
+    EINK_BG,
+    EINK_COLOR_NAME_MAP,
+    draw_dashed_line,
+)
 
 
 @register_block("recommendation")
@@ -158,9 +164,133 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
 
                 y += card_height + int(2 * ctx.scale)
         else:
-            line = f"{rank}  {title}"
-            if subtitle: line += f" · {subtitle}"
-            max_chars = max(10, int((ctx.available_width - int(20 * ctx.scale)) / (font_size * 0.72)))
-            ctx.draw.text((ctx.x_offset + int(10 * ctx.scale), y), line[:max_chars], fill=EINK_FG, font=font)
-            y += font_size + int(3 * ctx.scale)
+            # ── 精致现代墨水屏排行榜排版 ──
+            available_h = max(30, ctx.screen_h - ctx.footer_height - ctx.y - int(4 * ctx.scale))
+            rem_count = max(1, len(items_to_render) - index + 1)
+            row_h = max(int(font_size * 1.8), min(int(36 * ctx.scale), available_h // rem_count))
+
+            x_left = ctx.x_offset + int(8 * ctx.scale)
+            badge_size = max(13, int(font_size * 1.25))
+            badge_y = y + (row_h - badge_size) // 2
+
+            # 1. 排名徽章 (前三名高对比度微立体/反白突出)
+            badge_color = EINK_FG
+            badge_text_color = EINK_BG
+            is_solid = True
+
+            if index == 1:
+                if ctx.colors >= 3:
+                    badge_color = EINK_COLOR_NAME_MAP.get("red", EINK_FG)
+                is_solid = True
+            elif index == 2:
+                badge_color = EINK_FG
+                is_solid = True
+            elif index == 3:
+                badge_color = EINK_FG
+                is_solid = False
+                badge_text_color = EINK_FG
+            else:
+                badge_color = EINK_FG
+                is_solid = False
+                badge_text_color = EINK_FG
+
+            if is_solid:
+                ctx.draw.rounded_rectangle(
+                    [x_left, badge_y, x_left + badge_size, badge_y + badge_size],
+                    radius=3,
+                    fill=badge_color,
+                )
+            else:
+                ctx.draw.rounded_rectangle(
+                    [x_left, badge_y, x_left + badge_size, badge_y + badge_size],
+                    radius=3,
+                    outline=badge_color,
+                    width=1,
+                )
+
+            # 居中写排名数字
+            num_str = str(index)
+            num_font = load_font("inter_bold", max(9, int(badge_size * 0.72)))
+            nbb = ctx.draw.textbbox((0, 0), num_str, font=num_font)
+            nw = nbb[2] - nbb[0]
+            nh = nbb[3] - nbb[1]
+            ctx.draw.text(
+                (x_left + (badge_size - nw) // 2, badge_y + (badge_size - nh) // 2 - 1),
+                num_str,
+                fill=badge_text_color,
+                font=num_font,
+            )
+
+            # 2. 右侧元数据胶囊（如评分、热度、标签）
+            tag = str(item.get("rating_label") or item.get("views_label") or item.get("category") or "").strip()
+            if not tag and subtitle and len(subtitle) <= 6:
+                tag = subtitle
+
+            tag_w = 0
+            if tag and ctx.available_width >= 240:
+                tag_font = load_font("noto_serif_regular", max(8, int(font_size * 0.82)))
+                tbb = ctx.draw.textbbox((0, 0), tag, font=tag_font)
+                tw = tbb[2] - tbb[0]
+                th = tbb[3] - tbb[1]
+                pill_w = tw + int(8 * ctx.scale)
+                pill_h = max(th + int(2 * ctx.scale), int(badge_size * 0.9))
+                pill_x = ctx.x_offset + ctx.available_width - pill_w - int(8 * ctx.scale)
+                pill_y = y + (row_h - pill_h) // 2
+                ctx.draw.rounded_rectangle(
+                    [pill_x, pill_y, pill_x + pill_w, pill_y + pill_h],
+                    radius=3,
+                    outline=EINK_FG,
+                    width=1,
+                )
+                ctx.draw.text(
+                    (pill_x + int(4 * ctx.scale), pill_y + (pill_h - th) // 2 - 1),
+                    tag,
+                    fill=EINK_FG,
+                    font=tag_font,
+                )
+                tag_w = pill_w + int(8 * ctx.scale)
+
+            # 3. 主标题与副标题排版
+            text_x = x_left + badge_size + int(8 * ctx.scale)
+            max_text_w = max(60, ctx.available_width - (text_x - ctx.x_offset) - tag_w - int(6 * ctx.scale))
+            
+            main_title = title
+            t_bb = ctx.draw.textbbox((0, 0), main_title, font=bold)
+            while (t_bb[2] - t_bb[0]) > max_text_w and len(main_title) > 2:
+                main_title = main_title[:-1]
+                t_bb = ctx.draw.textbbox((0, 0), main_title + "...", font=bold)
+            if len(main_title) < len(title):
+                main_title += "..."
+
+            text_y = y + (row_h - font_size) // 2
+            ctx.draw.text((text_x, text_y), main_title, fill=EINK_FG, font=bold)
+            title_rendered_w = ctx.draw.textbbox((0, 0), main_title, font=bold)[2] - t_bb[0]
+
+            # 若还有可用空间且有未作为 tag 的 subtitle，在主标题后以浅色字紧随
+            if subtitle and subtitle != tag and (max_text_w - title_rendered_w) > int(45 * ctx.scale):
+                sub_font = load_font("noto_serif_light", max(9, int(font_size * 0.88)))
+                sub_text = f" · {subtitle}"
+                sub_bb = ctx.draw.textbbox((0, 0), sub_text, font=sub_font)
+                avail_sub_w = max_text_w - title_rendered_w - int(4 * ctx.scale)
+                while (sub_bb[2] - sub_bb[0]) > avail_sub_w and len(sub_text) > 4:
+                    sub_text = sub_text[:-1]
+                    sub_bb = ctx.draw.textbbox((0, 0), sub_text + "...", font=sub_font)
+                if len(sub_text) < len(f" · {subtitle}"):
+                    sub_text += "..."
+                ctx.draw.text((text_x + title_rendered_w + int(4 * ctx.scale), text_y + 1), sub_text, fill=EINK_FG, font=sub_font)
+
+            # 4. 行间微细虚线分隔
+            if index < len(items_to_render):
+                sep_y = y + row_h - 1
+                draw_dashed_line(
+                    ctx.draw,
+                    (x_left, sep_y),
+                    (ctx.x_offset + ctx.available_width - int(8 * ctx.scale), sep_y),
+                    fill=EINK_FG,
+                    width=1,
+                    dash_len=2,
+                    gap_len=3,
+                )
+
+            y += row_h
     ctx.y = y

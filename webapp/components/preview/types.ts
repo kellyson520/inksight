@@ -98,6 +98,7 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   PIXIV_DAILY: "recommendation",
   IWARA_VIDEO: "recommendation",
   PORN_VIDEO: "recommendation",
+  CURRENCY: "recommendation",
 };
 
 export const HOTLIST_AVAILABLE_PLATFORMS = [

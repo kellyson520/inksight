@@ -1,0 +1,96 @@
+{
+  "mode_id": "CURRENCY",
+  "display_name": "Global Forex",
+  "icon": "dollar-sign",
+  "cacheable": true,
+  "description": "Global foreign exchange rates dashboard for USD, EUR, JPY, GBP, HKD, and more",
+  "settings_schema": [
+    {
+      "key": "base_currency",
+      "label": "Base Currency",
+      "type": "select",
+      "default": "CNY",
+      "options": [
+        { "value": "CNY", "label": "Chinese Yuan (CNY)" },
+        { "value": "USD", "label": "US Dollar (USD)" },
+        { "value": "EUR", "label": "Euro (EUR)" },
+        { "value": "HKD", "label": "Hong Kong Dollar (HKD)" }
+      ]
+    },
+    {
+      "key": "layout_style",
+      "label": "Layout Style",
+      "type": "select",
+      "default": "grid",
+      "options": [
+        { "value": "grid", "label": "Two-Column Grid Cards" },
+        { "value": "list", "label": "Compact List" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "currency",
+    "base_currency": "CNY",
+    "layout_style": "grid",
+    "fallback": {
+      "title": "Foreign Exchange Rates",
+      "base_currency": "CNY",
+      "update_time": "12:00",
+      "items": [
+        { "currency": "USD", "name": "USD", "symbol": "$", "rate": 7.2385, "rate_str": "7.2385", "change_pct": 0.05, "change_str": "+0.05%", "is_up": true, "calc_tip": "100 USD ≈ 723.85 CNY" },
+        { "currency": "EUR", "name": "EUR", "symbol": "€", "rate": 7.8920, "rate_str": "7.8920", "change_pct": -0.12, "change_str": "-0.12%", "is_up": false, "calc_tip": "100 EUR ≈ 789.20 CNY" },
+        { "currency": "JPY", "name": "JPY", "symbol": "¥", "rate": 0.0468, "rate_str": "0.0468", "change_pct": 0.18, "change_str": "+0.18%", "is_up": true, "calc_tip": "1000 JPY ≈ 46.80 CNY" },
+        { "currency": "HKD", "name": "HKD", "symbol": "HK$", "rate": 0.9255, "rate_str": "0.9255", "change_pct": 0.02, "change_str": "+0.02%", "is_up": true, "calc_tip": "100 HKD ≈ 92.55 CNY" },
+        { "currency": "GBP", "name": "GBP", "symbol": "£", "rate": 9.3850, "rate_str": "9.3850", "change_pct": -0.08, "change_str": "-0.08%", "is_up": false, "calc_tip": "100 GBP ≈ 938.50 CNY" },
+        { "currency": "AUD", "name": "AUD", "symbol": "A$", "rate": 4.7820, "rate_str": "4.7820", "change_pct": 0.10, "change_str": "+0.10%", "is_up": true, "calc_tip": "100 AUD ≈ 478.20 CNY" }
+      ]
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "body": [
+      {
+        "type": "spacer",
+        "height": 2
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "margin_x": 8,
+        "items": [
+          {
+            "type": "text",
+            "template": "Foreign Exchange Rates",
+            "font": "inter_bold",
+            "font_size": 14
+          },
+          {
+            "type": "badge",
+            "template": "Base: {base_currency}",
+            "variant": "outline",
+            "font_size": 10,
+            "padding_x": 6,
+            "padding_y": 1,
+            "radius": 3
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "currency_board",
+        "field": "items",
+        "max_items": 6,
+        "margin_x": 8
+      }
+    ],
+    "footer": {
+      "label": "FOREX",
+      "attribution_template": "Market Data · Updated {update_time}"
+    }
+  }
+}
