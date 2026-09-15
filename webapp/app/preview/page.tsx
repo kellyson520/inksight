@@ -214,8 +214,17 @@ export default function ExperiencePage() {
 
       const mergedOverride: Record<string, unknown> = { ...(override || {}) };
 
-      if (targetMode === "HOTLIST") {
-        if (!mergedOverride.platforms && !mergedOverride.platform) {
+      if (
+        targetMode === "HOTLIST" ||
+        targetMode === "WEIBO" ||
+        targetMode === "ZHIHU" ||
+        targetMode === "BILIBILI" ||
+        targetMode === "BAIDU" ||
+        targetMode === "DOUYIN" ||
+        targetMode === "NETEASE" ||
+        targetMode === "TECH_NEWS"
+      ) {
+        if (targetMode === "HOTLIST" && !mergedOverride.platforms && !mergedOverride.platform) {
           mergedOverride.platforms = hotlistPlatforms;
         }
         if (!mergedOverride.style) {
@@ -349,7 +358,16 @@ export default function ExperiencePage() {
 
   // 接收配置表单提交
   const handleModalSubmit = async (modeId: string, override: Record<string, unknown>) => {
-    if (modeId === "HOTLIST") {
+    if (
+      modeId === "HOTLIST" ||
+      modeId === "WEIBO" ||
+      modeId === "ZHIHU" ||
+      modeId === "BILIBILI" ||
+      modeId === "BAIDU" ||
+      modeId === "DOUYIN" ||
+      modeId === "NETEASE" ||
+      modeId === "TECH_NEWS"
+    ) {
       if (Array.isArray(override.platforms)) {
         setHotlistPlatforms(override.platforms as string[]);
       }

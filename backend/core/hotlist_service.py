@@ -314,6 +314,7 @@ class HotlistService:
                 "platform": platform,
                 "platform_name": PLATFORM_NAMES.get(platform, platform),
                 "is_top": i < 3,
+                "cover_url": it.get("cover_url", ""),
             })
 
         result: dict[str, Any] = {
@@ -323,6 +324,7 @@ class HotlistService:
             "update_time": time.strftime("%H:%M"),
             "items": structured_items,
             "source_status": source_status,
+            "top_cover_url": structured_items[0].get("cover_url", "") if structured_items else "",
         }
         # 平铺向下兼容 item_1 ~ item_8
         for i, it in enumerate(structured_items[:8]):
@@ -386,10 +388,11 @@ class HotlistService:
                     merged_items.append({
                         "rank": len(merged_items) + 1,
                         "title": orig.get("title", ""),
-                        "hot_value": orig.get("hot_value", ""),
+                        "hot_value": orig.get("hot_value", "") or orig.get("hot", ""),
                         "platform": p,
                         "platform_name": PLATFORM_NAMES.get(p, p),
                         "is_top": len(merged_items) < 3,
+                        "cover_url": orig.get("cover_url", ""),
                     })
                 if len(merged_items) >= limit:
                     break
@@ -413,6 +416,7 @@ class HotlistService:
                 "stale" if "stale" in source_statuses else
                 "fallback" if "fallback" in source_statuses else "fresh"
             ),
+            "top_cover_url": merged_items[0].get("cover_url", "") if merged_items else "",
         }
         for i, it in enumerate(merged_items[:8]):
             res[f"item_{i + 1}"] = f"[{it['platform_name']}] {it['title']}"
@@ -437,8 +441,9 @@ class HotlistService:
                     t = target.get("title") or target.get("excerpt")
                     detail_text = item.get("detail_text", "")  # 例如 "1240 万热度"
                     hot = detail_text.split(" ")[0] if detail_text else ""
+                    cover = target.get("image_url") or ""
                     if t and not any(x["title"] == t.strip() for x in items):
-                        items.append({"title": t.strip(), "hot": hot, "platform": platform, "platform_name": plat_name})
+                        items.append({"title": t.strip(), "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                     if len(items) >= limit:
                         break
                 if items:
@@ -455,8 +460,9 @@ class HotlistService:
                     w = x.get("word", "").strip()
                     num = x.get("num")
                     hot = _format_hot_value(num) if num else ""
+                    cover = x.get("pic") or x.get("small_icon_desc") or ""
                     if w and not any(it["title"] == w for it in items):
-                        items.append({"title": w, "hot": hot, "platform": platform, "platform_name": plat_name})
+                        items.append({"title": w, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                     if len(items) >= limit:
                         break
                 if items:
@@ -473,8 +479,9 @@ class HotlistService:
                     t = x.get("title", "").strip()
                     view_num = x.get("stat", {}).get("view")
                     hot = _format_hot_value(view_num) if view_num else ""
+                    cover = x.get("pic") or ""
                     if t and not any(it["title"] == t for it in items):
-                        items.append({"title": t, "hot": hot, "platform": platform, "platform_name": plat_name})
+                        items.append({"title": t, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                     if len(items) >= limit:
                         break
                 if items:
@@ -491,8 +498,9 @@ class HotlistService:
                         for it in c_it.get("content", []):
                             w = it.get("word", "").strip()
                             hot = _format_hot_value(it.get("hotScore"))
+                            cover = it.get("img") or ""
                             if w and not any(x["title"] == w for x in items):
-                                items.append({"title": w, "hot": hot, "platform": platform, "platform_name": plat_name})
+                                items.append({"title": w, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                             if len(items) >= limit:
                                 break
                 if items:
@@ -508,8 +516,9 @@ class HotlistService:
                 for x in word_list:
                     w = x.get("word", "").strip()
                     hot = _format_hot_value(x.get("hot_value"))
+                    cover = (x.get("word_cover") or {}).get("url_list", [""])[0] if isinstance(x.get("word_cover"), dict) else ""
                     if w and not any(it["title"] == w for it in items):
-                        items.append({"title": w, "hot": hot, "platform": platform, "platform_name": plat_name})
+                        items.append({"title": w, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                     if len(items) >= limit:
                         break
                 if items:
@@ -535,8 +544,9 @@ class HotlistService:
                             title = f"{name} - {artists}" if artists else name
                             pop = t.get("popularity", 95)
                             hot = f"♪ {pop}°" if pop else "♪ 飙升"
+                            cover = (t.get("album") or {}).get("picUrl") or ""
                             if name and not any(it["title"] == title for it in items):
-                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name})
+                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                             if len(items) >= limit:
                                 break
                         if items:
@@ -570,8 +580,9 @@ class HotlistService:
                                 else s.get("rate")
                             )
                             hot = f"★ {rate}" if rate else "★ 热播"
+                            cover = (s.get("cover") or {}).get("url") or (s.get("pic") or {}).get("large") or s.get("cover_url") or ""
                             if title and not any(it["title"] == title for it in items):
-                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name})
+                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                             if len(items) >= limit:
                                 break
                         if items:
@@ -600,8 +611,9 @@ class HotlistService:
                                 continue
                             score = it.get("hotEvent", {}).get("hotScore")
                             hot = _format_hot_value(score) if score else "热议"
+                            cover = it.get("thumbnails", [""])[0] if it.get("thumbnails") else ""
                             if title and not any(x["title"] == title for x in items):
-                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name})
+                                items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                             if len(items) >= limit:
                                 break
                     if items:
@@ -621,8 +633,9 @@ class HotlistService:
                             for it in c_it.get("content", []):
                                 w = it.get("word", "").strip()
                                 hot = _format_hot_value(it.get("hotScore"))
+                                cover = it.get("img") or ""
                                 if w and not any(x["title"] == w for x in items):
-                                    items.append({"title": w, "hot": f"{hot}", "platform": platform, "platform_name": plat_name})
+                                    items.append({"title": w, "hot": f"{hot}", "platform": platform, "platform_name": plat_name, "cover_url": cover})
                                 if len(items) >= limit:
                                     break
                     if items:
@@ -649,8 +662,9 @@ class HotlistService:
                     t = mat.get("widgetTitle", "").strip()
                     reads = mat.get("statRead")
                     hot = f"{_format_hot_value(reads)}阅读" if reads else ""
+                    cover = mat.get("widgetImage") or ""
                     if t and not any(it["title"] == t for it in items):
-                        items.append({"title": t, "hot": hot, "platform": platform, "platform_name": plat_name})
+                        items.append({"title": t, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                     if len(items) >= limit:
                         break
                 if items:
@@ -667,8 +681,9 @@ class HotlistService:
                     t = x.get("title", "").strip()
                     likes = x.get("like_count")
                     hot = f"{likes}赞" if likes else ""
+                    cover = x.get("banner") or x.get("image") or ""
                     if t and not any(it["title"] == t for it in items):
-                        items.append({"title": t, "hot": hot, "platform": platform, "platform_name": plat_name})
+                        items.append({"title": t, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                     if len(items) >= limit:
                         break
                 if items:
@@ -683,8 +698,9 @@ class HotlistService:
                 items = []
                 for x in newslist:
                     t = x.get("title", "").strip()
+                    cover = x.get("image") or ""
                     if t and not any(it["title"] == t for it in items):
-                        items.append({"title": t, "hot": "科技", "platform": platform, "platform_name": plat_name})
+                        items.append({"title": t, "hot": "科技", "platform": platform, "platform_name": plat_name, "cover_url": cover})
                     if len(items) >= limit:
                         break
                 if items:

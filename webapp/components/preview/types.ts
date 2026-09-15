@@ -57,6 +57,13 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   // 资讯 (News & Alerts)
   BRIEFING: "news",
   HOTLIST: "news",
+  WEIBO: "news",
+  ZHIHU: "news",
+  BILIBILI: "news",
+  BAIDU: "news",
+  DOUYIN: "news",
+  NETEASE: "news",
+  TECH_NEWS: "news",
   MOYU: "news",
   RSS: "news",
   CRYPTO: "news",
@@ -70,6 +77,13 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
 
 export const CONFIGURABLE_MODES: Record<string, string> = {
   HOTLIST: "hotlist",
+  WEIBO: "hotlist",
+  ZHIHU: "hotlist",
+  BILIBILI: "hotlist",
+  BAIDU: "hotlist",
+  DOUYIN: "hotlist",
+  NETEASE: "hotlist",
+  TECH_NEWS: "hotlist",
   DISASTER_ALERT: "disaster",
   WEATHER: "weather",
   MEMO: "memo",
@@ -120,9 +134,10 @@ export const HOTLIST_AVAILABLE_PLATFORMS = [
 ];
 
 export const HOTLIST_AVAILABLE_STYLES = [
-  { id: "dense_grid", label: "双列卡片看板", desc: "左右并排，高密度展示 6-8 条热点" },
-  { id: "editorial", label: "杂志焦点大卡", desc: "TOP 1 醒目大卡片 + 4条次要聚合" },
-  { id: "classic", label: "精致胶囊单列", desc: "圆角排行微标 + 热度值单列流" },
+  { id: "dense_grid", label: "双列看板", desc: "左右并排，高密度展示前 8 条热点" },
+  { id: "cover_card", label: "图文精选", desc: "TOP 1 头条封面大卡 + 双列 7 条精选" },
+  { id: "editorial", label: "杂志焦点", desc: "TOP 1 醒目大卡片 + 4条次要聚合" },
+  { id: "classic", label: "精致胶囊", desc: "圆角排行微标 + 热度值单列流" },
 ];
 
 export const DISASTER_LEVELS = [

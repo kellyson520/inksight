@@ -95,6 +95,13 @@ export function ModeConfigModal({
   const getModalTitle = () => {
     switch (modal.type) {
       case "hotlist":
+        if (modal.modeId === "WEIBO") return locale === "zh" ? "微博实时热搜 · 排版样式设置" : "Weibo Hot Search Settings";
+        if (modal.modeId === "ZHIHU") return locale === "zh" ? "知乎实时热榜 · 排版样式设置" : "Zhihu Trending Settings";
+        if (modal.modeId === "BILIBILI") return locale === "zh" ? "B站热门精选 · 图文排版设置" : "Bilibili Popular Settings";
+        if (modal.modeId === "BAIDU") return locale === "zh" ? "百度今日热搜 · 排版样式设置" : "Baidu Hot Search Settings";
+        if (modal.modeId === "DOUYIN") return locale === "zh" ? "抖音实时热点 · 排版样式设置" : "Douyin Trends Settings";
+        if (modal.modeId === "NETEASE") return locale === "zh" ? "网易云音乐热歌 · 图文排版设置" : "Netease Music Settings";
+        if (modal.modeId === "TECH_NEWS") return locale === "zh" ? "科技数码快讯 · 排版样式设置" : "Tech Highlights Settings";
         return locale === "zh" ? "全网热点 · 多平台多选与聚合" : "Trending Topics Configuration";
       case "disaster":
         return locale === "zh" ? "自然灾害预警 · 四级预警体验" : "Disaster Warning Alert Experience";
@@ -158,13 +165,14 @@ export function ModeConfigModal({
         <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
           {modal.type === "hotlist" ? (
             <HotlistConfig
+              modeId={modal.modeId}
               initialPlatforms={initialHotlistPlatforms}
               initialStyle={initialHotlistStyle}
               locale={locale}
               previewLoading={previewLoading}
               onClose={onClose}
               onSubmit={async (platforms, style) => {
-                await onSubmit("HOTLIST", { platforms, style });
+                await onSubmit(modal.modeId, { platforms, style });
               }}
             />
           ) : modal.type === "disaster" ? (

@@ -59,13 +59,16 @@ async def generate_disaster_alert(
     # 若为真实设备轮播，或用户未主动在 mode_overrides 中指定特定灾害类型演练，
     # 必须展示真实的“气象平稳，无生效预警”状态，杜绝晴天误报暴雨红色预警。
     city = str(config.get("city") or "")
-    has_explicit_test_override = bool(override.get("hazard") or override.get("level"))
+    has_explicit_test_override = bool(
+        override.get("hazard") or override.get("level")
+        or content_cfg.get("hazard") or content_cfg.get("level")
+    )
     if mac or not has_explicit_test_override:
         return build_calm_weather_status(city)
 
     # 3. 仅在 Web 配置面板明确配置了灾害类型/预警级别演练时，提供效果演示
-    level = str(override.get("level") or "红色")
-    hazard = str(override.get("hazard") or "暴雨")
+    level = str(override.get("level") or content_cfg.get("level") or "红色")
+    hazard = str(override.get("hazard") or content_cfg.get("hazard") or "暴雨")
     score, meta = normalize_warning_level(level)
     hazard_key = _map_hazard_to_key(hazard)
     advices = _generate_default_advice(hazard_key)

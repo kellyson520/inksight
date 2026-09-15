@@ -1,0 +1,101 @@
+{
+  "mode_id": "BILIBILI",
+  "display_name": "B站热门",
+  "icon": "tv",
+  "cacheable": true,
+  "description": "哔哩哔哩全站热门视频、精选头条与创作者高燃作品榜单，支持视频封面图文大卡展示",
+  "settings_schema": [
+    {
+      "key": "style",
+      "label": "排版样式",
+      "type": "select",
+      "default": "cover_card",
+      "options": [
+        { "value": "cover_card", "label": "图文展示精选(视频封面大卡+双列)" },
+        { "value": "dense_grid", "label": "双列高密度看板(前8项)" },
+        { "value": "editorial", "label": "杂志焦点头条精选" },
+        { "value": "classic", "label": "精致胶囊单列排行" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "bilibili",
+    "style": "cover_card",
+    "fallback": {
+      "platform_title": "哔哩哔哩热门",
+      "style_badge": "热门精选",
+      "update_time": "实时",
+      "item_1": "1. 30岁重读本科：我的大学生活与真实感悟",
+      "item_2": "2. 人工智能如何颠覆现代数字创意设计流程",
+      "item_3": "3. 宇宙深空探测器传回前所未见的星系画卷",
+      "item_4": "4. 建立超强自律专注力的科学实践方法",
+      "item_5": "5. 本周精选开源软硬件与技术极客探索",
+      "item_6": "6. 深度拆解新一代低功耗墨水屏驱动原理",
+      "item_7": "7. 纪录片精选：探访极地生态与气象变迁",
+      "item_8": "8. 电子音乐制作与声音设计幕后全解析"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "purple",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 5
+          },
+          {
+            "type": "badge",
+            "field": "style_badge",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "hotlist_board"
+      }
+    ],
+    "footer": {
+      "label": "哔哩哔哩热门视频",
+      "attribution_template": "更新于 {update_time}"
+    }
+  }
+}

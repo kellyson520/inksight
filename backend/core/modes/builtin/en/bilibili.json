@@ -1,39 +1,18 @@
 {
-  "mode_id": "HOTLIST",
-  "display_name": "Trending Feeds",
-  "icon": "flame",
+  "mode_id": "BILIBILI",
+  "display_name": "Bilibili Popular",
+  "icon": "tv",
   "cacheable": true,
-  "description": "Live trending topics from NetEase Music, Douban Movies, Douyin, WeChat, Zhihu, Weibo, Bilibili, 36Kr, GitHub, etc.",
+  "description": "Trending videos, creator spotlights, and popular multimedia productions from Bilibili.",
   "settings_schema": [
     {
-      "key": "platforms",
-      "label": "Trending Platforms (Multi-select)",
-      "type": "multiselect",
-      "default": ["netease", "douban", "douyin", "wechat"],
-      "options": [
-        { "value": "netease", "label": "NetEase Hot Songs" },
-        { "value": "douban", "label": "Douban Top Movies" },
-        { "value": "douyin", "label": "Douyin Viral" },
-        { "value": "wechat", "label": "WeChat Hot Topics" },
-        { "value": "zhihu", "label": "Zhihu Trending" },
-        { "value": "weibo", "label": "Weibo Hot Search" },
-        { "value": "bilibili", "label": "Bilibili Hot" },
-        { "value": "baidu", "label": "Baidu Hot Search" },
-        { "value": "36kr", "label": "36Kr Tech" },
-        { "value": "sspai", "label": "SSPAI Prime" },
-        { "value": "ithome", "label": "ITHome Tech" },
-        { "value": "tieba", "label": "Tieba Topics" },
-        { "value": "github", "label": "GitHub Trending" }
-      ]
-    },
-    {
       "key": "style",
-      "label": "Board Style",
+      "label": "Layout Style",
       "type": "select",
-      "default": "dense_grid",
+      "default": "cover_card",
       "options": [
-        { "value": "dense_grid", "label": "Dense Two-Column Cards (Top 8)" },
         { "value": "cover_card", "label": "Cover Card & Illustrated List" },
+        { "value": "dense_grid", "label": "Dense Two-Column Cards (Top 8)" },
         { "value": "editorial", "label": "Editorial Focus Magazine" },
         { "value": "classic", "label": "Classic Pill Rank List" }
       ]
@@ -42,18 +21,20 @@
   "content": {
     "type": "computed",
     "provider": "hotlist",
-    "platforms": ["zhihu", "weibo"],
-    "style": "dense_grid",
+    "platform": "bilibili",
+    "style": "cover_card",
     "fallback": {
-      "platform_title": "Global Trending Feed",
-      "style_badge": "Curated",
+      "platform_title": "Bilibili Popular",
+      "style_badge": "Popular",
       "update_time": "Live",
-      "item_1": "1. Breakthroughs in room-temperature quantum computing",
-      "item_2": "2. How AI is transforming daily productivity and engineering",
-      "item_3": "3. Deep space probes transmit unprecedented high-res photos",
+      "item_1": "1. 30yo studying bachelor degree again: thoughts & life",
+      "item_2": "2. How generative AI is reshaping modern multimedia design",
+      "item_3": "3. Deep space probes transmit unprecedented galaxy photos",
       "item_4": "4. Proven habits for deep mental focus and health",
       "item_5": "5. Top curated books and technical documentaries this month",
-      "item_6": "6. Next-generation low-power e-ink display innovations"
+      "item_6": "6. Next-generation low-power e-ink display innovations",
+      "item_7": "7. Documentary showcase: polar climate exploration",
+      "item_8": "8. Music production and sound engineering insights"
     }
   },
   "layout": {
@@ -77,7 +58,7 @@
             "type": "badge",
             "field": "platform_title",
             "variant": "solid",
-            "bg_color": "red",
+            "bg_color": "purple",
             "color": "white",
             "font_size": 13,
             "padding_x": 10,
@@ -113,7 +94,7 @@
       }
     ],
     "footer": {
-      "label": "Trending News Wire",
+      "label": "Bilibili Popular",
       "attribution_template": "Updated at {update_time}"
     }
   }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { HOTLIST_AVAILABLE_PLATFORMS, HOTLIST_AVAILABLE_STYLES } from "../types";
 
 interface HotlistConfigProps {
+  modeId?: string;
   initialPlatforms: string[];
   initialStyle?: string;
   locale: string;
@@ -14,6 +15,7 @@ interface HotlistConfigProps {
 }
 
 export function HotlistConfig({
+  modeId,
   initialPlatforms,
   initialStyle = "dense_grid",
   locale,
@@ -21,6 +23,7 @@ export function HotlistConfig({
   onClose,
   onSubmit,
 }: HotlistConfigProps) {
+  const isStandalone = Boolean(modeId && modeId !== "HOTLIST");
   const [platforms, setPlatforms] = useState<string[]>(
     initialPlatforms.length > 0 ? initialPlatforms : ["zhihu", "weibo", "bilibili"]
   );
@@ -29,9 +32,13 @@ export function HotlistConfig({
   return (
     <div className="space-y-4">
       <div className="text-xs text-ink-light leading-relaxed">
-        {locale === "zh"
-          ? "支持网易云音乐、豆瓣电影、抖音、微信、知乎、微博、B站、36氪等 13 大主流平台多选聚合与三种排版风格！系统将并发抓取并结构化呈现。"
-          : "Supports 13 mainstream platforms (NetEase, Douban, Douyin, WeChat, Zhihu, etc.) and 3 e-ink visual layouts with concurrent aggregation."}
+        {isStandalone
+          ? locale === "zh"
+            ? "选择在墨水屏上的呈现样式。本模块专享实时热榜数据，排行榜完整展示前 8 项内容，并支持图文封面大卡展示！"
+            : "Choose layout style. Displays top 8 trending items and supports illustrated cover card view."
+          : locale === "zh"
+          ? "支持网易云音乐、豆瓣电影、抖音、微信、知乎、微博、B站、36氪等主流平台，排行榜完整展示前 8 项内容，支持图文大卡展示！"
+          : "Supports mainstream platforms (NetEase, Douban, Douyin, WeChat, Zhihu, etc.) and top 8 items with illustrated cover cards."}
       </div>
 
       {/* Style selector */}
@@ -39,7 +46,7 @@ export function HotlistConfig({
         <label className="text-xs font-semibold text-ink block">
           {locale === "zh" ? "排版风格呈现：" : "Layout Style:"}
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
           {HOTLIST_AVAILABLE_STYLES.map((s) => {
             const isSelected = style === s.id;
             return (
@@ -72,12 +79,13 @@ export function HotlistConfig({
         </div>
       </div>
 
-      {/* Platform multiselect */}
-      <div className="space-y-2">
-        <label className="text-xs font-semibold text-ink block">
-          {locale === "zh" ? "选择展示的热榜平台（支持多选）：" : "Select Platforms (Multi-select):"}
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+      {/* Platform multiselect (only for aggregated HOTLIST mode) */}
+      {!isStandalone && (
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-ink block">
+            {locale === "zh" ? "选择展示的热榜平台（支持多选）：" : "Select Platforms (Multi-select):"}
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
           {HOTLIST_AVAILABLE_PLATFORMS.map((p) => {
             const isSelected = platforms.includes(p.id);
             return (
@@ -115,25 +123,32 @@ export function HotlistConfig({
           })}
         </div>
       </div>
+      )}
 
       <div className="pt-2 flex items-center justify-between border-t border-ink/10">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setPlatforms(HOTLIST_AVAILABLE_PLATFORMS.map((p) => p.id))}
-            className="text-xs text-ink-light hover:text-ink underline"
-          >
-            {locale === "zh" ? "全选" : "Select All"}
-          </button>
-          <span className="text-ink/20">|</span>
-          <button
-            type="button"
-            onClick={() => setPlatforms(["zhihu", "weibo", "bilibili"])}
-            className="text-xs text-ink-light hover:text-ink underline"
-          >
-            {locale === "zh" ? "重置默认" : "Reset"}
-          </button>
-        </div>
+        {isStandalone ? (
+          <div className="text-xs text-ink-light font-medium">
+            {locale === "zh" ? "✦ 排行榜前 8 项完整呈现 · 支持图文展示" : "✦ Full top 8 items · Illustrated cover card"}
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPlatforms(HOTLIST_AVAILABLE_PLATFORMS.map((p) => p.id))}
+              className="text-xs text-ink-light hover:text-ink underline"
+            >
+              {locale === "zh" ? "全选" : "Select All"}
+            </button>
+            <span className="text-ink/20">|</span>
+            <button
+              type="button"
+              onClick={() => setPlatforms(["zhihu", "weibo", "bilibili"])}
+              className="text-xs text-ink-light hover:text-ink underline"
+            >
+              {locale === "zh" ? "重置默认" : "Reset"}
+            </button>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onClose}>

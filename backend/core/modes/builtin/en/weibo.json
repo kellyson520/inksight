@@ -1,34 +1,13 @@
 {
-  "mode_id": "HOTLIST",
-  "display_name": "Trending Feeds",
-  "icon": "flame",
+  "mode_id": "WEIBO",
+  "display_name": "Weibo Hot Search",
+  "icon": "trending-up",
   "cacheable": true,
-  "description": "Live trending topics from NetEase Music, Douban Movies, Douyin, WeChat, Zhihu, Weibo, Bilibili, 36Kr, GitHub, etc.",
+  "description": "Real-time top trending searches and discussions from Weibo, supporting dense grid and illustrated cover card views.",
   "settings_schema": [
     {
-      "key": "platforms",
-      "label": "Trending Platforms (Multi-select)",
-      "type": "multiselect",
-      "default": ["netease", "douban", "douyin", "wechat"],
-      "options": [
-        { "value": "netease", "label": "NetEase Hot Songs" },
-        { "value": "douban", "label": "Douban Top Movies" },
-        { "value": "douyin", "label": "Douyin Viral" },
-        { "value": "wechat", "label": "WeChat Hot Topics" },
-        { "value": "zhihu", "label": "Zhihu Trending" },
-        { "value": "weibo", "label": "Weibo Hot Search" },
-        { "value": "bilibili", "label": "Bilibili Hot" },
-        { "value": "baidu", "label": "Baidu Hot Search" },
-        { "value": "36kr", "label": "36Kr Tech" },
-        { "value": "sspai", "label": "SSPAI Prime" },
-        { "value": "ithome", "label": "ITHome Tech" },
-        { "value": "tieba", "label": "Tieba Topics" },
-        { "value": "github", "label": "GitHub Trending" }
-      ]
-    },
-    {
       "key": "style",
-      "label": "Board Style",
+      "label": "Layout Style",
       "type": "select",
       "default": "dense_grid",
       "options": [
@@ -42,18 +21,20 @@
   "content": {
     "type": "computed",
     "provider": "hotlist",
-    "platforms": ["zhihu", "weibo"],
+    "platform": "weibo",
     "style": "dense_grid",
     "fallback": {
-      "platform_title": "Global Trending Feed",
-      "style_badge": "Curated",
+      "platform_title": "Weibo Hot Search",
+      "style_badge": "Realtime",
       "update_time": "Live",
       "item_1": "1. Breakthroughs in room-temperature quantum computing",
       "item_2": "2. How AI is transforming daily productivity and engineering",
       "item_3": "3. Deep space probes transmit unprecedented high-res photos",
       "item_4": "4. Proven habits for deep mental focus and health",
       "item_5": "5. Top curated books and technical documentaries this month",
-      "item_6": "6. Next-generation low-power e-ink display innovations"
+      "item_6": "6. Next-generation low-power e-ink display innovations",
+      "item_7": "7. Global climate & energy innovation digest",
+      "item_8": "8. Digital minimalism and mental focus practices"
     }
   },
   "layout": {
@@ -113,7 +94,7 @@
       }
     ],
     "footer": {
-      "label": "Trending News Wire",
+      "label": "Weibo Hot Search",
       "attribution_template": "Updated at {update_time}"
     }
   }

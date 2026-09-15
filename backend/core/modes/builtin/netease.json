@@ -1,0 +1,101 @@
+{
+  "mode_id": "NETEASE",
+  "display_name": "网易云热歌",
+  "icon": "headphones",
+  "cacheable": true,
+  "description": "网易云音乐飙升榜与热门新歌排行榜，支持专辑封面图文展示与流行度呈现",
+  "settings_schema": [
+    {
+      "key": "style",
+      "label": "排版样式",
+      "type": "select",
+      "default": "cover_card",
+      "options": [
+        { "value": "cover_card", "label": "图文展示精选(专辑封面大卡+双列)" },
+        { "value": "dense_grid", "label": "双列高密度看板(前8项)" },
+        { "value": "editorial", "label": "杂志焦点头条精选" },
+        { "value": "classic", "label": "精致胶囊单列排行" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "netease",
+    "style": "cover_card",
+    "fallback": {
+      "platform_title": "网易云音乐热歌榜",
+      "style_badge": "飙升热歌",
+      "update_time": "实时",
+      "item_1": "1. 互删 (我走以后) - 江辰",
+      "item_2": "2. 唯有追赶风的方向 - 知更鸟 / Chevy",
+      "item_3": "3. 夏日尽头的我们 - N3 / 命运结构",
+      "item_4": "4. 循迹 (Live版) - 王铮亮 / 李佳薇",
+      "item_5": "5. 悬溺 - 葛东琪",
+      "item_6": "6. 离别开出花 - 就是南方凯",
+      "item_7": "7. 瞬 - 郑润泽",
+      "item_8": "8. 若月亮没来 - 王宇宙 / 乔浚丞"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "red",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 5
+          },
+          {
+            "type": "badge",
+            "field": "style_badge",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "hotlist_board"
+      }
+    ],
+    "footer": {
+      "label": "网易云音乐热歌榜",
+      "attribution_template": "更新于 {update_time}"
+    }
+  }
+}

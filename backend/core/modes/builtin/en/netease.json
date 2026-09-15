@@ -1,0 +1,101 @@
+{
+  "mode_id": "NETEASE",
+  "display_name": "Netease Music",
+  "icon": "headphones",
+  "cacheable": true,
+  "description": "Trending songs and soaring music charts from NetEase Cloud Music with album cover art.",
+  "settings_schema": [
+    {
+      "key": "style",
+      "label": "Layout Style",
+      "type": "select",
+      "default": "cover_card",
+      "options": [
+        { "value": "cover_card", "label": "Cover Card & Illustrated List" },
+        { "value": "dense_grid", "label": "Dense Two-Column Cards (Top 8)" },
+        { "value": "editorial", "label": "Editorial Focus Magazine" },
+        { "value": "classic", "label": "Classic Pill Rank List" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "netease",
+    "style": "cover_card",
+    "fallback": {
+      "platform_title": "Netease Music Chart",
+      "style_badge": "Top Soaring",
+      "update_time": "Live",
+      "item_1": "1. 互删 (我走以后) - 江辰",
+      "item_2": "2. 唯有追赶风的方向 - 知更鸟 / Chevy",
+      "item_3": "3. 夏日尽头的我们 - N3 / 命运结构",
+      "item_4": "4. 循迹 (Live版) - 王铮亮 / 李佳薇",
+      "item_5": "5. 悬溺 - 葛东琪",
+      "item_6": "6. 离别开出花 - 就是南方凯",
+      "item_7": "7. 瞬 - 郑润泽",
+      "item_8": "8. 若月亮没来 - 王宇宙 / 乔浚丞"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "red",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 5
+          },
+          {
+            "type": "badge",
+            "field": "style_badge",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "hotlist_board"
+      }
+    ],
+    "footer": {
+      "label": "Netease Music Chart",
+      "attribution_template": "Updated at {update_time}"
+    }
+  }
+}

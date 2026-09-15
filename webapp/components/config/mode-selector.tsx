@@ -52,6 +52,13 @@ type StudioTab = "all" | "life" | "productivity" | "news" | "media" | "studio";
 const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   // 资讯与热点
   HOTLIST: "news",
+  WEIBO: "news",
+  ZHIHU: "news",
+  BAIDU: "news",
+  TECH_NEWS: "news",
+  BILIBILI: "media",
+  DOUYIN: "media",
+  NETEASE: "media",
   DISASTER_ALERT: "news",
   RSS: "news",
   CRYPTO: "news",
