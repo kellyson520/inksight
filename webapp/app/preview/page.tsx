@@ -13,6 +13,7 @@ import {
   Sliders,
   Check,
   Search,
+  Film,
 } from "lucide-react";
 import { localeFromPathname, t, withLocalePath } from "@/lib/i18n";
 import { authHeaders, fetchCurrentUser } from "@/lib/auth";
@@ -476,8 +477,11 @@ export default function ExperiencePage() {
                 { id: "life", label: locale === "zh" ? "生活日常" : "Life", icon: Heart },
                 { id: "productivity", label: locale === "zh" ? "效率工作" : "Productivity", icon: Briefcase },
                 { id: "news", label: locale === "zh" ? "资讯热点" : "News & Alerts", icon: Newspaper },
+                { id: "media", label: locale === "zh" ? "影音娱乐" : "Media & Video", icon: Film },
+                { id: "studio", label: locale === "zh" ? "灵感创作" : "Studio & Fun", icon: Sparkles },
               ].map((tab) => {
                 const isActive = primaryTab === tab.id;
+                const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
@@ -488,6 +492,7 @@ export default function ExperiencePage() {
                         : "text-ink-light hover:text-ink hover:bg-white/60 dark:hover:bg-zinc-800/60"
                     }`}
                   >
+                    <Icon size={14} />
                     <span>{tab.label}</span>
                   </button>
                 );

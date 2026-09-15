@@ -40,6 +40,9 @@ STUDIO_CATEGORIES = [
 MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     # 资讯热点
     "HOTLIST": "news",
+    "WEIBO": "news",
+    "ZHIHU": "news",
+    "BAIDU": "news",
     "DISASTER_ALERT": "news",
     "WEB_NOTICE": "news",
     "RSS": "news",
@@ -48,6 +51,7 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "GOLD": "news",
     "MARKET": "news",
     # 效率工作
+    "TECH_NEWS": "productivity",
     "TODO": "productivity",
     "TIMETABLE": "productivity",
     "CALENDAR": "productivity",
@@ -58,6 +62,10 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "GITHUB_PULSE": "productivity",
     "TECH_RADAR": "productivity",
     "MIHOMO_SUB": "productivity",
+    # 影音娱乐
+    "BILIBILI": "media",
+    "NETEASE": "media",
+    "DOUYIN": "media",
     # 生活日常
     "CLOCK": "life",
     "WEATHER": "life",

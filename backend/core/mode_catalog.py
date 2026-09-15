@@ -279,6 +279,13 @@ BUILTIN_CATALOG: list[CatalogItem] = [
     CatalogItem(mode_id="PIXIV_DAILY", category="more", zh=CatalogText(name="Pixiv 每日一图", tip="Pixiv 每日精选插画"), en=CatalogText(name="Pixiv Daily", tip="Pixiv daily illustration")),
     CatalogItem(mode_id="IWARA_VIDEO", category="more", zh=CatalogText(name="iwara 视频", tip="iwara 公开视频推荐"), en=CatalogText(name="iwara Videos", tip="Public iwara video recommendations")),
     CatalogItem(mode_id="PORN_VIDEO", category="more", zh=CatalogText(name="P站视频", tip="P站公开推荐视频"), en=CatalogText(name="P Video", tip="Public video recommendations")),
+    CatalogItem(mode_id="WEIBO", category="more", zh=CatalogText(name="微博热搜", tip="微博实时热搜话题与头条要闻"), en=CatalogText(name="Weibo Hot Search", tip="Weibo real-time trending topics and news")),
+    CatalogItem(mode_id="ZHIHU", category="more", zh=CatalogText(name="知乎热榜", tip="知乎全站实时高热问题与高质量讨论"), en=CatalogText(name="Zhihu Trending", tip="Zhihu trending question discussions and insights")),
+    CatalogItem(mode_id="BILIBILI", category="more", zh=CatalogText(name="B站热门", tip="哔哩哔哩全站热门视频与创作者榜单"), en=CatalogText(name="Bilibili Popular", tip="Bilibili popular videos and trending productions")),
+    CatalogItem(mode_id="BAIDU", category="more", zh=CatalogText(name="百度热搜", tip="百度全网即时事件与搜索热点风云榜"), en=CatalogText(name="Baidu Hot Search", tip="Baidu real-time search trends and breaking events")),
+    CatalogItem(mode_id="DOUYIN", category="more", zh=CatalogText(name="抖音热点", tip="抖音短视频全网流行热点与社会风向"), en=CatalogText(name="Douyin Trends", tip="Douyin viral short video topics and cultural trends")),
+    CatalogItem(mode_id="NETEASE", category="more", zh=CatalogText(name="网易云热歌", tip="网易云音乐飙升榜与热门新歌风向标"), en=CatalogText(name="Netease Music", tip="NetEase Cloud Music soaring charts and trending songs")),
+    CatalogItem(mode_id="TECH_NEWS", category="more", zh=CatalogText(name="科技快讯", tip="精选36氪、少数派、IT之家与GitHub趋势"), en=CatalogText(name="Tech Highlights", tip="Curated technology news from 36Kr, SSPAI, ITHome, and GitHub")),
 ]
 
 

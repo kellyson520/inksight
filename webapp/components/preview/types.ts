@@ -10,32 +10,27 @@ export type ModeCatalogItem = {
   };
 };
 
-export type PrimaryCategory = "all" | "life" | "productivity" | "news";
+export type PrimaryCategory = "all" | "life" | "productivity" | "news" | "media" | "studio";
 
-// 模式到【生活 / 效率 / 资讯】一级分类的权威映射
-export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "news"> = {
+// 模式到【生活 / 效率 / 资讯 / 影音 / 灵感】一级分类的权威映射
+export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "news" | "media" | "studio"> = {
   // 生活 (Life)
   DAILY: "life",
   WEATHER: "life",
-  ZEN: "life",
-  POETRY: "life",
-  ARTWALL: "life",
   ALMANAC: "life",
   RECIPE: "life",
-  ROAST: "life",
   FITNESS: "life",
-  LETTER: "life",
-  RIDDLE: "life",
-  QUESTION: "life",
-  STORY: "life",
   MY_QUOTE: "life",
   MY_ADAPTIVE: "life",
   DRINK_WATER: "life",
-  WECHAT_READ: "life",
-  DOUBAN_MOVIE: "life",
-  SMZDM: "life",
+  CLOCK: "life",
+  HEALTH: "life",
+  AIR: "life",
+  OIL_PRICE: "life",
   ELEMENT_DAY: "life",
   XKCD_COMIC: "life",
+  SMZDM: "life",
+  MOYU: "life",
 
   // 效率 (Productivity)
   COUNTDOWN: "productivity",
@@ -44,35 +39,59 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   LIFEBAR: "productivity",
   CALENDAR: "productivity",
   TIMETABLE: "productivity",
-  CHALLENGE: "productivity",
-  WORD_OF_THE_DAY: "productivity",
-  WEBHOOK: "productivity",
+  TODO: "productivity",
+  FOCUS: "productivity",
+  GITHUB: "productivity",
+  GITHUB_PULSE: "productivity",
   POMODORO: "productivity",
   SERVER_STATUS: "productivity",
   CPA_QUOTA: "productivity",
   TECH_RADAR: "productivity",
-  GITHUB_PULSE: "productivity",
   MIHOMO_SUB: "productivity",
+  WEBHOOK: "productivity",
+  TECH_NEWS: "productivity", // 科技快讯 (36氪/少数派/IT之家/GitHub)
 
   // 资讯 (News & Alerts)
   BRIEFING: "news",
   HOTLIST: "news",
-  WEIBO: "news",
-  ZHIHU: "news",
-  BILIBILI: "news",
-  BAIDU: "news",
-  DOUYIN: "news",
-  NETEASE: "news",
-  TECH_NEWS: "news",
-  MOYU: "news",
+  WEIBO: "news", // 微博热搜
+  ZHIHU: "news", // 知乎热榜
+  BAIDU: "news", // 百度热搜
+  DISASTER_ALERT: "news",
+  WEB_NOTICE: "news",
   RSS: "news",
   CRYPTO: "news",
   GOLD: "news",
+  CURRENCY: "news",
+  SPACE_WATCH: "news",
   MARKET: "news",
   THISDAY: "news",
   BIAS: "news",
-  DISASTER_ALERT: "news",
-  WEB_NOTICE: "news",
+
+  // 影音多媒体 (Media & Entertainment)
+  BILIBILI: "media", // B站热门 (视频大卡图文展示)
+  NETEASE: "media", // 网易云热歌 (音乐专辑封面图文展示)
+  DOUYIN: "media", // 抖音热点 (短视频潮流)
+  WECHAT_READ: "media",
+  DOUBAN_MOVIE: "media",
+  QIDIAN_NOVEL: "media",
+  PIXIV_DAILY: "media",
+  IWARA_VIDEO: "media",
+  PORN_VIDEO: "media",
+  GAME_GIVEAWAY: "media",
+
+  // 灵感创作 (Studio & Creative)
+  WORD_OF_THE_DAY: "studio",
+  LETTER: "studio",
+  RIDDLE: "studio",
+  QUESTION: "studio",
+  STORY: "studio",
+  ROAST: "studio",
+  ZEN: "studio",
+  POETRY: "studio",
+  ARTWALL: "studio",
+  CHALLENGE: "studio",
+  STOIC: "studio",
 };
 
 export const CONFIGURABLE_MODES: Record<string, string> = {
