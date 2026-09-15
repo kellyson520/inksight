@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 import httpx
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 from ..outbound_http import RequestPolicy, outbound_http
 from ..patterns.utils import load_font
 from ..recommendation_provider import normalize_recommendation_item, resolve_proxy_url
@@ -62,56 +62,69 @@ def _format_rating(val: Any) -> str:
 def _build_video_fallback_image(
     title: str = "精选推荐视频",
     author: str = "Official",
-    duration: str = "12:45",
+    duration: str = "14:28",
     views_label: str = "128万次播放",
     rating_label: str = "98%好评",
     rank_label: str = "NO.1",
     width: int = 640,
     height: int = 360,
 ) -> Image.Image:
-    """Render a clean, high-contrast e-ink video card with player button and badges."""
-    image = Image.new("RGB", (width, height), (248, 248, 250))
+    """Render an iwara-styled e-ink video card: sharp foreground cover on enlarged blurred backdrop."""
+    # 1. 仿照 iwara：背后是扩大的放大镜式视频散焦毛玻璃模糊效果
+    bg = Image.new("RGB", (width, height), (18, 18, 24))
+    bg_draw = ImageDraw.Draw(bg)
+    bg_draw.ellipse([-int(width * 0.1), -int(height * 0.2), int(width * 0.6), int(height * 0.9)], fill=(85, 45, 95))
+    bg_draw.ellipse([int(width * 0.4), -int(height * 0.1), int(width * 1.15), int(height * 0.85)], fill=(110, 65, 30))
+    bg_draw.ellipse([int(width * 0.15), int(height * 0.35), int(width * 0.85), int(height * 1.15)], fill=(35, 65, 90))
+    bg_blurred = bg.filter(ImageFilter.GaussianBlur(radius=max(14, int(min(width, height) * 0.08))))
+    image = bg_blurred
     draw = ImageDraw.Draw(image)
 
-    # 1. 拟物化优雅外框与深色底纹
-    draw.rounded_rectangle([4, 4, width - 5, height - 5], radius=16, outline=(170, 170, 175), width=2)
-    # 内边距边框线，呈现微立体卡片质感
-    draw.rounded_rectangle([10, 10, width - 11, height - 11], radius=12, outline=(225, 225, 230), width=1)
+    # 2. 前置主体视频封面（中心微立体浮雕与高对比度边框）
+    pad_x = int(width * 0.05)
+    pad_y = int(height * 0.05)
+    card_w = width - pad_x * 2
+    card_h = height - pad_y * 2
+    card_rect = [pad_x, pad_y, pad_x + card_w, pad_y + card_h]
 
-    # 2. 顶部左侧：P-HUB 标志性品牌徽章
-    badge_x, badge_y = 24, 20
-    draw.rounded_rectangle([badge_x, badge_y, badge_x + 138, badge_y + 42], radius=8, fill=(22, 22, 26))
+    # 外层柔和发光/阴影
+    draw.rounded_rectangle([pad_x - 3, pad_y - 3, pad_x + card_w + 3, pad_y + card_h + 3], radius=14, outline=(255, 255, 255, 60), width=1)
+    # 前景封面主体
+    draw.rounded_rectangle(card_rect, radius=12, fill=(26, 26, 32), outline=(230, 230, 235), width=2)
+
+    # 3. 顶部左侧：P-HUB 标志性品牌徽章
+    badge_x, badge_y = pad_x + 16, pad_y + 16
+    draw.rounded_rectangle([badge_x, badge_y, badge_x + 138, badge_y + 42], radius=8, fill=(16, 16, 20))
     badge_font = load_font("noto_serif_bold", 22)
     draw.text((badge_x + 10, badge_y + 6), "PORN", fill=(255, 255, 255), font=badge_font)
     draw.rounded_rectangle([badge_x + 82, badge_y + 5, badge_x + 130, badge_y + 37], radius=5, fill=(255, 153, 0))
     draw.text((badge_x + 86, badge_y + 6), "HUB", fill=(0, 0, 0), font=badge_font)
 
-    # 3. 顶部右侧：排名标签 (例如 NO.1)
+    # 4. 顶部右侧：排名标签 (例如 NO.1)
     if rank_label:
         rank_font = load_font("noto_serif_bold", 20)
-        draw.rounded_rectangle([width - 110, badge_y, width - 24, badge_y + 40], radius=8, fill=(230, 230, 235), outline=(180, 180, 185), width=1)
-        draw.text((width - 98, badge_y + 7), rank_label, fill=(20, 20, 25), font=rank_font)
+        draw.rounded_rectangle([pad_x + card_w - 100, badge_y, pad_x + card_w - 16, badge_y + 40], radius=8, fill=(240, 240, 245))
+        draw.text((pad_x + card_w - 88, badge_y + 7), rank_label, fill=(20, 20, 25), font=rank_font)
 
-    # 4. 画面正中心：微立体视频播放大按钮 (Play Circle)
-    cx, cy = width // 2, height // 2 - 6
-    r = min(width, height) // 7
-    # 按钮外圈高对比度深色圆环与金色描边
+    # 5. 画面正中心：微立体视频播放大按钮 (Play Circle)
+    cx, cy = width // 2, height // 2 - 4
+    r = min(card_w, card_h) // 6
+    draw.ellipse([cx - r - 2, cy - r - 2, cx + r + 2, cy + r + 2], fill=(12, 12, 16), outline=(255, 255, 255, 160), width=2)
     draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(24, 24, 28), outline=(255, 153, 0), width=4)
-    # 中心实心播放三角 (Triangle)
     tri_w = int(r * 0.6)
     tri_h = int(r * 0.75)
-    tri = [(cx - tri_w // 2 + 3, cy - tri_h // 2), (cx - tri_w // 2 + 3, cy + tri_h // 2), (cx + tri_w // 2 + 5, cy)]
+    tri = [(cx - tri_w // 2 + 3, cy - tri_h // 2), (cx - tri_w // 2 + 3, cy + tri_h // 2), (cx + tri_w // 2 + 6, cy)]
     draw.polygon(tri, fill=(255, 255, 255))
 
-    # 5. 底部右侧：高对比度时长标签 (Duration Badge, 如 12:45)
+    # 6. 底部右侧：高对比度时长标签 (Duration Badge, 如 14:28)
     tag_font = load_font("noto_serif_bold", 20)
     if duration:
         dur_text = duration if ":" in duration else f"{duration}"
         dur_w = max(80, int(len(dur_text) * 13 + 24))
-        draw.rounded_rectangle([width - dur_w - 24, height - 58, width - 24, height - 20], radius=8, fill=(20, 20, 24))
-        draw.text((width - dur_w - 12, height - 52), dur_text, fill=(255, 255, 255), font=tag_font)
+        draw.rounded_rectangle([pad_x + card_w - dur_w - 16, pad_y + card_h - 52, pad_x + card_w - 16, pad_y + card_h - 16], radius=8, fill=(16, 16, 20), outline=(255, 255, 255, 100), width=1)
+        draw.text((pad_x + card_w - dur_w - 4, pad_y + card_h - 46), dur_text, fill=(255, 255, 255), font=tag_font)
 
-    # 6. 底部左侧：播放量与好评率徽章 (如 128万次播放 · 98%好评)
+    # 7. 底部左侧：播放量与好评率徽章 (如 128万次播放 · 98%好评)
     info_parts = []
     if views_label:
         info_parts.append(f"▶ {views_label}")
@@ -121,8 +134,8 @@ def _build_video_fallback_image(
         info_str = "  ".join(info_parts)
         info_font = load_font("noto_serif_regular", 18)
         info_w = int(len(info_str) * 11 + 30)
-        draw.rounded_rectangle([24, height - 58, min(width - 150, 24 + info_w), height - 20], radius=8, fill=(232, 234, 238), outline=(175, 178, 185), width=1)
-        draw.text((34, height - 50), info_str, fill=(35, 35, 42), font=info_font)
+        draw.rounded_rectangle([pad_x + 16, pad_y + card_h - 52, min(pad_x + card_w - 140, pad_x + 16 + info_w), pad_y + card_h - 16], radius=8, fill=(240, 242, 246))
+        draw.text((pad_x + 26, pad_y + card_h - 44), info_str, fill=(25, 25, 30), font=info_font)
 
     return image
 

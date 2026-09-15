@@ -124,7 +124,7 @@ def render_recommendation(ctx: RenderContext, block: dict) -> None:
                         "height": img_h,
                         "x": ctx.x_offset + int(10 * ctx.scale),
                         "y": y,
-                        "fit": "contain",
+                        "fit": str(block.get("cover_fit") or "backdrop_blur"),
                     })
                     if previous_image is None:
                         ctx.content.pop("__recommendation_image", None)

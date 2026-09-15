@@ -235,6 +235,17 @@ def load_font_by_name(name: str, size: int, force_truetype: bool = False) -> Ima
         if bitmap_font is not None:
             return bitmap_font
     path = os.path.join(TRUETYPE_DIR, name)
+    if not os.path.exists(path):
+        # 兼容系统字体路径（例如 apt 安装的 gentiumplus 或 dejavu）
+        candidate_sys_paths = [
+            os.path.join("/usr/share/fonts/truetype/gentiumplus", name),
+            os.path.join("/usr/share/fonts/truetype/dejavu", name),
+            os.path.join("/usr/share/fonts/truetype", name),
+        ]
+        for sp in candidate_sys_paths:
+            if os.path.exists(sp):
+                path = sp
+                break
     if os.path.exists(path):
         if name.lower().endswith(".pil"):
             return ImageFont.load(path)
@@ -242,21 +253,21 @@ def load_font_by_name(name: str, size: int, force_truetype: bool = False) -> Ima
             return ImageFont.truetype(path, size)
         except Exception as e:
             logger.warning(f"[FONT] Failed to load {name}: {e}")
-            fallback_cjk = "NotoSerifSC-Regular.ttf"
-            fallback_path = os.path.join(TRUETYPE_DIR, fallback_cjk)
-            if os.path.exists(fallback_path):
-                return ImageFont.truetype(fallback_path, size)
-    if name not in _font_warned:
-        _font_warned.add(name)
-        logger.warning(f"[FONT] Missing {name}, fallback to NotoSerifSC-Regular.ttf")
-    # 平稳降级到通用可用的中西文字体
-    fallback_cjk = "NotoSerifSC-Regular.ttf"
-    fallback_path = os.path.join(TRUETYPE_DIR, fallback_cjk)
+
+    # 若未找到字体：音标/国际音标字体降级到支持完整 IPA 字符集的 Lora-Regular.ttf 或 Inter，避免方框(tofu)
+    is_ipa = any(k in name.lower() for k in ("gentium", "phonetic", "ipa"))
+    fallback_font_name = "Lora-Regular.ttf" if is_ipa else "NotoSerifSC-Regular.ttf"
+    fallback_path = os.path.join(TRUETYPE_DIR, fallback_font_name)
     if os.path.exists(fallback_path):
         try:
             return ImageFont.truetype(fallback_path, size)
         except Exception:
             pass
+
+    if name not in _font_warned:
+        _font_warned.add(name)
+        logger.warning(f"[FONT] Missing {name}, fallback to {fallback_font_name}")
+
     return ImageFont.load_default()
 
 

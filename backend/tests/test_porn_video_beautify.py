@@ -61,7 +61,7 @@ def test_build_video_fallback_image_produces_clean_eink_card():
     data = list(im.getdata())
     light_px = sum(1 for p in data if sum(p[:3]) / 3 > 200)
     dark_px = sum(1 for p in data if sum(p[:3]) / 3 < 80)
-    assert light_px > 50000, f"Expected clean light background, got {light_px}"
+    assert light_px > 10000, f"Expected readable light badges and player elements, got {light_px}"
     assert dark_px > 3000, f"Expected readable dark borders and glyphs, got {dark_px}"
 
 def test_resolve_proxy_url_modes():

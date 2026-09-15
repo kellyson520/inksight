@@ -83,6 +83,8 @@ FONTS = {
     "lora_regular": "Lora-Regular.ttf",
     "lora_bold": "Lora-Bold.ttf",
     "inter_medium": "Inter_24pt-Medium.ttf",
+    "gentium_regular": "GentiumPlus-Regular.ttf",
+    "phonetic": "GentiumPlus-Regular.ttf",
 }
 
 

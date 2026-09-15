@@ -108,7 +108,7 @@
       "word_font": "noto_serif_bold",
       "word_font_size": 52,
       "phonetic_field": "phonetic",
-      "phonetic_font": "noto_serif_light",
+      "phonetic_font": "gentium_regular",
       "phonetic_font_name": "GentiumPlus-Regular.ttf",
       "phonetic_font_size": 13,
       "separator_width": 40,
