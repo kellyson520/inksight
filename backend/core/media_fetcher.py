@@ -151,6 +151,20 @@ class MediaFetcher:
             return "https://www.iwara.tv/"
         if "yuewen.com" in host or "qidian.com" in host or "qpic.cn" in host:
             return "https://m.qidian.com/"
+        if "hdslb.com" in host or "bilibili.com" in host:
+            return "https://www.bilibili.com/"
+        if "126.net" in host or "music.163.com" in host:
+            return "https://music.163.com/"
+        if "sinaimg.cn" in host or "weibo.com" in host or "weibo.cn" in host:
+            return "https://weibo.com/"
+        if "snssdk.com" in host or "byteimg.com" in host or "douyinpic.com" in host:
+            return "https://www.douyin.com/"
+        if "36krcdn.com" in host or "36kr.com" in host:
+            return "https://36kr.com/"
+        if "sspai.com" in host:
+            return "https://sspai.com/"
+        if "ithome.com" in host:
+            return "https://www.ithome.com/"
         return f"{parsed.scheme}://{parsed.netloc}/"
 
     @staticmethod

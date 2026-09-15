@@ -27,7 +27,7 @@ async def test_hotlist_service_multi_interleaving():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("style", ["dense_grid", "editorial", "classic"])
+@pytest.mark.parametrize("style", ["dense_grid", "editorial", "classic", "cover_card"])
 async def test_hotlist_render_all_styles(style):
     cfg = {
         "mac": "test-hotlist",

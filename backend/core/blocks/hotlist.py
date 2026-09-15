@@ -148,6 +148,7 @@ def _render_dense_grid(ctx: RenderContext, block: dict[str, Any], items: list[di
 
     start_y = ctx.y
     max_col_h = 0
+    max_bottom = ctx.screen_h - ctx.footer_height - margin_bottom
 
     # 左右两列分别排版
     for col_idx, col_items in enumerate([left_items, right_items]):
@@ -160,6 +161,11 @@ def _render_dense_grid(ctx: RenderContext, block: dict[str, Any], items: list[di
             title = str(it.get("title", "")).strip()
             plat_name = str(it.get("platform_name") or it.get("platform") or "热点")
             hot_val = str(it.get("hot_value", "")).strip()
+
+            line_h = int(12.5 * scale) if is_dense_8 else int(14 * scale)
+            estimated_row_h = int(16 * scale) + line_h + (int(4 * scale) if is_dense_8 else int(6 * scale))
+            if cur_y + estimated_row_h > max_bottom:
+                break
 
             # 1. 绘制顶部信息行：[Rank] [来源] [热度]
             pill_fill = accent_color if (rank == 1 and ctx.colors >= 3) else EINK_FG
@@ -244,17 +250,18 @@ def _render_cover_card(ctx: RenderContext, block: dict[str, Any], items: list[di
     font_meta = load_font(pick_cjk_font("noto_serif_regular"), int(8 * scale))
 
     # 1. 顶部焦点图文卡片
+    is_small_screen = ctx.screen_h <= 180
     card_x = ctx.x_offset + margin_x
     card_y = ctx.y
-    card_h = int(82 * scale)
-    card_pad = int(6 * scale)
+    card_h = int(54 * scale) if is_small_screen else int(82 * scale)
+    card_pad = int(4 * scale) if is_small_screen else int(6 * scale)
 
     # 绘制外边框
-    ctx.draw.rounded_rectangle([card_x, card_y, card_x + avail_w, card_y + card_h], radius=6, outline=EINK_FG, width=1)
+    ctx.draw.rounded_rectangle([card_x, card_y, card_x + avail_w, card_y + card_h], radius=6 if not is_small_screen else 4, outline=EINK_FG, width=1)
 
     # 封面图尺寸 (16:9 / 4:3 比例)
-    thumb_w = int(106 * scale)
-    thumb_h = int(68 * scale)
+    thumb_w = int(74 * scale) if is_small_screen else int(106 * scale)
+    thumb_h = int(44 * scale) if is_small_screen else int(68 * scale)
     thumb_x = card_x + card_pad
     thumb_y = card_y + (card_h - thumb_h) // 2
 
@@ -336,6 +343,7 @@ def _render_cover_card(ctx: RenderContext, block: dict[str, Any], items: list[di
 
         sub_start_y = ctx.y
         max_sub_h = 0
+        max_bottom = ctx.screen_h - ctx.footer_height - margin_bottom
 
         for col_idx, col_items in enumerate([left_sub, right_sub]):
             col_x = card_x + col_idx * (col_w + gap_x)
@@ -350,6 +358,10 @@ def _render_cover_card(ctx: RenderContext, block: dict[str, Any], items: list[di
 
                 pill_fill = accent_color if (is_top and ctx.colors >= 3) else EINK_FG
                 solid_badge = rank in (2, 3)
+
+                row_est_h = int(16 * scale) + int(5 * scale)
+                if cur_y + row_est_h > max_bottom:
+                    break
                 rw, rh = _draw_badge_pill(
                     ctx.draw, col_x, cur_y, f"{rank:02d}", font_rank,
                     solid=solid_badge, fill_color=pill_fill, text_color=EINK_BG if solid_badge else EINK_FG,
@@ -451,9 +463,14 @@ def _render_editorial(ctx: RenderContext, block: dict[str, Any], items: list[dic
         text_y += int(16 * scale)
 
     ctx.y = card_y + hero_h + int(6 * scale)
+    max_bottom = ctx.screen_h - ctx.footer_height - margin_bottom
 
     # 2. 渲染次级热搜排行（2 ~ 8）
     for it in sub_items:
+        row_y = ctx.y
+        if row_y + int(18 * scale) > max_bottom:
+            break
+
         rank = int(it.get("rank", 2))
         is_top = it.get("is_top", rank <= 3)
         title = str(it.get("title", "")).strip()
@@ -502,6 +519,7 @@ def _render_classic(ctx: RenderContext, block: dict[str, Any], items: list[dict[
     accent_color = _DEFAULT_RED if ctx.colors >= 3 else EINK_FG
     max_items = int(block.get("max_items", 8))
     display_items = items[:max_items]
+    max_bottom = ctx.screen_h - ctx.footer_height - margin_bottom
 
     is_compact = len(display_items) > 5
     font_rank = load_font("roboto_bold", int(9 * scale) if is_compact else int(11 * scale))
@@ -510,6 +528,10 @@ def _render_classic(ctx: RenderContext, block: dict[str, Any], items: list[dict[
     font_meta = load_font(pick_cjk_font("noto_serif_regular"), int(8.5 * scale) if is_compact else int(9 * scale))
 
     for it in display_items:
+        row_y = ctx.y
+        if row_y + int(18 * scale) > max_bottom:
+            break
+
         rank = int(it.get("rank", 1))
         is_top = it.get("is_top", rank <= 3)
         title = str(it.get("title", "")).strip()
