@@ -21,7 +21,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ColorSelect } from "@/components/ui/color-select";
 import { ScreenSizeSelect } from "@/components/ui/screen-size-select";
-import { CONFIGURABLE_MODES } from "@/components/preview/types";
+import { CONFIGURABLE_MODES, MODE_ICONS } from "@/components/preview/types";
 
 type ModeMeta = Record<string, { name: string; tip: string }>;
 
@@ -262,7 +262,15 @@ export function ModeSelector({
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1">
-                      <span className={`text-xs truncate ${isCurrentPreview ? "font-bold text-ink underline underline-offset-2" : "font-bold text-ink"}`}>{meta.name}</span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {MODE_ICONS[mode.toUpperCase()] ? (
+                          (() => {
+                            const I = MODE_ICONS[mode.toUpperCase()];
+                            return <I size={13} className="text-ink/75 dark:text-zinc-300 shrink-0" />;
+                          })()
+                        ) : null}
+                        <span className={`text-xs truncate ${isCurrentPreview ? "font-bold text-ink underline underline-offset-2" : "font-bold text-ink"}`}>{meta.name}</span>
+                      </div>
                       <div className="flex items-center gap-1 shrink-0">
                         {isConfigurable && onOpenConfigModal ? (
                           <button

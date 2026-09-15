@@ -179,3 +179,38 @@ async def test_standalone_modes_immune_to_douban_interference():
     for item in res_tech["items"]:
         assert item["platform"] in ["36kr", "ithome", "sspai", "github"]
         assert item["platform"] != "douban"
+
+
+def test_hotlist_mode_icons_and_alignment():
+    """Verify that all hotlist modes have valid non-None mode icons and render footer icons properly."""
+    import numpy as np
+    from core.patterns.utils import get_mode_icon
+    from core.mode_registry import get_registry
+    from core.json_renderer import render_json_mode
+
+    reg = get_registry()
+    modes = ["WEIBO", "ZHIHU", "BILIBILI", "BAIDU", "DOUYIN", "NETEASE", "TECH_NEWS", "WECHAT_HOT", "GITHUB_TRENDING", "TIEBA", "HOTLIST"]
+
+    for mid in modes:
+        # 1. get_mode_icon must return valid Image
+        icon = get_mode_icon(mid)
+        assert icon is not None, f"get_mode_icon for {mid} must not be None"
+        assert icon.size == (12, 12), f"Icon size for {mid} must be 12x12"
+
+        # 2. When rendered, footer icon area must have non-white pixels
+        mdef = reg.get_json_mode(mid).definition
+        dummy_content = {
+            "platform_title": f"{mid} 测试",
+            "style_badge": "实时",
+            "update_time": "12:00",
+            "items": [
+                {"rank": i, "title": f"测试热搜条目第{i}条长标题示例用于排版测试", "platform": "weibo", "platform_name": "热搜", "hot_value": "100万", "is_top": i <= 3}
+                for i in range(1, 9)
+            ],
+            "style": "dense_grid",
+        }
+        img = render_json_mode(mdef, dummy_content, date_str="9月15日", weather_str="晴 25°C", battery_pct=90.0, screen_w=400, screen_h=300)
+        arr = np.array(img.convert("L"))
+        # Footer icon is located around x:11-25, y:276-292
+        footer_icon_pixels = (arr[276:292, 11:25] < 128).sum()
+        assert footer_icon_pixels > 0, f"Mode {mid} must render footer icon pixels, got {footer_icon_pixels}"

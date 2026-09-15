@@ -304,8 +304,9 @@ def get_weather_icon(weather_code: int, size: tuple[int, int] | None = None) -> 
 
 
 def get_mode_icon(mode: str, size: tuple[int, int] | None = None) -> Image.Image | None:
-    """Get footer mode icon (book, electric_bolt, etc.)."""
+    """Get footer mode icon (book, electric_bolt, trending-up, help-circle, etc.)."""
     icon_name = None
+    m_upper = mode.upper()
     try:
         from ..mode_registry import get_registry
         info = get_registry().get_mode_info(mode)
@@ -313,17 +314,54 @@ def get_mode_icon(mode: str, size: tuple[int, int] | None = None) -> Image.Image
             icon_name = info.icon
     except (ImportError, AttributeError, RuntimeError):
         logger.warning("[FONT] Falling back to static mode icon mapping for %s", mode, exc_info=True)
-        # Registry may be unavailable in some test/bootstrap paths.
-        fallback_icons = {
-            "DAILY": "sunny",
-            "BRIEFING": "global",
-            "ARTWALL": "art",
-            "RECIPE": "food",
-            "COUNTDOWN": "flag",
-        }
-        icon_name = fallback_icons.get(mode.upper())
+
+    fallback_icons = {
+        "DAILY": "sunny",
+        "BRIEFING": "global",
+        "ARTWALL": "art",
+        "RECIPE": "food",
+        "COUNTDOWN": "flag",
+        "WEIBO": "trending-up",
+        "ZHIHU": "help-circle",
+        "BILIBILI": "tv",
+        "BAIDU": "search",
+        "DOUYIN": "music",
+        "NETEASE": "headphones",
+        "TECH_NEWS": "cpu",
+        "WECHAT_HOT": "message-circle",
+        "GITHUB_TRENDING": "github",
+        "TIEBA": "message-square",
+        "HOTLIST": "flame",
+    }
+    if not icon_name:
+        icon_name = fallback_icons.get(m_upper)
+
+    target_size = size or ICON_SIZES["mode"]
     if icon_name:
-        return load_icon(icon_name, size=size or ICON_SIZES["mode"])
+        img = load_icon(icon_name, size=target_size)
+        if img:
+            return img
+
+    # 别名降级检查
+    alias_map = {
+        "help-circle": "question",
+        "headphones": "music",
+        "message-circle": "question",
+        "message-square": "question",
+        "flame": "electric_bolt",
+        "cpu": "electric_bolt",
+    }
+    alias = alias_map.get(str(icon_name))
+    if alias:
+        img = load_icon(alias, size=target_size)
+        if img:
+            return img
+
+    # 按模式名兜底
+    fb = fallback_icons.get(m_upper)
+    if fb and fb != icon_name:
+        return load_icon(fb, size=target_size)
+
     return None
 
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Eye, Sliders, Loader2, type LucideIcon } from "lucide-react";
-import { CONFIGURABLE_MODES } from "./types";
+import { CONFIGURABLE_MODES, MODE_ICONS } from "./types";
 
 interface PaginatedModeSectionProps {
   title: string;
@@ -98,6 +98,7 @@ export function PaginatedModeSection({
           const meta = customMeta?.[m] || { name: m, tip: "" };
           const isCurrent = currentMode === m;
           const isConfigurable = Boolean(CONFIGURABLE_MODES[m]);
+          const ModeIcon = MODE_ICONS[m.toUpperCase()];
 
           return (
             <div
@@ -114,9 +115,12 @@ export function PaginatedModeSection({
                 className="w-full p-2.5 text-left flex-1 flex flex-col justify-start"
               >
                 <div className="flex items-center justify-between gap-1 w-full mb-1">
-                  <span className="text-xs font-bold truncate text-ink">
-                    {meta.name}
-                  </span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {ModeIcon ? <ModeIcon size={14} className="text-ink/75 dark:text-zinc-300 shrink-0" /> : null}
+                    <span className="text-xs font-bold truncate text-ink dark:text-zinc-100">
+                      {meta.name}
+                    </span>
+                  </div>
                   {m === "DISASTER_ALERT" ? (
                     <span className="text-[10px] px-1 py-0.2 rounded bg-red-100 text-red-700 font-medium shrink-0">
                       最高优

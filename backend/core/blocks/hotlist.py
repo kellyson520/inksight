@@ -45,20 +45,25 @@ def _draw_badge_pill(
     pad_x: int = 4,
     pad_y: int = 1,
     radius: int = 3,
+    fixed_h: int | None = None,
+    min_w: int = 0,
 ) -> tuple[int, int]:
-    """绘制小巧的微型徽标或胶囊。返回 (width, height)。"""
+    """绘制小巧的微型徽标或胶囊，保证内部文字精准几何居中。返回 (width, height)。"""
     bbox = font.getbbox(text)
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
-    w = tw + pad_x * 2
-    h = max(th, 10) + pad_y * 2
+    w = max(tw + pad_x * 2, min_w)
+    h = fixed_h if fixed_h is not None else (max(th, 10) + pad_y * 2)
+
+    tx = x + (w - tw) // 2 - bbox[0]
+    ty = y + (h - th) // 2 - bbox[1]
 
     if solid:
         draw.rounded_rectangle([x, y, x + w, y + h], radius=radius, fill=fill_color)
-        draw.text((x + pad_x - bbox[0], y + pad_y - bbox[1]), text, fill=text_color, font=font)
+        draw.text((tx, ty), text, fill=text_color, font=font)
     else:
         draw.rounded_rectangle([x, y, x + w, y + h], radius=radius, outline=fill_color, width=1)
-        draw.text((x + pad_x - bbox[0], y + pad_y - bbox[1]), text, fill=fill_color, font=font)
+        draw.text((tx, ty), text, fill=fill_color, font=font)
 
     return w, h
 
@@ -121,7 +126,7 @@ def render_hotlist_board(ctx: RenderContext, block: dict[str, Any]) -> None:
 
 
 def _render_dense_grid(ctx: RenderContext, block: dict[str, Any], items: list[dict[str, Any]]) -> None:
-    """渲染双列高密度热榜（左右两列并排，每列 4 条，共 8 条精选热点）。"""
+    """渲染双列高密度热榜（行级对齐栅格，每行左右并列，左右列完全水平对齐，底线与字底绝对平整）。"""
     scale = ctx.scale
     margin_x = int(block.get("margin_x", 10) * scale)
     margin_bottom = int(block.get("margin_bottom", 6) * scale)
@@ -136,6 +141,8 @@ def _render_dense_grid(ctx: RenderContext, block: dict[str, Any], items: list[di
     avail_w = ctx.available_width - margin_x * 2
     gap_x = int(12 * scale)
     col_w = (avail_w - gap_x) // 2
+    col_left_x = ctx.x_offset + margin_x
+    col_right_x = col_left_x + col_w + gap_x
 
     # 自适应字号与间距：若条目数多（如 7-8 条），使用微紧凑字号避免溢出屏幕
     is_dense_8 = k > 6
@@ -145,90 +152,107 @@ def _render_dense_grid(ctx: RenderContext, block: dict[str, Any], items: list[di
     font_hot = load_font("roboto_light", int(8 * scale))
 
     accent_color = _DEFAULT_RED if ctx.colors >= 3 else EINK_FG
-
-    start_y = ctx.y
-    max_col_h = 0
     max_bottom = ctx.screen_h - ctx.footer_height - margin_bottom
 
-    # 左右两列分别排版
-    for col_idx, col_items in enumerate([left_items, right_items]):
-        col_x = ctx.x_offset + margin_x + col_idx * (col_w + gap_x)
-        cur_y = start_y
+    pill_h = int(13 * scale)
+    line_h = int(12.5 * scale) if is_dense_8 else int(14 * scale)
 
-        for it in col_items:
+    cur_y = ctx.y
+
+    # 行级同步排版：左右对应成行，杜绝左右两列因折行差异导致的纵向微错位
+    for r in range(left_count):
+        it_l = left_items[r]
+        it_r = right_items[r] if r < len(right_items) else None
+
+        # 预先折行左右标题，统一求出该行的最高高度
+        title_l = str(it_l.get("title", "")).strip()
+        lines_l = wrap_text(title_l, font_title, col_w)
+        if len(lines_l) > 2:
+            lines_l = [lines_l[0], _truncate_text_to_width(lines_l[1] + lines_l[2], font_title, col_w)]
+
+        lines_r = []
+        if it_r:
+            title_r = str(it_r.get("title", "")).strip()
+            lines_r = wrap_text(title_r, font_title, col_w)
+            if len(lines_r) > 2:
+                lines_r = [lines_r[0], _truncate_text_to_width(lines_r[1] + lines_r[2], font_title, col_w)]
+
+        content_h_l = pill_h + (int(2.5 * scale) if is_dense_8 else int(3.5 * scale)) + len(lines_l) * line_h
+        content_h_r = (pill_h + (int(2.5 * scale) if is_dense_8 else int(3.5 * scale)) + len(lines_r) * line_h) if it_r else 0
+        row_content_h = max(content_h_l, content_h_r)
+
+        row_est_total = row_content_h + (int(4 * scale) if is_dense_8 else int(6 * scale))
+        if cur_y + row_est_total > max_bottom:
+            break
+
+        # 绘制该行单元格的辅助函数
+        def _draw_cell(col_x: int, it: dict[str, Any], lines: list[str]) -> None:
             rank = int(it.get("rank", 1))
-            is_top = it.get("is_top", rank <= 3)
-            title = str(it.get("title", "")).strip()
             plat_name = str(it.get("platform_name") or it.get("platform") or "热点")
             hot_val = str(it.get("hot_value", "")).strip()
 
-            line_h = int(12.5 * scale) if is_dense_8 else int(14 * scale)
-            estimated_row_h = int(16 * scale) + line_h + (int(4 * scale) if is_dense_8 else int(6 * scale))
-            if cur_y + estimated_row_h > max_bottom:
-                break
-
-            # 1. 绘制顶部信息行：[Rank] [来源] [热度]
             pill_fill = accent_color if (rank == 1 and ctx.colors >= 3) else EINK_FG
             rank_str = f"{rank:02d}" if rank < 10 else str(rank)
             solid_badge = rank in (1, 2)
-            rw, rh = _draw_badge_pill(
+            rw, _ = _draw_badge_pill(
                 ctx.draw, col_x, cur_y, rank_str, font_rank,
                 solid=solid_badge, fill_color=pill_fill, text_color=EINK_BG if solid_badge else EINK_FG,
-                pad_x=int(2.5 * scale) if is_dense_8 else int(3 * scale),
-                pad_y=int(1 * scale), radius=2,
+                pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
+                fixed_h=pill_h, min_w=int(17 * scale),
             )
 
-            # 平台徽标
-            plat_tag = plat_name
-            pw, ph = _draw_badge_pill(
-                ctx.draw, col_x + rw + int(3 * scale), cur_y, plat_tag, font_plat,
+            # 平台徽标（与 rank 徽标统一高度，严格垂直对齐）
+            pw, _ = _draw_badge_pill(
+                ctx.draw, col_x + rw + int(3 * scale), cur_y, plat_name, font_plat,
                 solid=False, fill_color=EINK_FG, text_color=EINK_FG,
-                pad_x=int(2.5 * scale) if is_dense_8 else int(3 * scale),
-                pad_y=int(1 * scale), radius=2,
+                pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
+                fixed_h=pill_h,
             )
 
-            # 热度值（靠右）
+            # 热度值（与徽标水平对齐）
             if hot_val:
-                if any(x in hot_val for x in ("♪", "★", "🔥")):
-                    hot_str = hot_val
-                else:
-                    compact_val = format_compact_number(hot_val)
-                    hot_str = f"🔥{compact_val}"
-                hw = font_hot.getbbox(hot_str)[2] - font_hot.getbbox(hot_str)[0]
+                hot_str = hot_val if any(x in hot_val for x in ("♪", "★", "🔥")) else f"🔥{format_compact_number(hot_val)}"
+                hot_bbox = font_hot.getbbox(hot_str)
+                hw = hot_bbox[2] - hot_bbox[0]
+                hth = hot_bbox[3] - hot_bbox[1]
                 if col_x + col_w - hw > col_x + rw + pw + int(6 * scale):
-                    ctx.draw.text((col_x + col_w - hw, cur_y + int(1 * scale)), hot_str, fill=EINK_FG, font=font_hot)
+                    hot_y = cur_y + (pill_h - hth) // 2 - hot_bbox[1]
+                    ctx.draw.text((col_x + col_w - hw, hot_y), hot_str, fill=EINK_FG, font=font_hot)
 
-            cur_y += max(rh, ph) + (int(2 * scale) if is_dense_8 else int(3 * scale))
-
-            # 2. 绘制标题（最多折行两行，第二行加省略号）
-            lines = wrap_text(title, font_title, col_w)
-            if len(lines) > 2:
-                lines = [lines[0], _truncate_text_to_width(lines[1] + lines[2], font_title, col_w)]
-            elif len(lines) == 1:
-                pass
-
-            line_h = int(12.5 * scale) if is_dense_8 else int(14 * scale)
+            # 标题文字
+            text_y = cur_y + pill_h + (int(2.5 * scale) if is_dense_8 else int(3.5 * scale))
             for ln in lines:
-                ctx.draw.text((col_x, cur_y), ln, fill=EINK_FG, font=font_title)
-                cur_y += line_h
+                ctx.draw.text((col_x, text_y), ln, fill=EINK_FG, font=font_title)
+                text_y += line_h
 
-            cur_y += int(1 * scale) if is_dense_8 else int(2 * scale)
+        # 1. 绘制左列
+        _draw_cell(col_left_x, it_l, lines_l)
 
-            # 3. 项与项之间轻量虚线分割
+        # 2. 绘制右列
+        if it_r:
+            _draw_cell(col_right_x, it_r, lines_r)
+
+        cur_y += row_content_h + (int(1.5 * scale) if is_dense_8 else int(2.5 * scale))
+
+        # 3. 左右列完全水平平齐的分割虚线
+        draw_dashed_line(
+            ctx.draw,
+            (col_left_x, cur_y),
+            (col_left_x + col_w, cur_y),
+            fill=EINK_FG,
+            width=1,
+        )
+        if it_r:
             draw_dashed_line(
                 ctx.draw,
-                (col_x, cur_y),
-                (col_x + col_w, cur_y),
+                (col_right_x, cur_y),
+                (col_right_x + col_w, cur_y),
                 fill=EINK_FG,
                 width=1,
             )
-            cur_y += int(3 * scale) if is_dense_8 else int(5 * scale)
+        cur_y += int(3.5 * scale) if is_dense_8 else int(5 * scale)
 
-        col_h = cur_y - start_y
-        if col_h > max_col_h:
-            max_col_h = col_h
-
-    ctx.y = start_y + max_col_h + margin_bottom
+    ctx.y = cur_y + margin_bottom
 
 
 def _render_cover_card(ctx: RenderContext, block: dict[str, Any], items: list[dict[str, Any]]) -> None:
@@ -304,52 +328,65 @@ def _render_cover_card(ctx: RenderContext, block: dict[str, Any], items: list[di
     text_w = card_x + avail_w - card_pad - text_x
 
     # 徽章栏：[TOP 1 头条] [平台] [🔥热度]
-    rw, rh = _draw_badge_pill(
+    pill_h = int(14 * scale) if not is_small_screen else int(12 * scale)
+    rw, _ = _draw_badge_pill(
         ctx.draw, text_x, thumb_y, "TOP 1 头条", font_banner,
-        solid=True, fill_color=accent_color, text_color=EINK_BG, pad_x=int(4 * scale), pad_y=int(1 * scale), radius=3
+        solid=True, fill_color=accent_color, text_color=EINK_BG,
+        pad_x=int(4 * scale), pad_y=int(1 * scale), radius=3, fixed_h=pill_h,
     )
-    pw, ph = _draw_badge_pill(
+    pw, _ = _draw_badge_pill(
         ctx.draw, text_x + rw + int(4 * scale), thumb_y, str(top_item.get("platform_name") or "热点"), font_meta,
-        solid=False, fill_color=EINK_FG, text_color=EINK_FG, pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2
+        solid=False, fill_color=EINK_FG, text_color=EINK_FG,
+        pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2, fixed_h=pill_h,
     )
     hero_hot = str(top_item.get("hot_value", "")).strip()
     if hero_hot:
         hot_str = hero_hot if any(x in hero_hot for x in ("♪", "★", "🔥")) else f"🔥{format_compact_number(hero_hot)}"
-        hw = font_meta.getbbox(hot_str)[2] - font_meta.getbbox(hot_str)[0]
-        if text_x + text_w - hw > text_x + rw + pw + int(6 * scale):
-            ctx.draw.text((card_x + avail_w - card_pad - hw, thumb_y + int(1 * scale)), hot_str, fill=EINK_FG, font=font_meta)
+        hot_bbox = font_meta.getbbox(hot_str)
+        hw = hot_bbox[2] - hot_bbox[0]
+        hth = hot_bbox[3] - hot_bbox[1]
+        hot_x = card_x + avail_w - card_pad - hw
+        if hot_x > text_x + rw + pw + int(6 * scale):
+            hot_y = thumb_y + (pill_h - hth) // 2 - hot_bbox[1]
+            ctx.draw.text((hot_x, hot_y), hot_str, fill=EINK_FG, font=font_meta)
 
     # 标题正文（最多折行3行）
     hero_title = str(top_item.get("title", "")).strip()
     title_lines = wrap_text(hero_title, font_hero_title, text_w)
-    if len(title_lines) > 3:
-        title_lines = [title_lines[0], title_lines[1], _truncate_text_to_width(title_lines[2] + title_lines[3], font_hero_title, text_w)]
+    max_lines = 2 if is_small_screen else 3
+    if len(title_lines) > max_lines:
+        title_lines = title_lines[:max_lines - 1] + [_truncate_text_to_width("".join(title_lines[max_lines - 1:]), font_hero_title, text_w)]
 
-    cur_text_y = thumb_y + max(rh, ph) + int(4 * scale)
-    line_spacing = int(14 * scale)
+    cur_text_y = thumb_y + pill_h + (int(3 * scale) if is_small_screen else int(5 * scale))
+    line_spacing = int(12 * scale) if is_small_screen else int(15 * scale)
     for ln in title_lines:
         ctx.draw.text((text_x, cur_text_y), ln, fill=EINK_FG, font=font_hero_title)
         cur_text_y += line_spacing
 
     ctx.y = card_y + card_h + int(6 * scale)
 
-    # 2. 下方次要热点排行（第 2 ~ 8 条，双列并排展示，每列 3-4 条）
+    # 2. 下方次要热点排行（第 2 ~ 8 条，双列并排展示，每列水平对齐）
     if sub_items:
         gap_x = int(10 * scale)
         col_w = (avail_w - gap_x) // 2
-        half = (len(sub_items) + 1) // 2
-        left_sub = sub_items[:half]
-        right_sub = sub_items[half:]
+        col_left_x = card_x
+        col_right_x = card_x + col_w + gap_x
 
-        sub_start_y = ctx.y
-        max_sub_h = 0
+        sub_pill_h = int(13 * scale)
+        sub_row_h = int(17 * scale)
         max_bottom = ctx.screen_h - ctx.footer_height - margin_bottom
 
-        for col_idx, col_items in enumerate([left_sub, right_sub]):
-            col_x = card_x + col_idx * (col_w + gap_x)
-            cur_y = sub_start_y
+        cur_y = ctx.y
+        num_sub_rows = (len(sub_items) + 1) // 2
 
-            for it in col_items:
+        for r in range(num_sub_rows):
+            it_l = sub_items[r * 2]
+            it_r = sub_items[r * 2 + 1] if (r * 2 + 1) < len(sub_items) else None
+
+            if cur_y + sub_row_h > max_bottom:
+                break
+
+            def _draw_sub_cell(col_x: int, it: dict[str, Any]) -> None:
                 rank = int(it.get("rank", 2))
                 is_top = it.get("is_top", rank <= 3)
                 title = str(it.get("title", "")).strip()
@@ -359,51 +396,50 @@ def _render_cover_card(ctx: RenderContext, block: dict[str, Any], items: list[di
                 pill_fill = accent_color if (is_top and ctx.colors >= 3) else EINK_FG
                 solid_badge = rank in (2, 3)
 
-                row_est_h = int(16 * scale) + int(5 * scale)
-                if cur_y + row_est_h > max_bottom:
-                    break
-                rw, rh = _draw_badge_pill(
+                rw, _ = _draw_badge_pill(
                     ctx.draw, col_x, cur_y, f"{rank:02d}", font_rank,
                     solid=solid_badge, fill_color=pill_fill, text_color=EINK_BG if solid_badge else EINK_FG,
                     pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
+                    fixed_h=sub_pill_h, min_w=int(17 * scale),
                 )
 
-                # 平台小标
-                pw, ph = _draw_badge_pill(
+                pw, _ = _draw_badge_pill(
                     ctx.draw, col_x + rw + int(3 * scale), cur_y, plat_name, font_meta,
                     solid=False, fill_color=EINK_FG, text_color=EINK_FG,
-                    pad_x=int(2 * scale), pad_y=int(1 * scale), radius=2,
+                    pad_x=int(2.5 * scale), pad_y=int(1 * scale), radius=2,
+                    fixed_h=sub_pill_h,
                 )
 
-                # 热度
-                hot_str = ""
                 hw = 0
                 if hot_val:
                     hot_str = hot_val if any(x in hot_val for x in ("♪", "★", "🔥")) else f"🔥{format_compact_number(hot_val)}"
-                    hw = font_meta.getbbox(hot_str)[2] - font_meta.getbbox(hot_str)[0]
-                    if col_x + col_w - hw > col_x + rw + pw + int(6 * scale):
-                        ctx.draw.text((col_x + col_w - hw, cur_y + int(1 * scale)), hot_str, fill=EINK_FG, font=font_meta)
+                    hot_bbox = font_meta.getbbox(hot_str)
+                    hw = hot_bbox[2] - hot_bbox[0]
+                    hth = hot_bbox[3] - hot_bbox[1]
+                    hot_x = col_x + col_w - hw
+                    if hot_x > col_x + rw + pw + int(6 * scale):
+                        hot_y = cur_y + (sub_pill_h - hth) // 2 - hot_bbox[1]
+                        ctx.draw.text((hot_x, hot_y), hot_str, fill=EINK_FG, font=font_meta)
 
-                # 标题截断并显示
+                # 标题文字与徽标垂直居中对齐
                 max_t_w = col_w - rw - pw - int(8 * scale) - (hw + int(4 * scale) if hw else 0)
                 short_t = _truncate_text_to_width(title, font_sub_title, max_t_w)
-                ctx.draw.text((col_x + rw + pw + int(6 * scale), cur_y), short_t, fill=EINK_FG, font=font_sub_title)
+                t_bbox = font_sub_title.getbbox(short_t)
+                t_th = t_bbox[3] - t_bbox[1]
+                t_y = cur_y + (sub_pill_h - t_th) // 2 - t_bbox[1]
+                ctx.draw.text((col_x + rw + pw + int(5 * scale), t_y), short_t, fill=EINK_FG, font=font_sub_title)
 
-                cur_y += max(rh, ph, int(15 * scale)) + int(2 * scale)
-                draw_dashed_line(
-                    ctx.draw,
-                    (col_x, cur_y),
-                    (col_x + col_w, cur_y),
-                    fill=EINK_FG,
-                    width=1,
-                )
-                cur_y += int(3 * scale)
+            _draw_sub_cell(col_left_x, it_l)
+            if it_r:
+                _draw_sub_cell(col_right_x, it_r)
 
-            sub_h = cur_y - sub_start_y
-            if sub_h > max_sub_h:
-                max_sub_h = sub_h
+            cur_y += sub_row_h
+            draw_dashed_line(ctx.draw, (col_left_x, cur_y), (col_left_x + col_w, cur_y), fill=EINK_FG, width=1)
+            if it_r:
+                draw_dashed_line(ctx.draw, (col_right_x, cur_y), (col_right_x + col_w, cur_y), fill=EINK_FG, width=1)
+            cur_y += int(3 * scale)
 
-        ctx.y = sub_start_y + max_sub_h + margin_bottom
+        ctx.y = cur_y + margin_bottom
 
 
 def _render_editorial(ctx: RenderContext, block: dict[str, Any], items: list[dict[str, Any]]) -> None:
@@ -443,18 +479,24 @@ def _render_editorial(ctx: RenderContext, block: dict[str, Any], items: list[dic
     ctx.draw.rounded_rectangle([card_x, card_y, card_x + avail_w, card_y + hero_h], radius=5, outline=EINK_FG, width=1)
 
     # 顶部焦点徽章行
-    badge_w, badge_h = _draw_badge_pill(
+    badge_h = int(14 * scale)
+    badge_w, _ = _draw_badge_pill(
         ctx.draw, card_x + card_pad, card_y + card_pad, "TOP 1 焦点头条", font_banner,
-        solid=True, fill_color=accent_color, text_color=EINK_BG, pad_x=int(4 * scale), pad_y=int(1 * scale), radius=3,
+        solid=True, fill_color=accent_color, text_color=EINK_BG,
+        pad_x=int(4 * scale), pad_y=int(1 * scale), radius=3, fixed_h=badge_h,
     )
     _draw_badge_pill(
         ctx.draw, card_x + card_pad + badge_w + int(4 * scale), card_y + card_pad, hero_plat, font_meta,
-        solid=False, fill_color=EINK_FG, text_color=EINK_FG, pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
+        solid=False, fill_color=EINK_FG, text_color=EINK_FG,
+        pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2, fixed_h=badge_h,
     )
     if hero_hot:
         hot_text = f"🔥 {hero_hot}"
-        hw = font_meta.getbbox(hot_text)[2] - font_meta.getbbox(hot_text)[0]
-        ctx.draw.text((card_x + avail_w - card_pad - hw, card_y + card_pad + int(1 * scale)), hot_text, fill=EINK_FG, font=font_meta)
+        hot_bbox = font_meta.getbbox(hot_text)
+        hw = hot_bbox[2] - hot_bbox[0]
+        hth = hot_bbox[3] - hot_bbox[1]
+        hot_y = card_y + card_pad + (badge_h - hth) // 2 - hot_bbox[1]
+        ctx.draw.text((card_x + avail_w - card_pad - hw, hot_y), hot_text, fill=EINK_FG, font=font_meta)
 
     # 绘制大卡片主标题
     text_y = card_y + card_pad + badge_h + int(4 * scale)
@@ -466,6 +508,7 @@ def _render_editorial(ctx: RenderContext, block: dict[str, Any], items: list[dic
     max_bottom = ctx.screen_h - ctx.footer_height - margin_bottom
 
     # 2. 渲染次级热搜排行（2 ~ 8）
+    sub_pill_h = int(13 * scale)
     for it in sub_items:
         row_y = ctx.y
         if row_y + int(18 * scale) > max_bottom:
@@ -477,29 +520,41 @@ def _render_editorial(ctx: RenderContext, block: dict[str, Any], items: list[dic
         plat_name = str(it.get("platform_name") or it.get("platform") or "热点")
         hot_val = str(it.get("hot_value", "")).strip()
 
-        row_y = ctx.y
         pill_fill = accent_color if (is_top and ctx.colors >= 3) else EINK_FG
-        rw, rh = _draw_badge_pill(
+        rw, _ = _draw_badge_pill(
             ctx.draw, ctx.x_offset + margin_x, row_y, f"{rank:02d}", font_rank,
-            solid=is_top, fill_color=pill_fill, text_color=EINK_BG, pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
+            solid=is_top, fill_color=pill_fill, text_color=EINK_BG,
+            pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
+            fixed_h=sub_pill_h, min_w=int(17 * scale),
         )
 
-        pw, ph = _draw_badge_pill(
+        pw, _ = _draw_badge_pill(
             ctx.draw, ctx.x_offset + margin_x + rw + int(4 * scale), row_y, plat_name, font_meta,
-            solid=False, fill_color=EINK_FG, text_color=EINK_FG, pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
+            solid=False, fill_color=EINK_FG, text_color=EINK_FG,
+            pad_x=int(3 * scale), pad_y=int(1 * scale), radius=2,
+            fixed_h=sub_pill_h,
         )
 
-        # 标题截断
+        # 标题截断并垂直居中
         title_x = ctx.x_offset + margin_x + rw + pw + int(6 * scale)
-        hot_w = (font_meta.getbbox(hot_val)[2] - font_meta.getbbox(hot_val)[0] + int(6 * scale)) if hot_val else 0
+        hot_w = 0
+        h_bbox = None
+        if hot_val:
+            h_bbox = font_meta.getbbox(hot_val)
+            hot_w = h_bbox[2] - h_bbox[0] + int(6 * scale)
         max_t_w = ctx.available_width - margin_x * 2 - (rw + pw + int(6 * scale)) - hot_w
         short_t = _truncate_text_to_width(title, font_sub_title, max_t_w)
-        ctx.draw.text((title_x, row_y - int(1 * scale)), short_t, fill=EINK_FG, font=font_sub_title)
+        t_bbox = font_sub_title.getbbox(short_t)
+        t_th = t_bbox[3] - t_bbox[1]
+        t_y = row_y + (sub_pill_h - t_th) // 2 - t_bbox[1]
+        ctx.draw.text((title_x, t_y), short_t, fill=EINK_FG, font=font_sub_title)
 
-        if hot_val:
-            ctx.draw.text((ctx.x_offset + ctx.available_width - margin_x - hot_w + int(2 * scale), row_y + int(1 * scale)), hot_val, fill=EINK_FG, font=font_meta)
+        if hot_val and h_bbox:
+            h_th = h_bbox[3] - h_bbox[1]
+            h_y = row_y + (sub_pill_h - h_th) // 2 - h_bbox[1]
+            ctx.draw.text((ctx.x_offset + ctx.available_width - margin_x - hot_w + int(2 * scale), h_y), hot_val, fill=EINK_FG, font=font_meta)
 
-        ctx.y += max(rh, ph) + (int(2.5 * scale) if len(sub_items) > 4 else int(4 * scale))
+        ctx.y += sub_pill_h + (int(2.5 * scale) if len(sub_items) > 4 else int(4 * scale))
         draw_dashed_line(
             ctx.draw,
             (ctx.x_offset + margin_x, ctx.y),
@@ -512,7 +567,7 @@ def _render_editorial(ctx: RenderContext, block: dict[str, Any], items: list[dic
 
 
 def _render_classic(ctx: RenderContext, block: dict[str, Any], items: list[dict[str, Any]]) -> None:
-    """渲染精致胶囊排行流风格（支持 5~8 项，圆角徽章与清晰行距）。"""
+    """渲染精致胶囊排行流风格（支持 5~8 项，圆角徽章与清晰行距，严格垂直中心轴对齐）。"""
     scale = ctx.scale
     margin_x = int(block.get("margin_x", 12) * scale)
     margin_bottom = int(block.get("margin_bottom", 6) * scale)
@@ -527,6 +582,8 @@ def _render_classic(ctx: RenderContext, block: dict[str, Any], items: list[dict[
     font_title = load_font(pick_cjk_font("noto_serif_regular"), int(10.5 * scale) if is_compact else int(13 * scale))
     font_meta = load_font(pick_cjk_font("noto_serif_regular"), int(8.5 * scale) if is_compact else int(9 * scale))
 
+    row_pill_h = int(13 * scale) if is_compact else int(15 * scale)
+
     for it in display_items:
         row_y = ctx.y
         if row_y + int(18 * scale) > max_bottom:
@@ -538,43 +595,54 @@ def _render_classic(ctx: RenderContext, block: dict[str, Any], items: list[dict[
         plat_name = str(it.get("platform_name") or it.get("platform") or "热点")
         hot_val = str(it.get("hot_value", "")).strip()
 
-        row_y = ctx.y
         pill_fill = accent_color if (rank == 1 and ctx.colors >= 3) else EINK_FG
         solid_badge = rank in (1, 2, 3) if is_compact else rank in (1, 2)
-        rw, rh = _draw_badge_pill(
+        rw, _ = _draw_badge_pill(
             ctx.draw, ctx.x_offset + margin_x, row_y, f"{rank:02d}", font_rank,
             solid=solid_badge, fill_color=pill_fill, text_color=EINK_BG if solid_badge else EINK_FG,
             pad_x=int(3 * scale) if is_compact else int(4 * scale),
             pad_y=int(1 * scale), radius=2 if is_compact else 3,
+            fixed_h=row_pill_h, min_w=int(17 * scale) if is_compact else int(20 * scale),
         )
 
-        pw, ph = _draw_badge_pill(
+        pw, _ = _draw_badge_pill(
             ctx.draw, ctx.x_offset + margin_x + rw + int(4 * scale), row_y, plat_name, font_plat,
             solid=False, fill_color=EINK_FG, text_color=EINK_FG,
             pad_x=int(3 * scale) if is_compact else int(4 * scale),
             pad_y=int(1 * scale), radius=2,
+            fixed_h=row_pill_h,
         )
 
         compact_hot = format_compact_number(hot_val) if hot_val else ""
         hot_label = hot_val if any(x in hot_val for x in ("♪", "★", "🔥")) else (f"🔥 {compact_hot}" if compact_hot else "")
-        hot_w = (font_meta.getbbox(hot_label)[2] - font_meta.getbbox(hot_label)[0] + int(6 * scale)) if hot_label else 0
+        hot_w = 0
+        h_bbox = None
+        if hot_label:
+            h_bbox = font_meta.getbbox(hot_label)
+            hot_w = h_bbox[2] - h_bbox[0] + int(6 * scale)
+
         title_x = ctx.x_offset + margin_x + rw + pw + int(8 * scale)
         max_t_w = ctx.available_width - margin_x * 2 - (rw + pw + int(8 * scale)) - hot_w
 
         short_t = _truncate_text_to_width(title, font_title, max_t_w)
-        ctx.draw.text((title_x, row_y - int(1 * scale)), short_t, fill=EINK_FG, font=font_title)
+        t_bbox = font_title.getbbox(short_t)
+        t_th = t_bbox[3] - t_bbox[1]
+        t_y = row_y + (row_pill_h - t_th) // 2 - t_bbox[1]
+        ctx.draw.text((title_x, t_y), short_t, fill=EINK_FG, font=font_title)
 
-        if hot_label:
-            ctx.draw.text((ctx.x_offset + ctx.available_width - margin_x - hot_w + int(2 * scale), row_y + int(1 * scale)), hot_label, fill=EINK_FG, font=font_meta)
+        if hot_label and h_bbox:
+            h_th = h_bbox[3] - h_bbox[1]
+            h_y = row_y + (row_pill_h - h_th) // 2 - h_bbox[1]
+            ctx.draw.text((ctx.x_offset + ctx.available_width - margin_x - hot_w + int(2 * scale), h_y), hot_label, fill=EINK_FG, font=font_meta)
 
-        ctx.y += max(rh, ph) + (int(2.5 * scale) if is_compact else int(5 * scale))
+        ctx.y += row_pill_h + (int(2.5 * scale) if is_compact else int(4 * scale))
         draw_dashed_line(
             ctx.draw,
             (ctx.x_offset + margin_x, ctx.y),
             (ctx.x_offset + ctx.available_width - margin_x, ctx.y),
             fill=EINK_FG, width=1,
         )
-        ctx.y += int(3 * scale) if is_compact else int(6 * scale)
+        ctx.y += int(3 * scale) if is_compact else int(5 * scale)
 
     ctx.y += margin_bottom
 

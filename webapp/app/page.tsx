@@ -33,6 +33,14 @@ import {
   BarChart3,
   Target,
   Plus,
+  TrendingUp,
+  Tv,
+  Search,
+  Music,
+  Headphones,
+  MessageCircle,
+  MessageSquare,
+  Github,
 } from "lucide-react";
 
 const coreModes = [
@@ -176,6 +184,72 @@ const moreModes = [
     label: "微挑战",
     desc: "每天一个5分钟可完成的小挑战",
     icon: Target,
+  },
+  {
+    name: "WEIBO",
+    label: "微博热搜",
+    desc: "实时热搜话题与头条要闻",
+    icon: TrendingUp,
+  },
+  {
+    name: "ZHIHU",
+    label: "知乎热榜",
+    desc: "全站高热问题与高质量讨论",
+    icon: HelpCircle,
+  },
+  {
+    name: "BILIBILI",
+    label: "B站热门",
+    desc: "热门视频与创作者榜单",
+    icon: Tv,
+  },
+  {
+    name: "BAIDU",
+    label: "百度热搜",
+    desc: "即时热搜事件与搜索风云榜",
+    icon: Search,
+  },
+  {
+    name: "DOUYIN",
+    label: "抖音热点",
+    desc: "短视频流行热点与文化潮流",
+    icon: Music,
+  },
+  {
+    name: "NETEASE",
+    label: "网易云热歌",
+    desc: "热歌飙升榜与热门新歌",
+    icon: Headphones,
+  },
+  {
+    name: "TECH_NEWS",
+    label: "科技快讯",
+    desc: "精选36氪、少数派与IT之家",
+    icon: Cpu,
+  },
+  {
+    name: "WECHAT_HOT",
+    label: "微信热榜",
+    desc: "微信公众平台精选热点要闻",
+    icon: MessageCircle,
+  },
+  {
+    name: "GITHUB_TRENDING",
+    label: "GitHub 趋势",
+    desc: "全球高星开源项目与开发者趋势",
+    icon: Github,
+  },
+  {
+    name: "TIEBA",
+    label: "贴吧热议",
+    desc: "百度贴吧圈子热帖与网络热梗",
+    icon: MessageSquare,
+  },
+  {
+    name: "HOTLIST",
+    label: "全网热点",
+    desc: "多平台跨源热榜聚合看板",
+    icon: Flame,
   },
 ];
 
