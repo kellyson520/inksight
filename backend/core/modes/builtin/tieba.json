@@ -1,0 +1,101 @@
+{
+  "mode_id": "TIEBA",
+  "display_name": "贴吧热议",
+  "icon": "message-square",
+  "cacheable": true,
+  "description": "实时抓取百度贴吧热议榜、兴趣圈子讨论与高热互联网流行梗",
+  "settings_schema": [
+    {
+      "key": "style",
+      "label": "排版样式",
+      "type": "select",
+      "default": "dense_grid",
+      "options": [
+        { "value": "dense_grid", "label": "双列高密度看板(前8项)" },
+        { "value": "cover_card", "label": "图文展示精选(头条焦点+双列)" },
+        { "value": "editorial", "label": "杂志焦点头条精选" },
+        { "value": "classic", "label": "精致胶囊单列排行" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "tieba",
+    "style": "dense_grid",
+    "fallback": {
+      "platform_title": "百度贴吧热议榜",
+      "style_badge": "贴吧热议",
+      "update_time": "实时",
+      "item_1": "1. 科学家在常温超导与量子计算领域取得新突破",
+      "item_2": "2. 人工智能重塑数字生产力与前沿工作流",
+      "item_3": "3. 深空探测器传回太阳系边缘超高清影像",
+      "item_4": "4. 建立健康生活节奏与专注习惯实践指南",
+      "item_5": "5. 本周精选科技前沿观察与开源创新项目",
+      "item_6": "6. 探索新一代低功耗电子墨水屏技术前沿",
+      "item_7": "7. 全球气候与能源转型前沿动态盘点",
+      "item_8": "8. 数字生活极简主义与心智专注力重塑"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "blue",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 5
+          },
+          {
+            "type": "badge",
+            "field": "style_badge",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "hotlist_board"
+      }
+    ],
+    "footer": {
+      "label": "百度贴吧热议",
+      "attribution_template": "更新于 {update_time}"
+    }
+  }
+}

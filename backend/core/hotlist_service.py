@@ -6,6 +6,7 @@ InkSight 全网热点聚合核心基础设施 (Hotlist Infrastructure Service)
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta
 import json
 import logging
 import time
@@ -725,17 +726,21 @@ class HotlistService:
                     return items
 
         elif platform == "github":
-            url = "https://api.github.com/search/repositories?q=stars:>1000+pushed:>2026-08-01&sort=stars&order=desc&per_page=12"
+            cutoff_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+            url = f"https://api.github.com/search/repositories?q=stars:>500+pushed:>{cutoff_date}&sort=stars&order=desc&per_page=16"
             r = await client.get(url, headers={"User-Agent": _BROWSER_UA, "Accept": "application/vnd.github.v3+json"}, timeout=4.0)
             if r.status_code == 200:
                 repos = r.json().get("items", [])
                 items = []
                 for repo in repos:
-                    name = repo.get("full_name")
+                    name = repo.get("full_name", "").strip()
+                    desc = (repo.get("description") or "").strip()
                     stars = repo.get("stargazers_count")
                     hot = f"★ {_format_hot_value(stars)}" if stars else ""
-                    if name and not any(it["title"] == name for it in items):
-                        items.append({"title": name, "hot": hot, "platform": platform, "platform_name": plat_name})
+                    cover = (repo.get("owner") or {}).get("avatar_url") or ""
+                    title = f"{name}: {desc}" if desc else name
+                    if name and not any(it["title"].startswith(name) for it in items):
+                        items.append({"title": title, "hot": hot, "platform": platform, "platform_name": plat_name, "cover_url": cover})
                     if len(items) >= limit:
                         break
                 if items:

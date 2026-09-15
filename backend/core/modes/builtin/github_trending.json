@@ -1,0 +1,101 @@
+{
+  "mode_id": "GITHUB_TRENDING",
+  "display_name": "GitHub 趋势",
+  "icon": "github",
+  "cacheable": true,
+  "description": "实时抓取 GitHub 全球热门开源项目、高星趋势代码库与开发者活跃脉搏，支持头像封面图文大卡展示",
+  "settings_schema": [
+    {
+      "key": "style",
+      "label": "排版样式",
+      "type": "select",
+      "default": "dense_grid",
+      "options": [
+        { "value": "dense_grid", "label": "双列高密度看板(前8项)" },
+        { "value": "cover_card", "label": "图文展示精选(头条封面大卡+双列)" },
+        { "value": "editorial", "label": "杂志焦点头条精选" },
+        { "value": "classic", "label": "精致胶囊单列排行" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "github",
+    "style": "dense_grid",
+    "fallback": {
+      "platform_title": "GitHub 热门趋势",
+      "style_badge": "开源趋势",
+      "update_time": "实时",
+      "item_1": "1. inksight: 智能桌面墨水屏内容伴侣与开放生态系统",
+      "item_2": "2. fastapi: 现代高性能、生产级 Python Web 异步框架",
+      "item_3": "3. home-assistant: 隐私优先的开源全屋智能家居自动化中枢",
+      "item_4": "4. ollama: 极简一行命令在本地运行与调试开源大模型",
+      "item_5": "5. affine: 下一代开源多模态知识库与生产力协作平台",
+      "item_6": "6. n8n: 可自托管的灵活自动化工作流编排与集成平台",
+      "item_7": "7. vllm: 高吞吐量与极低内存占用的 LLM 推理与服务引擎",
+      "item_8": "8. invoke-ai: 专业级本地生成式人工智能与数字创意工作室"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "black",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 5
+          },
+          {
+            "type": "badge",
+            "field": "style_badge",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "hotlist_board"
+      }
+    ],
+    "footer": {
+      "label": "GitHub 热门开源趋势",
+      "attribution_template": "更新于 {update_time}"
+    }
+  }
+}

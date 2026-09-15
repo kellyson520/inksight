@@ -1,0 +1,101 @@
+{
+  "mode_id": "GITHUB_TRENDING",
+  "display_name": "GitHub Trending",
+  "icon": "github",
+  "cacheable": true,
+  "description": "Trending repositories, high-star open source projects, and developer momentum from GitHub.",
+  "settings_schema": [
+    {
+      "key": "style",
+      "label": "Layout Style",
+      "type": "select",
+      "default": "dense_grid",
+      "options": [
+        { "value": "dense_grid", "label": "Dense Two-Column Cards (Top 8)" },
+        { "value": "cover_card", "label": "Cover Card & Illustrated List" },
+        { "value": "editorial", "label": "Editorial Focus Magazine" },
+        { "value": "classic", "label": "Classic Pill Rank List" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "github",
+    "style": "dense_grid",
+    "fallback": {
+      "platform_title": "GitHub Trending",
+      "style_badge": "Open Source",
+      "update_time": "Live",
+      "item_1": "1. inksight: Smart desktop e-ink companion and open ecosystem",
+      "item_2": "2. fastapi: Modern high-performance async Web framework for Python",
+      "item_3": "3. home-assistant: Open source home automation with local control",
+      "item_4": "4. ollama: Run and customize open-source LLMs locally with ease",
+      "item_5": "5. affine: Next-gen knowledge base and collaborative workspace",
+      "item_6": "6. n8n: Fair-code workflow automation and system integration tool",
+      "item_7": "7. vllm: High-throughput and memory-efficient LLM inference engine",
+      "item_8": "8. invoke-ai: Professional local generative AI creation suite"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "black",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 5
+          },
+          {
+            "type": "badge",
+            "field": "style_badge",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "hotlist_board"
+      }
+    ],
+    "footer": {
+      "label": "GitHub Trending Projects",
+      "attribution_template": "Updated at {update_time}"
+    }
+  }
+}

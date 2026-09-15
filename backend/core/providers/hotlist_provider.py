@@ -33,6 +33,9 @@ async def generate_hotlist(
         "BAIDU": "baidu",
         "DOUYIN": "douyin",
         "NETEASE": "netease",
+        "WECHAT_HOT": "wechat",
+        "GITHUB_TRENDING": "github",
+        "TIEBA": "tieba",
         "TECH_NEWS": ["36kr", "ithome", "sspai", "github"],
     }
 

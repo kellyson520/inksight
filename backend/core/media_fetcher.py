@@ -165,6 +165,10 @@ class MediaFetcher:
             return "https://sspai.com/"
         if "ithome.com" in host:
             return "https://www.ithome.com/"
+        if "gtimg.com" in host or "qq.com" in host:
+            return "https://news.qq.com/"
+        if "githubusercontent.com" in host or "github.com" in host:
+            return "https://github.com/"
         return f"{parsed.scheme}://{parsed.netloc}/"
 
     @staticmethod

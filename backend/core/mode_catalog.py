@@ -286,6 +286,9 @@ BUILTIN_CATALOG: list[CatalogItem] = [
     CatalogItem(mode_id="DOUYIN", category="more", zh=CatalogText(name="抖音热点", tip="抖音短视频全网流行热点与社会风向"), en=CatalogText(name="Douyin Trends", tip="Douyin viral short video topics and cultural trends")),
     CatalogItem(mode_id="NETEASE", category="more", zh=CatalogText(name="网易云热歌", tip="网易云音乐飙升榜与热门新歌风向标"), en=CatalogText(name="Netease Music", tip="NetEase Cloud Music soaring charts and trending songs")),
     CatalogItem(mode_id="TECH_NEWS", category="more", zh=CatalogText(name="科技快讯", tip="精选36氪、少数派、IT之家与GitHub趋势"), en=CatalogText(name="Tech Highlights", tip="Curated technology news from 36Kr, SSPAI, ITHome, and GitHub")),
+    CatalogItem(mode_id="WECHAT_HOT", category="more", zh=CatalogText(name="微信热榜", tip="微信公众号与腾讯实时精选热点事件"), en=CatalogText(name="WeChat Top News", tip="Real-time trending articles and social buzz from WeChat")),
+    CatalogItem(mode_id="GITHUB_TRENDING", category="more", zh=CatalogText(name="GitHub 趋势", tip="GitHub 实时热门开源项目与高星趋势"), en=CatalogText(name="GitHub Trending", tip="Trending repositories and developer momentum on GitHub")),
+    CatalogItem(mode_id="TIEBA", category="more", zh=CatalogText(name="贴吧热议", tip="百度贴吧兴趣圈子热议与流行网络热梗"), en=CatalogText(name="Tieba Hot Topics", tip="Baidu Tieba community trending discussions and forum buzz")),
 ]
 
 

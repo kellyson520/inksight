@@ -229,7 +229,10 @@ export default function ExperiencePage() {
         targetMode === "BAIDU" ||
         targetMode === "DOUYIN" ||
         targetMode === "NETEASE" ||
-        targetMode === "TECH_NEWS"
+        targetMode === "TECH_NEWS" ||
+        targetMode === "WECHAT_HOT" ||
+        targetMode === "GITHUB_TRENDING" ||
+        targetMode === "TIEBA"
       ) {
         delete mergedOverride.platforms;
         delete mergedOverride.platform;
@@ -378,7 +381,10 @@ export default function ExperiencePage() {
       modeId === "BAIDU" ||
       modeId === "DOUYIN" ||
       modeId === "NETEASE" ||
-      modeId === "TECH_NEWS"
+      modeId === "TECH_NEWS" ||
+      modeId === "WECHAT_HOT" ||
+      modeId === "GITHUB_TRENDING" ||
+      modeId === "TIEBA"
     ) {
       if (override.style) {
         setHotlistStyle(String(override.style));

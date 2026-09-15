@@ -1,0 +1,101 @@
+{
+  "mode_id": "WECHAT_HOT",
+  "display_name": "微信热榜",
+  "icon": "message-circle",
+  "cacheable": true,
+  "description": "实时获取微信公众号与腾讯实时精选热点事件，呈现全民社交关注要闻与深度议题",
+  "settings_schema": [
+    {
+      "key": "style",
+      "label": "排版样式",
+      "type": "select",
+      "default": "cover_card",
+      "options": [
+        { "value": "cover_card", "label": "图文展示精选(头条封面大卡+双列)" },
+        { "value": "dense_grid", "label": "双列高密度看板(前8项)" },
+        { "value": "editorial", "label": "杂志焦点头条精选" },
+        { "value": "classic", "label": "精致胶囊单列排行" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "hotlist",
+    "platform": "wechat",
+    "style": "cover_card",
+    "fallback": {
+      "platform_title": "微信实时热点榜",
+      "style_badge": "社交精选",
+      "update_time": "实时",
+      "item_1": "1. 全球科技前沿观察与最新突破",
+      "item_2": "2. 人工智能助力数字创意与前沿设计",
+      "item_3": "3. 探索健康生活节奏与专注工作指南",
+      "item_4": "4. 精选深度好文与本周热议议题总结",
+      "item_5": "5. 新一代低功耗墨水屏硬件探索",
+      "item_6": "6. 纪录片精选：极地气象与生态变迁",
+      "item_7": "7. 全球气候与能源转型动态盘点",
+      "item_8": "8. 心智专注力与极简生活方式实践"
+    }
+  },
+  "layout": {
+    "body_align": "left",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "flex_row",
+        "justify": "space_between",
+        "align_items": "center",
+        "gap": 8,
+        "items": [
+          {
+            "type": "badge",
+            "field": "platform_title",
+            "variant": "solid",
+            "bg_color": "green",
+            "color": "white",
+            "font_size": 13,
+            "padding_x": 10,
+            "padding_y": 3,
+            "radius": 5
+          },
+          {
+            "type": "badge",
+            "field": "style_badge",
+            "variant": "outline",
+            "font_size": 11,
+            "padding_x": 6,
+            "padding_y": 2,
+            "radius": 4
+          }
+        ]
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "separator",
+        "line_width": 1,
+        "dashed": true
+      },
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "hotlist_board"
+      }
+    ],
+    "footer": {
+      "label": "微信实时热榜",
+      "attribution_template": "更新于 {update_time}"
+    }
+  }
+}

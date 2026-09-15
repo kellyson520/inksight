@@ -125,11 +125,11 @@ export function PaginatedModeSection({
                     <span className="text-[10px] px-1 py-0.2 rounded bg-orange-100 text-orange-700 font-medium shrink-0">
                       多源
                     </span>
-                  ) : m === "BILIBILI" || m === "NETEASE" ? (
+                  ) : m === "BILIBILI" || m === "NETEASE" || m === "WECHAT_HOT" ? (
                     <span className="text-[10px] px-1 py-0.2 rounded bg-purple-100 text-purple-700 font-medium shrink-0">
                       图文
                     </span>
-                  ) : m === "WEIBO" || m === "ZHIHU" || m === "BAIDU" || m === "DOUYIN" || m === "TECH_NEWS" ? (
+                  ) : m === "WEIBO" || m === "ZHIHU" || m === "BAIDU" || m === "DOUYIN" || m === "TECH_NEWS" || m === "GITHUB_TRENDING" || m === "TIEBA" ? (
                     <span className="text-[10px] px-1 py-0.2 rounded bg-blue-100 text-blue-700 font-medium shrink-0">
                       实时
                     </span>

@@ -55,6 +55,8 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   WEIBO: "news",
   ZHIHU: "news",
   BAIDU: "news",
+  WECHAT_HOT: "news",
+  TIEBA: "news",
   DISASTER_ALERT: "news",
   RSS: "news",
   CRYPTO: "news",
@@ -67,6 +69,7 @@ const STUDIO_CATEGORIES_CONFIG: Record<string, StudioTab> = {
   WEB_NOTICE: "news",
   // 效率工作
   TECH_NEWS: "productivity",
+  GITHUB_TRENDING: "productivity",
   TODO: "productivity",
   TIMETABLE: "productivity",
   CALENDAR: "productivity",

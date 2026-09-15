@@ -43,6 +43,8 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "WEIBO": "news",
     "ZHIHU": "news",
     "BAIDU": "news",
+    "WECHAT_HOT": "news",
+    "TIEBA": "news",
     "DISASTER_ALERT": "news",
     "WEB_NOTICE": "news",
     "RSS": "news",
@@ -52,6 +54,7 @@ MODE_TO_STUDIO_CATEGORY: dict[str, str] = {
     "MARKET": "news",
     # 效率工作
     "TECH_NEWS": "productivity",
+    "GITHUB_TRENDING": "productivity",
     "TODO": "productivity",
     "TIMETABLE": "productivity",
     "CALENDAR": "productivity",

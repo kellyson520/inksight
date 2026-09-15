@@ -50,6 +50,7 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   MIHOMO_SUB: "productivity",
   WEBHOOK: "productivity",
   TECH_NEWS: "productivity", // 科技快讯 (36氪/少数派/IT之家/GitHub)
+  GITHUB_TRENDING: "productivity", // GitHub 开源趋势热榜
 
   // 资讯 (News & Alerts)
   BRIEFING: "news",
@@ -57,6 +58,8 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   WEIBO: "news", // 微博热搜
   ZHIHU: "news", // 知乎热榜
   BAIDU: "news", // 百度热搜
+  WECHAT_HOT: "news", // 微信实时热榜
+  TIEBA: "news", // 百度贴吧热议
   DISASTER_ALERT: "news",
   WEB_NOTICE: "news",
   RSS: "news",
@@ -103,6 +106,9 @@ export const CONFIGURABLE_MODES: Record<string, string> = {
   DOUYIN: "hotlist",
   NETEASE: "hotlist",
   TECH_NEWS: "hotlist",
+  WECHAT_HOT: "hotlist",
+  GITHUB_TRENDING: "hotlist",
+  TIEBA: "hotlist",
   DISASTER_ALERT: "disaster",
   WEATHER: "weather",
   MEMO: "memo",

@@ -102,6 +102,9 @@ export function ModeConfigModal({
         if (modal.modeId === "DOUYIN") return locale === "zh" ? "抖音实时热点 · 排版样式设置" : "Douyin Trends Settings";
         if (modal.modeId === "NETEASE") return locale === "zh" ? "网易云音乐热歌 · 图文排版设置" : "Netease Music Settings";
         if (modal.modeId === "TECH_NEWS") return locale === "zh" ? "科技数码快讯 · 排版样式设置" : "Tech Highlights Settings";
+        if (modal.modeId === "WECHAT_HOT") return locale === "zh" ? "微信实时热榜 · 图文排版设置" : "WeChat Trending Settings";
+        if (modal.modeId === "GITHUB_TRENDING") return locale === "zh" ? "GitHub 热门趋势 · 排版样式设置" : "GitHub Trending Settings";
+        if (modal.modeId === "TIEBA") return locale === "zh" ? "百度贴吧热议 · 排版样式设置" : "Tieba Hot Topics Settings";
         return locale === "zh" ? "全网热点 · 多平台多选与聚合" : "Trending Topics Configuration";
       case "disaster":
         return locale === "zh" ? "自然灾害预警 · 四级预警体验" : "Disaster Warning Alert Experience";

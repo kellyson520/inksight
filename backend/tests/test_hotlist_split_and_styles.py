@@ -110,7 +110,7 @@ def test_hotlist_board_renders_editorial_and_cover_card():
 def test_standalone_hotlist_modes_in_registry():
     """Verify new standalone hotlist modes are registered in ModeRegistry."""
     reg = get_registry()
-    for mode_id in ["WEIBO", "ZHIHU", "BILIBILI", "BAIDU", "DOUYIN", "NETEASE", "TECH_NEWS"]:
+    for mode_id in ["WEIBO", "ZHIHU", "BILIBILI", "BAIDU", "DOUYIN", "NETEASE", "TECH_NEWS", "WECHAT_HOT", "GITHUB_TRENDING", "TIEBA"]:
         mode_def = reg.get_json_mode(mode_id)
         assert mode_def is not None, f"Mode {mode_id} must be registered"
         assert mode_def.definition.get("content", {}).get("provider") == "hotlist"
