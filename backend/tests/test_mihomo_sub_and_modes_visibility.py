@@ -323,11 +323,13 @@ def test_mihomo_multi_layout_channel_cards_are_compact():
     cards = mode["layout"]["body"][1]["conditions"][0]["children"]
     channel_cards = [cards[2], cards[4]]
     for card in channel_cards:
-        rows = [child for child in card["children"] if child.get("type") == "flex_row"]
-        assert len(rows) == 2
-        assert rows[0]["justify"] == "space-between"
-        assert rows[1]["justify"] == "space-between"
-        assert "expire_short_badge" in str(rows[1])
+        header = card["children"][0]
+        assert header["type"] == "flex_row"
+        assert header["justify"] == "space-between"
+        assert "expire_short_badge" in str(header)
+        # 验证卡片内不会再次重复 expire_short_badge
+        other_children = card["children"][1:]
+        assert not any("expire_short_badge" in str(c) for c in other_children), "expire_short_badge must not be duplicated in channel card"
 
 
 def test_mihomo_expiry_is_kept_in_channel_header_row():

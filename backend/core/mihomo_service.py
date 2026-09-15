@@ -62,13 +62,16 @@ def _parse_reset_days_text(text: str, now_dt: datetime.datetime | None = None) -
     """Parse provider-specific reset countdown/date markers from subscription text."""
     if not text:
         return None
-    # 1. "还有 5 天重置", "剩余 5 天重置"
-    m_before = re.search(r"(?:还有|剩余)[^\d]{0,10}(\d+)\s*天\s*重置", text)
+
+    now = now_dt or datetime.datetime.now()
+
+    # 1. 精确匹配 "还有 5 天重置", "剩余 5 天重置", "距离重置还有 3 天"
+    m_before = re.search(r"(?:还有|剩余|距离[^\d]{0,10})[^\d]{0,10}(\d+)\s*天[^\d]{0,6}重置", text, re.IGNORECASE)
     if m_before:
         return int(m_before.group(1))
 
-    # 2. "重置还有 5 天", "reset in 5 days", "重置: 5天"
-    m_after = re.search(r"(?:重置|reset)[^\d]{0,30}(\d+)\s*(?:天|day|days)?", text, re.IGNORECASE)
+    # 2. "重置还有 5 天", "reset in 5 days", "重置剩余 5 天", "重置倒计时: 5天", "重置: 5天"
+    m_after = re.search(r"(?:重置|reset)[^\d]{0,15}(?:还有|剩余|倒计时|in|:|\s)[^\d]{0,6}(\d+)\s*(?:天|day|days)?", text, re.IGNORECASE)
     if m_after:
         return int(m_after.group(1))
 
@@ -77,30 +80,35 @@ def _parse_reset_days_text(text: str, now_dt: datetime.datetime | None = None) -
     if m_en:
         return int(m_en.group(1))
 
-    # 4. "每月 15 日重置" 或 "每月15号重置"
-    m_monthly = re.search(r"每月\s*(\d{1,2})\s*(?:日|号)\s*重置", text)
+    # 4. 显式月重置日模式：如 "每月 15 日重置", "每月15号重置", "15号重置", "15日重置", "每月 15 号", "Reset on 15th"
+    m_monthly = re.search(r"(?:每月\s*(\d{1,2})\s*(?:日|号)\s*重置|每月\s*(\d{1,2})\s*(?:日|号)|(\d{1,2})\s*(?:日|号)\s*重置|reset\s*(?:on|every)?\s*(\d{1,2})(?:st|nd|rd|th)?)", text, re.IGNORECASE)
     if m_monthly:
-        target_day = int(m_monthly.group(1))
+        matched_str = next(g for g in m_monthly.groups() if g is not None)
+        target_day = int(matched_str)
         if 1 <= target_day <= 31:
-            now = now_dt or datetime.datetime.now()
             curr_y = now.year
             curr_m = now.month
-            try:
-                cand = datetime.date(curr_y, curr_m, target_day)
-            except ValueError:
-                _, max_day = calendar.monthrange(curr_y, curr_m)
-                cand = datetime.date(curr_y, curr_m, min(target_day, max_day))
-            if cand >= now.date():
-                return (cand - now.date()).days
+            _, max_curr = calendar.monthrange(curr_y, curr_m)
+            cand_curr_day = min(target_day, max_curr)
+            cand_curr = datetime.date(curr_y, curr_m, cand_curr_day)
+
+            if cand_curr > now.date():
+                return (cand_curr - now.date()).days
+            elif cand_curr == now.date():
+                return 0
             else:
                 next_y = curr_y + (1 if curr_m == 12 else 0)
                 next_m = 1 if curr_m == 12 else curr_m + 1
-                try:
-                    cand = datetime.date(next_y, next_m, target_day)
-                except ValueError:
-                    _, max_day = calendar.monthrange(next_y, next_m)
-                    cand = datetime.date(next_y, next_m, min(target_day, max_day))
-                return (cand - now.date()).days
+                _, max_next = calendar.monthrange(next_y, next_m)
+                cand_next_day = min(target_day, max_next)
+                cand_next = datetime.date(next_y, next_m, cand_next_day)
+                return (cand_next - now.date()).days
+
+    # 5. 常规 "X天重置"
+    m_general = re.search(r"(\d+)\s*天\s*重置", text)
+    if m_general:
+        return int(m_general.group(1))
+
     return None
 
 
@@ -140,15 +148,18 @@ def format_subscription_summary(
         rem_color = "black"
 
     if reset_days is not None:
-        reset_badge = f"还有 {int(reset_days)} 天重置"
+        if reset_days == 0:
+            reset_badge = "今日重置"
+        else:
+            reset_badge = f"还有 {int(reset_days)} 天重置"
     else:
         curr_y = now_dt.year
         curr_m = now_dt.month
-        next_m_1st = datetime.datetime(curr_y + (1 if curr_m == 12 else 0), 1 if curr_m == 12 else curr_m + 1, 1)
-        days_to_1st = max(0, (next_m_1st.date() - now_dt.date()).days)
         if now_dt.day == 1:
             reset_badge = "今日重置 (1日)"
         else:
+            next_m_1st = datetime.datetime(curr_y + (1 if curr_m == 12 else 0), 1 if curr_m == 12 else curr_m + 1, 1)
+            days_to_1st = max(0, (next_m_1st.date() - now_dt.date()).days)
             reset_badge = f"每月 1 日重置 (剩{days_to_1st}天)"
 
     exp_str = "长期有效"
@@ -240,24 +251,58 @@ def _resolve_active_egress(proxies: dict[str, dict[str, Any]]) -> str:
     return _clean_node_name(current)
 
 
-def _resolve_reset_days(subscription_info: dict[str, Any], proxies: list[dict[str, Any]]) -> int | None:
+def _resolve_reset_days(subscription_info: dict[str, Any], proxies: list[dict[str, Any]], now_dt: datetime.datetime | None = None) -> int | None:
     """Extract reset countdown belonging to this subscription only."""
+    now = now_dt or datetime.datetime.now()
     if isinstance(subscription_info, dict):
+        # 1. 检查 reset / ResetDays
         for key in ("Reset", "reset", "ResetDays", "reset_days"):
             value = subscription_info.get(key)
-            try:
-                numeric = int(value)
-                if numeric > 1_000_000_000:
-                    return max(0, (datetime.datetime.fromtimestamp(numeric).date() - datetime.datetime.now().date()).days)
-                if numeric >= 0:
-                    return numeric
-            except (TypeError, ValueError, OverflowError):
-                pass
+            if value is not None:
+                try:
+                    numeric = int(value)
+                    if numeric > 1_000_000_000:
+                        # 秒级绝对时间戳
+                        exp_date = datetime.datetime.fromtimestamp(numeric).date()
+                        return max(0, (exp_date - now.date()).days)
+                    if 0 <= numeric <= 365:
+                        return numeric
+                except (TypeError, ValueError, OverflowError):
+                    pass
+
+        # 2. 检查 reset_day (1~31 号的每月固定重置日)
+        for key in ("reset_day", "ResetDay", "resetDay"):
+            r_day_val = subscription_info.get(key)
+            if r_day_val is not None:
+                try:
+                    target_day = int(r_day_val)
+                    if 1 <= target_day <= 31:
+                        curr_y = now.year
+                        curr_m = now.month
+                        _, max_curr = calendar.monthrange(curr_y, curr_m)
+                        cand_curr_day = min(target_day, max_curr)
+                        cand_curr = datetime.date(curr_y, curr_m, cand_curr_day)
+                        if cand_curr > now.date():
+                            return (cand_curr - now.date()).days
+                        elif cand_curr == now.date():
+                            return 0
+                        else:
+                            next_y = curr_y + (1 if curr_m == 12 else 0)
+                            next_m = 1 if curr_m == 12 else curr_m + 1
+                            _, max_next = calendar.monthrange(next_y, next_m)
+                            cand_next_day = min(target_day, max_next)
+                            cand_next = datetime.date(next_y, next_m, cand_next_day)
+                            return (cand_next - now.date()).days
+                except (TypeError, ValueError):
+                    pass
+
+    # 3. 从节点名提取（许多机场在节点列表中包含 "距离下次重置还有X天" 或 "每月15号重置" 的提示节点）
     for proxy in proxies or []:
         name = str(proxy.get("name", ""))
-        match = re.search(r"(?:重置.*?|剩余[^\d]*)(\d+)\s*天", name)
-        if match:
-            return int(match.group(1))
+        parsed_days = _parse_reset_days_text(name, now_dt=now)
+        if parsed_days is not None:
+            return parsed_days
+
     return None
 
 

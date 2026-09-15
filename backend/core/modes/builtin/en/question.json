@@ -26,7 +26,49 @@
       "question": "What would you do today if no one was watching?",
       "context_note": "Authenticity begins with honest self-reflection",
       "category": "Self"
-    }
+    },
+    "fallback_pool": [
+      {
+        "question": "When was the last time you genuinely changed your mind?",
+        "context_note": "Changing your mind is a sign of mental growth",
+        "category": "Self"
+      },
+      {
+        "question": "What would you do today if no one was watching?",
+        "context_note": "Solitary choices reveal your true desires",
+        "category": "Self"
+      },
+      {
+        "question": "What is something you persist in doing out of mere habit?",
+        "context_note": "Examining inertia creates room for what matters",
+        "category": "Life"
+      },
+      {
+        "question": "If you could send a one-sentence message to yourself 10 years ago?",
+        "context_note": "Reflecting on the journey distills real wisdom",
+        "category": "Life"
+      },
+      {
+        "question": "Which single task today could bring the greatest fulfillment?",
+        "context_note": "Small positive feedback sustains deep focus",
+        "category": "Work"
+      },
+      {
+        "question": "If you had to describe your current life as an object, what is it?",
+        "context_note": "Metaphors uncover subconscious clarity",
+        "category": "Creativity"
+      },
+      {
+        "question": "What sincere compliment have you offered to someone recently?",
+        "context_note": "Authentic appreciation gently illuminates both sides",
+        "category": "Relationships"
+      },
+      {
+        "question": "What current obstacle might actually be an unexpected doorway?",
+        "context_note": "Reframing challenges reveals hidden paths",
+        "category": "Work"
+      }
+    ]
   },
   "layout": {
     "status_bar": {

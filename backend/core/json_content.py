@@ -926,7 +926,10 @@ async def generate_json_mode_content(
             elif mode_id in ("RIDDLE", "QUESTION"):
                 recent_questions = await get_recent_content_field_values(dedup_mac, mode_id, ("question",), limit=20)
                 if recent_questions:
-                    first_attempt_hint = "\n请绝对避免出以下近期出过的谜题/问题：" + "；".join(recent_questions[:6])
+                    if language == "en":
+                        first_attempt_hint = "\nStrictly avoid asking these recent questions:\n- " + "\n- ".join(recent_questions[:8])
+                    else:
+                        first_attempt_hint = "\n请绝对避免出以下近期出过的谜题/问题：\n- " + "\n- ".join(recent_questions[:8])
             elif mode_id == "LETTER":
                 recent_letters = await get_recent_content_field_values(dedup_mac, mode_id, ("sender", "body"), limit=15)
                 if recent_letters:
