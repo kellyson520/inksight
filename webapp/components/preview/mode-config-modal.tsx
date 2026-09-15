@@ -166,13 +166,17 @@ export function ModeConfigModal({
           {modal.type === "hotlist" ? (
             <HotlistConfig
               modeId={modal.modeId}
-              initialPlatforms={initialHotlistPlatforms}
+              initialPlatforms={modal.modeId === "HOTLIST" ? initialHotlistPlatforms : []}
               initialStyle={initialHotlistStyle}
               locale={locale}
               previewLoading={previewLoading}
               onClose={onClose}
               onSubmit={async (platforms, style) => {
-                await onSubmit(modal.modeId, { platforms, style });
+                if (modal.modeId === "HOTLIST") {
+                  await onSubmit("HOTLIST", { platforms, style });
+                } else {
+                  await onSubmit(modal.modeId, { style });
+                }
               }}
             />
           ) : modal.type === "disaster" ? (

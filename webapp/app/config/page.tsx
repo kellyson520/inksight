@@ -2844,12 +2844,12 @@ function ConfigPageInner() {
                     onClose={() => setActiveConfigModal(null)}
                     onSubmit={handleModeConfigSubmit}
                     initialHotlistPlatforms={
-                      (modeOverrides[activeConfigModal?.modeId || "HOTLIST"]?.platforms as string[]) ||
-                      (modeOverrides["HOTLIST"]?.platforms as string[]) || ["netease", "douban", "douyin", "wechat"]
+                      activeConfigModal?.modeId === "HOTLIST"
+                        ? ((modeOverrides["HOTLIST"]?.platforms as string[]) || ["zhihu", "weibo", "bilibili"])
+                        : []
                     }
                     initialHotlistStyle={
-                      (modeOverrides[activeConfigModal?.modeId || "HOTLIST"]?.style as string) ||
-                      (modeOverrides["HOTLIST"]?.style as string) || "dense_grid"
+                      (modeOverrides[activeConfigModal?.modeId || "HOTLIST"]?.style as string) || "dense_grid"
                     }
                     initialDisasterLevel={
                       (modeOverrides["DISASTER_ALERT"]?.level as string) || "red"

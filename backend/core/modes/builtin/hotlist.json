@@ -9,7 +9,7 @@
       "key": "platforms",
       "label": "热榜平台(可多选)",
       "type": "multiselect",
-      "default": ["netease", "douban", "douyin", "wechat"],
+      "default": ["zhihu", "weibo", "bilibili"],
       "options": [
         { "value": "netease", "label": "网易云音乐热歌榜" },
         { "value": "douban", "label": "豆瓣电影热门榜" },

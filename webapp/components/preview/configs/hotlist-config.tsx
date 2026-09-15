@@ -158,7 +158,11 @@ export function HotlistConfig({
             size="sm"
             onClick={async () => {
               onClose();
-              await onSubmit(platforms, style);
+              if (isStandalone) {
+                await onSubmit([], style);
+              } else {
+                await onSubmit(platforms, style);
+              }
             }}
             disabled={previewLoading}
             className="bg-ink text-white hover:bg-ink/90"

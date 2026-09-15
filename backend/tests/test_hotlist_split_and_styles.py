@@ -114,3 +114,68 @@ def test_standalone_hotlist_modes_in_registry():
         mode_def = reg.get_json_mode(mode_id)
         assert mode_def is not None, f"Mode {mode_id} must be registered"
         assert mode_def.definition.get("content", {}).get("provider") == "hotlist"
+
+@pytest.mark.asyncio
+async def test_standalone_modes_immune_to_douban_interference():
+    """Verify standalone modes are 100% immune to external dirty overrides containing Douban or other platforms."""
+    from core.providers.hotlist_provider import generate_hotlist
+
+    dirty_config = {
+        "mode_overrides": {
+            "WEIBO": {"platforms": ["douban", "netease"]},
+            "BILIBILI": {"platforms": ["douban"]},
+            "NETEASE": {"platforms": ["douban", "wechat"]},
+            "TECH_NEWS": {"platforms": ["douban"]},
+            "HOTLIST": {"platforms": ["douban"]},
+        }
+    }
+
+    # 1. Test WEIBO with dirty Douban override
+    res_weibo = await generate_hotlist(
+        {"mode_id": "WEIBO"},
+        {"provider": "hotlist", "platform": "weibo"},
+        {},
+        config=dirty_config,
+    )
+    assert res_weibo["platform"] == "weibo"
+    assert res_weibo["platform_title"] == "微博实时热搜"
+    for item in res_weibo["items"]:
+        assert item["platform"] == "weibo"
+        assert "豆瓣" not in item.get("platform_name", "")
+
+    # 2. Test BILIBILI with dirty Douban override
+    res_bili = await generate_hotlist(
+        {"mode_id": "BILIBILI"},
+        {"provider": "hotlist", "platform": "bilibili"},
+        {},
+        config=dirty_config,
+    )
+    assert res_bili["platform"] == "bilibili"
+    assert res_bili["platform_title"] == "哔哩哔哩热门推荐"
+    for item in res_bili["items"]:
+        assert item["platform"] == "bilibili"
+        assert "豆瓣" not in item.get("platform_name", "")
+
+    # 3. Test NETEASE with dirty Douban override
+    res_netease = await generate_hotlist(
+        {"mode_id": "NETEASE"},
+        {"provider": "hotlist", "platform": "netease"},
+        {},
+        config=dirty_config,
+    )
+    assert res_netease["platform"] == "netease"
+    assert res_netease["platform_title"] == "网易云音乐热歌榜"
+    for item in res_netease["items"]:
+        assert item["platform"] == "netease"
+        assert "豆瓣" not in item.get("platform_name", "")
+
+    # 4. Test TECH_NEWS with dirty Douban override
+    res_tech = await generate_hotlist(
+        {"mode_id": "TECH_NEWS"},
+        {"provider": "hotlist", "platforms": ["36kr", "ithome", "sspai", "github"]},
+        {},
+        config=dirty_config,
+    )
+    for item in res_tech["items"]:
+        assert item["platform"] in ["36kr", "ithome", "sspai", "github"]
+        assert item["platform"] != "douban"

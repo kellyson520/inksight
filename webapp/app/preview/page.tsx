@@ -215,8 +215,14 @@ export default function ExperiencePage() {
 
       const mergedOverride: Record<string, unknown> = { ...(override || {}) };
 
-      if (
-        targetMode === "HOTLIST" ||
+      if (targetMode === "HOTLIST") {
+        if (!mergedOverride.platforms && !mergedOverride.platform) {
+          mergedOverride.platforms = hotlistPlatforms;
+        }
+        if (!mergedOverride.style) {
+          mergedOverride.style = hotlistStyle;
+        }
+      } else if (
         targetMode === "WEIBO" ||
         targetMode === "ZHIHU" ||
         targetMode === "BILIBILI" ||
@@ -225,9 +231,8 @@ export default function ExperiencePage() {
         targetMode === "NETEASE" ||
         targetMode === "TECH_NEWS"
       ) {
-        if (targetMode === "HOTLIST" && !mergedOverride.platforms && !mergedOverride.platform) {
-          mergedOverride.platforms = hotlistPlatforms;
-        }
+        delete mergedOverride.platforms;
+        delete mergedOverride.platform;
         if (!mergedOverride.style) {
           mergedOverride.style = hotlistStyle;
         }
@@ -359,8 +364,14 @@ export default function ExperiencePage() {
 
   // 接收配置表单提交
   const handleModalSubmit = async (modeId: string, override: Record<string, unknown>) => {
-    if (
-      modeId === "HOTLIST" ||
+    if (modeId === "HOTLIST") {
+      if (Array.isArray(override.platforms)) {
+        setHotlistPlatforms(override.platforms as string[]);
+      }
+      if (override.style) {
+        setHotlistStyle(String(override.style));
+      }
+    } else if (
       modeId === "WEIBO" ||
       modeId === "ZHIHU" ||
       modeId === "BILIBILI" ||
@@ -369,9 +380,6 @@ export default function ExperiencePage() {
       modeId === "NETEASE" ||
       modeId === "TECH_NEWS"
     ) {
-      if (Array.isArray(override.platforms)) {
-        setHotlistPlatforms(override.platforms as string[]);
-      }
       if (override.style) {
         setHotlistStyle(String(override.style));
       }

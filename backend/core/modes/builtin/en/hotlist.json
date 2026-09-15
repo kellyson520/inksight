@@ -9,7 +9,7 @@
       "key": "platforms",
       "label": "Trending Platforms (Multi-select)",
       "type": "multiselect",
-      "default": ["netease", "douban", "douyin", "wechat"],
+      "default": ["zhihu", "weibo", "bilibili"],
       "options": [
         { "value": "netease", "label": "NetEase Hot Songs" },
         { "value": "douban", "label": "Douban Top Movies" },
