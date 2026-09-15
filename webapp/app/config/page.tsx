@@ -1585,6 +1585,13 @@ function ConfigPageInner() {
     const { m, params, consumeNoCacheOnce } = buildPreviewParams(mode, forceNoCache, forcedModeOverride, clearSavedOverride);
     if (!m) return;
 
+    // 0 毫秒即刻视觉反馈：立即更新加载状态，绝不让用户处于无反馈等待中
+    setPreviewConfirm(null);
+    setPreviewCacheHit(null);
+    setPreviewLlmStatus(null);
+    setPreviewLoading(true);
+    setPreviewStatusText(tr("正在生成...", "Generating..."));
+
     if (mac && !confirmed) {
       try {
         const intentParams = new URLSearchParams(params);
@@ -1605,6 +1612,7 @@ function ConfigPageInner() {
             setShowInviteModal(true);
             setPendingPreviewMode(m);
             setPreviewStatusText(formatPreviewUsageText(intentData.usage_source));
+            setPreviewLoading(false);
             return;
           }
           if (!intentData.cache_hit && intentData.llm_mode_requires_quota) {
@@ -1614,17 +1622,13 @@ function ConfigPageInner() {
               forcedModeOverride,
               usageSource: intentData.usage_source,
             });
+            setPreviewLoading(false);
             return;
           }
         }
       } catch {}
     }
 
-    setPreviewConfirm(null);
-    setPreviewCacheHit(null);
-    setPreviewLlmStatus(null);
-    setPreviewLoading(true);
-    setPreviewStatusText(tr("正在生成...", "Generating..."));
     try {
       previewStreamRef.current?.close();
       const stream = new EventSource(`/api/preview/stream?${params.toString()}`);
@@ -2121,6 +2125,7 @@ function ConfigPageInner() {
 
   const handleModePreview = (m: string) => {
     const modeId = (m || "").toUpperCase();
+    if (!modeId) return;
     setPreviewMode(modeId);
     if (modeId === "MY_ADAPTIVE") {
       setAdaptiveModal({ action: "preview" });
@@ -2130,6 +2135,9 @@ function ConfigPageInner() {
       openParamModal(modeId, "preview");
       return;
     }
+    // 0 毫秒立即更新加载状态，确保卡片与预览面板即时反馈
+    setPreviewLoading(true);
+    setPreviewStatusText(tr("正在生成...", "Generating..."));
     // Config page preview should bypass cache so it:
     // - reflects latest overrides
     // - triggers quota deduction when applicable (quota is only deducted on cache miss)
@@ -2775,6 +2783,8 @@ function ConfigPageInner() {
                     previewWidth={previewWidth}
                     previewHeight={previewHeight}
                     onScreenSizeChange={(w, h) => { setPreviewWidth(w); setPreviewHeight(h); }}
+                    previewMode={previewMode}
+                    previewLoading={previewLoading}
                   />
 
                   <div ref={previewPanelRef} className="w-full min-w-0 lg:sticky lg:top-24">

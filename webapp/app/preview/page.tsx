@@ -325,9 +325,11 @@ export default function ExperiencePage() {
     const isSameMode = modeId === previewMode;
     setPreviewMode(modeId);
     setPreviewModeNameOverride(null);
+    setPreviewLoading(true);
 
     if (modeId === "MY_ADAPTIVE") {
       adaptiveFileInputRef.current?.click();
+      setPreviewLoading(false);
       return;
     }
 
@@ -506,6 +508,7 @@ export default function ExperiencePage() {
             customMeta={modeMeta}
             locale={locale}
             pageSize={8}
+            previewLoading={previewLoading}
           />
 
           {/* 二级子标题 2：更多丰富模式 */}
@@ -520,6 +523,7 @@ export default function ExperiencePage() {
             customMeta={modeMeta}
             locale={locale}
             pageSize={8}
+            previewLoading={previewLoading}
           />
 
           {/* 二级子标题 3：自定义与扩展模式 */}
@@ -534,6 +538,7 @@ export default function ExperiencePage() {
             customMeta={modeMeta}
             locale={locale}
             pageSize={8}
+            previewLoading={previewLoading}
             tailItem={
               <button
                 onClick={() => setShowCustomModeModal(true)}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Eye, Sliders, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Sliders, Loader2, type LucideIcon } from "lucide-react";
 import { CONFIGURABLE_MODES } from "./types";
 
 interface PaginatedModeSectionProps {
@@ -16,6 +16,7 @@ interface PaginatedModeSectionProps {
   tailItem?: ReactNode;
   locale: string;
   pageSize?: number;
+  previewLoading?: boolean;
 }
 
 export function PaginatedModeSection({
@@ -30,6 +31,7 @@ export function PaginatedModeSection({
   tailItem,
   locale,
   pageSize = 8,
+  previewLoading = false,
 }: PaginatedModeSectionProps) {
   const [page, setPage] = useState(0);
 
@@ -133,22 +135,35 @@ export function PaginatedModeSection({
               {/* 操作底栏 */}
               <div className="border-t border-ink/10 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 px-2 py-1 flex items-center justify-between gap-1">
                 <button
+                  type="button"
                   onClick={() => onPreview(m)}
-                  className={`text-[11px] font-medium flex items-center gap-1 transition-colors ${
-                    isCurrent ? "text-ink font-semibold" : "text-ink-light hover:text-ink"
+                  className={`text-[11px] font-medium flex items-center gap-1.5 py-0.5 px-1.5 -ml-1 rounded-sm transition-all active:scale-95 touch-manipulation cursor-pointer ${
+                    isCurrent ? "text-ink font-bold bg-ink/10 dark:bg-zinc-700/80" : "text-ink-light hover:text-ink hover:bg-ink/5"
                   }`}
+                  title={locale === "zh" ? "点击即时预览此模式" : "Click to preview"}
                 >
-                  <Eye size={13} />
-                  <span>{isCurrent ? (locale === "zh" ? "当前中" : "Active") : (locale === "zh" ? "预览" : "Preview")}</span>
+                  {isCurrent && previewLoading ? (
+                    <Loader2 size={13} className="animate-spin text-ink shrink-0" />
+                  ) : (
+                    <Eye size={13} className={`shrink-0 ${isCurrent ? "text-ink" : ""}`} />
+                  )}
+                  <span className="truncate">
+                    {isCurrent && previewLoading
+                      ? (locale === "zh" ? "生成中..." : "Generating...")
+                      : isCurrent
+                      ? (locale === "zh" ? "当前中" : "Active")
+                      : (locale === "zh" ? "预览" : "Preview")}
+                  </span>
                 </button>
 
                 {isConfigurable ? (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onConfigure(m);
                     }}
-                    className="text-[11px] text-ink-light hover:text-ink flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-ink/5 transition-colors"
+                    className="text-[11px] text-ink-light hover:text-ink flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-ink/5 transition-colors active:scale-95"
                     title={locale === "zh" ? "调整此模式参数" : "Configure parameters"}
                   >
                     <Sliders size={12} />

@@ -16,6 +16,7 @@ import {
   Check,
   Settings,
   Sliders,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ColorSelect } from "@/components/ui/color-select";
@@ -42,6 +43,8 @@ type ModeSelectorProps = {
   previewWidth?: number;
   previewHeight?: number;
   onScreenSizeChange?: (w: number, h: number) => void;
+  previewMode?: string;
+  previewLoading?: boolean;
 };
 
 type StudioTab = "all" | "life" | "productivity" | "news" | "media" | "studio";
@@ -126,6 +129,8 @@ export function ModeSelector({
   previewWidth = 400,
   previewHeight = 300,
   onScreenSizeChange,
+  previewMode = "",
+  previewLoading = false,
 }: ModeSelectorProps) {
   const [activeTab, setActiveTab] = useState<StudioTab>("all");
   const [keyword, setKeyword] = useState("");
@@ -223,25 +228,29 @@ export function ModeSelector({
             const meta = modeMeta[mode] || { name: mode, tip: "" };
             const isSelected = selectedModes.has(mode);
             const isConfigurable = Boolean(CONFIGURABLE_MODES[mode.toUpperCase()]);
+            const isCurrentPreview = (previewMode || "").toUpperCase() === mode.toUpperCase();
+            const isLoadingThis = Boolean(previewLoading && isCurrentPreview);
 
             return (
               <div
                 key={mode}
                 className={`group relative rounded-sm border transition-all flex flex-col justify-between overflow-hidden ${
-                  isSelected
+                  isCurrentPreview
+                    ? "border-ink dark:border-zinc-400 bg-paper-dark/80 dark:bg-zinc-800 ring-2 ring-ink/80 dark:ring-zinc-400 shadow-sm"
+                    : isSelected
                     ? "border-ink dark:border-zinc-500 bg-paper-dark/60 dark:bg-zinc-800/60 shadow-2xs"
                     : "border-ink/15 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-ink/40 dark:hover:border-zinc-700"
                 }`}
               >
-                {/* 卡片头部与说明 */}
+                {/* 卡片头部与说明：整块大区域均可点击触发预览 */}
                 <div
                   onClick={() => handleModePreview(mode)}
-                  className="p-3 cursor-pointer select-none flex-1 flex flex-col justify-between"
+                  className="p-3 cursor-pointer select-none flex-1 flex flex-col justify-between active:bg-paper-dark/40 transition-colors"
                   title={tr("点击在右侧即时渲染预览", "Click to preview on the right")}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-bold text-ink truncate">{meta.name}</span>
+                      <span className={`text-xs truncate ${isCurrentPreview ? "font-bold text-ink underline underline-offset-2" : "font-bold text-ink"}`}>{meta.name}</span>
                       <div className="flex items-center gap-1 shrink-0">
                         {isConfigurable && onOpenConfigModal ? (
                           <button
@@ -270,22 +279,37 @@ export function ModeSelector({
                   </div>
                 </div>
 
-                {/* 卡片底部操作按钮栏 */}
-                <div className="border-t border-ink/10 dark:border-zinc-800 bg-paper-light/70 dark:bg-zinc-950/70 px-2 py-1.5 flex items-center justify-between text-xs">
+                {/* 卡片底部操作按钮栏：左半侧大热区响应预览 */}
+                <div className="border-t border-ink/10 dark:border-zinc-800 bg-paper-light/70 dark:bg-zinc-950/70 px-2 py-1 flex items-center justify-between text-xs gap-1">
                   <button
                     type="button"
                     onClick={() => handleModePreview(mode)}
-                    className="text-ink-light hover:text-ink dark:hover:text-zinc-100 flex items-center gap-1 font-medium transition-colors"
+                    className={`flex items-center gap-1.5 py-1 px-1.5 -ml-1 rounded-sm font-medium transition-all active:scale-95 touch-manipulation cursor-pointer ${
+                      isCurrentPreview
+                        ? "text-ink font-bold bg-ink/10 dark:bg-zinc-700/80"
+                        : "text-ink-light hover:text-ink hover:bg-ink/5 dark:hover:text-zinc-100"
+                    }`}
+                    title={tr("点击即时渲染预览", "Click to preview")}
                   >
-                    <Eye size={12} />
-                    <span>{tr("预览", "Preview")}</span>
+                    {isLoadingThis ? (
+                      <Loader2 size={13} className="animate-spin text-ink shrink-0" />
+                    ) : (
+                      <Eye size={13} className={`shrink-0 ${isCurrentPreview ? "text-ink" : ""}`} />
+                    )}
+                    <span className="text-[11px] truncate">
+                      {isLoadingThis
+                        ? tr("生成中...", "Generating...")
+                        : isCurrentPreview
+                        ? tr("当前预览", "Previewing")
+                        : tr("预览", "Preview")}
+                    </span>
                   </button>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => handleModeApply(mode)}
-                      className={`px-2 py-0.5 rounded-sm text-[11px] font-semibold transition-colors ${
+                      className={`px-2 py-0.5 rounded-sm text-[11px] font-semibold transition-colors active:scale-95 ${
                         isSelected
                           ? "bg-ink/10 text-ink hover:bg-red-100 hover:text-red-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-950/60 dark:hover:text-red-400"
                           : "bg-ink text-white hover:bg-ink-light dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white dark:border dark:border-zinc-300"
@@ -303,23 +327,27 @@ export function ModeSelector({
           {displayedCustoms.map((mode) => {
             const meta = customModeMeta[mode] || { name: mode, tip: "" };
             const isSelected = selectedModes.has(mode);
+            const isCurrentPreview = (previewMode || "").toUpperCase() === mode.toUpperCase();
+            const isLoadingThis = Boolean(previewLoading && isCurrentPreview);
 
             return (
               <div
                 key={mode}
                 className={`group relative rounded-sm border transition-all flex flex-col justify-between overflow-hidden ${
-                  isSelected
+                  isCurrentPreview
+                    ? "border-ink dark:border-zinc-400 bg-paper-dark/80 dark:bg-zinc-800 ring-2 ring-ink/80 dark:ring-zinc-400 shadow-sm"
+                    : isSelected
                     ? "border-ink dark:border-zinc-500 bg-paper-dark/60 dark:bg-zinc-800/60 shadow-2xs"
                     : "border-ink/15 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-ink/40 dark:hover:border-zinc-700"
                 }`}
               >
                 <div
                   onClick={() => handleModePreview(mode)}
-                  className="p-3 cursor-pointer select-none flex-1 flex flex-col justify-between"
+                  className="p-3 cursor-pointer select-none flex-1 flex flex-col justify-between active:bg-paper-dark/40 transition-colors"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-bold text-ink truncate">{meta.name}</span>
+                      <span className={`text-xs truncate ${isCurrentPreview ? "font-bold text-ink underline underline-offset-2" : "font-bold text-ink"}`}>{meta.name}</span>
                       <span className="shrink-0 text-[10px] text-ink-light font-mono px-1 py-0.2 rounded-xs bg-paper-dark">
                         Studio
                       </span>
@@ -330,17 +358,31 @@ export function ModeSelector({
                   </div>
                 </div>
 
-                <div className="border-t border-ink/10 dark:border-zinc-800 bg-paper-light/70 dark:bg-zinc-950/70 px-2 py-1.5 flex items-center justify-between text-xs">
+                <div className="border-t border-ink/10 dark:border-zinc-800 bg-paper-light/70 dark:bg-zinc-950/70 px-2 py-1 flex items-center justify-between text-xs gap-1">
                   <button
                     type="button"
                     onClick={() => handleModePreview(mode)}
-                    className="text-ink-light hover:text-ink flex items-center gap-1 font-medium transition-colors"
+                    className={`flex items-center gap-1.5 py-1 px-1.5 -ml-1 rounded-sm font-medium transition-all active:scale-95 touch-manipulation cursor-pointer ${
+                      isCurrentPreview
+                        ? "text-ink font-bold bg-ink/10 dark:bg-zinc-700/80"
+                        : "text-ink-light hover:text-ink hover:bg-ink/5 dark:hover:text-zinc-100"
+                    }`}
                   >
-                    <Eye size={12} />
-                    <span>{tr("预览", "Preview")}</span>
+                    {isLoadingThis ? (
+                      <Loader2 size={13} className="animate-spin text-ink shrink-0" />
+                    ) : (
+                      <Eye size={13} className={`shrink-0 ${isCurrentPreview ? "text-ink" : ""}`} />
+                    )}
+                    <span className="text-[11px] truncate">
+                      {isLoadingThis
+                        ? tr("生成中...", "Generating...")
+                        : isCurrentPreview
+                        ? tr("当前预览", "Previewing")
+                        : tr("预览", "Preview")}
+                    </span>
                   </button>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => handleCustomModeDelete(mode)}
@@ -352,7 +394,7 @@ export function ModeSelector({
                     <button
                       type="button"
                       onClick={() => handleModeApply(mode)}
-                      className={`px-2 py-0.5 rounded-sm text-[11px] font-semibold transition-colors ${
+                      className={`px-2 py-0.5 rounded-sm text-[11px] font-semibold transition-colors active:scale-95 ${
                         isSelected
                           ? "bg-ink/10 text-ink hover:bg-red-100 hover:text-red-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-red-950/60 dark:hover:text-red-400"
                           : "bg-ink text-white hover:bg-ink-light dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 dark:border dark:border-zinc-700"
