@@ -27,7 +27,7 @@ from httpx import HTTPStatusError
 from openai import OpenAIError
 
 from .config import DEFAULT_LLM_PROVIDER, DEFAULT_LLM_MODEL, DEFAULT_IMAGE_PROVIDER, DEFAULT_IMAGE_MODEL
-from .content import _build_context_str, _build_style_instructions, _call_llm, _clean_json_response
+from .content import _build_context_str, _build_style_instructions, _call_llm, _call_llm_resilient, _clean_json_response
 from .db import get_cache_db
 from .errors import LLMKeyMissingError
 from .layout_presets import expand_layout_presets
@@ -934,6 +934,30 @@ async def generate_json_mode_content(
                 recent_letters = await get_recent_content_field_values(dedup_mac, mode_id, ("sender", "body"), limit=15)
                 if recent_letters:
                     first_attempt_hint = "\n请更换全新寄信人身份与情境，避免类似设定：" + "；".join(recent_letters[:4])
+            elif mode_id == "STORY":
+                recent_stories = await get_recent_content_field_values(dedup_mac, mode_id, ("title", "setup"), limit=15)
+                if recent_stories:
+                    first_attempt_hint = "\n请绝对避免以下近期出过的微型小说题材/主角设定：\n- " + "\n- ".join(recent_stories[:6])
+            elif mode_id == "POETRY":
+                recent_poems = await get_recent_content_field_values(dedup_mac, mode_id, ("title", "poem"), limit=15)
+                if recent_poems:
+                    first_attempt_hint = "\n请创作全新意象与题材的现代诗，避免以下近期主题：\n- " + "\n- ".join(recent_poems[:6])
+            elif mode_id == "BIAS":
+                recent_biases = await get_recent_content_field_values(dedup_mac, mode_id, ("name_cn", "name_en"), limit=20)
+                if recent_biases:
+                    first_attempt_hint = "\n请避免讲解以下近期已介绍过的认知偏差/心理学效应：\n- " + "\n- ".join(recent_biases[:8])
+            elif mode_id == "CHALLENGE":
+                recent_challenges = await get_recent_content_field_values(dedup_mac, mode_id, ("title", "action"), limit=15)
+                if recent_challenges:
+                    first_attempt_hint = "\n请避免给出以下近期出现过的微行动挑战：\n- " + "\n- ".join(recent_challenges[:6])
+            elif mode_id == "ZEN":
+                recent_zens = await get_recent_content_field_values(dedup_mac, mode_id, ("koan", "insight"), limit=15)
+                if recent_zens:
+                    first_attempt_hint = "\n请参悟全新禅意公案与开悟洞察，避免重复：\n- " + "\n- ".join(recent_zens[:6])
+            elif mode_id == "RECIPE":
+                recent_recipes = await get_recent_content_field_values(dedup_mac, mode_id, ("dish_name",), limit=20)
+                if recent_recipes:
+                    first_attempt_hint = "\n请推荐一道截然不同的全新创意料理，避免：\n- " + "\n- ".join(recent_recipes[:8])
             elif dedup_hint:
                 first_attempt_hint = dedup_hint
         except (OSError, TypeError, ValueError):
@@ -957,7 +981,7 @@ async def generate_json_mode_content(
         llm_ok = False
         api_key_invalid = False
         try:
-            text = await _call_llm(
+            text = await _call_llm_resilient(
                 provider,
                 model,
                 prompt,
@@ -965,6 +989,7 @@ async def generate_json_mode_content(
                 max_tokens=max_tokens,
                 api_key=api_key,
                 base_url=llm_base_url,
+                call_llm_fn=_call_llm,
             )
             llm_ok = True
         except (LLMKeyMissingError, httpx.HTTPError, HTTPStatusError, OpenAIError, OSError, TypeError, ValueError) as e:
@@ -1100,6 +1125,30 @@ async def generate_json_mode_content(
                 elif res_body and any(res_body[:20] in rl for rl in recent_letters):
                     is_duplicate = True
                     logger.info(f"[JSONContent] Letter body duplicate detected for {mode_id}")
+
+            if not is_duplicate and (mode_id == "STORY" or "setup" in result):
+                res_story_title = str(result.get("title") or "").strip()
+                if res_story_title and any(res_story_title in rs or rs in res_story_title for rs in (recent_stories if 'recent_stories' in locals() else [])):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Story duplicate detected for {mode_id}: {res_story_title}")
+
+            if not is_duplicate and (mode_id == "BIAS" or "name_cn" in result):
+                res_bias = str(result.get("name_cn") or "").strip()
+                if res_bias and any(res_bias == rb or res_bias in rb for rb in (recent_biases if 'recent_biases' in locals() else [])):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Bias duplicate detected for {mode_id}: {res_bias}")
+
+            if not is_duplicate and (mode_id == "CHALLENGE" or "action" in result):
+                res_chal = str(result.get("title") or "").strip()
+                if res_chal and any(res_chal == rc or res_chal in rc for rc in (recent_challenges if 'recent_challenges' in locals() else [])):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Challenge duplicate detected for {mode_id}: {res_chal}")
+
+            if not is_duplicate and (mode_id == "RECIPE" or "dish_name" in result):
+                res_dish = str(result.get("dish_name") or "").strip()
+                if res_dish and any(res_dish == rd or res_dish in rd for rd in (recent_recipes if 'recent_recipes' in locals() else [])):
+                    is_duplicate = True
+                    logger.info(f"[JSONContent] Recipe duplicate detected for {mode_id}: {res_dish}")
 
         if not is_duplicate:
             break

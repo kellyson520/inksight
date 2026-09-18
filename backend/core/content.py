@@ -386,6 +386,88 @@ class LLMClient:
     ),
     reraise=True,
 )
+def get_configured_llm_providers() -> list[tuple[str, str]]:
+    """Return available (provider, default_model) pairs that have valid API keys in env."""
+    providers: list[tuple[str, str]] = []
+    candidates = [
+        ("aliyun", "qwen-plus", "DASHSCOPE_API_KEY"),
+        ("deepseek", "deepseek-chat", "DEEPSEEK_API_KEY"),
+        ("moonshot", "moonshot-v1-8k", "MOONSHOT_API_KEY"),
+    ]
+    for p, m, env_k in candidates:
+        val = (os.getenv(env_k) or "").strip()
+        if val and not val.startswith("sk-your-"):
+            providers.append((p, m))
+    return providers
+
+
+async def _call_llm_resilient(
+    provider: str,
+    model: str,
+    prompt: str,
+    temperature: float = 0.8,
+    max_tokens: int | None = None,
+    api_key: str | None = None,
+    base_url: str | None = None,
+    call_llm_fn: Any | None = None,
+) -> str:
+    """Resilient LLM call with smart automatic failover to prevent unwanted downgrades.
+
+    If the primary provider fails due to transient network/rate-limit/auth/service issues
+    and the caller did not pin a specific custom key (or configured multiple fallback keys),
+    it automatically attempts available fallback providers in the environment before giving up.
+    """
+    fn = call_llm_fn or _call_llm
+    # 1. 尝试主 provider/model 调用
+    try:
+        return await fn(
+            provider,
+            model,
+            prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            api_key=api_key,
+            base_url=base_url,
+        )
+    except Exception as primary_exc:
+        # 如果是用户显式传入了特定的自建兼容网关 (openai_compat) 且调用失败，不要随意漂移到平台 provider
+        if provider == "openai_compat":
+            raise primary_exc
+
+        logger.warning(
+            f"[LLMResilient] Primary provider {provider}/{model} failed: {primary_exc}. Attempting failover..."
+        )
+
+        # 2. 构造故障转移备选列表 (按健康与多态优先级排序)
+        available = get_configured_llm_providers()
+        failover_candidates = [(p, m) for (p, m) in available if p != provider]
+
+        if not failover_candidates:
+            # 没有可用于自动漂移的备用 provider，抛出原始异常
+            raise primary_exc
+
+        last_exc = primary_exc
+        for fb_p, fb_m in failover_candidates:
+            try:
+                logger.info(f"[LLMResilient] Switching to fallback provider {fb_p}/{fb_m}...")
+                text = await fn(
+                    fb_p,
+                    fb_m,
+                    prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    api_key=None,
+                    base_url=None,
+                )
+                logger.info(f"[LLMResilient] Successfully recovered using {fb_p}/{fb_m} (no downgrade)!")
+                return text
+            except Exception as fb_exc:
+                logger.warning(f"[LLMResilient] Fallback provider {fb_p}/{fb_m} failed: {fb_exc}")
+                last_exc = fb_exc
+
+        raise last_exc
+
+
 async def _call_llm(
     provider: str,
     model: str,
