@@ -7,7 +7,6 @@ import { ColorSelect } from "@/components/ui/color-select";
 import { ScreenSizeSelect } from "@/components/ui/screen-size-select";
 import { RefreshCw, Sliders, Loader2, Eye, Download } from "lucide-react";
 import { CONFIGURABLE_MODES } from "./types";
-import { LayoutInspectorPanel } from "./layout-inspector-panel";
 
 interface PreviewCanvasProps {
   previewMode: string;
@@ -158,14 +157,6 @@ export function PreviewCanvas({
             </a>
           ) : null}
         </div>
-
-        {/* AI 空间排版与版面拓扑诊断面板 */}
-        <LayoutInspectorPanel
-          modeId={previewMode}
-          width={previewWidth}
-          height={previewHeight}
-          locale={locale}
-        />
       </CardContent>
     </Card>
   );
