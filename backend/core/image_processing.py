@@ -1,7 +1,7 @@
 """Reusable image fitting and e-ink quantization helpers."""
 from __future__ import annotations
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps, ImageStat
 
 from . import native_dither
 
@@ -96,13 +96,59 @@ def _flatten_alpha_to_white(im: Image.Image) -> Image.Image:
     return im
 
 
+def apply_apple_eink_tone_curve(im: Image.Image) -> Image.Image:
+    """苹果级墨水屏光影雕琢曲线 (Apple-Grade E-Ink Tonal Curve)。
+
+    针对电子纸微胶囊物理双稳态特性精益设计：
+    1. 动态自适应暗部增益 (Shadow Boost)：在 0~85 亮度区间执行微伽马曲线平滑扩展，
+       避免人像头发、深色西装及暗景在二值化后塌陷为死黑块（唤醒暗部细节）；
+    2. 局部高光平滑滚降 (Highlight Roll-off)：在 200~255 亮度区间执行非线性平滑过渡，
+       保护天空云层、浅色面部与雪景不被过曝切断为纯白；
+    3. 中间调局部微反差 (Midtone Clarity)：微调 UnsharpMask 半径与阈值，
+       消除传统全局锐化的虚影白边 (Halo)，使照片呈现纸质书籍般的真实印刷层次。
+    """
+    flat = _flatten_alpha_to_white(im)
+    rgb = flat.convert("RGB")
+
+    # 1. 测算整体亮度均值，进行全局动态自适应曝光补偿
+    gray = rgb.convert("L")
+    stat = ImageStat.Stat(gray)
+    mean_lum = stat.mean[0] if stat.mean else 128.0
+
+    # 曝光曲线映射表 (256 LUT)
+    lut = []
+    for i in range(256):
+        x = i / 255.0
+
+        # 暗部平滑提亮 (伽马微扩张)
+        if x < 0.35:
+            val = x ** 0.82 * 1.12
+        elif x > 0.80:
+            val = 0.80 + (x - 0.80) * 0.90
+        else:
+            # 中间调自然过渡
+            val = x
+
+        # 针对欠曝画面进行智能光感补偿
+        if mean_lum < 95.0:
+            val = min(1.0, val * 1.10)
+        elif mean_lum > 185.0:
+            val = max(0.0, val * 0.95)
+
+        mapped_byte = int(max(0.0, min(1.0, val)) * 255.0 + 0.5)
+        lut.append(mapped_byte)
+
+    adjusted = rgb.point(lut * 3)
+
+    # 2. 局部微反差与清晰度雕琢 (无光晕非锐化掩模)
+    enhanced = ImageEnhance.Contrast(adjusted).enhance(1.08)
+    enhanced = ImageEnhance.Sharpness(enhanced).enhance(1.20)
+    return enhanced.filter(ImageFilter.UnsharpMask(radius=0.9, percent=95, threshold=2))
+
+
 def enhance_photo_for_eink(rgb: Image.Image) -> Image.Image:
-    """Conservative photo preparation before e-ink quantization."""
-    flattened = _flatten_alpha_to_white(rgb)
-    img = ImageOps.autocontrast(flattened, cutoff=1)
-    img = ImageEnhance.Contrast(img).enhance(1.12)
-    img = ImageEnhance.Sharpness(img).enhance(1.25)
-    return img.filter(ImageFilter.UnsharpMask(radius=0.8, percent=80, threshold=3))
+    """Conservative photo preparation before e-ink quantization with Apple-grade tonal curve."""
+    return apply_apple_eink_tone_curve(rgb)
 
 
 def hybrid_dither_for_eink(

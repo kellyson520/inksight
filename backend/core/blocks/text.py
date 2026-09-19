@@ -121,7 +121,8 @@ def render_text(ctx: RenderContext, block: dict) -> None:
     if line_height is not None:
         line_height = int(line_height * ctx.scale)
     else:
-        line_height = font_size + 6
+        # 黄金排版呼吸行距 (~1.36 倍字号)
+        line_height = max(font_size + 4, int(font_size * 1.36))
 
     lines = wrap_text(text, font, max_w)
 
@@ -144,12 +145,15 @@ def render_text(ctx: RenderContext, block: dict) -> None:
     is_truncated = len(fitted_lines) < len(lines)
     if is_truncated and fitted_lines and block.get("ellipsis", True):
         last_l = fitted_lines[-1].rstrip()
+        # 苹果级微排版：剥离行尾突兀的挂起逗号、冒号、顿号与破折号，避免出现 "，..." 或 "：..."
+        last_l = last_l.rstrip("，。、；：,;: -—")
+        ellipsis_char = "…" if has_cjk(last_l) else "..."
         if not last_l.endswith(("...", "…", "⋯")):
-            test = last_l + "..."
+            test = last_l + ellipsis_char
             span = safe_font_bbox(font, test)[2] - safe_font_bbox(font, test)[0]
             while span > max_w and len(last_l) > 1:
-                last_l = last_l[:-1].rstrip()
-                test = last_l + "..."
+                last_l = last_l[:-1].rstrip("，。、；：,;: -— ")
+                test = last_l + ellipsis_char
                 span = safe_font_bbox(font, test)[2] - safe_font_bbox(font, test)[0]
             fitted_lines[-1] = test
 
