@@ -848,3 +848,22 @@ async def get_mode_layout_session(
         "session": session.to_dict(),
         "ai_dialogue": format_ai_dialogue(session),
     }
+
+
+@router.get("/preload/status")
+async def get_preload_harvester_status():
+    """查看离线预存池自成长状态与各模式储备水位。"""
+    from core.preload_harvester import get_harvester_status
+    status = await get_harvester_status()
+    return {"ok": True, "status": status}
+
+
+@router.post("/preload/harvest")
+async def trigger_preload_harvest_endpoint(
+    max_per_mode: int = Query(default=2, ge=1, le=5),
+    _: Any = Depends(optional_user),
+):
+    """手动或定时触发一轮后台预存池自主补给。"""
+    from core.preload_harvester import trigger_harvest_round
+    result = await trigger_harvest_round(max_per_mode=max_per_mode)
+    return {"ok": True, "result": result}

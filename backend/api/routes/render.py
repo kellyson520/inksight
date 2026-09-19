@@ -231,7 +231,13 @@ async def render(
             "X-Mode-Id": resolved_persona,
         }
         if configured_refresh_minutes is not None:
-            headers["X-Refresh-Minutes"] = str(configured_refresh_minutes)
+            from core.sleep_scheduler import calculate_optimal_sleep_minutes
+            optimal_sleep = calculate_optimal_sleep_minutes(
+                cfg or {},
+                current_mode=resolved_persona,
+                battery_pct=params.b,
+            )
+            headers["X-Refresh-Minutes"] = str(optimal_sleep)
         if mac and await consume_pending_refresh(mac):
             headers["X-Pending-Refresh"] = "1"
         if content_fallback:

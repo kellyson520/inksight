@@ -105,15 +105,60 @@ def enhance_photo_for_eink(rgb: Image.Image) -> Image.Image:
     return img.filter(ImageFilter.UnsharpMask(radius=0.8, percent=80, threshold=3))
 
 
+def hybrid_dither_for_eink(
+    im: Image.Image,
+    *,
+    colors: int = 2,
+    edge_preserve: bool = True,
+    dark_threshold: int = 40,
+    bright_threshold: int = 225,
+) -> Image.Image:
+    """自适应混合墨水屏抖动算法 (Hybrid E-ink Dithering)。
+
+    - 对高反差笔画、文字与几何边缘保持绝对二值化（零噪点、坚挺黑线）；
+    - 对中间连续灰度调与渐变区执行高质量 Atkinson 误差扩散；
+    - 在 1-bit 黑白点阵上兼顾文本极度锐利与摄影灰度过渡。
+    """
+    flat = _flatten_alpha_to_white(im)
+    gray = flat.convert("L")
+
+    # 1. 生成高质量抖动全图
+    dithered = native_dither.atkinson_bw(gray) if colors < 3 else native_dither.atkinson_palette(flat, colors)
+
+    if not edge_preserve or colors >= 3:
+        return dithered
+
+    # 2. 提取极端高对比度固实像素遮罩（深黑与亮白）
+    # 极黑像素（如文字、纯黑细线）直接固定为黑 (0)
+    solid_black = gray.point(lambda p: 255 if p <= dark_threshold else 0, mode="1")
+    # 极亮背景直接固定为白 (255)
+    solid_white = gray.point(lambda p: 255 if p >= bright_threshold else 0, mode="1")
+
+    # 3. 将固实黑/白覆盖回抖动结果上，消除边缘噪点
+    res = dithered.copy()
+    # 贴纯黑
+    black_mask = Image.new("1", res.size, 0)
+    res.paste(black_mask, (0, 0), mask=solid_black)
+    # 贴纯白
+    white_mask = Image.new("1", res.size, 1)
+    res.paste(white_mask, (0, 0), mask=solid_white)
+
+    return res
+
+
 def quantize_image_for_eink(
     rgb: Image.Image,
     *,
     colors: int,
     photo_enhance: bool = False,
+    hybrid: bool = False,
 ) -> Image.Image:
-    """Quantize RGB image data for 2-, 3-, or 4-color e-ink output with Atkinson dithering."""
+    """Quantize RGB image data for 2-, 3-, or 4-color e-ink output with Atkinson/Hybrid dithering."""
     rgb_flattened = _flatten_alpha_to_white(rgb)
     prepared = enhance_photo_for_eink(rgb_flattened) if photo_enhance else rgb_flattened
+
+    if hybrid:
+        return hybrid_dither_for_eink(prepared, colors=colors)
 
     if colors < 3:
         gray = ImageOps.autocontrast(prepared.convert("L"), cutoff=1)
