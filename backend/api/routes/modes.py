@@ -841,6 +841,8 @@ async def get_mode_layout_session(
     session = inspect_layout(
         mode_def, sample_content, screen_w=w, screen_h=h, language=language
     )
+    from core.layout_inspector import evaluate_eink_aesthetics
+    aesthetics = evaluate_eink_aesthetics(session)
 
     if format in ("dialogue", "markdown", "text"):
         dialogue = format_ai_dialogue(session)
@@ -849,6 +851,7 @@ async def get_mode_layout_session(
     return {
         "ok": True,
         "session": session.to_dict(),
+        "aesthetics": aesthetics,
         "ai_dialogue": format_ai_dialogue(session),
     }
 

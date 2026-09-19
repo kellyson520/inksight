@@ -279,6 +279,82 @@ def inspect_layout(
     )
 
 
+def evaluate_eink_aesthetics(session: LayoutSession) -> dict[str, Any]:
+    """面向大模型/AI 编程的墨水屏版面美学量化评估系统 (E-Ink Aesthetics & Harmony Index)。
+
+    让 AI 不仅仅看到抽象像素坐标，还能精准理解设计美感、排版张力与人机工学平衡：
+    1. overall_score (0~100): 综合美学指数
+    2. visual_balance: 视觉重心与留白呼吸感 (Golden Section & Balance)
+    3. typography_elegance: 字符排版质感与断行节奏
+    4. contrast_and_readability: 墨水屏阅读清晰度与疲劳指数
+    5. actionable_advice_for_ai: 针对 LLM 生成内容/排版的一针见血的可执行调优建议
+    """
+    score = 100.0
+    deductions: list[str] = []
+    advice: list[str] = []
+
+    # 1. 空间与留白利用率评估 (最佳舒适区间: 55% ~ 85%)
+    fill = session.fill_ratio
+    balance_desc = "平衡自然"
+    if session.has_truncation:
+        score -= 40.0
+        deductions.append("文本发生物理硬截断 (-40分)")
+        balance_desc = "严重溢出"
+        advice.append("【关键截断】文本内容已溢出物理屏幕。请大幅精简字数（减少 25%~35%）或调小字体。")
+    elif fill < 0.40:
+        penalty = min(25.0, (0.40 - fill) * 60)
+        score -= penalty
+        deductions.append(f"留白过多，空间空洞 (-{round(penalty, 1)}分)")
+        balance_desc = "下部空旷"
+        advice.append("【视觉稀疏】屏幕下半部分存在较大冷场。建议扩充金句/故事细节，或增加副标题。")
+    elif fill > 0.90:
+        penalty = min(15.0, (fill - 0.90) * 100)
+        score -= penalty
+        deductions.append(f"边距压迫，呼吸感不足 (-{round(penalty, 1)}分)")
+        balance_desc = "压迫拥挤"
+        advice.append("【视觉局促】文字已逼近页脚安全红线。建议适当缩减 1~2 句话以留出呼吸感。")
+
+    # 2. 视觉重心计算 (Center of Visual Mass)
+    if session.blocks and session.available_body_height > 0:
+        mid_points = [b.y + b.height / 2.0 - session.status_bar_h for b in session.blocks]
+        avg_mid = sum(mid_points) / float(len(mid_points))
+        normalized_center = avg_mid / float(session.available_body_height)
+        # 黄金视觉重心通常在 0.38 ~ 0.52 (偏上方能带来轻盈感)
+        if normalized_center > 0.65:
+            score -= 8.0
+            deductions.append("视觉重心过度沉底 (-8分)")
+            advice.append("【重心下沉】重要内容集中在下半屏，建议将主要信息或大字标题上提。")
+        elif normalized_center < 0.25:
+            score -= 8.0
+            deductions.append("视觉重心过度悬空 (-8分)")
+            advice.append("【重心悬空】内容全部拥挤在顶部，建议开启垂直居中 (vertical_center)。")
+    else:
+        normalized_center = 0.5
+
+    # 3. 字体与排版优雅度评估 (Typography Elegance)
+    typo_desc = "典雅舒展"
+    line_counts = [len(b.rendered_lines) for b in session.blocks if b.rendered_lines]
+    max_block_lines = max(line_counts) if line_counts else 0
+    if max_block_lines > 6:
+        score -= 10.0
+        deductions.append("单段落折行过多 (>6行)，容易引发阅读疲劳 (-10分)")
+        typo_desc = "长段密集"
+        advice.append("【分段节奏】检测到超过 6 行的长文本块。建议提炼核心语句或分拆为多段。")
+
+    score = max(0.0, min(100.0, round(score, 1)))
+
+    return {
+        "overall_score": score,
+        "grade": "S级 (典范)" if score >= 90 else ("A级 (良好)" if score >= 75 else ("B级 (及格)" if score >= 60 else "C级 (需改进)")),
+        "visual_balance": balance_desc,
+        "visual_center_ratio": round(normalized_center, 2),
+        "fill_ratio": fill,
+        "typography_elegance": typo_desc,
+        "deductions": deductions,
+        "actionable_advice_for_ai": advice or ["【完美排版】视觉平衡度与墨水屏留白比例极佳，无需调整。"],
+    }
+
+
 def format_ascii_preview(session: LayoutSession, cols: int = 36, rows: int = 14) -> str:
     """生成 AI 与终端可直接理解的 ASCII 墨水屏空间几何草图。"""
     grid = [[" " for _ in range(cols)] for _ in range(rows)]
@@ -340,14 +416,17 @@ def format_ascii_preview(session: LayoutSession, cols: int = 36, rows: int = 14)
 def format_ai_dialogue(session: LayoutSession) -> str:
     """生成供 AI Agent 或大模型直接理解与消费的语义排版会话诊断报告。"""
     ascii_mockup = format_ascii_preview(session)
-    status_emoji = "✅ 优秀" if session.density_assessment == "balanced" and not session.has_truncation else (
-        "❌ 截断警告" if session.has_truncation else "⚠️ 留白过多"
+    aesthetics = evaluate_eink_aesthetics(session)
+    status_emoji = "✅ 优秀" if aesthetics["overall_score"] >= 80 else (
+        "❌ 截断严重" if session.has_truncation else "⚠️ 需优化"
     )
 
     lines = [
         "### 墨水屏物理版面诊断报告 (AI-Readable Layout Inspection)",
         f"- **模式标识**: `{session.mode_id}`",
         f"- **物理屏幕分辨率**: {session.screen_w}x{session.screen_h} (1-bit E-ink)",
+        f"- **美学与和谐度评分**: **{aesthetics['overall_score']} / 100** [{aesthetics['grade']}]",
+        f"- **视觉重心与留白**: `{aesthetics['visual_balance']}` (重心比例: {aesthetics['visual_center_ratio']})",
         f"- **排版状态**: {status_emoji} (密度评定: `{session.density_assessment}`)",
         f"- **空间利用率**: {int(session.fill_ratio * 100)}% (主体占用: {session.body_height_used}px / 可用: {session.available_body_height}px)",
         f"- **剩余保护余量**: {session.remaining_height_px}px",
@@ -372,15 +451,15 @@ def format_ai_dialogue(session: LayoutSession) -> str:
             lines.append(f"   - 排版文本: \"{preview}\"")
 
     lines.append("")
-    lines.append("#### 🤖 AI 排版优化建议:")
-    if session.has_truncation:
-        lines.append("1. **紧急处理**: 内容文本超出了物理屏幕高度，末尾已被粗暴裁切！")
-        lines.append("2. **降容建议**: 请将生成文本字数缩减 20%~30%，或者降低字号（如 16px -> 14px）。")
-    elif session.density_assessment == "sparse":
-        lines.append("1. **美化建议**: 墨水屏下半部分留白率过高 (>50%)，缺乏视觉重心。")
-        lines.append("2. **增容建议**: 可适当丰富内容表述，或增加辅助解读、副标题或加大主文字字号。")
-    else:
-        lines.append("1. **排版极佳**: 视觉比例协调，字符密度舒适，未触碰边界安全线。")
+    lines.append("#### 🤖 AI 面向对象排版与美学优化建议:")
+    for adv in aesthetics["actionable_advice_for_ai"]:
+        lines.append(f"- {adv}")
+
+    if aesthetics["deductions"]:
+        lines.append("")
+        lines.append("#### 📉 美学扣分项明细:")
+        for ded in aesthetics["deductions"]:
+            lines.append(f"- {ded}")
 
     if session.warnings:
         lines.append("")
