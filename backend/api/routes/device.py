@@ -80,6 +80,18 @@ async def pop_device_alert_async(mac: str, now: Optional[datetime] = None) -> Op
     return await _DEVICE_ALERT_QUEUE.pop(mac, now=now)
 
 
+async def peek_device_alert_async(mac: str, now: Optional[datetime] = None) -> Optional[dict]:
+    return await _DEVICE_ALERT_QUEUE.peek(mac, now=now)
+
+
+async def ack_device_alert_async(alert_id: int) -> bool:
+    return await _DEVICE_ALERT_QUEUE.ack(alert_id)
+
+
+async def get_device_alert_stats_async(mac: Optional[str] = None) -> dict[str, Any]:
+    return await _DEVICE_ALERT_QUEUE.get_queue_stats(mac)
+
+
 def enqueue_device_alert(mac: str, alert: dict) -> None:
     key = mac.upper()
     if key not in _device_alerts and len(_device_alerts) >= _ALERT_GLOBAL_KEY_LIMIT:
@@ -489,6 +501,7 @@ async def push_device_alert(
 @router.get("/device/{mac}/check_alert")
 async def check_device_alert(
     mac: str,
+    peek: bool = Query(default=False, description="为 true 时仅窥视待办不消费队列"),
     x_device_token: Optional[str] = Header(default=None, alias="X-Device-Token"),
 ):
     mac = validate_mac_param(mac)
@@ -496,9 +509,14 @@ async def check_device_alert(
 
     now = datetime.now()
     alert_payload: Optional[dict] = None
-    existing = await pop_device_alert_async(mac, now=now)
+    if peek:
+        existing = await peek_device_alert_async(mac, now=now)
+    else:
+        existing = await pop_device_alert_async(mac, now=now)
+
     if existing:
         alert_payload = {
+            "alert_id": existing.get("alert_id"),
             "sender": existing.get("sender") or "",
             "message": existing.get("message") or "",
             "level": existing.get("level") or "info",
@@ -506,6 +524,42 @@ async def check_device_alert(
     if not alert_payload:
         return {"has_alert": False}
     return {"has_alert": True, "alert": alert_payload}
+
+
+@router.post("/device/{mac}/ack_alert")
+async def ack_device_alert_endpoint(
+    mac: str,
+    request: Request,
+    x_device_token: Optional[str] = Header(default=None, alias="X-Device-Token"),
+):
+    """设备端确认消费某条告警 (ACK 机制)，确保弱网与掉电时不丢消息。"""
+    mac = validate_mac_param(mac)
+    await require_device_token(mac, x_device_token)
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    alert_id = body.get("alert_id")
+    if not alert_id:
+        # 如果未带具体 alert_id，则默认确认弹出队首
+        popped = await pop_device_alert_async(mac)
+        return {"ok": True, "acked": bool(popped)}
+
+    acked = await ack_device_alert_async(int(alert_id))
+    return {"ok": True, "acked": acked, "alert_id": alert_id}
+
+
+@router.get("/device/{mac}/alert_stats")
+async def device_alert_stats(
+    mac: str,
+    x_device_token: Optional[str] = Header(default=None, alias="X-Device-Token"),
+):
+    """获取设备端当前积压的告警统计信息。"""
+    mac = validate_mac_param(mac)
+    await require_device_token(mac, x_device_token)
+    stats = await get_device_alert_stats_async(mac)
+    return {"ok": True, "stats": stats}
 
 
 def _wrap_text_by_pixels(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:

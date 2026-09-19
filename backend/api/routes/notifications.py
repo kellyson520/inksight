@@ -96,3 +96,11 @@ async def broadcast_device_alert(body: BroadcastAlertRequest, _: Any = Depends(r
 async def get_notification_logs(_: Any = Depends(require_admin)):
     """获取最近推送分发日志。"""
     return {"ok": True, "logs": push_dispatcher.get_recent_logs()}
+
+
+@router.get("/queue/stats")
+async def get_global_push_queue_stats(_: Any = Depends(require_admin)):
+    """管理员查看当前全系统墨水屏设备待投递消息积压状态。"""
+    from api.routes.device import get_device_alert_stats_async
+    stats = await get_device_alert_stats_async()
+    return {"ok": True, "stats": stats}
