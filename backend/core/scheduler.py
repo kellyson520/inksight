@@ -134,6 +134,25 @@ async def start_scheduler() -> None:
         misfire_grace_time=7200,
     )
 
+    # 离线预存池自成长守护任务 (Autonomous Preload Harvester)
+    # 每 30 分钟进行一次自适应补池检查，在后台静默补充水位偏低的 LLM 模式
+    async def _preload_harvest_job():
+        try:
+            from .preload_harvester import trigger_harvest_round
+            await trigger_harvest_round(max_per_mode=1)
+        except Exception:
+            logger.exception("[Scheduler] Autonomous preload harvest failed")
+
+    scheduler.add_job(
+        _preload_harvest_job,
+        "interval",
+        minutes=30,
+        id="autonomous_preload_harvest",
+        name="Autonomous Preload Harvest",
+        max_instances=1,
+        coalesce=True,
+    )
+
     scheduler.start()
     logger.info("[Scheduler] Started with %d jobs", len(scheduler.get_jobs()))
 

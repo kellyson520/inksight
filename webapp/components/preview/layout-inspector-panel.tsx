@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Terminal, ChevronDown, ChevronUp, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Terminal, ChevronDown, ChevronUp, AlertCircle, CheckCircle2, Database, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface LayoutInspectorPanelProps {
   modeId: string;
@@ -20,6 +21,12 @@ interface LayoutSessionData {
   warnings: string[];
 }
 
+interface PreloadModeInfo {
+  count: number;
+  target: number;
+  needs_harvest: boolean;
+}
+
 export function LayoutInspectorPanel({
   modeId,
   width,
@@ -30,19 +37,38 @@ export function LayoutInspectorPanel({
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<LayoutSessionData | null>(null);
   const [asciiPreview, setAsciiPreview] = useState<string>("");
+  const [preloadInfo, setPreloadInfo] = useState<PreloadModeInfo | null>(null);
+  const [harvesting, setHarvesting] = useState(false);
+  const [harvestMsg, setHarvestMsg] = useState<string | null>(null);
+
+  const fetchPreload = () => {
+    fetch("/api/preload/status")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.ok && data.status?.modes_status) {
+          const upperId = modeId.toUpperCase();
+          if (data.status.modes_status[upperId]) {
+            setPreloadInfo(data.status.modes_status[upperId]);
+          } else {
+            setPreloadInfo(null);
+          }
+        }
+      })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     if (!isOpen || !modeId) return;
 
     let mounted = true;
     setLoading(true);
+    setHarvestMsg(null);
 
     fetch(`/api/modes/${encodeURIComponent(modeId)}/layout-session?w=${width}&h=${height}&format=json`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!mounted || !data || !data.ok) return;
         setSession(data.session);
-        // 提取 ASCII 拓扑
         const rawDialogue = String(data.ai_dialogue || "");
         const match = rawDialogue.match(/```text\n([\s\S]*?)\n```/);
         if (match && match[1]) {
@@ -56,10 +82,29 @@ export function LayoutInspectorPanel({
         if (mounted) setLoading(false);
       });
 
+    fetchPreload();
+
     return () => {
       mounted = false;
     };
   }, [isOpen, modeId, width, height]);
+
+  const handleHarvest = async () => {
+    setHarvesting(true);
+    setHarvestMsg(null);
+    try {
+      const res = await fetch("/api/preload/harvest?max_per_mode=2", { method: "POST" });
+      const data = await res.json();
+      if (data && data.ok) {
+        setHarvestMsg(locale === "zh" ? `补池成功 (+${data.result?.total_added || 0}条)` : `Harvested (+${data.result?.total_added || 0})`);
+        fetchPreload();
+      }
+    } catch {
+      setHarvestMsg(locale === "zh" ? "补齐失败" : "Failed");
+    } finally {
+      setHarvesting(false);
+    }
+  };
 
   return (
     <div className="w-full mt-3 border border-ink/10 rounded-sm bg-paper-light/50 dark:bg-zinc-900/50 text-xs">
@@ -123,6 +168,41 @@ export function LayoutInspectorPanel({
                   </span>
                 </div>
               </div>
+
+              {/* 离线预存池状态卡片 */}
+              {preloadInfo ? (
+                <div className="flex items-center justify-between p-2 rounded bg-white dark:bg-zinc-950 border border-ink/5 text-[11px]">
+                  <div className="flex items-center gap-1.5">
+                    <Database size={12} className="text-ink-light" />
+                    <span className="text-ink-light">{locale === "zh" ? "离线预存池:" : "Preload Pool:"}</span>
+                    <span className="font-bold text-ink font-mono">
+                      {preloadInfo.count} / {preloadInfo.target} {locale === "zh" ? "条" : "items"}
+                    </span>
+                    {preloadInfo.count >= preloadInfo.target ? (
+                      <span className="text-[10px] px-1 py-0.2 rounded bg-green-50 text-green-700">
+                        {locale === "zh" ? "充盈" : "Sufficient"}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] px-1 py-0.2 rounded bg-amber-50 text-amber-700">
+                        {locale === "zh" ? "偏低" : "Low"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {harvestMsg ? <span className="text-[10px] text-green-600 font-medium">{harvestMsg}</span> : null}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleHarvest}
+                      disabled={harvesting}
+                      className="h-6 px-2 text-[10px] gap-1 cursor-pointer"
+                    >
+                      <RefreshCw size={10} className={harvesting ? "animate-spin" : ""} />
+                      <span>{locale === "zh" ? "一键补池" : "Harvest"}</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
 
               {/* ASCII 拓扑 */}
               {asciiPreview ? (
