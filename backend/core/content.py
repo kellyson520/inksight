@@ -483,29 +483,36 @@ async def _call_llm(
     Raises ValueError when the API key is missing (no retry).
     """
     client, default_max_tokens = _get_client(provider, model, api_key=api_key, base_url=base_url)
-    request_kwargs = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": max_tokens or default_max_tokens,
-        "temperature": temperature,
-    }
-    extra_body = _chat_completion_extra_body(provider, model)
-    if extra_body is not None:
-        request_kwargs["extra_body"] = extra_body
-    response = await client.chat.completions.create(
-        **request_kwargs,
-    )
-    text = response.choices[0].message.content.strip()
+    try:
+        request_kwargs = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": max_tokens or default_max_tokens,
+            "temperature": temperature,
+        }
+        extra_body = _chat_completion_extra_body(provider, model)
+        if extra_body is not None:
+            request_kwargs["extra_body"] = extra_body
+        response = await client.chat.completions.create(
+            **request_kwargs,
+        )
+        text = response.choices[0].message.content.strip()
 
-    finish_reason = response.choices[0].finish_reason
-    usage = response.usage
-    logger.info(
-        f"[LLM] {provider}/{model} tokens={usage.total_tokens}, finish={finish_reason}"
-    )
-    if finish_reason == "length":
-        logger.warning("[LLM] Content truncated due to max_tokens limit")
+        finish_reason = response.choices[0].finish_reason
+        usage = response.usage
+        logger.info(
+            f"[LLM] {provider}/{model} tokens={usage.total_tokens}, finish={finish_reason}"
+        )
+        if finish_reason == "length":
+            logger.warning("[LLM] Content truncated due to max_tokens limit")
 
-    return text
+        return text
+    finally:
+        # 显式关闭并释放底层 httpx 连接池，防止在事件循环切换或高并发请求时出现悬挂未回收套接字
+        try:
+            await client.close()
+        except Exception:
+            pass
 
 
 async def call_llm(

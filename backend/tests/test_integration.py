@@ -255,7 +255,7 @@ async def test_build_image_prefers_owner_image_provider_over_device_config(sampl
             "image_provider": "aliyun",
         }
 
-    async def _fake_resolve_mode(mac, config, persona_override, force_next=False):
+    async def _fake_resolve_mode(mac, config, persona_override, force_next=False, **kwargs):
         return "ARTWALL"
 
     async def _fake_get_device_owner(mac):

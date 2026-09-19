@@ -86,7 +86,9 @@ class OutboundHttp:
             if addr.is_loopback or addr.is_link_local or addr.is_unspecified:
                 return True
             if isinstance(addr, ipaddress.IPv4Address):
-                return addr.is_private or addr.is_reserved
+                # 包含 RFC 6598 运营商级 NAT (100.64.0.0/10) 以及私有/保留地址
+                cgnat = ipaddress.IPv4Network("100.64.0.0/10")
+                return addr.is_private or addr.is_reserved or (addr in cgnat)
             else:
                 return addr in ipaddress.IPv6Network("fc00::/7") or addr in ipaddress.IPv6Network("fe80::/10")
 
