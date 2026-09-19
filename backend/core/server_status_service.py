@@ -9,11 +9,16 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
+import shlex
 import socket
 import time
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
+
+# 最大缓存与持久化监控服务器节点数
+MAX_STORED_SERVERS = 64
 
 # 持久化存储文件
 _STORAGE_FILE = os.path.join(
@@ -142,6 +147,12 @@ class ServerStatusService:
                     if isinstance(content, dict):
                         _pushed_server_data.update(content.get("records") or {})
                         _server_aliases.update(content.get("aliases") or {})
+                        # 启动加载时修剪超额数据，防止历史脏数据占用
+                        while len(_pushed_server_data) > MAX_STORED_SERVERS:
+                            for k in list(_pushed_server_data.keys()):
+                                if k != "default":
+                                    del _pushed_server_data[k]
+                                    break
                         logger.info(
                             "[ServerStatus] Loaded %d records, %d aliases from storage",
                             len(_pushed_server_data),
@@ -225,7 +236,8 @@ class ServerStatusService:
 
     def record_pushed_metrics(self, key: str, data: dict[str, Any]) -> dict[str, Any]:
         """记录外部推送的服务器状态指标。"""
-        clean_key = (key or "default").strip().lower()
+        raw_key = (key or "default").strip()
+        clean_key = re.sub(r"[^a-zA-Z0-9_\-\.]", "", raw_key)[:64].lower() or "default"
         now_str = time.strftime("%H:%M:%S")
 
         cpu_pct = round(float(data.get("cpu_pct") or data.get("cpu") or 0.0), 1)
@@ -252,10 +264,26 @@ class ServerStatusService:
             "update_time": now_str,
             "source": "pushed",
         }
+
+        # 防御无界增长：达到上限时驱逐最早的非 default 记录
+        while len(_pushed_server_data) >= MAX_STORED_SERVERS and clean_key not in _pushed_server_data:
+            evicted = False
+            for k in list(_pushed_server_data.keys()):
+                if k != "default":
+                    del _pushed_server_data[k]
+                    evicted = True
+                    break
+            if not evicted:
+                break
+
         _pushed_server_data[clean_key] = record
         self._save_storage()
         logger.info("[ServerStatus] Pushed status updated for '%s': CPU %s%%, MEM %s%%", clean_key, cpu_pct, mem_pct)
         return record
+
+    @property
+    def pushed_server_data(self) -> dict[str, dict[str, Any]]:
+        return _pushed_server_data
 
     def get_metrics_for_mode(self, server_key: Optional[str] = None) -> dict[str, Any]:
         """获取用于墨水屏渲染的指标字典（优先使用匹配的远程上报数据，否则回退到宿主机本地）。"""
@@ -281,14 +309,18 @@ class ServerStatusService:
         return self.get_local_metrics()
 
     def generate_shell_script(self, report_url: str, server_name: str = "") -> str:
-        """生成一键上报探针 Shell 脚本，兼容 Linux/宝塔计划任务/Crontab。"""
+        """生成一键上报探针 Shell 脚本，兼容 Linux/宝塔计划任务/Crontab。使用 shlex 安全转义防止命令注入。"""
+        clean_name = re.sub(r"[^a-zA-Z0-9_\-\.\u4e00-\u9fa5 ]", "", server_name)[:64]
+        clean_url = re.sub(r"[\r\n\"\'`\$\(\)\{\};<>]", "", report_url)
+        safe_url = shlex.quote(clean_url)
+        safe_name = shlex.quote(clean_name)
         return f"""#!/usr/bin/env bash
 # ==============================================================================
 # InkSight 墨水屏服务器监控一键上报脚本 (Server Status Agent)
 # 可放入 Crontab (如每 2 分钟执行一次) 或宝塔面板计划任务
 # ==============================================================================
-REPORT_URL="{report_url}"
-SERVER_NAME="{server_name}"
+REPORT_URL={safe_url}
+SERVER_NAME={safe_name}
 
 if [ -z "$SERVER_NAME" ]; then
     SERVER_NAME=$(hostname)

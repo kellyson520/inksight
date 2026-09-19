@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable, Optional
 
@@ -394,10 +395,15 @@ class ModeRegistry:
 # ── Validation ───────────────────────────────────────────────
 
 
+_MODE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_]{1,64}$")
+
+
 def _validate_mode_def_with_error(definition: dict, *, allow_raw_component_tree: bool = True) -> tuple[bool, str | None]:
     mode_id = definition.get("mode_id", "")
     if not isinstance(mode_id, str) or not mode_id:
         return False, "mode_id is required"
+    if not _MODE_ID_PATTERN.fullmatch(mode_id):
+        return False, "mode_id must be 1-64 characters matching [A-Za-z0-9_]"
 
     content = definition.get("content")
     if not isinstance(content, dict):

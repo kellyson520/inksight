@@ -83,17 +83,23 @@ class OutboundHttp:
             addresses = [ipaddress.ip_address(info[4][0]) for info in infos]
 
         def _is_private_or_blocked(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
-            if addr.is_loopback or addr.is_link_local or addr.is_unspecified:
+            if addr.is_loopback or addr.is_link_local or addr.is_unspecified or addr.is_reserved:
                 return True
-            if isinstance(addr, ipaddress.IPv4Address):
-                # 包含 RFC 6598 运营商级 NAT (100.64.0.0/10) 以及私有/保留地址
-                cgnat = ipaddress.IPv4Network("100.64.0.0/10")
-                return addr.is_private or addr.is_reserved or (addr in cgnat)
-            else:
-                return addr in ipaddress.IPv6Network("fc00::/7") or addr in ipaddress.IPv6Network("fe80::/10")
+            if isinstance(addr, ipaddress.IPv6Address):
+                # 检查 IPv4-mapped IPv6 地址 (如 ::ffff:127.0.0.1, ::ffff:169.254.169.254)
+                if addr.ipv4_mapped:
+                    return _is_private_or_blocked(addr.ipv4_mapped)
+                return (
+                    addr.is_private
+                    or (addr in ipaddress.IPv6Network("fc00::/7"))
+                    or (addr in ipaddress.IPv6Network("fe80::/10"))
+                )
+            # IPv4 检查：RFC 1918 私网、保留地址以及 RFC 6598 运营商级 NAT (100.64.0.0/10)
+            cgnat = ipaddress.IPv4Network("100.64.0.0/10")
+            return addr.is_private or addr.is_reserved or (addr in cgnat)
 
-        # Block if all resolved addresses are private/local
-        if addresses and all(_is_private_or_blocked(a) for a in addresses):
+        # 只要解析出的任一 IP 属于私有/保留/环回/拦截范围，立即防御性拦截
+        if addresses and any(_is_private_or_blocked(a) for a in addresses):
             raise ValueError(f"private URL blocked: {url}")
 
     @staticmethod

@@ -130,7 +130,8 @@ async def firmware_download(
     the device's OTA state is cleared so the mobile app can show a retry prompt.
     """
     sem = _get_ota_semaphore()
-    is_zh = (accept_language or "").lower().startswith("zh")
+    lang_str = accept_language if isinstance(accept_language, str) else ""
+    is_zh = lang_str.lower().startswith("zh")
 
     # Try to grab a concurrent slot (wait up to 0.5s before giving up)
     try:
@@ -178,6 +179,19 @@ async def firmware_download(
         sem.release()
         raise HTTPException(status_code=404, detail="No pending OTA firmware URL for this device")
 
+    from core.outbound_http import OutboundHttp, RequestPolicy
+    try:
+        OutboundHttp._validate_url(download_url, RequestPolicy())
+    except ValueError as exc:
+        sem.release()
+        logger.warning("[OTA DOWNLOAD] Blocked invalid or private download_url=%s: %s", download_url, exc)
+        raise HTTPException(status_code=400, detail=f"Invalid or blocked firmware URL: {exc}")
+
+    async def _check_redirect(response: httpx.Response):
+        if response.is_redirect and "location" in response.headers:
+            target = str(response.url.join(response.headers["location"]))
+            OutboundHttp._validate_url(target, RequestPolicy())
+
     # ── Phase 1: Fetch headers only to get Content-Length ─────────────────
     # This MUST succeed before we create StreamingResponse, because headers
     # (including Content-Length) are sent before the generator runs.
@@ -194,6 +208,7 @@ async def firmware_download(
             follow_redirects=True,
             max_redirects=10,
             http2=False,
+            event_hooks={"response": [_check_redirect]},
         ) as client:
             async with client.stream("GET", download_url, headers=headers) as resp:
                 resp.raise_for_status()
@@ -237,6 +252,7 @@ async def firmware_download(
                 follow_redirects=True,
                 max_redirects=10,
                 http2=False,  # Disable HTTP/2
+                event_hooks={"response": [_check_redirect]},
             ) as client:
                 # Full download (not streaming) - mimics browser behavior
                 resp = await client.get(download_url, headers=headers)

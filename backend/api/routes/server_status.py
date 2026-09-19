@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Optional
 
 from fastapi import APIRouter, Header, Query, Request, Response
@@ -68,14 +69,19 @@ async def get_reporting_script(
     key: Optional[str] = Query(default="", description="服务器名称/标识"),
 ) -> str:
     """生成一键复制运行的上报 Shell 脚本。"""
+    clean_key = re.sub(r"[^a-zA-Z0-9_\-\.]", "", (key or "").strip())[:64]
     host = (
         request.headers.get("x-forwarded-host")
         or request.headers.get("host")
         or request.url.netloc
         or "127.0.0.1:8070"
     ).strip()
-    scheme = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").strip()
+    if not re.fullmatch(r"^[a-zA-Z0-9\.\-\:\[\]]+$", host):
+        host = "127.0.0.1:8070"
+    scheme = (request.headers.get("x-forwarded-proto") or request.url.scheme or "http").strip().lower()
+    if scheme not in ("http", "https"):
+        scheme = "http"
     report_url = f"{scheme}://{host}/api/server-status"
-    if key:
-        report_url = f"{report_url}?key={key}"
-    return server_status_service.generate_shell_script(report_url, server_name=key or "")
+    if clean_key:
+        report_url = f"{report_url}?key={clean_key}"
+    return server_status_service.generate_shell_script(report_url, server_name=clean_key)
