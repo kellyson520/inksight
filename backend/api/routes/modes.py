@@ -809,3 +809,42 @@ async def generate_mode(
             {"error": f"生成失败: {type(exc).__name__}: {str(exc)[:200]}"},
             status_code=500,
         )
+
+
+@router.get("/modes/{mode_id}/layout-session")
+async def get_mode_layout_session(
+    mode_id: str,
+    w: int = Query(default=SCREEN_WIDTH, ge=100, le=1600),
+    h: int = Query(default=SCREEN_HEIGHT, ge=100, le=1200),
+    format: str = Query(default="json", description="json 或 dialogue"),
+    language: str = Query(default="zh"),
+    user_id: int = Depends(optional_user),
+):
+    """生成墨水屏物理版面诊断会话与 ASCII 拓扑草图，供 AI 或调试器直接读懂视觉排版。"""
+    from core.layout_inspector import inspect_layout, format_ai_dialogue
+    from fastapi.responses import PlainTextResponse
+
+    registry = get_registry()
+    json_mode = registry.get_json_mode(mode_id, language=language)
+    if not json_mode:
+        return JSONResponse({"error": "mode_not_found"}, status_code=404)
+
+    mode_def = json_mode.definition if hasattr(json_mode, "definition") else json_mode
+    content_cfg = mode_def.get("content", {})
+    fallback = content_cfg.get("fallback", {})
+    static_data = content_cfg.get("static_data", {})
+    sample_content = dict(fallback or static_data or {})
+
+    session = inspect_layout(
+        mode_def, sample_content, screen_w=w, screen_h=h, language=language
+    )
+
+    if format in ("dialogue", "markdown", "text"):
+        dialogue = format_ai_dialogue(session)
+        return PlainTextResponse(dialogue, media_type="text/markdown; charset=utf-8")
+
+    return {
+        "ok": True,
+        "session": session.to_dict(),
+        "ai_dialogue": format_ai_dialogue(session),
+    }

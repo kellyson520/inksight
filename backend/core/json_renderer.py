@@ -376,8 +376,12 @@ def render_json_mode(
     screen_h: int = SCREEN_HEIGHT,
     colors: int = 2,
     language: str = "zh",
-) -> Image.Image:
-    """Render a JSON-defined mode to an e-ink image (1-bit or 4-color palette)."""
+    return_session: bool = False,
+) -> Image.Image | tuple[Image.Image, Any]:
+    """Render a JSON-defined mode to an e-ink image (1-bit or 4-color palette).
+
+    When return_session is True, returns (img, layout_session) for AI inspection & debugging.
+    """
     if colors >= 3:
         img = Image.new("P", (screen_w, screen_h), EINK_BG)
         pal = EINK_4COLOR_PALETTE + [0] * (768 - len(EINK_4COLOR_PALETTE))
@@ -531,6 +535,13 @@ def render_json_mode(
         colors=colors,
         footer_top=footer_top,
     )
+
+    if return_session:
+        from core.layout_inspector import inspect_layout
+        session = inspect_layout(
+            mode_def, content, screen_w=screen_w, screen_h=screen_h, colors=colors, language=language
+        )
+        return img, session
 
     return img
 

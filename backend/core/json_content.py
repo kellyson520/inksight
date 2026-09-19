@@ -1151,6 +1151,32 @@ async def generate_json_mode_content(
                     logger.info(f"[JSONContent] Recipe duplicate detected for {mode_id}: {res_dish}")
 
         if not is_duplicate:
+            # 执行虚拟排版预检与防截断自愈 (Virtual Layout Inspection & Self-healing)
+            try:
+                from .layout_inspector import inspect_layout
+                dry_session = inspect_layout(mode_def, result, screen_w=screen_w, screen_h=screen_h)
+                if dry_session.has_truncation:
+                    logger.warning(
+                        f"[JSONContent] Generated content for {mode_id} overflows screen {screen_w}x{screen_h} (has_truncation=True)."
+                    )
+                    if attempt < DEDUP_MAX_RETRIES:
+                        first_attempt_hint += (
+                            "\n[墨水屏排版超界警告]: 上一轮生成的文本过多，超出物理屏幕被硬性截断！"
+                            "请精炼语句，减少 20%~30% 字数，确保排版完整！"
+                        )
+                        continue
+                    else:
+                        # 达到重试上限，执行安全标点修剪，避免残句和破句
+                        for fld in ("quote", "content", "body", "text", "story", "explanation"):
+                            if fld in result and isinstance(result[fld], str) and len(result[fld]) > 30:
+                                val = result[fld]
+                                cut_idx = max(val.rfind("。"), val.rfind("！"), val.rfind("；"), val.rfind("."))
+                                if cut_idx > len(val) * 0.4:
+                                    result[fld] = val[:cut_idx + 1]
+                                    logger.info(f"[JSONContent] Applied safe punctuation trim on field {fld}")
+            except Exception as _insp_e:
+                logger.debug(f"[JSONContent] Layout dry-run inspection skipped: {_insp_e}")
+
             break
 
         temperature = min(1.0, temperature + 0.1)
