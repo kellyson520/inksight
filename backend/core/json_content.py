@@ -1151,10 +1151,12 @@ async def generate_json_mode_content(
                     logger.info(f"[JSONContent] Recipe duplicate detected for {mode_id}: {res_dish}")
 
         if not is_duplicate:
-            # 执行虚拟排版预检与防截断自愈 (Virtual Layout Inspection & Self-healing)
+            # 执行虚拟排版预检与美学自愈闭环 (Virtual Layout & Aesthetics Closed-loop Self-healing)
             try:
-                from .layout_inspector import inspect_layout
+                from .layout_inspector import inspect_layout, evaluate_eink_aesthetics
                 dry_session = inspect_layout(mode_def, result, screen_w=screen_w, screen_h=screen_h)
+                aesthetics = evaluate_eink_aesthetics(dry_session)
+
                 if dry_session.has_truncation:
                     logger.warning(
                         f"[JSONContent] Generated content for {mode_id} overflows screen {screen_w}x{screen_h} (has_truncation=True)."
@@ -1174,6 +1176,22 @@ async def generate_json_mode_content(
                                 if cut_idx > len(val) * 0.4:
                                     result[fld] = val[:cut_idx + 1]
                                     logger.info(f"[JSONContent] Applied safe punctuation trim on field {fld}")
+                elif (
+                    mode_def.get("layout", {}).get("body")
+                    and dry_session.density_assessment == "sparse"
+                    and dry_session.fill_ratio < 0.25
+                    and attempt < DEDUP_MAX_RETRIES
+                ):
+                    # 仅在定义了真实 layout 组件结构且版面极端空旷时触发美学扩充
+                    logger.info(f"[JSONContent] Content for {mode_id} is overly sparse (fill={dry_session.fill_ratio}). Enhancing next prompt attempt.")
+                    first_attempt_hint += (
+                        "\n[墨水屏版面过空提醒]: 上一轮生成的内容偏短，墨水屏下半部分留白过多。"
+                        "请适当展开，增加更有深度的背景解析或金句注解，丰富版面饱满度！"
+                    )
+                    continue
+
+                # 记录美学评分到结果元数据中，供后续离线池沉淀质量加权
+                result["_aesthetic_score"] = aesthetics.get("overall_score", 90.0)
             except Exception as _insp_e:
                 logger.debug(f"[JSONContent] Layout dry-run inspection skipped: {_insp_e}")
 
@@ -1192,7 +1210,8 @@ async def generate_json_mode_content(
     try:
         from .preload_store import add_preload_item
         target_d = date_str[:10] if (date_str and len(date_str) >= 10 and mode_id == "THISDAY") else ""
-        await add_preload_item(mode_id, result, target_date=target_d, quality_score=95)
+        quality_score = int(result.get("_aesthetic_score", 95))
+        await add_preload_item(mode_id, result, target_date=target_d, quality_score=quality_score)
     except Exception as _seed_exc:
         logger.debug(f"[JSONContent] Failed to dynamically save preload item for {mode_id}: {_seed_exc}")
 
