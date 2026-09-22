@@ -1189,6 +1189,17 @@ async def generate_json_mode_content(
                         "请适当展开，增加更有深度的背景解析或金句注解，丰富版面饱满度！"
                     )
                     continue
+                elif (
+                    mode_def.get("layout", {}).get("body")
+                    and aesthetics.get("hierarchy_desc") == "层级偏平"
+                    and attempt < DEDUP_MAX_RETRIES
+                ):
+                    # 若标题与正文字数或字号层级完全拉不开，在可重试范围内引导大模型输出主次更分明的内容结构
+                    logger.info(f"[JSONContent] Hierarchy is flat for {mode_id}. Guiding LLM for distinct primary vs secondary content.")
+                    first_attempt_hint += (
+                        "\n[排版层级建议]: 请确保主标题更加凝练精悍 (8~14字)，正文详实深刻，拉开视觉落脚点的主次反差！"
+                    )
+                    continue
 
                 # 记录美学评分到结果元数据中，供后续离线池沉淀质量加权
                 result["_aesthetic_score"] = aesthetics.get("overall_score", 90.0)

@@ -24,3 +24,25 @@ def test_sparse_layout_triggers_aesthetic_warning():
     assert session.density_assessment == "sparse"
     assert aesthetics["overall_score"] < 90
     assert any("稀疏" in adv or "空" in adv for adv in aesthetics["actionable_advice_for_ai"])
+
+
+def test_flat_hierarchy_triggers_structured_advice():
+    mode_def = {
+        "mode_id": "TEST_FLAT_HIERARCHY",
+        "layout": {
+            "body": [
+                {"type": "text", "field": "title", "font_size": 15},
+                {"type": "text", "field": "desc", "font_size": 14},
+                {"type": "text", "field": "extra", "font_size": 14},
+            ]
+        }
+    }
+    content = {
+        "title": "晨间问候",
+        "desc": "新的一天开始了，愿你专注内心的力量。",
+        "extra": "今日宜专注、深呼吸与阅读。",
+    }
+    session = inspect_layout(mode_def, content, screen_w=400, screen_h=300)
+    aesthetics = evaluate_eink_aesthetics(session)
+    assert aesthetics["hierarchy_desc"] == "层级偏平"
+    assert any("信息层级" in adv for adv in aesthetics["actionable_advice_for_ai"])
