@@ -341,6 +341,27 @@ def evaluate_eink_aesthetics(session: LayoutSession) -> dict[str, Any]:
         typo_desc = "长段密集"
         advice.append("【分段节奏】检测到超过 6 行的长文本块。建议提炼核心语句或分拆为多段。")
 
+    # 4. 信息层级梯度评估 (Information Hierarchy)
+    hierarchy_desc = "梯队鲜明"
+    font_sizes = [
+        int(b.details["font_size"])
+        for b in session.blocks
+        if b.details and b.details.get("font_size") and b.rendered_lines
+    ]
+    hierarchy_ratio = 1.0
+    if len(font_sizes) >= 2:
+        max_fs = max(font_sizes)
+        min_fs = min(font_sizes)
+        if min_fs > 0:
+            hierarchy_ratio = round(max_fs / float(min_fs), 2)
+            if hierarchy_ratio < 1.15 and len(session.blocks) >= 3:
+                score -= 5.0
+                deductions.append(f"标题与正文字号过近 ({max_fs}px vs {min_fs}px)，缺乏视觉梯队 (-5分)")
+                hierarchy_desc = "层级偏平"
+                advice.append(
+                    f"【信息层级】当前字号层级比为 {hierarchy_ratio} (推荐 >= 1.25)。建议增大主标题字号以强化视觉落脚点。"
+                )
+
     score = max(0.0, min(100.0, round(score, 1)))
 
     return {
@@ -350,6 +371,8 @@ def evaluate_eink_aesthetics(session: LayoutSession) -> dict[str, Any]:
         "visual_center_ratio": round(normalized_center, 2),
         "fill_ratio": fill,
         "typography_elegance": typo_desc,
+        "hierarchy_desc": hierarchy_desc,
+        "hierarchy_ratio": hierarchy_ratio,
         "deductions": deductions,
         "actionable_advice_for_ai": advice or ["【完美排版】视觉平衡度与墨水屏留白比例极佳，无需调整。"],
     }
@@ -427,8 +450,8 @@ def format_ai_dialogue(session: LayoutSession) -> str:
         f"- **物理屏幕分辨率**: {session.screen_w}x{session.screen_h} (1-bit E-ink)",
         f"- **美学与和谐度评分**: **{aesthetics['overall_score']} / 100** [{aesthetics['grade']}]",
         f"- **视觉重心与留白**: `{aesthetics['visual_balance']}` (重心比例: {aesthetics['visual_center_ratio']})",
-        f"- **排版状态**: {status_emoji} (密度评定: `{session.density_assessment}`)",
-        f"- **空间利用率**: {int(session.fill_ratio * 100)}% (主体占用: {session.body_height_used}px / 可用: {session.available_body_height}px)",
+        f"- **排版状态**: {status_emoji} (密度评定: `{session.density_assessment}`, 层级梯度: `{aesthetics.get('hierarchy_desc', '梯队鲜明')}`)",
+        f"- **空间利用率**: {int(session.fill_ratio * 100)}% (主体占用: {session.body_height_used}px / 可用: {session.available_body_height}px, 字号阶梯比: {aesthetics.get('hierarchy_ratio', 1.0)})",
         f"- **剩余保护余量**: {session.remaining_height_px}px",
         f"- **是否发生截断**: {'是 (存在文字丢失)' if session.has_truncation else '否 (全部内容完整显示)'}",
         "",

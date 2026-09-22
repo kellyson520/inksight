@@ -33,3 +33,37 @@ def test_draw_apple_squircle_filled():
     assert img.getpixel((50, 30)) == 0
     # 验证外部角落未被误填
     assert img.getpixel((5, 5)) == 1
+
+
+def test_render_card_with_apple_squircle():
+    from core.blocks.context import RenderContext
+    from core.blocks.layout import render_card
+
+    img = Image.new("1", (200, 200), 1)
+    draw = ImageDraw.Draw(img)
+    ctx = RenderContext(
+        draw=draw,
+        img=img,
+        content={"title": "Apple Card"},
+        screen_w=200,
+        screen_h=200,
+        y=10,
+        x_offset=0,
+        available_width=200,
+        colors=2,
+    )
+    block = {
+        "type": "card",
+        "border": "solid",
+        "radius": 10,
+        "padding": 5,
+        "margin_x": 10,
+        "children": [
+            {"type": "text", "text": "Card Content"},
+        ],
+    }
+    render_card(ctx, block)
+    # 验证卡片绘制完成后 y 坐标向下推移
+    assert ctx.y > 10
+    # 验证边框像素被绘制 (例如外轮廓处)
+    assert img.getpixel((10, 10)) == 0

@@ -10,6 +10,7 @@ from typing import Any
 from core.patterns.utils import (
     EINK_BG,
     EINK_FG,
+    draw_apple_squircle,
     draw_dashed_line,
     has_cjk,
     load_font,
@@ -366,9 +367,26 @@ def render_card(ctx: RenderContext, block: dict) -> None:
         if max_card_h < 25:
             return
         card_h = max_card_h
-    if border_type == "solid":
-        ctx.draw.rounded_rectangle([card_x, start_y, card_x + card_w, start_y + card_h], radius=radius, outline=border_color, width=border_width)
+    bg_color_name = block.get("bg_color")
+    bg_fill = ctx.color_index(str(bg_color_name)) if bg_color_name else None
+
+    if border_type in ("solid", "squircle"):
+        draw_apple_squircle(
+            ctx.draw,
+            [card_x, start_y, card_x + card_w, start_y + card_h],
+            radius=radius,
+            outline=border_color,
+            width=border_width,
+            fill=bg_fill,
+        )
     elif border_type == "dashed":
+        if bg_fill is not None:
+            draw_apple_squircle(
+                ctx.draw,
+                [card_x, start_y, card_x + card_w, start_y + card_h],
+                radius=radius,
+                fill=bg_fill,
+            )
         draw_dashed_line(ctx.draw, (card_x + radius, start_y), (card_x + card_w - radius, start_y), fill=border_color, width=border_width)
         draw_dashed_line(ctx.draw, (card_x + radius, start_y + card_h), (card_x + card_w - radius, start_y + card_h), fill=border_color, width=border_width)
         draw_dashed_line(ctx.draw, (card_x, start_y + radius), (card_x, start_y + card_h - radius), fill=border_color, width=border_width)

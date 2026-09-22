@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 import re
 from functools import lru_cache
@@ -842,6 +843,7 @@ def draw_apple_squircle(
     fill: Any | None = None,
     outline: Any | None = None,
     width: int = 1,
+    n: float = 3.2,
 ) -> None:
     """绘制苹果风格平滑超椭圆/圆角矩形 (Apple-Style Squircle / Continuous Curvature Corner)。
 
@@ -854,6 +856,43 @@ def draw_apple_squircle(
     h = max(1, y1 - y0)
     r = max(1, min(radius, w // 2, h // 2))
 
-    # 在点阵尺寸较小或极简绘制时直接使用高兼容 rounded_rectangle，但在边缘做无锯齿处理
-    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=fill, outline=outline, width=width)
+    if r <= 3:
+        draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=fill, outline=outline, width=width)
+        return
+
+    exp = 2.0 / max(1.0, float(n))
+    steps = max(6, min(14, r))
+    pts: list[tuple[int, int]] = []
+
+    # Top-right corner (cx = x1 - r, cy = y0 + r)
+    cx, cy = x1 - r, y0 + r
+    for i in range(steps + 1):
+        t = (math.pi / 2.0) * (1.0 - i / float(steps))
+        pts.append((round(cx + r * (math.cos(t) ** exp)), round(cy - r * (math.sin(t) ** exp))))
+
+    # Bottom-right corner (cx = x1 - r, cy = y1 - r)
+    cx, cy = x1 - r, y1 - r
+    for i in range(steps + 1):
+        t = (math.pi / 2.0) * (i / float(steps))
+        pts.append((round(cx + r * (math.cos(t) ** exp)), round(cy + r * (math.sin(t) ** exp))))
+
+    # Bottom-left corner (cx = x0 + r, cy = y1 - r)
+    cx, cy = x0 + r, y1 - r
+    for i in range(steps + 1):
+        t = (math.pi / 2.0) * (1.0 - i / float(steps))
+        pts.append((round(cx - r * (math.cos(t) ** exp)), round(cy + r * (math.sin(t) ** exp))))
+
+    # Top-left corner (cx = x0 + r, cy = y0 + r)
+    cx, cy = x0 + r, y0 + r
+    for i in range(steps + 1):
+        t = (math.pi / 2.0) * (i / float(steps))
+        pts.append((round(cx - r * (math.cos(t) ** exp)), round(cy - r * (math.sin(t) ** exp))))
+
+    if fill is not None:
+        draw.polygon(pts, fill=fill)
+    if outline is not None:
+        if width <= 1:
+            draw.polygon(pts, outline=outline)
+        else:
+            draw.line(pts + [pts[0]], fill=outline, width=width)
 

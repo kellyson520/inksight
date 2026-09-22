@@ -48,3 +48,28 @@ def test_format_ai_dialogue_contains_aesthetic_score():
     # 验证报告中包含美学综合评分与 AI 视觉理解维度
     assert "美学与和谐度评分" in report or "Aesthetic" in report
     assert "视觉重心" in report or "平衡" in report
+
+
+def test_evaluate_eink_aesthetics_hierarchy_detection():
+    # 测试标题与正文字号过近的扁平层级检测
+    mode_def = {
+        "mode_id": "TEST_HIERARCHY",
+        "layout": {
+            "body": [
+                {"type": "text", "field": "title", "font_size": 15},
+                {"type": "text", "field": "subtitle", "font_size": 14},
+                {"type": "text", "field": "body", "font_size": 14},
+            ]
+        }
+    }
+    content = {
+        "title": "晨间微思",
+        "subtitle": "今日专注要务",
+        "body": "生活是一场持续的自我超越，保持专注与内心的平静。",
+    }
+    session = inspect_layout(mode_def, content, screen_w=400, screen_h=300)
+    report = evaluate_eink_aesthetics(session)
+    assert "hierarchy_ratio" in report
+    assert report["hierarchy_ratio"] < 1.15
+    assert report["hierarchy_desc"] == "层级偏平"
+    assert any("信息层级" in adv for adv in report["actionable_advice_for_ai"])
