@@ -168,7 +168,7 @@ def _extract_user(
             logger.warning(f"[AUTH] _extract_user: Failed to decode token from {source_type}: {type(e).__name__}: {e}")
             continue
     
-    logger.warning(f"[AUTH] _extract_user: No valid token found (cookie={'present' if ink_session else 'None'}, header={'present' if auth_header else 'None'})")
+    logger.debug(f"[AUTH] _extract_user: No valid token found (cookie={'present' if ink_session else 'None'}, header={'present' if auth_header else 'None'})")
     return None
 
 

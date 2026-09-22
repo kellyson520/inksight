@@ -98,6 +98,7 @@ async def start_scheduler() -> None:
         name="Event Outbox Dispatch",
         max_instances=1,
         coalesce=True,
+        misfire_grace_time=30,
     )
     async def _poll_hotlist_diff():
         for platform in ("zhihu", "weibo", "bilibili"):
@@ -114,6 +115,7 @@ async def start_scheduler() -> None:
         name="Hotlist Diff Poll",
         max_instances=1,
         coalesce=True,
+        misfire_grace_time=60,
     )
     scheduler.add_job(
         monitor_runner.run_once,
@@ -123,6 +125,7 @@ async def start_scheduler() -> None:
         name="Web Monitor Poll",
         max_instances=1,
         coalesce=True,
+        misfire_grace_time=60,
     )
 
     # 周更任务：每周一 03:00 通过 LLM 生成新谜语
