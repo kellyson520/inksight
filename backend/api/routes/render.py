@@ -35,7 +35,7 @@ from core.config_store import (
     get_or_create_claim_token,
     update_device_state,
 )
-from core.context import extract_location_settings, get_date_context, get_weather
+from core.context import calc_battery_pct, extract_location_settings, get_date_context, get_weather
 from core.pipeline import generate_and_render
 from core.renderer import image_to_bmp_bytes, image_to_png_bytes, image_to_raw_2bpp, render_error
 from core.schemas import RenderQuery
@@ -232,10 +232,11 @@ async def render(
         }
         if configured_refresh_minutes is not None:
             from core.sleep_scheduler import calculate_optimal_sleep_minutes
+            battery_pct = params.b if params.b is not None else calc_battery_pct(params.v)
             optimal_sleep = calculate_optimal_sleep_minutes(
                 cfg or {},
                 current_mode=resolved_persona,
-                battery_pct=params.b,
+                battery_pct=battery_pct,
             )
             headers["X-Refresh-Minutes"] = str(optimal_sleep)
         if mac and await consume_pending_refresh(mac):
@@ -244,7 +245,7 @@ async def render(
             headers["X-Content-Fallback"] = "1"
 
         return Response(content=out_bytes, media_type=out_media, headers=headers)
-    except (OSError, RuntimeError, TypeError, UnidentifiedImageError, ValueError) as exc:
+    except Exception as exc:
         elapsed_ms = int((time.time() - start_time) * 1000)
         logger.error("[RENDER] Failed: %s", exc, exc_info=True)
         if mac:
