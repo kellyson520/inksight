@@ -162,7 +162,10 @@ class MonitorService:
                 resp = await injected_client.get(url, headers=headers)
                 text = resp.text
             else:
-                resp = outbound_http.get_text(url, headers=headers)
+                # 监控服务需要支持探测站长自建内网健康状态 (如 127.0.0.1 或内网群晖/NAS)
+                from core.outbound_http import RequestPolicy
+                policy = RequestPolicy(allow_private=True)
+                resp = outbound_http.get_text(url, headers=headers, policy=policy)
                 text = resp.text
             target["last_checked"] = int(time.time())
             title, summary = _extract_page_core_text(text)

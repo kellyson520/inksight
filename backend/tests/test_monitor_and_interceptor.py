@@ -28,6 +28,24 @@ from core.blocks.context import RenderContext
 from PIL import Image, ImageDraw
 
 
+@pytest.fixture(autouse=True)
+def isolate_monitor_storage(monkeypatch, tmp_path):
+    temp_targets = tmp_path / "monitor_targets.json"
+    temp_notices = tmp_path / "monitor_notices.json"
+    monkeypatch.setattr("core.monitor_service._TARGETS_FILE", temp_targets)
+    monkeypatch.setattr("core.monitor_service._NOTICES_FILE", temp_notices)
+    orig_targets = list(monitor_service._targets)
+    orig_notices = list(monitor_service._notices)
+    orig_presented = dict(monitor_service._device_presented_map)
+    monitor_service._targets = []
+    monitor_service._notices = []
+    monitor_service._device_presented_map = {}
+    yield
+    monitor_service._targets = orig_targets
+    monitor_service._notices = orig_notices
+    monitor_service._device_presented_map = orig_presented
+
+
 def test_extract_page_core_text():
     """测试网页核心文本抽取与噪声过滤。"""
     html = """

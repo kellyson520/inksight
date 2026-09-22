@@ -24,6 +24,7 @@ class RequestPolicy:
     verify: bool = True
     follow_redirects: bool = False
     allowed_hosts: frozenset[str] | None = None
+    allow_private: bool = False
 
 
 @dataclass(frozen=True)
@@ -98,8 +99,8 @@ class OutboundHttp:
             cgnat = ipaddress.IPv4Network("100.64.0.0/10")
             return addr.is_private or addr.is_reserved or (addr in cgnat)
 
-        # 只要解析出的任一 IP 属于私有/保留/环回/拦截范围，立即防御性拦截
-        if addresses and any(_is_private_or_blocked(a) for a in addresses):
+        # 只要解析出的任一 IP 属于私有/保留/环回/拦截范围，且未明确允许私网，立即防御性拦截
+        if not policy.allow_private and addresses and any(_is_private_or_blocked(a) for a in addresses):
             raise ValueError(f"private URL blocked: {url}")
 
     @staticmethod
