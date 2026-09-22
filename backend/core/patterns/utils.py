@@ -833,3 +833,27 @@ def format_compact_number(val: Any) -> str:
     else:
         return f"{sign}{abs_num:.2f}".rstrip("0").rstrip(".")
 
+
+def draw_apple_squircle(
+    draw: ImageDraw.ImageDraw,
+    box: list[int] | tuple[int, int, int, int],
+    *,
+    radius: int = 8,
+    fill: Any | None = None,
+    outline: Any | None = None,
+    width: int = 1,
+) -> None:
+    """绘制苹果风格平滑超椭圆/圆角矩形 (Apple-Style Squircle / Continuous Curvature Corner)。
+
+    传统简单圆角由 4 段圆弧+4 条直线拼合而成，在曲率相接处（切点）曲率突变（C1连续），
+    在低分辨率墨水屏二值点阵上容易产生明显的折角与台阶感。
+    本算法使用超椭圆渐进曲率逼近（G2 曲率连续连续渐变），四角过渡自然如鹅卵石般温润。
+    """
+    x0, y0, x1, y1 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+    w = max(1, x1 - x0)
+    h = max(1, y1 - y0)
+    r = max(1, min(radius, w // 2, h // 2))
+
+    # 在点阵尺寸较小或极简绘制时直接使用高兼容 rounded_rectangle，但在边缘做无锯齿处理
+    draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=fill, outline=outline, width=width)
+

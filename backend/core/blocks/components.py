@@ -17,6 +17,7 @@ from core.media_fetcher import media_fetcher
 from core.patterns.utils import (
     EINK_BG,
     EINK_FG,
+    draw_apple_squircle,
     draw_dashed_line,
     has_cjk,
     load_font,
@@ -108,10 +109,10 @@ def render_badge(ctx: RenderContext, block: dict) -> None:
     bg_fill = ctx.color_index(str(bg_color_name), default=EINK_FG)
 
     if variant == "solid":
-        ctx.draw.rounded_rectangle([bx, by, bx + badge_w, by + badge_h], radius=radius, fill=bg_fill)
+        draw_apple_squircle(ctx.draw, [bx, by, bx + badge_w, by + badge_h], radius=radius, fill=bg_fill)
         text_fill = ctx.color_index(text_color_name, default=EINK_BG) if text_color_name else EINK_BG
     elif variant == "outline":
-        ctx.draw.rounded_rectangle([bx, by, bx + badge_w, by + badge_h], radius=radius, outline=bg_fill, width=1)
+        draw_apple_squircle(ctx.draw, [bx, by, bx + badge_w, by + badge_h], radius=radius, outline=bg_fill, width=1)
         text_fill = ctx.color_index(text_color_name, default=bg_fill) if text_color_name else bg_fill
     else:
         text_fill = ctx.color_index(text_color_name, default=EINK_FG)
@@ -164,7 +165,7 @@ def render_metric_card(ctx: RenderContext, block: dict) -> None:
 
     border_type = block.get("border", "solid")
     if border_type == "solid":
-        ctx.draw.rounded_rectangle([card_x, start_y, card_x + card_w, start_y + card_h], radius=radius, outline=EINK_FG, width=1)
+        draw_apple_squircle(ctx.draw, [card_x, start_y, card_x + card_w, start_y + card_h], radius=radius, outline=EINK_FG, width=1)
     elif border_type == "dashed":
         draw_dashed_line(ctx.draw, (card_x, start_y), (card_x + card_w, start_y), fill=EINK_FG)
         draw_dashed_line(ctx.draw, (card_x, start_y + card_h), (card_x + card_w, start_y + card_h), fill=EINK_FG)
