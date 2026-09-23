@@ -47,7 +47,46 @@ def render_mode(
 
 
 def image_to_bmp_bytes(img: Image.Image) -> bytes:
-    """将图像转换为 BMP 字节流"""
+    """将图像转换为 BMP 字节流。针对 1-bit 墨水屏图像使用无锁内存快速组包，并保持标准兼容。"""
+    if img.mode == "1":
+        try:
+            import numpy as np
+            w, h = img.size
+            row_bytes = (w + 31) // 32 * 4
+            image_size = row_bytes * h
+            file_size = 62 + image_size
+
+            header = bytearray(62)
+            header[0:2] = b"BM"
+            header[2:6] = file_size.to_bytes(4, "little")
+            header[10:14] = (62).to_bytes(4, "little")
+
+            header[14:18] = (40).to_bytes(4, "little")
+            header[18:22] = w.to_bytes(4, "little")
+            header[22:26] = h.to_bytes(4, "little")
+            header[26:28] = (1).to_bytes(2, "little")
+            header[28:30] = (1).to_bytes(2, "little")
+            header[34:38] = image_size.to_bytes(4, "little")
+            header[38:42] = (3780).to_bytes(4, "little")
+            header[42:46] = (3780).to_bytes(4, "little")
+            header[46:50] = (2).to_bytes(4, "little")
+            header[50:54] = (2).to_bytes(4, "little")
+
+            header[54:58] = b"\x00\x00\x00\x00"
+            header[58:62] = b"\xff\xff\xff\xff"
+
+            arr = (np.array(img, dtype=np.uint8) != 0).astype(np.uint8)
+            flip_arr = np.flipud(arr)
+            packed = np.packbits(flip_arr, axis=1)
+
+            pad = row_bytes - packed.shape[1]
+            if pad > 0:
+                packed = np.pad(packed, ((0, 0), (0, pad)), mode="constant", constant_values=0)
+
+            return bytes(header) + packed.tobytes()
+        except Exception:
+            pass
+
     buf = io.BytesIO()
     img.save(buf, format="BMP")
     return buf.getvalue()

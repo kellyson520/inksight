@@ -67,3 +67,35 @@ def test_render_card_with_apple_squircle():
     assert ctx.y > 10
     # 验证边框像素被绘制 (例如外轮廓处)
     assert img.getpixel((10, 10)) == 0
+
+
+def test_render_flex_row_with_apple_squircle_background():
+    from core.blocks.context import RenderContext
+    from core.blocks.layout import render_flex_row
+
+    img = Image.new("1", (200, 200), 1)
+    draw = ImageDraw.Draw(img)
+    ctx = RenderContext(
+        draw=draw,
+        img=img,
+        content={"tag1": "Tag A", "tag2": "Tag B"},
+        screen_w=200,
+        screen_h=200,
+        y=20,
+        x_offset=0,
+        available_width=200,
+        colors=2,
+    )
+    block = {
+        "type": "flex_row",
+        "bg_color": "black",
+        "radius": 6,
+        "items": [
+            {"type": "text", "text": "Tag A", "color": "white"},
+            {"type": "text", "text": "Tag B", "color": "white"},
+        ],
+    }
+    render_flex_row(ctx, block)
+    assert ctx.y > 20
+    # 验证内部区域被黑色底板填充
+    assert img.getpixel((100, 22)) == 0

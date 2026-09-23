@@ -295,6 +295,20 @@ def render_flex_row(ctx: RenderContext, block: dict) -> None:
     row_y = ctx.y
     cur_x = start_x
 
+    # 背景胶囊/底板支持 (bg_color & radius)
+    bg_color_name = block.get("bg_color")
+    if bg_color_name:
+        bg_fill = ctx.color_index(str(bg_color_name))
+        row_radius = int(block.get("radius", 4) * ctx.scale)
+        row_pad_x = int(block.get("padding_x", 6) * ctx.scale)
+        row_pad_y = int(block.get("padding_y", 3) * ctx.scale)
+        draw_apple_squircle(
+            ctx.draw,
+            [cur_x - row_pad_x, row_y - row_pad_y, cur_x + total_items_w + (k - 1) * computed_gap + row_pad_x, row_y + row_h + row_pad_y],
+            radius=row_radius,
+            fill=bg_fill,
+        )
+
     for idx, (item, (w, h)) in enumerate(zip(items, sizes)):
         if align_items == "bottom":
             item_y = row_y + (row_h - h)
@@ -370,15 +384,17 @@ def render_card(ctx: RenderContext, block: dict) -> None:
     bg_color_name = block.get("bg_color")
     bg_fill = ctx.color_index(str(bg_color_name)) if bg_color_name else None
 
-    if border_type in ("solid", "squircle"):
-        draw_apple_squircle(
-            ctx.draw,
-            [card_x, start_y, card_x + card_w, start_y + card_h],
-            radius=radius,
-            outline=border_color,
-            width=border_width,
-            fill=bg_fill,
-        )
+    if border_type in ("solid", "squircle", "apple_squircle", "none", ""):
+        outline_val = border_color if border_type not in ("none", "") else None
+        if outline_val is not None or bg_fill is not None:
+            draw_apple_squircle(
+                ctx.draw,
+                [card_x, start_y, card_x + card_w, start_y + card_h],
+                radius=radius,
+                outline=outline_val,
+                width=border_width,
+                fill=bg_fill,
+            )
     elif border_type == "dashed":
         if bg_fill is not None:
             draw_apple_squircle(
