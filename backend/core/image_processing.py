@@ -1,6 +1,7 @@
 """Reusable image fitting and e-ink quantization helpers."""
 from __future__ import annotations
 
+from functools import lru_cache
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps, ImageStat
 
 from . import native_dither
@@ -96,27 +97,11 @@ def _flatten_alpha_to_white(im: Image.Image) -> Image.Image:
     return im
 
 
-def apply_apple_eink_tone_curve(im: Image.Image) -> Image.Image:
-    """苹果级墨水屏光影雕琢曲线 (Apple-Grade E-Ink Tonal Curve)。
-
-    针对电子纸微胶囊物理双稳态特性精益设计：
-    1. 动态自适应暗部增益 (Shadow Boost)：在 0~85 亮度区间执行微伽马曲线平滑扩展，
-       避免人像头发、深色西装及暗景在二值化后塌陷为死黑块（唤醒暗部细节）；
-    2. 局部高光平滑滚降 (Highlight Roll-off)：在 200~255 亮度区间执行非线性平滑过渡，
-       保护天空云层、浅色面部与雪景不被过曝切断为纯白；
-    3. 中间调局部微反差 (Midtone Clarity)：微调 UnsharpMask 半径与阈值，
-       消除传统全局锐化的虚影白边 (Halo)，使照片呈现纸质书籍般的真实印刷层次。
-    """
-    flat = _flatten_alpha_to_white(im)
-    rgb = flat.convert("RGB")
-
-    # 1. 测算整体亮度均值，进行全局动态自适应曝光补偿
-    gray = rgb.convert("L")
-    stat = ImageStat.Stat(gray)
-    mean_lum = stat.mean[0] if stat.mean else 128.0
-
-    # 曝光曲线映射表 (256 LUT)
-    lut = []
+@lru_cache(maxsize=128)
+def _get_apple_eink_lut(mean_bucket: int) -> tuple[int, ...]:
+    """生成并缓存苹果级 256 色阶调色曲线映射表 (自适应曝光 LUT)。"""
+    mean_lum = float(mean_bucket)
+    lut: list[int] = []
     for i in range(256):
         x = i / 255.0
 
@@ -137,6 +122,31 @@ def apply_apple_eink_tone_curve(im: Image.Image) -> Image.Image:
 
         mapped_byte = int(max(0.0, min(1.0, val)) * 255.0 + 0.5)
         lut.append(mapped_byte)
+    return tuple(lut)
+
+
+def apply_apple_eink_tone_curve(im: Image.Image) -> Image.Image:
+    """苹果级墨水屏光影雕琢曲线 (Apple-Grade E-Ink Tonal Curve)。
+
+    针对电子纸微胶囊物理双稳态特性精益设计：
+    1. 动态自适应暗部增益 (Shadow Boost)：在 0~85 亮度区间执行微伽马曲线平滑扩展，
+       避免人像头发、深色西装及暗景在二值化后塌陷为死黑块（唤醒暗部细节）；
+    2. 局部高光平滑滚降 (Highlight Roll-off)：在 200~255 亮度区间执行非线性平滑过渡，
+       保护天空云层、浅色面部与雪景不被过曝切断为纯白；
+    3. 中间调局部微反差 (Midtone Clarity)：微调 UnsharpMask 半径与阈值，
+       消除传统全局锐化的虚影白边 (Halo)，使照片呈现纸质书籍般的真实印刷层次。
+    """
+    flat = _flatten_alpha_to_white(im)
+    rgb = flat.convert("RGB")
+
+    # 1. 测算整体亮度均值，进行全局动态自适应曝光补偿
+    gray = rgb.convert("L")
+    stat = ImageStat.Stat(gray)
+    mean_lum = stat.mean[0] if stat.mean else 128.0
+
+    # 查表获取高性能量化 LUT 映射
+    mean_bucket = int(round(mean_lum / 2.0)) * 2
+    lut = list(_get_apple_eink_lut(mean_bucket))
 
     adjusted = rgb.point(lut * 3)
 

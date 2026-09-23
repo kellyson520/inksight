@@ -835,6 +835,39 @@ def format_compact_number(val: Any) -> str:
         return f"{sign}{abs_num:.2f}".rstrip("0").rstrip(".")
 
 
+@lru_cache(maxsize=256)
+def _get_squircle_relative_points(w: int, h: int, r: int, n: float, steps: int) -> tuple[tuple[int, int], ...]:
+    """生成相对于 (0, 0) 的超椭圆闭合点阵轮廓（带 LRU 高性能缓存）。"""
+    exp = 2.0 / max(1.0, float(n))
+    pts: list[tuple[int, int]] = []
+
+    # Top-right corner (cx = w - r, cy = r)
+    cx, cy = w - r, r
+    for i in range(steps + 1):
+        t = (math.pi / 2.0) * (1.0 - i / float(steps))
+        pts.append((round(cx + r * (math.cos(t) ** exp)), round(cy - r * (math.sin(t) ** exp))))
+
+    # Bottom-right corner (cx = w - r, cy = h - r)
+    cx, cy = w - r, h - r
+    for i in range(steps + 1):
+        t = (math.pi / 2.0) * (i / float(steps))
+        pts.append((round(cx + r * (math.cos(t) ** exp)), round(cy + r * (math.sin(t) ** exp))))
+
+    # Bottom-left corner (cx = r, cy = h - r)
+    cx, cy = r, h - r
+    for i in range(steps + 1):
+        t = (math.pi / 2.0) * (1.0 - i / float(steps))
+        pts.append((round(cx - r * (math.cos(t) ** exp)), round(cy + r * (math.sin(t) ** exp))))
+
+    # Top-left corner (cx = r, cy = r)
+    cx, cy = r, r
+    for i in range(steps + 1):
+        t = (math.pi / 2.0) * (i / float(steps))
+        pts.append((round(cx - r * (math.cos(t) ** exp)), round(cy - r * (math.sin(t) ** exp))))
+
+    return tuple(pts)
+
+
 def draw_apple_squircle(
     draw: ImageDraw.ImageDraw,
     box: list[int] | tuple[int, int, int, int],
@@ -860,33 +893,9 @@ def draw_apple_squircle(
         draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill=fill, outline=outline, width=width)
         return
 
-    exp = 2.0 / max(1.0, float(n))
     steps = max(6, min(14, r))
-    pts: list[tuple[int, int]] = []
-
-    # Top-right corner (cx = x1 - r, cy = y0 + r)
-    cx, cy = x1 - r, y0 + r
-    for i in range(steps + 1):
-        t = (math.pi / 2.0) * (1.0 - i / float(steps))
-        pts.append((round(cx + r * (math.cos(t) ** exp)), round(cy - r * (math.sin(t) ** exp))))
-
-    # Bottom-right corner (cx = x1 - r, cy = y1 - r)
-    cx, cy = x1 - r, y1 - r
-    for i in range(steps + 1):
-        t = (math.pi / 2.0) * (i / float(steps))
-        pts.append((round(cx + r * (math.cos(t) ** exp)), round(cy + r * (math.sin(t) ** exp))))
-
-    # Bottom-left corner (cx = x0 + r, cy = y1 - r)
-    cx, cy = x0 + r, y1 - r
-    for i in range(steps + 1):
-        t = (math.pi / 2.0) * (1.0 - i / float(steps))
-        pts.append((round(cx - r * (math.cos(t) ** exp)), round(cy + r * (math.sin(t) ** exp))))
-
-    # Top-left corner (cx = x0 + r, cy = y0 + r)
-    cx, cy = x0 + r, y0 + r
-    for i in range(steps + 1):
-        t = (math.pi / 2.0) * (i / float(steps))
-        pts.append((round(cx - r * (math.cos(t) ** exp)), round(cy - r * (math.sin(t) ** exp))))
+    rel_pts = _get_squircle_relative_points(w, h, r, float(n), steps)
+    pts = [(x0 + dx, y0 + dy) for dx, dy in rel_pts]
 
     if fill is not None:
         draw.polygon(pts, fill=fill)
