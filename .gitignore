@@ -278,3 +278,9 @@ lab/
 .cursor/
 backend/data/mihomo-providers/*.yaml
 backend/data/mihomo-providers/controller_secret
+backend/data/steam_cache/
+backend/data/game_discounts_cache.json
+backend/data/epic_free_cache.json
+backend/data/gaming_media_cache.json
+backend/data/real_market_cache.json
+backend/data/server_status_records.json

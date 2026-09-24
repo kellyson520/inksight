@@ -6,9 +6,11 @@
 """
 from __future__ import annotations
 
+import json
 import logging
 import random
 import time
+from pathlib import Path
 from typing import Any
 import httpx
 
@@ -17,9 +19,30 @@ from .base import register_provider
 
 logger = logging.getLogger(__name__)
 
+_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+_DISCOUNT_CACHE_FILE = _DATA_DIR / "game_discounts_cache.json"
+_EPIC_CACHE_FILE = _DATA_DIR / "epic_free_cache.json"
+
 _CACHE_TTL = 1800  # 30 分钟缓存
 _DISCOUNT_CACHE: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 _EPIC_CACHE: tuple[float, list[dict[str, Any]]] = (0.0, [])
+
+
+def _load_json_disk_cache(path: Path) -> Any | None:
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        logger.debug("[GameDiscount] Read disk cache failed: %s", e)
+    return None
+
+
+def _save_json_disk_cache(path: Path, data: Any) -> None:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as e:
+        logger.debug("[GameDiscount] Write disk cache failed: %s", e)
 
 
 def _make_client(proxy: str | None = None, **kwargs) -> httpx.AsyncClient:
@@ -160,8 +183,14 @@ async def fetch_game_discounts(proxy_url: str | None = None) -> list[dict[str, A
     except Exception as exc:
         logger.warning("[GameDiscountProvider] Failed to fetch Steam specials: %s", exc)
 
-    if not specials_list:
-        specials_list = _FALLBACK_DISCOUNTS
+    if specials_list:
+        _save_json_disk_cache(_DISCOUNT_CACHE_FILE, specials_list)
+    else:
+        disk_specials = _load_json_disk_cache(_DISCOUNT_CACHE_FILE)
+        if disk_specials and isinstance(disk_specials, list) and len(disk_specials) > 0:
+            specials_list = disk_specials
+        else:
+            specials_list = _FALLBACK_DISCOUNTS
 
     _DISCOUNT_CACHE[cache_key] = (now, specials_list)
     return specials_list
@@ -261,8 +290,14 @@ async def fetch_epic_free_games(proxy_url: str | None = None) -> list[dict[str, 
         except Exception as exc:
             logger.warning("[GameDiscountProvider] Failed to fetch GamerPower Epic: %s", exc)
 
-    if not free_games:
-        free_games = _FALLBACK_EPIC_GAMES
+    if free_games:
+        _save_json_disk_cache(_EPIC_CACHE_FILE, free_games)
+    else:
+        disk_epic = _load_json_disk_cache(_EPIC_CACHE_FILE)
+        if disk_epic and isinstance(disk_epic, list) and len(disk_epic) > 0:
+            free_games = disk_epic
+        else:
+            free_games = _FALLBACK_EPIC_GAMES
 
     _EPIC_CACHE = (now, free_games)
     return free_games

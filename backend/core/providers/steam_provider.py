@@ -14,10 +14,13 @@ Steam 个人资料、游戏与好友状态 Provider
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import random
 import re
 import time
+from pathlib import Path
 from typing import Any
 import httpx
 
@@ -25,6 +28,30 @@ from core.recommendation_provider import resolve_proxy_url
 from .base import register_provider
 
 logger = logging.getLogger(__name__)
+
+_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+_STEAM_CACHE_DIR = _DATA_DIR / "steam_cache"
+
+
+def _load_steam_disk_cache(cache_type: str, key: str) -> Any | None:
+    try:
+        h = hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+        f = _STEAM_CACHE_DIR / f"{cache_type}_{h}.json"
+        if f.exists():
+            return json.loads(f.read_text(encoding="utf-8"))
+    except Exception as e:
+        logger.debug("[SteamProvider] Read disk cache failed: %s", e)
+    return None
+
+
+def _save_steam_disk_cache(cache_type: str, key: str, data: Any) -> None:
+    try:
+        _STEAM_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        h = hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+        f = _STEAM_CACHE_DIR / f"{cache_type}_{h}.json"
+        f.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as e:
+        logger.debug("[SteamProvider] Write disk cache failed: %s", e)
 
 
 def _make_client(proxy: str | None = None, **kwargs) -> httpx.AsyncClient:
@@ -183,6 +210,10 @@ async def fetch_steam_profile_data(steam_url: str, proxy_url: str | None = None)
         logger.warning("[SteamProvider] Failed to fetch steam profile %s: %s", canon_url, exc)
 
     if not html:
+        disk_data = _load_steam_disk_cache("profile", canon_url)
+        if disk_data and disk_data.get("games"):
+            _STEAM_PROFILE_CACHE[canon_url] = (now, disk_data)
+            return disk_data
         # 使用兜底默认数据
         data = {
             "persona_name": "O_0",
@@ -255,6 +286,7 @@ async def fetch_steam_profile_data(steam_url: str, proxy_url: str | None = None)
         "level": level,
         "games": games,
     }
+    _save_steam_disk_cache("profile", canon_url, data)
     _STEAM_PROFILE_CACHE[canon_url] = (now, data)
     return data
 
@@ -312,7 +344,13 @@ async def fetch_steam_friends_data(steam_url: str, proxy_url: str | None = None)
             })
 
     if not friends:
+        disk_friends = _load_steam_disk_cache("friends", canon_url)
+        if disk_friends:
+            _STEAM_FRIENDS_CACHE[canon_url] = (now, disk_friends)
+            return disk_friends
         friends = _FALLBACK_FRIENDS
+    else:
+        _save_steam_disk_cache("friends", canon_url, friends)
 
     # 排序：游戏中 > 在线 > 离线
     status_order = {"in-game": 0, "online": 1, "offline": 2}
