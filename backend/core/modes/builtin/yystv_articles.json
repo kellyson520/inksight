@@ -1,0 +1,103 @@
+{
+  "mode_id": "YYSTV_ARTICLES",
+  "display_name": "游研社 最新文章",
+  "icon": "book",
+  "cacheable": true,
+  "description": "阅读游研社最新的游戏故事、文化文章与玩家见闻。",
+  "settings_schema": [],
+  "content": {
+    "type": "computed",
+    "provider": "yystv_articles",
+    "fallback": {
+      "header_tag": "游研社 · 游戏社评与文化",
+      "title": "联动偶像女团，成了《守望先锋》十年里最神的操作？",
+      "author": "游研社特约作者",
+      "summary": "回溯经典游戏与流行文化交错的历程，探究玩家情感共鸣与社群记忆的深层联结。",
+      "published_at": "今日发布",
+      "footer_label": "YYSTV · 游研社游戏故事与见闻"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "header_tag",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "author",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "title",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "max_lines": 2,
+            "line_height": 22,
+            "margin_bottom": 6
+          },
+          {
+            "type": "text",
+            "field": "summary",
+            "font": "noto_serif_light",
+            "font_size": 12,
+            "max_lines": 4,
+            "line_height": 18,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "items": [
+              {
+                "type": "text",
+                "text": "游研社 · 游戏研究社",
+                "font_size": 11,
+                "color": "gray"
+              },
+              {
+                "type": "text",
+                "field": "published_at",
+                "font_size": 11,
+                "color": "black"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "游研社最新文章",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

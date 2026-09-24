@@ -448,10 +448,19 @@ async def init_db():
                 locale TEXT DEFAULT 'zh',
                 timezone TEXT DEFAULT 'Asia/Shanghai',
                 global_proxy_url TEXT DEFAULT '',
+                steam_profile_url TEXT DEFAULT '',
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
+        try:
+            cursor = await db.execute("PRAGMA table_info(user_preferences)")
+            cols = [c[1] for c in await cursor.fetchall()]
+            if "steam_profile_url" not in cols:
+                await db.execute("ALTER TABLE user_preferences ADD COLUMN steam_profile_url TEXT DEFAULT ''")
+                await db.commit()
+        except Exception:
+            logger.warning("[MIGRATION] Failed to add steam_profile_url column to user_preferences", exc_info=True)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS push_tokens (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -620,10 +629,13 @@ async def create_user(
 
 
 async def get_user_by_username(username: str) -> Optional[dict]:
+    clean = (username or "").strip()
+    if not clean:
+        return None
     db = await get_main_db()
     cursor = await db.execute(
-        "SELECT id, username, password_hash, created_at FROM users WHERE username = ?",
-        (username.strip(),),
+        "SELECT id, username, password_hash, created_at FROM users WHERE username = ? OR email = ? OR phone = ? LIMIT 1",
+        (clean, clean, clean),
     )
     row = await cursor.fetchone()
     if not row:
@@ -649,6 +661,7 @@ def _default_user_preferences(user_id: int) -> dict:
         "locale": "zh",
         "timezone": "Asia/Shanghai",
         "global_proxy_url": "",
+        "steam_profile_url": "",
         "updated_at": "",
     }
 
@@ -656,7 +669,7 @@ def _default_user_preferences(user_id: int) -> dict:
 async def get_user_preferences(user_id: int) -> dict:
     db = await get_main_db()
     cursor = await db.execute(
-        """SELECT user_id, push_enabled, push_time, push_modes, widget_mode, locale, timezone, global_proxy_url, updated_at
+        """SELECT user_id, push_enabled, push_time, push_modes, widget_mode, locale, timezone, global_proxy_url, steam_profile_url, updated_at
            FROM user_preferences WHERE user_id = ? LIMIT 1""",
         (user_id,),
     )
@@ -672,7 +685,8 @@ async def get_user_preferences(user_id: int) -> dict:
         "locale": row[5] or "zh",
         "timezone": row[6] or "Asia/Shanghai",
         "global_proxy_url": row[7] or "",
-        "updated_at": row[8] or "",
+        "steam_profile_url": row[8] or "",
+        "updated_at": row[9] or "",
     }
 
 
@@ -689,13 +703,14 @@ async def save_user_preferences(user_id: int, data: dict) -> dict:
     locale = str(data.get("locale", current["locale"]) or current["locale"]).strip().lower() or "zh"
     timezone = str(data.get("timezone", current["timezone"]) or current["timezone"]).strip() or "Asia/Shanghai"
     global_proxy_url = str(data.get("global_proxy_url", current.get("global_proxy_url", "")) or "").strip()[:512]
+    steam_profile_url = str(data.get("steam_profile_url", current.get("steam_profile_url", "")) or "").strip()[:512]
 
     db = await get_main_db()
     await db.execute(
         """
         INSERT INTO user_preferences
-            (user_id, push_enabled, push_time, push_modes, widget_mode, locale, timezone, global_proxy_url, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (user_id, push_enabled, push_time, push_modes, widget_mode, locale, timezone, global_proxy_url, steam_profile_url, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(user_id) DO UPDATE SET
             push_enabled = excluded.push_enabled,
             push_time = excluded.push_time,
@@ -704,6 +719,7 @@ async def save_user_preferences(user_id: int, data: dict) -> dict:
             locale = excluded.locale,
             timezone = excluded.timezone,
             global_proxy_url = excluded.global_proxy_url,
+            steam_profile_url = excluded.steam_profile_url,
             updated_at = excluded.updated_at
         """,
         (
@@ -715,6 +731,7 @@ async def save_user_preferences(user_id: int, data: dict) -> dict:
             locale,
             timezone,
             global_proxy_url,
+            steam_profile_url,
             now,
         ),
     )
@@ -769,7 +786,8 @@ async def authenticate_user(username: str, password: str) -> Optional[dict]:
     user = await get_user_by_username(username)
     if not user:
         return None
-    if not _verify_password(password, user["password_hash"]):
+    valid = await asyncio.to_thread(_verify_password, password, user["password_hash"])
+    if not valid:
         return None
     return user
 

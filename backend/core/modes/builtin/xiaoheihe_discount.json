@@ -1,0 +1,142 @@
+{
+  "mode_id": "XIAOHEIHE_DISCOUNT",
+  "display_name": "小黑盒 游戏折扣",
+  "icon": "tag",
+  "cacheable": true,
+  "description": "小黑盒游戏折扣信息，随机展示一款正在优惠的游戏。",
+  "settings_schema": [
+    {
+      "key": "endpoint",
+      "label": "自定义折扣数据接口（可选）",
+      "type": "text",
+      "placeholder": "https://example.com/discounts.json"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "xiaoheihe_discount",
+    "fallback": {
+      "header_title": "小黑盒 · 热门折扣",
+      "game_name": "双人成行 (It Takes Two)",
+      "discount_badge": "-70%",
+      "current_price": "¥59.40",
+      "original_price": "¥198.00",
+      "cut_price": "立省 ¥138.60",
+      "historical_status": "平史低",
+      "rating_label": "好评如潮 (95%)",
+      "deadline_label": "特惠进行中",
+      "tag_list": "合作 · 动作 · 冒险",
+      "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/header_schinese.jpg",
+      "description": "年度最佳合作游戏，突破常理的奇幻冒险之旅，两名玩家必须齐心协力方能化险为夷。",
+      "footer_label": "XIAOHEIHE · 游戏好价每日选"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "header_title",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "discount_badge",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "game_name",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "max_lines": 1,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "left",
+            "gap": 8,
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "badge",
+                "field": "current_price",
+                "variant": "filled",
+                "radius": 4
+              },
+              {
+                "type": "badge",
+                "field": "original_price",
+                "variant": "outline",
+                "radius": 4
+              },
+              {
+                "type": "badge",
+                "field": "historical_status",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "description",
+            "font": "noto_serif_light",
+            "font_size": 12,
+            "max_lines": 3,
+            "line_height": 18,
+            "margin_bottom": 4
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "items": [
+              {
+                "type": "text",
+                "field": "tag_list",
+                "font_size": 11,
+                "color": "gray"
+              },
+              {
+                "type": "text",
+                "field": "deadline_label",
+                "font_size": 11,
+                "color": "black"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "小黑盒游戏折扣",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

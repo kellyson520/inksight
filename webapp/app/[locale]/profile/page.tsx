@@ -17,6 +17,7 @@ interface ProfileData {
   email: string;
   role: string;
   free_quota_remaining: number;
+  steam_profile_url?: string;
   llm_config: {
     llm_access_mode?: "preset" | "custom_openai";
     provider: string;
@@ -58,6 +59,8 @@ export default function ProfilePage() {
   const [imageApiKey, setImageApiKey] = useState("");
   const [imageBaseUrl, setImageBaseUrl] = useState("");
   const [globalProxyUrl, setGlobalProxyUrl] = useState("");
+  const [steamProfileUrl, setSteamProfileUrl] = useState("");
+  const [savingSteam, setSavingSteam] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -124,10 +127,16 @@ export default function ProfilePage() {
       }
       const data: ProfileData = await res.json();
       setProfileData(data);
+      if (typeof data.steam_profile_url === "string") {
+        setSteamProfileUrl(data.steam_profile_url);
+      }
       const prefsRes = await fetch("/api/user/preferences", { headers: authHeaders() });
       if (prefsRes.ok) {
         const prefs = await prefsRes.json();
         setGlobalProxyUrl(typeof prefs.global_proxy_url === "string" ? prefs.global_proxy_url : "");
+        if (typeof prefs.steam_profile_url === "string" && prefs.steam_profile_url) {
+          setSteamProfileUrl(prefs.steam_profile_url);
+        }
       }
 
       // 只要数据库里存在配置记录，就回填表单并进入 BYOK 视图。
@@ -171,6 +180,27 @@ export default function ProfilePage() {
       loadProfile();
     }
   }, [currentUser, loadProfile]);
+
+  const handleSaveSteamProfile = async () => {
+    setSavingSteam(true);
+    try {
+      const res = await fetch("/api/user/profile/steam", {
+        method: "PUT",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ steam_profile_url: steamProfileUrl.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || tr("保存 Steam 链接失败", "Failed to save Steam profile URL"));
+      }
+      showToast(tr("Steam 个人主页链接已保存", "Steam profile URL saved successfully"), "success");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : tr("保存 Steam 链接失败", "Failed to save Steam profile URL");
+      showToast(msg, "error");
+    } finally {
+      setSavingSteam(false);
+    }
+  };
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", headers: authHeaders() });
@@ -479,6 +509,52 @@ export default function ProfilePage() {
               <Button variant="outline" onClick={handleLogout} className="text-ink-light hover:text-ink">
                 <LogOut size={14} className="mr-2" />
                 {tr("登出", "Logout")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 游戏与媒体偏好卡片 (Steam 个人链接配置) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-lg">🎮</span> {tr("Steam 账户与游戏数据", "Steam Account & Gaming Data")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field label={tr("Steam 个人主页链接", "Steam Community Profile URL")}>
+              <input
+                type="url"
+                value={steamProfileUrl}
+                onChange={(e) => setSteamProfileUrl(e.target.value)}
+                placeholder="https://steamcommunity.com/profiles/76561198978201763/"
+                className="w-full rounded-sm border border-ink/20 px-3 py-2 text-sm bg-white font-mono"
+              />
+            </Field>
+            <p className="text-xs text-ink-light">
+              {tr(
+                "用于「Steam我的成就」、「Steam最近在玩」、「Steam今天玩什么」和「Steam好友状态」模式展示。请确保 Steam 个人资料与游戏详情为公开状态。",
+                "Used by Steam achievements, recent games, random game picker, and friends status modes. Please ensure your Steam profile and game details are set to public."
+              )}
+            </p>
+            <div className="pt-2">
+              <Button
+                onClick={handleSaveSteamProfile}
+                disabled={savingSteam}
+                variant="outline"
+                className="bg-white text-ink border-ink/20 hover:bg-ink hover:text-white hover:border-ink active:bg-ink/90"
+              >
+                {savingSteam ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin mr-1" />
+                    {tr("保存中...", "Saving...")}
+                  </>
+                ) : (
+                  <>
+                    <Save size={14} className="mr-1" />
+                    {tr("保存 Steam 链接", "Save Steam URL")}
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>

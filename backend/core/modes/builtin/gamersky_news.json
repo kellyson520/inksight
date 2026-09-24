@@ -1,0 +1,104 @@
+{
+  "mode_id": "GAMERSKY_NEWS",
+  "display_name": "游民星空 单机资讯",
+  "icon": "gamepad-2",
+  "cacheable": true,
+  "description": "浏览游民星空最新单机游戏资讯，了解新作与游戏动态。",
+  "settings_schema": [],
+  "content": {
+    "type": "computed",
+    "provider": "gamersky_news",
+    "fallback": {
+      "header_tag": "游民星空 · 单机资讯",
+      "title": "巫师3次世代更新官方实机视频公布，对比原版画质全面进化",
+      "source_tag": "GAMERSKY 单机动态",
+      "summary": "全面进化的次世代光影与材质细节，角色建模与环境互动再度提升，新老玩家皆可免费升级体验。",
+      "published_at": "今日更新",
+      "cover_url": "https://dummyimage.com/640x360/1a1a24/ffffff.png&text=GAMERSKY+NEWS",
+      "footer_label": "GAMERSKY · 单机与主机最新动向"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "header_tag",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "source_tag",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "title",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "max_lines": 2,
+            "line_height": 22,
+            "margin_bottom": 6
+          },
+          {
+            "type": "text",
+            "field": "summary",
+            "font": "noto_serif_light",
+            "font_size": 12,
+            "max_lines": 4,
+            "line_height": 18,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "items": [
+              {
+                "type": "text",
+                "text": "游民星空 综合游戏社区",
+                "font_size": 11,
+                "color": "gray"
+              },
+              {
+                "type": "text",
+                "field": "published_at",
+                "font_size": 11,
+                "color": "black"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "游民星空资讯",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

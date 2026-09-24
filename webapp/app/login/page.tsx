@@ -154,6 +154,7 @@ function LoginForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(12000),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -188,8 +189,7 @@ function LoginForm() {
           return;
         }
       }
-      router.push(next);
-      router.refresh();
+      router.replace(next);
     } catch {
       setError(locale === "en" ? "Network error" : "网络错误");
     } finally {

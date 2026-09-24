@@ -1,0 +1,103 @@
+{
+  "mode_id": "CHUAPP_ARTICLES",
+  "display_name": "触乐 最新文章",
+  "icon": "file-text",
+  "cacheable": true,
+  "description": "阅读触乐最新文章，了解游戏与玩家背后的故事。",
+  "settings_schema": [],
+  "content": {
+    "type": "computed",
+    "provider": "chuapp_articles",
+    "fallback": {
+      "header_tag": "触乐 · 游戏人文故事",
+      "title": "《EA Sports FC 27》：足球开放世界、模拟收纳与断舍离",
+      "author": "触乐特约作者",
+      "summary": "记录游戏与人，寻找那些值得被记录的玩家故事。在数字绿茵场内外，重新思考电子游戏带给普通人的热忱与释怀。",
+      "published_at": "今日发布",
+      "footer_label": "CHUAPP · 触乐网深度故事"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "header_tag",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "author",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "title",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "max_lines": 2,
+            "line_height": 22,
+            "margin_bottom": 6
+          },
+          {
+            "type": "text",
+            "field": "summary",
+            "font": "noto_serif_light",
+            "font_size": 12,
+            "max_lines": 4,
+            "line_height": 18,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "items": [
+              {
+                "type": "text",
+                "text": "触乐网 · 游戏与人",
+                "font_size": 11,
+                "color": "gray"
+              },
+              {
+                "type": "text",
+                "field": "published_at",
+                "font_size": 11,
+                "color": "black"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "触乐最新文章",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

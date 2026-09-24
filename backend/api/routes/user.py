@@ -145,6 +145,7 @@ async def get_user_profile(request: Request, user_id: int = Depends(require_user
     await log_user_activity(user_id, "profile.open", request=request)
 
     quota = await get_user_api_quota(user_id)
+    prefs = await get_user_preferences(user_id)
 
     llm_config = await get_user_llm_config(user_id)
     if llm_config:
@@ -159,8 +160,18 @@ async def get_user_profile(request: Request, user_id: int = Depends(require_user
         "email": user_row[3] or "",
         "role": user_row[4] or "user",
         "free_quota_remaining": quota.get("free_quota_remaining", 0) if quota else 0,
+        "steam_profile_url": prefs.get("steam_profile_url", ""),
         "llm_config": llm_config,
     }
+
+
+@router.put("/user/profile/steam")
+async def save_user_steam_profile_route(body: dict, request: Request, user_id: int = Depends(require_user)):
+    """保存用户绑定的 Steam 个人主页链接。"""
+    url = str(body.get("steam_profile_url") or "").strip()[:512]
+    prefs = await save_user_preferences(user_id, {"steam_profile_url": url})
+    await log_user_activity(user_id, "profile.steam_url.save", request=request, metadata={"steam_profile_url": url})
+    return {"ok": True, "steam_profile_url": prefs.get("steam_profile_url", ""), "message": "Steam 链接已保存"}
 
 
 @router.put("/user/profile/llm")

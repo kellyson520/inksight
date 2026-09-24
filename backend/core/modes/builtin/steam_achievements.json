@@ -1,0 +1,183 @@
+{
+  "mode_id": "STEAM_ACHIEVEMENTS",
+  "display_name": "Steam我的成就",
+  "icon": "award",
+  "cacheable": true,
+  "description": "显示你最近游玩的游戏和已解锁的成就。",
+  "settings_schema": [
+    {
+      "key": "steam_url",
+      "label": "Steam 个人主页链接（可选，默认读取个人资料配置）",
+      "type": "text",
+      "placeholder": "https://steamcommunity.com/profiles/76561198978201763/"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "steam_achievements",
+    "fallback": {
+      "persona_name": "O_0",
+      "level": "11",
+      "game_name": "Sid Meier's Civilization VI",
+      "hours_total": "62.0 小时",
+      "progress_label": "已解锁 37 / 320 项成就",
+      "progress_pct": 12,
+      "progress_text": "12%",
+      "ach1_name": "Alfred Wegener's Legacy",
+      "ach2_name": "Land Party",
+      "ach3_name": "Investment Banking",
+      "footer_label": "STEAM ACHIEVEMENTS · 成就之路"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "persona_name",
+                "font": "noto_serif_bold",
+                "font_size": 14
+              },
+              {
+                "type": "badge",
+                "field": "hours_total",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "game_name",
+            "font": "noto_serif_bold",
+            "font_size": 16,
+            "max_lines": 1,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "field": "progress_label",
+                "font_size": 12,
+                "color": "black"
+              },
+              {
+                "type": "text",
+                "field": "progress_text",
+                "font_size": 12,
+                "font": "noto_serif_bold",
+                "color": "black"
+              }
+            ]
+          },
+          {
+            "type": "progress_bar",
+            "field": "progress_pct",
+            "max_val": 100,
+            "height": 6,
+            "margin_bottom": 8
+          },
+          {
+            "type": "text",
+            "text": "近期解锁成就：",
+            "font_size": 11,
+            "color": "gray",
+            "margin_bottom": 4
+          },
+          {
+            "type": "flex_row",
+            "justify": "left",
+            "gap": 6,
+            "margin_bottom": 3,
+            "items": [
+              {
+                "type": "badge",
+                "text": "🏆",
+                "variant": "outline",
+                "radius": 4
+              },
+              {
+                "type": "text",
+                "field": "ach1_name",
+                "font_size": 12,
+                "font": "noto_serif_medium",
+                "max_lines": 1
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "left",
+            "gap": 6,
+            "margin_bottom": 3,
+            "items": [
+              {
+                "type": "badge",
+                "text": "🏆",
+                "variant": "outline",
+                "radius": 4
+              },
+              {
+                "type": "text",
+                "field": "ach2_name",
+                "font_size": 12,
+                "font": "noto_serif_medium",
+                "max_lines": 1
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "left",
+            "gap": 6,
+            "items": [
+              {
+                "type": "badge",
+                "text": "🏆",
+                "variant": "outline",
+                "radius": 4
+              },
+              {
+                "type": "text",
+                "field": "ach3_name",
+                "font_size": 12,
+                "font": "noto_serif_medium",
+                "max_lines": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "Steam我的成就",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

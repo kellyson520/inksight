@@ -167,6 +167,11 @@ async def run_main_db_migrations(db, *, defaults: dict[str, str]) -> None:
                 """
             ),
         ),
+        (
+            27,
+            "user_preferences.steam_profile_url",
+            lambda: _add_column_if_missing(db, "user_preferences", "steam_profile_url", "steam_profile_url TEXT DEFAULT ''"),
+        ),
     ]
 
     now = datetime.now().isoformat()

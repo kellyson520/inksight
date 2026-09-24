@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 from datetime import datetime
 
@@ -134,7 +135,7 @@ async def auth_register(body: dict, response: Response, request: Request = None)
 
     token = create_session_token(user_id, username)
     set_session_cookie(response, token)
-    await log_user_activity(user_id, "auth.register", request=request, metadata={"username": username})
+    asyncio.create_task(log_user_activity(user_id, "auth.register", request=request, metadata={"username": username}))
     return {"ok": True, "user_id": user_id, "username": username, "token": token}
 
 
@@ -147,7 +148,7 @@ async def auth_login(body: dict, response: Response, request: Request = None):
         return JSONResponse({"error": "用户名或密码错误"}, status_code=401)
     token = create_session_token(user["id"], user["username"])
     set_session_cookie(response, token)
-    await log_user_activity(user["id"], "auth.login", request=request)
+    asyncio.create_task(log_user_activity(user["id"], "auth.login", request=request))
     return {"ok": True, "user_id": user["id"], "username": user["username"], "token": token}
 
 

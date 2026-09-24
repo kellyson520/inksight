@@ -1,0 +1,117 @@
+{
+  "mode_id": "GCORES_PODCAST",
+  "display_name": "机核 播客",
+  "icon": "headphones",
+  "cacheable": true,
+  "description": "选择机核播客栏目，收听最新一期节目。",
+  "settings_schema": [
+    {
+      "key": "program",
+      "label": "播客栏目分类",
+      "type": "select",
+      "default": "ALL",
+      "options": [
+        { "value": "ALL", "label": "全部栏目 (最新节目)" },
+        { "value": "PRO", "label": "Gadio Pro (核心对谈与文化)" },
+        { "value": "LIFE", "label": "Gadio Life (生活与日常唠嗑)" },
+        { "value": "MUSIC", "label": "Gadio Music (音乐主题专栏)" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "gcores_podcast",
+    "fallback": {
+      "header_tag": "机核网 · 最新电台",
+      "title": "上海谍战风云录 第四期丨长袖善舞",
+      "program_tag": "Gadio Pro · 深度对谈",
+      "summary": "特科总务科与情报科如何一明一暗、长袖善舞，在上海滩扎下根基，以商养党、营救同志、周旋险境。",
+      "published_at": "09-23 21:00",
+      "cover_url": "https://dummyimage.com/640x360/e23e3e/ffffff.png&text=GCORES+RADIO",
+      "footer_label": "GCORES RADIO · 分享热爱的声音"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "header_tag",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "program_tag",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "title",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "max_lines": 2,
+            "line_height": 22,
+            "margin_bottom": 6
+          },
+          {
+            "type": "text",
+            "field": "summary",
+            "font": "noto_serif_light",
+            "font_size": 12,
+            "max_lines": 4,
+            "line_height": 18,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "items": [
+              {
+                "type": "text",
+                "text": "机核网电台",
+                "font_size": 11,
+                "color": "gray"
+              },
+              {
+                "type": "text",
+                "field": "published_at",
+                "font_size": 11,
+                "color": "black"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "机核播客",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

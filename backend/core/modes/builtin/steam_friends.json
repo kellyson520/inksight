@@ -1,0 +1,197 @@
+{
+  "mode_id": "STEAM_FRIENDS",
+  "display_name": "Steam好友状态",
+  "icon": "users",
+  "cacheable": true,
+  "description": "显示好友的在线和游戏状态，看看是不是有人偷偷玩。",
+  "settings_schema": [
+    {
+      "key": "steam_url",
+      "label": "Steam 个人主页链接（可选，默认读取个人资料配置）",
+      "type": "text",
+      "placeholder": "https://steamcommunity.com/profiles/76561198978201763/"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "steam_friends",
+    "fallback": {
+      "header_title": "STEAM 好友动态",
+      "status_summary": "在线: 2 人 · 游戏中: 1 人",
+      "f1_dot": "●",
+      "f1_name": "Hank Garcia",
+      "f1_status": "游戏中",
+      "f1_game": "Counter-Strike 2",
+      "f2_dot": "●",
+      "f2_name": "James Allen",
+      "f2_status": "在线",
+      "f2_game": "在线",
+      "f3_dot": "○",
+      "f3_name": "kelly",
+      "f3_status": "离线",
+      "f3_game": "7小时前在线",
+      "f4_dot": "○",
+      "f4_name": "Momo.368",
+      "f4_status": "离线",
+      "f4_game": "1天前在线",
+      "f5_dot": "○",
+      "f5_name": "YANG",
+      "f5_status": "离线",
+      "f5_game": "2天前在线",
+      "footer_label": "STEAM FRIENDS · 看看谁在偷偷玩"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "header_title",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "status_summary",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "{f1_dot} {f1_name}",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "f1_game",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "line_width": 1,
+            "margin_x": 0
+          },
+          {
+            "type": "spacer",
+            "height": 4
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "{f2_dot} {f2_name}",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "f2_game",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "line_width": 1,
+            "margin_x": 0
+          },
+          {
+            "type": "spacer",
+            "height": 4
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "text",
+                "text": "{f3_dot} {f3_name}",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "f3_game",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "line_width": 1,
+            "margin_x": 0
+          },
+          {
+            "type": "spacer",
+            "height": 4
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "items": [
+              {
+                "type": "text",
+                "text": "{f4_dot} {f4_name}",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "f4_game",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "Steam好友状态",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

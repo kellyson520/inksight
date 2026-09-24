@@ -1,0 +1,104 @@
+{
+  "mode_id": "GCORES_ARTICLES",
+  "display_name": "机核 文章",
+  "icon": "book-open",
+  "cacheable": true,
+  "description": "阅读机核作者与社区创作者关于游戏、文化、科技与生活方式的深度文章。",
+  "settings_schema": [],
+  "content": {
+    "type": "computed",
+    "provider": "gcores_articles",
+    "fallback": {
+      "header_tag": "机核 · 深度好文",
+      "title": "回望黄金时代：论沉浸式模拟类游戏的设计演进与未来哲学",
+      "author": "机核特约作者",
+      "summary": "从《神偷》、《网络奇兵》到《耻辱》，关卡设计如何在虚构世界中构建出无与伦比的真实沉浸感与选择自由。",
+      "published_at": "今日推荐",
+      "cover_url": "https://dummyimage.com/640x360/e23e3e/ffffff.png&text=GCORES+ARTICLE",
+      "footer_label": "GCORES ARTICLE · 游戏与文化深度探讨"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "header_tag",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "author",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "title",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "max_lines": 2,
+            "line_height": 22,
+            "margin_bottom": 6
+          },
+          {
+            "type": "text",
+            "field": "summary",
+            "font": "noto_serif_light",
+            "font_size": 12,
+            "max_lines": 4,
+            "line_height": 18,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "items": [
+              {
+                "type": "text",
+                "text": "机核深度专栏",
+                "font_size": 11,
+                "color": "gray"
+              },
+              {
+                "type": "text",
+                "field": "published_at",
+                "font_size": 11,
+                "color": "black"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "机核文章",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

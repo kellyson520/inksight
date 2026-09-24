@@ -77,6 +77,7 @@ class _ManagedConnection:
 async def _open_db(path: str, label: str) -> _ManagedConnection:
     conn = await aiosqlite.connect(path)
     await conn.execute("PRAGMA journal_mode=WAL")
+    await conn.execute("PRAGMA synchronous=NORMAL")
     await conn.execute("PRAGMA busy_timeout=5000")
     managed = _ManagedConnection(conn, label)
     _live_connections.add(managed)

@@ -26,6 +26,7 @@ async function forward(req: NextRequest, { params }: { params: Promise<{ path: s
       headers,
       body,
       redirect: "manual",
+      signal: AbortSignal.timeout(10000),
     });
 
     const resHeaders = new Headers();

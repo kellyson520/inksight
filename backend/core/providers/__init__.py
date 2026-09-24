@@ -23,6 +23,25 @@ from .porn_video_provider import generate_porn_video
 from .currency_provider import generate_currency
 from .oil_price_provider import generate_oil_price
 from .space_watch_provider import generate_space_watch
+from .steam_provider import (
+    generate_steam_achievements,
+    generate_steam_recent,
+    generate_steam_random,
+    generate_steam_friends,
+)
+from .game_discount_provider import (
+    generate_xiaoheihe_discount,
+    generate_epic_free,
+)
+from .gaming_media_provider import (
+    generate_gcores_podcast,
+    generate_gcores_news,
+    generate_gcores_articles,
+    generate_miyoushe_news,
+    generate_gamersky_news,
+    generate_chuapp_articles,
+    generate_yystv_articles,
+)
 
 __all__ = [
     "register_provider",
@@ -46,4 +65,17 @@ __all__ = [
     "generate_pixiv_daily",
     "generate_iwara_video",
     "generate_porn_video",
+    "generate_steam_achievements",
+    "generate_steam_recent",
+    "generate_steam_random",
+    "generate_steam_friends",
+    "generate_xiaoheihe_discount",
+    "generate_epic_free",
+    "generate_gcores_podcast",
+    "generate_gcores_news",
+    "generate_gcores_articles",
+    "generate_miyoushe_news",
+    "generate_gamersky_news",
+    "generate_chuapp_articles",
+    "generate_yystv_articles",
 ]

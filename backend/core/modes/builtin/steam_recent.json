@@ -1,0 +1,181 @@
+{
+  "mode_id": "STEAM_RECENT",
+  "display_name": "Steam最近在玩",
+  "icon": "clock",
+  "cacheable": true,
+  "description": "显示最近玩过的游戏，以及近两周和累计游玩时间。",
+  "settings_schema": [
+    {
+      "key": "steam_url",
+      "label": "Steam 个人主页链接（可选，默认读取个人资料配置）",
+      "type": "text",
+      "placeholder": "https://steamcommunity.com/profiles/76561198978201763/"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "steam_recent",
+    "fallback": {
+      "persona_name": "O_0",
+      "level": "11",
+      "game1_name": "Sid Meier's Civilization VI",
+      "game1_hours_total": "累计 62.0h",
+      "game1_hours_2w": "近两周 12.5h",
+      "game2_name": "It Takes Two (双人成行)",
+      "game2_hours_total": "累计 22.0h",
+      "game2_hours_2w": "近两周 3.0h",
+      "game3_name": "Palworld (幻兽帕鲁)",
+      "game3_hours_total": "累计 0.4h",
+      "game3_hours_2w": "近两周 0.4h",
+      "footer_label": "STEAM RECENT · 近期游玩记录"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "persona_name",
+                "font": "noto_serif_bold",
+                "font_size": 14
+              },
+              {
+                "type": "badge",
+                "text": "近期活跃",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 2,
+            "items": [
+              {
+                "type": "text",
+                "field": "game1_name",
+                "font": "noto_serif_bold",
+                "font_size": 14,
+                "max_lines": 1
+              },
+              {
+                "type": "badge",
+                "field": "game1_hours_2w",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "game1_hours_total",
+            "font_size": 11,
+            "color": "gray",
+            "margin_bottom": 6
+          },
+          {
+            "type": "separator",
+            "line_width": 1,
+            "margin_x": 0
+          },
+          {
+            "type": "spacer",
+            "height": 4
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 2,
+            "items": [
+              {
+                "type": "text",
+                "field": "game2_name",
+                "font": "noto_serif_bold",
+                "font_size": 14,
+                "max_lines": 1
+              },
+              {
+                "type": "badge",
+                "field": "game2_hours_2w",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "game2_hours_total",
+            "font_size": 11,
+            "color": "gray",
+            "margin_bottom": 6
+          },
+          {
+            "type": "separator",
+            "line_width": 1,
+            "margin_x": 0
+          },
+          {
+            "type": "spacer",
+            "height": 4
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 2,
+            "items": [
+              {
+                "type": "text",
+                "field": "game3_name",
+                "font": "noto_serif_bold",
+                "font_size": 14,
+                "max_lines": 1
+              },
+              {
+                "type": "badge",
+                "field": "game3_hours_2w",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "game3_hours_total",
+            "font_size": 11,
+            "color": "gray"
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "Steam最近在玩",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

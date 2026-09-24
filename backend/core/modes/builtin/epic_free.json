@@ -1,0 +1,120 @@
+{
+  "mode_id": "EPIC_FREE",
+  "display_name": "Epic喜加一",
+  "icon": "gift",
+  "cacheable": true,
+  "description": "查看Epic喜加一活动，快速了解当前或下一期的免费游戏。",
+  "settings_schema": [
+    {
+      "key": "endpoint",
+      "label": "自定义喜加一接口（可选）",
+      "type": "text",
+      "placeholder": "https://example.com/epic.json"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "epic_free",
+    "fallback": {
+      "header_title": "EPIC GAMES · 喜加一",
+      "game_title": "《幽灵行者 2》 (Ghostrunner II)",
+      "status_label": "本周免费",
+      "original_price": "原价 ¥169.00",
+      "deadline_label": "截止 09月26日 23:00",
+      "cover_url": "https://dummyimage.com/640x360/1a1a24/ffffff.png&text=GHOSTRUNNER+II",
+      "description": "第一人称赛博朋克砍杀动作游戏，在毁灭后的达摩塔外荒原展开高速跑酷与激烈斩击！一键入库，终身畅玩。",
+      "claim_url": "https://store.epicgames.com/",
+      "footer_label": "EPIC FREE GAMES · 喜加一活动"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "field": "header_title",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "status_label",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "game_title",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "max_lines": 1,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "left",
+            "gap": 8,
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "badge",
+                "text": "FREE 免费",
+                "variant": "filled",
+                "radius": 4
+              },
+              {
+                "type": "badge",
+                "field": "original_price",
+                "variant": "outline",
+                "radius": 4
+              },
+              {
+                "type": "badge",
+                "field": "deadline_label",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "description",
+            "font": "noto_serif_light",
+            "font_size": 12,
+            "max_lines": 3,
+            "line_height": 18,
+            "margin_bottom": 4
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "Epic喜加一",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

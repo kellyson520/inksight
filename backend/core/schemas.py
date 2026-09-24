@@ -291,6 +291,7 @@ class UserPreferencesRequest(BaseModel):
     locale: str = Field(default="zh", max_length=8)
     timezone: str = Field(default="Asia/Shanghai", max_length=64)
     global_proxy_url: str = Field(default="", max_length=512)
+    steam_profile_url: str = Field(default="", max_length=512)
 
     @field_validator("global_proxy_url")
     @classmethod

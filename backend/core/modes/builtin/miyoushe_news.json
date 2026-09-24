@@ -1,0 +1,117 @@
+{
+  "mode_id": "MIYOUSHE_NEWS",
+  "display_name": "米游社 公告",
+  "icon": "bell",
+  "cacheable": true,
+  "description": "选择你关注的游戏，查看米游社最新公告、活动与资讯。",
+  "settings_schema": [
+    {
+      "key": "game",
+      "label": "关注游戏",
+      "type": "select",
+      "default": "GENSHIN",
+      "options": [
+        { "value": "GENSHIN", "label": "原神" },
+        { "value": "STAR_RAIL", "label": "崩坏：星穹铁道" },
+        { "value": "ZZZ", "label": "绝区零" },
+        { "value": "HONKAI3", "label": "崩坏3" }
+      ]
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "miyoushe_news",
+    "fallback": {
+      "game_badge": "原神",
+      "title": "巡风执令，明光镇雪",
+      "category_tag": "官方活动 · 公告速递",
+      "summary": "全新 5.0 版本祈愿即将开启，参与限时活动赢取丰富原石与角色培养素材！",
+      "published_at": "今日更新",
+      "cover_url": "https://dummyimage.com/640x360/284b63/ffffff.png&text=MIYOUSHE+NEWS",
+      "footer_label": "MIYOUSHE · 官方最新公告"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "badge",
+                "field": "game_badge",
+                "variant": "filled",
+                "radius": 4
+              },
+              {
+                "type": "badge",
+                "field": "category_tag",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "title",
+            "font": "noto_serif_bold",
+            "font_size": 17,
+            "max_lines": 2,
+            "line_height": 22,
+            "margin_bottom": 6
+          },
+          {
+            "type": "text",
+            "field": "summary",
+            "font": "noto_serif_light",
+            "font_size": 12,
+            "max_lines": 4,
+            "line_height": 18,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "items": [
+              {
+                "type": "text",
+                "text": "米游社官方社区",
+                "font_size": 11,
+                "color": "gray"
+              },
+              {
+                "type": "text",
+                "field": "published_at",
+                "font_size": 11,
+                "color": "black"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "米游社公告",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

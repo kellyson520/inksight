@@ -1,0 +1,112 @@
+{
+  "mode_id": "STEAM_RANDOM",
+  "display_name": "Steam今天玩什么",
+  "icon": "shuffle",
+  "cacheable": true,
+  "description": "从你的公开游戏库随机抽一款，帮你决定今天玩什么。",
+  "settings_schema": [
+    {
+      "key": "steam_url",
+      "label": "Steam 个人主页链接（可选，默认读取个人资料配置）",
+      "type": "text",
+      "placeholder": "https://steamcommunity.com/profiles/76561198978201763/"
+    }
+  ],
+  "content": {
+    "type": "computed",
+    "provider": "steam_random",
+    "fallback": {
+      "persona_name": "O_0",
+      "picked_game": "Sid Meier's Civilization VI",
+      "playtime_badge": "已游玩 62.0 小时",
+      "ach_badge": "成就进度 12%",
+      "recommend_reason": "开一局文明VI吧，体验一把世界征服的快感，再来一个回合就天亮了！",
+      "cover_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/289070/header.jpg",
+      "footer_label": "STEAM TODAY · 随机决定"
+    }
+  },
+  "layout": {
+    "body_align": "top",
+    "status_bar": {
+      "line_width": 1,
+      "dashed": false
+    },
+    "body": [
+      {
+        "type": "spacer",
+        "height": 4
+      },
+      {
+        "type": "card",
+        "border": "solid",
+        "radius": 8,
+        "padding": 8,
+        "margin_x": 10,
+        "margin_bottom": 6,
+        "children": [
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "text",
+                "text": "🎲 今天玩什么？",
+                "font": "noto_serif_bold",
+                "font_size": 13
+              },
+              {
+                "type": "badge",
+                "field": "persona_name",
+                "variant": "filled",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "picked_game",
+            "font": "noto_serif_bold",
+            "font_size": 18,
+            "max_lines": 1,
+            "margin_bottom": 6
+          },
+          {
+            "type": "flex_row",
+            "justify": "left",
+            "gap": 8,
+            "margin_bottom": 6,
+            "items": [
+              {
+                "type": "badge",
+                "field": "playtime_badge",
+                "variant": "filled",
+                "radius": 4
+              },
+              {
+                "type": "badge",
+                "field": "ach_badge",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "field": "recommend_reason",
+            "font": "noto_serif_light",
+            "font_size": 13,
+            "max_lines": 3,
+            "line_height": 20,
+            "margin_bottom": 4
+          }
+        ]
+      }
+    ],
+    "footer": {
+      "label": "Steam今天玩什么",
+      "attribution_template": "{footer_label}"
+    }
+  }
+}

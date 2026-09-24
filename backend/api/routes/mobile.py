@@ -222,7 +222,7 @@ async def update_user_preferences(
     body: UserPreferencesRequest,
     user_id: int = Depends(require_user),
 ):
-    prefs = await save_user_preferences(user_id, body.model_dump())
+    prefs = await save_user_preferences(user_id, body.model_dump(exclude_unset=True))
     return {"ok": True, "preferences": prefs}
 
 
