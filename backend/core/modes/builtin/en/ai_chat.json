@@ -1,0 +1,81 @@
+{
+  "mode_id": "AI_CHAT",
+  "display_name": "AI Voice Chat",
+  "icon": "message-circle",
+  "cacheable": false,
+  "description": "Voice conversation mode for devices equipped with microphone and speaker.",
+  "content": {
+    "type": "static",
+    "fallback": {
+      "title": "AI Voice Chat",
+      "hint": "Press device button to speak",
+      "tip": "Ask follow-up questions anytime, say 'exit' to end dialogue"
+    },
+    "static_data": {
+      "title": "AI Voice Chat",
+      "hint": "Press device button to speak",
+      "tip": "Ask follow-up questions anytime, say 'exit' to end dialogue"
+    }
+  },
+  "layout": {
+    "status_bar": { "line_width": 1, "dashed": false },
+    "body": [
+      {
+        "type": "centered_text",
+        "field": "title",
+        "font_name": "NotoSerifSC-Regular.ttf",
+        "font_size": 22,
+        "y": 88,
+        "max_width_ratio": 0.8
+      },
+      {
+        "type": "centered_text",
+        "field": "hint",
+        "font_name": "NotoSerifSC-Light.ttf",
+        "font_size": 14,
+        "y": 148,
+        "max_width_ratio": 0.84
+      },
+      {
+        "type": "centered_text",
+        "field": "tip",
+        "font_name": "NotoSerifSC-Light.ttf",
+        "font_size": 12,
+        "y": 192,
+        "max_width_ratio": 0.86
+      }
+    ],
+    "footer": { "label": "AI_CHAT" }
+  },
+  "layout_overrides": {
+    "296x128": {
+      "body": [
+        {
+          "type": "centered_text",
+          "field": "title",
+          "font_name": "NotoSerifSC-Regular.ttf",
+          "font_size": 16,
+          "y": 34,
+          "max_width_ratio": 0.86
+        },
+        {
+          "type": "centered_text",
+          "field": "hint",
+          "font_name": "NotoSerifSC-Light.ttf",
+          "font_size": 11,
+          "y": 66,
+          "max_width_ratio": 0.9
+        },
+        {
+          "type": "centered_text",
+          "field": "tip",
+          "font_name": "NotoSerifSC-Light.ttf",
+          "font_size": 9,
+          "y": 92,
+          "max_width_ratio": 0.92
+        }
+      ],
+      "footer": { "label": "AI_CHAT", "height": 18 }
+    }
+  }
+}
