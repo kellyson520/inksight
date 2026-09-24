@@ -19,12 +19,15 @@
       "persona_name": "O_0",
       "level": "11",
       "game1_name": "Sid Meier's Civilization VI",
+      "game1_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/289070/capsule_184x69.jpg",
       "game1_hours_total": "累计 62.0h",
       "game1_hours_2w": "近两周 12.5h",
       "game2_name": "It Takes Two (双人成行)",
+      "game2_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/capsule_184x69.jpg",
       "game2_hours_total": "累计 22.0h",
       "game2_hours_2w": "近两周 3.0h",
       "game3_name": "Palworld (幻兽帕鲁)",
+      "game3_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1623730/capsule_184x69.jpg",
       "game3_hours_total": "累计 0.4h",
       "game3_hours_2w": "近两周 0.4h",
       "footer_label": "STEAM RECENT · 近期游玩记录"
@@ -42,28 +45,29 @@
         "height": 4
       },
       {
-        "type": "card",
-        "border": "solid",
-        "radius": 8,
-        "padding": 8,
+        "type": "two_column",
         "margin_x": 10,
-        "margin_bottom": 6,
-        "children": [
+        "gap": 10,
+        "left_ratio": 0.60,
+        "right_ratio": 0.40,
+        "left_align_y": "top",
+        "right_align_y": "top",
+        "left_blocks": [
           {
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
-            "margin_bottom": 6,
+            "margin_bottom": 4,
             "items": [
               {
                 "type": "text",
                 "field": "persona_name",
                 "font": "noto_serif_bold",
-                "font_size": 14
+                "font_size": 13
               },
               {
                 "type": "badge",
-                "text": "近期活跃",
+                "text": "近期游玩",
                 "variant": "filled",
                 "radius": 4
               }
@@ -73,29 +77,29 @@
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
-            "margin_bottom": 2,
+            "margin_bottom": 1,
             "items": [
               {
                 "type": "text",
                 "field": "game1_name",
                 "font": "noto_serif_bold",
-                "font_size": 14,
+                "font_size": 13,
                 "max_lines": 1
               },
               {
                 "type": "badge",
                 "field": "game1_hours_2w",
                 "variant": "outline",
-                "radius": 4
+                "radius": 3
               }
             ]
           },
           {
             "type": "text",
             "field": "game1_hours_total",
-            "font_size": 11,
+            "font_size": 10,
             "color": "gray",
-            "margin_bottom": 6
+            "margin_bottom": 4
           },
           {
             "type": "separator",
@@ -104,35 +108,35 @@
           },
           {
             "type": "spacer",
-            "height": 4
+            "height": 3
           },
           {
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
-            "margin_bottom": 2,
+            "margin_bottom": 1,
             "items": [
               {
                 "type": "text",
                 "field": "game2_name",
                 "font": "noto_serif_bold",
-                "font_size": 14,
+                "font_size": 13,
                 "max_lines": 1
               },
               {
                 "type": "badge",
                 "field": "game2_hours_2w",
                 "variant": "outline",
-                "radius": 4
+                "radius": 3
               }
             ]
           },
           {
             "type": "text",
             "field": "game2_hours_total",
-            "font_size": 11,
+            "font_size": 10,
             "color": "gray",
-            "margin_bottom": 6
+            "margin_bottom": 4
           },
           {
             "type": "separator",
@@ -141,34 +145,51 @@
           },
           {
             "type": "spacer",
-            "height": 4
+            "height": 3
           },
           {
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
-            "margin_bottom": 2,
+            "margin_bottom": 1,
             "items": [
               {
                 "type": "text",
                 "field": "game3_name",
                 "font": "noto_serif_bold",
-                "font_size": 14,
+                "font_size": 13,
                 "max_lines": 1
               },
               {
                 "type": "badge",
                 "field": "game3_hours_2w",
                 "variant": "outline",
-                "radius": 4
+                "radius": 3
               }
             ]
           },
           {
             "type": "text",
             "field": "game3_hours_total",
-            "font_size": 11,
+            "font_size": 10,
             "color": "gray"
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "image",
+            "field": "game1_cover",
+            "width": 138,
+            "height": 178,
+            "fit": "cover",
+            "photo_enhance": true,
+            "margin_bottom": 4
+          },
+          {
+            "type": "centered_text",
+            "text": "近期主要投入",
+            "font": "noto_serif_light",
+            "font_size": 10
           }
         ]
       }

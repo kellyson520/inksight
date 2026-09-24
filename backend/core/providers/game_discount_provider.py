@@ -21,6 +21,15 @@ _CACHE_TTL = 1800  # 30 分钟缓存
 _DISCOUNT_CACHE: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 _EPIC_CACHE: tuple[float, list[dict[str, Any]]] = (0.0, [])
 
+
+def _make_client(proxy: str | None = None, **kwargs) -> httpx.AsyncClient:
+    if proxy:
+        try:
+            return httpx.AsyncClient(proxy=proxy, **kwargs)
+        except TypeError:
+            return httpx.AsyncClient(proxies=proxy, **kwargs)
+    return httpx.AsyncClient(**kwargs)
+
 _FALLBACK_DISCOUNTS = [
     {
         "game_name": "双人成行 (It Takes Two)",
@@ -115,7 +124,7 @@ async def fetch_game_discounts(proxy_url: str | None = None) -> list[dict[str, A
 
     specials_list: list[dict[str, Any]] = []
     try:
-        async with httpx.AsyncClient(proxy=proxy, timeout=8.0, follow_redirects=True, headers=headers) as client:
+        async with _make_client(proxy=proxy, timeout=8.0, follow_redirects=True, headers=headers) as client:
             resp = await client.get(url)
             if resp.status_code == 200:
                 data = resp.json()
@@ -173,7 +182,7 @@ async def fetch_epic_free_games(proxy_url: str | None = None) -> list[dict[str, 
     free_games: list[dict[str, Any]] = []
 
     try:
-        async with httpx.AsyncClient(proxy=proxy, timeout=8.0, follow_redirects=True, headers=headers) as client:
+        async with _make_client(proxy=proxy, timeout=8.0, follow_redirects=True, headers=headers) as client:
             resp = await client.get(epic_url)
             if resp.status_code == 200:
                 data = resp.json()
@@ -235,7 +244,7 @@ async def fetch_epic_free_games(proxy_url: str | None = None) -> list[dict[str, 
     if not free_games:
         try:
             gp_url = "https://www.gamerpower.com/api/giveaways?platform=epic-games-store"
-            async with httpx.AsyncClient(proxy=proxy, timeout=6.0, follow_redirects=True, headers=headers) as client:
+            async with _make_client(proxy=proxy, timeout=6.0, follow_redirects=True, headers=headers) as client:
                 resp = await client.get(gp_url)
                 if resp.status_code == 200:
                     data = resp.json()

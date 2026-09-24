@@ -14,6 +14,7 @@
       "author": "触乐特约作者",
       "summary": "记录游戏与人，寻找那些值得被记录的玩家故事。在数字绿茵场内外，重新思考电子游戏带给普通人的热忱与释怀。",
       "published_at": "今日发布",
+      "cover_url": "http://img.chuapp.com/wp-content/Picture/2026-09-23/6ab3948658aaa.jpg?imageView2/2/w/700",
       "footer_label": "CHUAPP · 触乐网深度故事"
     }
   },
@@ -29,29 +30,30 @@
         "height": 4
       },
       {
-        "type": "card",
-        "border": "solid",
-        "radius": 8,
-        "padding": 8,
+        "type": "two_column",
         "margin_x": 10,
-        "margin_bottom": 6,
-        "children": [
+        "gap": 10,
+        "left_ratio": 0.60,
+        "right_ratio": 0.40,
+        "left_align_y": "top",
+        "right_align_y": "top",
+        "left_blocks": [
           {
             "type": "flex_row",
-            "justify": "space-between",
-            "align_items": "center",
-            "margin_bottom": 6,
+            "justify": "start",
+            "gap": 6,
+            "margin_bottom": 4,
             "items": [
               {
-                "type": "text",
-                "field": "header_tag",
-                "font": "noto_serif_bold",
-                "font_size": 13
+                "type": "badge",
+                "text": "触乐专栏",
+                "variant": "filled",
+                "radius": 4
               },
               {
                 "type": "badge",
                 "field": "author",
-                "variant": "filled",
+                "variant": "outline",
                 "radius": 4
               }
             ]
@@ -60,19 +62,19 @@
             "type": "text",
             "field": "title",
             "font": "noto_serif_bold",
-            "font_size": 17,
+            "font_size": 15,
             "max_lines": 2,
-            "line_height": 22,
-            "margin_bottom": 6
+            "line_height": 20,
+            "margin_bottom": 4
           },
           {
             "type": "text",
             "field": "summary",
             "font": "noto_serif_light",
-            "font_size": 12,
-            "max_lines": 4,
-            "line_height": 18,
-            "margin_bottom": 6
+            "font_size": 11,
+            "max_lines": 5,
+            "line_height": 16,
+            "margin_bottom": 4
           },
           {
             "type": "flex_row",
@@ -80,17 +82,34 @@
             "items": [
               {
                 "type": "text",
-                "text": "触乐网 · 游戏与人",
-                "font_size": 11,
+                "text": "触乐网 · 人物纪实",
+                "font_size": 10,
                 "color": "gray"
               },
               {
                 "type": "text",
                 "field": "published_at",
-                "font_size": 11,
+                "font_size": 10,
                 "color": "black"
               }
             ]
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "image",
+            "field": "cover_url",
+            "width": 138,
+            "height": 178,
+            "fit": "cover",
+            "photo_enhance": true,
+            "margin_bottom": 4
+          },
+          {
+            "type": "centered_text",
+            "text": "触乐故事配图",
+            "font": "noto_serif_light",
+            "font_size": 10
           }
         ]
       }

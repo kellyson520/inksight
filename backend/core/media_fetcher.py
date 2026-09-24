@@ -235,16 +235,16 @@ class MediaFetcher:
                     timeout=self.timeout,
                     max_attempts=1,
                     max_response_bytes=self.max_response_bytes,
-                    follow_redirects=False,
+                    follow_redirects=True,
                 ),
                 proxy_url=proxy_url,
             )
             return httpx.Response(response.status_code, headers=dict(getattr(response, "headers", {})), content=response.content, request=httpx.Request("GET", url))
-        client = self.client_factory(timeout=self.timeout, follow_redirects=False)
+        client = self.client_factory(timeout=self.timeout, follow_redirects=True)
         if hasattr(client, "__enter__"):
             with client as managed_client:
-                return managed_client.get(url, headers=headers, follow_redirects=False)
-        return client.get(url, headers=headers, follow_redirects=False)
+                return managed_client.get(url, headers=headers, follow_redirects=True)
+        return client.get(url, headers=headers, follow_redirects=True)
 
     @classmethod
     def _retryable_status(cls, status: int) -> bool:

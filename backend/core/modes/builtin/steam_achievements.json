@@ -19,6 +19,7 @@
       "persona_name": "O_0",
       "level": "11",
       "game_name": "Sid Meier's Civilization VI",
+      "cover_url": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/289070/header.jpg",
       "hours_total": "62.0 小时",
       "progress_label": "已解锁 37 / 320 项成就",
       "progress_pct": 12,
@@ -41,24 +42,25 @@
         "height": 4
       },
       {
-        "type": "card",
-        "border": "solid",
-        "radius": 8,
-        "padding": 8,
+        "type": "two_column",
         "margin_x": 10,
-        "margin_bottom": 6,
-        "children": [
+        "gap": 10,
+        "left_ratio": 0.60,
+        "right_ratio": 0.40,
+        "left_align_y": "top",
+        "right_align_y": "top",
+        "left_blocks": [
           {
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
-            "margin_bottom": 6,
+            "margin_bottom": 4,
             "items": [
               {
                 "type": "text",
                 "field": "persona_name",
                 "font": "noto_serif_bold",
-                "font_size": 14
+                "font_size": 13
               },
               {
                 "type": "badge",
@@ -72,25 +74,26 @@
             "type": "text",
             "field": "game_name",
             "font": "noto_serif_bold",
-            "font_size": 16,
-            "max_lines": 1,
-            "margin_bottom": 6
+            "font_size": 15,
+            "max_lines": 2,
+            "line_height": 19,
+            "margin_bottom": 4
           },
           {
             "type": "flex_row",
             "justify": "space-between",
-            "margin_bottom": 4,
+            "margin_bottom": 3,
             "items": [
               {
                 "type": "text",
                 "field": "progress_label",
-                "font_size": 12,
+                "font_size": 11,
                 "color": "black"
               },
               {
                 "type": "text",
                 "field": "progress_text",
-                "font_size": 12,
+                "font_size": 11,
                 "font": "noto_serif_bold",
                 "color": "black"
               }
@@ -100,77 +103,91 @@
             "type": "progress_bar",
             "field": "progress_pct",
             "max_val": 100,
-            "height": 6,
-            "margin_bottom": 8
+            "height": 5,
+            "margin_bottom": 6
           },
           {
             "type": "text",
             "text": "近期解锁成就：",
-            "font_size": 11,
+            "font_size": 10,
             "color": "gray",
-            "margin_bottom": 4
+            "margin_bottom": 3
           },
           {
             "type": "flex_row",
-            "justify": "left",
-            "gap": 6,
-            "margin_bottom": 3,
+            "justify": "start",
+            "gap": 4,
+            "margin_bottom": 2,
             "items": [
               {
                 "type": "badge",
                 "text": "🏆",
                 "variant": "outline",
-                "radius": 4
+                "radius": 3
               },
               {
                 "type": "text",
                 "field": "ach1_name",
-                "font_size": 12,
-                "font": "noto_serif_medium",
+                "font_size": 11,
                 "max_lines": 1
               }
             ]
           },
           {
             "type": "flex_row",
-            "justify": "left",
-            "gap": 6,
-            "margin_bottom": 3,
+            "justify": "start",
+            "gap": 4,
+            "margin_bottom": 2,
             "items": [
               {
                 "type": "badge",
                 "text": "🏆",
                 "variant": "outline",
-                "radius": 4
+                "radius": 3
               },
               {
                 "type": "text",
                 "field": "ach2_name",
-                "font_size": 12,
-                "font": "noto_serif_medium",
+                "font_size": 11,
                 "max_lines": 1
               }
             ]
           },
           {
             "type": "flex_row",
-            "justify": "left",
-            "gap": 6,
+            "justify": "start",
+            "gap": 4,
             "items": [
               {
                 "type": "badge",
                 "text": "🏆",
                 "variant": "outline",
-                "radius": 4
+                "radius": 3
               },
               {
                 "type": "text",
                 "field": "ach3_name",
-                "font_size": 12,
-                "font": "noto_serif_medium",
+                "font_size": 11,
                 "max_lines": 1
               }
             ]
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "image",
+            "field": "cover_url",
+            "width": 138,
+            "height": 178,
+            "fit": "cover",
+            "photo_enhance": true,
+            "margin_bottom": 4
+          },
+          {
+            "type": "centered_text",
+            "field": "progress_text",
+            "font": "noto_serif_bold",
+            "font_size": 10
           }
         ]
       }

@@ -29,6 +29,15 @@ _CACHE_TTL = 1200  # 20 分钟缓存
 _MEDIA_CACHE: dict[str, tuple[float, Any]] = {}
 
 
+def _make_client(proxy: str | None = None, **kwargs) -> httpx.AsyncClient:
+    if proxy:
+        try:
+            return httpx.AsyncClient(proxy=proxy, **kwargs)
+        except TypeError:
+            return httpx.AsyncClient(proxies=proxy, **kwargs)
+    return httpx.AsyncClient(**kwargs)
+
+
 def _clean_text(s: str | None, max_len: int = 200) -> str:
     if not s:
         return ""
@@ -37,6 +46,15 @@ def _clean_text(s: str | None, max_len: int = 200) -> str:
     clean = html.unescape(clean)
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean[:max_len]
+
+
+def _format_gcores_image(path: str | None) -> str:
+    if not path:
+        return ""
+    p = str(path).strip()
+    if p.startswith("http://") or p.startswith("https://"):
+        return p
+    return f"https://image.gcores.com/{p}"
 
 
 # ==========================================
@@ -66,7 +84,7 @@ async def generate_gcores_podcast(
     if not cached_data:
         url = "https://www.gcores.com/gapi/v1/radios?sort=-published-at&page[limit]=10"
         try:
-            async with httpx.AsyncClient(proxy=proxy, timeout=8.0, headers=headers) as client:
+            async with _make_client(proxy=proxy, timeout=8.0, headers=headers) as client:
                 resp = await client.get(url)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -95,7 +113,7 @@ async def generate_gcores_podcast(
             except Exception:
                 summary = _clean_text(raw_content, 120)
 
-        cover = attrs.get("thumb", attrs.get("cover", ""))
+        cover = _format_gcores_image(attrs.get("thumb", attrs.get("cover", "")))
         if not cover:
             cover = "https://dummyimage.com/640x360/e23e3e/ffffff.png&text=GCORES+RADIO"
 
@@ -141,7 +159,7 @@ async def generate_gcores_news(
     if not cached_data:
         url = "https://www.gcores.com/gapi/v1/categories/2/articles?sort=-published-at&page[limit]=10"
         try:
-            async with httpx.AsyncClient(proxy=proxy, timeout=8.0, headers=headers) as client:
+            async with _make_client(proxy=proxy, timeout=8.0, headers=headers) as client:
                 resp = await client.get(url)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -156,7 +174,7 @@ async def generate_gcores_news(
         title = attrs.get("title", "")
         desc = attrs.get("desc", "") or ""
         published_at = str(attrs.get("published-at", ""))[:16].replace("T", " ")
-        cover = attrs.get("thumb", attrs.get("cover", ""))
+        cover = _format_gcores_image(attrs.get("thumb", attrs.get("cover", "")))
 
         res = dict(fallback)
         res.update({
@@ -200,7 +218,7 @@ async def generate_gcores_articles(
     if not cached_data:
         url = "https://www.gcores.com/gapi/v1/articles?sort=-published-at&page[limit]=10"
         try:
-            async with httpx.AsyncClient(proxy=proxy, timeout=8.0, headers=headers) as client:
+            async with _make_client(proxy=proxy, timeout=8.0, headers=headers) as client:
                 resp = await client.get(url)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -215,7 +233,7 @@ async def generate_gcores_articles(
         title = attrs.get("title", "")
         desc = attrs.get("desc", "") or ""
         published_at = str(attrs.get("published-at", ""))[:10]
-        cover = attrs.get("thumb", attrs.get("cover", ""))
+        cover = _format_gcores_image(attrs.get("thumb", attrs.get("cover", "")))
 
         res = dict(fallback)
         res.update({
@@ -272,7 +290,7 @@ async def generate_miyoushe_news(
     if not cached_data:
         url = f"https://bbs-api.miyoushe.com/post/wapi/getForumPostList?forum_id={forum_id}&page_size=5&sort_type=1"
         try:
-            async with httpx.AsyncClient(proxy=proxy, timeout=8.0, headers=headers) as client:
+            async with _make_client(proxy=proxy, timeout=8.0, headers=headers) as client:
                 resp = await client.get(url)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -331,16 +349,20 @@ async def generate_gamersky_news(
 
     if not cached_data:
         try:
-            async with httpx.AsyncClient(proxy=proxy, timeout=8.0, headers=headers) as client:
-                resp = await client.get("https://www.gamersky.com/")
+            async with _make_client(proxy=proxy, timeout=8.0, headers=headers) as client:
+                resp = await client.get("https://www.gamersky.com/news/")
                 if resp.status_code == 200:
                     html_text = resp.text
-                    matches = re.findall(r'<a href="(https://www\.gamersky\.com/news/\d+/\d+\.shtml)"[^>]*>([^<]+)</a>', html_text)
+                    raw_items = re.findall(
+                        r'<li[^>]*>.*?<a href="(https://www\.gamersky\.com/news/\d+/\d+\.shtml)"[^>]*>.*?<img[^>]+(?:src|data-original)=["\']([^"\']+)["\'][^>]*>.*?<div class="tit"><a[^>]*>([^<]+)</a>',
+                        html_text,
+                        re.S,
+                    )
                     items = []
-                    for link, title in matches:
+                    for link, img, title in raw_items:
                         t = title.strip()
-                        if len(t) >= 8 and not any(skip in t for skip in ("一碗", "甜品", "父亲", "网红")):
-                            items.append({"title": t, "link": link})
+                        if len(t) >= 6 and not any(skip in t for skip in ("囧图", "福利", "妹子", "搞笑")):
+                            items.append({"title": t, "link": link, "cover": img})
                     cached_data = items
                     _MEDIA_CACHE[cache_key] = (now, cached_data)
         except Exception as exc:
@@ -353,9 +375,9 @@ async def generate_gamersky_news(
             "header_tag": "游民星空 · 单机资讯",
             "title": top_item["title"],
             "source_tag": "GAMERSKY 单机动态",
-            "summary": f"新作动态、游戏预告与前沿硬件情报实时追踪，最新大作评测一览无遗。",
+            "summary": "新作情报、游戏预告与前沿硬件情报实时追踪，最新大作评测一览无遗。",
             "published_at": "今日更新",
-            "cover_url": "https://dummyimage.com/640x360/1a1a24/ffffff.png&text=GAMERSKY+NEWS",
+            "cover_url": top_item.get("cover") or fallback.get("cover_url", ""),
             "footer_label": "GAMERSKY · 单机与主机最新动向",
         })
         return res
@@ -389,7 +411,7 @@ async def generate_chuapp_articles(
 
     if not cached_data:
         try:
-            async with httpx.AsyncClient(proxy=proxy, timeout=8.0, headers=headers) as client:
+            async with _make_client(proxy=proxy, timeout=8.0, headers=headers) as client:
                 resp = await client.get("https://www.chuapp.com/feed")
                 if resp.status_code == 200:
                     root = ET.fromstring(resp.content)
@@ -397,14 +419,17 @@ async def generate_chuapp_articles(
                     parsed = []
                     for it in raw_items[:6]:
                         title = it.find("title").text if it.find("title") is not None else ""
-                        desc = it.find("description").text if it.find("description") is not None else ""
+                        raw_desc = it.find("description").text if it.find("description") is not None else ""
                         author = it.find("author").text if it.find("author") is not None else "触乐"
                         pub_date = it.find("pubDate").text if it.find("pubDate") is not None else ""
+                        img_m = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', raw_desc or "")
+                        cover = img_m.group(1) if img_m else ""
                         parsed.append({
                             "title": title.strip(),
-                            "desc": _clean_text(desc, 130),
+                            "desc": _clean_text(raw_desc, 130),
                             "author": author.strip() or "触乐特约作者",
                             "pub_date": pub_date[:16] if pub_date else "近期",
+                            "cover": cover,
                         })
                     cached_data = parsed
                     _MEDIA_CACHE[cache_key] = (now, cached_data)
@@ -420,6 +445,7 @@ async def generate_chuapp_articles(
             "author": art.get("author", "触乐编辑部"),
             "summary": art.get("desc", ""),
             "published_at": art.get("pub_date", "近期"),
+            "cover_url": art.get("cover") or fallback.get("cover_url", ""),
             "quote": "记录游戏与人，寻找那些值得被记录的玩家故事。",
             "footer_label": "CHUAPP · 触乐网深度故事",
         })
@@ -454,7 +480,7 @@ async def generate_yystv_articles(
 
     if not cached_data:
         try:
-            async with httpx.AsyncClient(proxy=proxy, timeout=8.0, headers=headers) as client:
+            async with _make_client(proxy=proxy, timeout=8.0, headers=headers) as client:
                 resp = await client.get("https://www.yystv.cn/rss/feed")
                 if resp.status_code == 200:
                     root = ET.fromstring(resp.content)
@@ -462,14 +488,17 @@ async def generate_yystv_articles(
                     parsed = []
                     for it in raw_items[:6]:
                         title = it.find("title").text if it.find("title") is not None else ""
-                        desc = it.find("description").text if it.find("description") is not None else ""
+                        raw_desc = it.find("description").text if it.find("description") is not None else ""
                         author = it.find("author").text if it.find("author") is not None else "游研社"
                         pub_date = it.find("pubDate").text if it.find("pubDate") is not None else ""
+                        img_m = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', raw_desc or "")
+                        cover = img_m.group(1) if img_m else ""
                         parsed.append({
                             "title": title.strip(),
-                            "desc": _clean_text(desc, 130),
+                            "desc": _clean_text(raw_desc, 130),
                             "author": author.strip() or "游研社",
                             "pub_date": pub_date[:16] if pub_date else "近期",
+                            "cover": cover,
                         })
                     cached_data = parsed
                     _MEDIA_CACHE[cache_key] = (now, cached_data)
@@ -485,6 +514,7 @@ async def generate_yystv_articles(
             "author": art.get("author", "游研社"),
             "summary": art.get("desc", ""),
             "published_at": art.get("pub_date", "近期"),
+            "cover_url": art.get("cover") or fallback.get("cover_url", ""),
             "footer_label": "YYSTV · 游研社游戏故事与见闻",
         })
         return res

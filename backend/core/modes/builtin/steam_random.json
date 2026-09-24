@@ -37,29 +37,30 @@
         "height": 4
       },
       {
-        "type": "card",
-        "border": "solid",
-        "radius": 8,
-        "padding": 8,
+        "type": "two_column",
         "margin_x": 10,
-        "margin_bottom": 6,
-        "children": [
+        "gap": 10,
+        "left_ratio": 0.60,
+        "right_ratio": 0.40,
+        "left_align_y": "top",
+        "right_align_y": "top",
+        "left_blocks": [
           {
             "type": "flex_row",
-            "justify": "space-between",
-            "align_items": "center",
-            "margin_bottom": 6,
+            "justify": "start",
+            "gap": 6,
+            "margin_bottom": 4,
             "items": [
               {
-                "type": "text",
-                "text": "🎲 今天玩什么？",
-                "font": "noto_serif_bold",
-                "font_size": 13
+                "type": "badge",
+                "text": "🎲 随机抽选",
+                "variant": "filled",
+                "radius": 4
               },
               {
                 "type": "badge",
                 "field": "persona_name",
-                "variant": "filled",
+                "variant": "outline",
                 "radius": 4
               }
             ]
@@ -68,15 +69,16 @@
             "type": "text",
             "field": "picked_game",
             "font": "noto_serif_bold",
-            "font_size": 18,
-            "max_lines": 1,
-            "margin_bottom": 6
+            "font_size": 16,
+            "max_lines": 2,
+            "line_height": 21,
+            "margin_bottom": 4
           },
           {
             "type": "flex_row",
-            "justify": "left",
-            "gap": 8,
-            "margin_bottom": 6,
+            "justify": "start",
+            "gap": 6,
+            "margin_bottom": 4,
             "items": [
               {
                 "type": "badge",
@@ -96,10 +98,27 @@
             "type": "text",
             "field": "recommend_reason",
             "font": "noto_serif_light",
-            "font_size": 13,
-            "max_lines": 3,
-            "line_height": 20,
+            "font_size": 11,
+            "max_lines": 5,
+            "line_height": 17,
             "margin_bottom": 4
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "image",
+            "field": "cover_url",
+            "width": 138,
+            "height": 178,
+            "fit": "cover",
+            "photo_enhance": true,
+            "margin_bottom": 4
+          },
+          {
+            "type": "centered_text",
+            "text": "Steam 游戏库推荐",
+            "font": "noto_serif_light",
+            "font_size": 10
           }
         ]
       }

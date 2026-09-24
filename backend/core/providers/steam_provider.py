@@ -26,6 +26,16 @@ from .base import register_provider
 
 logger = logging.getLogger(__name__)
 
+
+def _make_client(proxy: str | None = None, **kwargs) -> httpx.AsyncClient:
+    if proxy:
+        try:
+            return httpx.AsyncClient(proxy=proxy, **kwargs)
+        except TypeError:
+            return httpx.AsyncClient(proxies=proxy, **kwargs)
+    return httpx.AsyncClient(**kwargs)
+
+
 # 默认测试主页
 DEFAULT_STEAM_URL = "https://steamcommunity.com/profiles/76561198978201763/"
 
@@ -40,7 +50,7 @@ _FALLBACK_GAMES = [
         "appid": "289070",
         "name": "Sid Meier's Civilization VI",
         "capsule": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/289070/capsule_184x69.jpg",
-        "header": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/289070/header.jpg",
+        "header": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/289070/header.jpg",
         "hours_total": "62.0",
         "hours_2w": "12.5",
         "ach_unlocked": "37",
@@ -53,7 +63,7 @@ _FALLBACK_GAMES = [
         "appid": "1426210",
         "name": "It Takes Two (双人成行)",
         "capsule": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/capsule_184x69.jpg",
-        "header": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1426210/header.jpg",
+        "header": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/header.jpg",
         "hours_total": "22.0",
         "hours_2w": "3.0",
         "ach_unlocked": "7",
@@ -66,7 +76,7 @@ _FALLBACK_GAMES = [
         "appid": "1623730",
         "name": "Palworld (幻兽帕鲁)",
         "capsule": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1623730/capsule_184x69.jpg",
-        "header": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1623730/header.jpg",
+        "header": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1623730/header.jpg",
         "hours_total": "0.4",
         "hours_2w": "0.4",
         "ach_unlocked": "1",
@@ -163,7 +173,7 @@ async def fetch_steam_profile_data(steam_url: str, proxy_url: str | None = None)
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"}
 
     try:
-        async with httpx.AsyncClient(proxy=proxy, timeout=8.0, follow_redirects=True, headers=headers) as client:
+        async with _make_client(proxy=proxy, timeout=8.0, follow_redirects=True, headers=headers) as client:
             resp = await client.get(canon_url)
             if resp.status_code == 200:
                 html = resp.text
@@ -200,7 +210,7 @@ async def fetch_steam_profile_data(steam_url: str, proxy_url: str | None = None)
         name = name_m.group(2).strip()
 
         capsule_m = re.search(r'<img class="game_capsule" src="([^\"]+)"', chunk)
-        capsule = capsule_m.group(1) if capsule_m else f"https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/{appid}/header.jpg"
+        capsule = capsule_m.group(1) if capsule_m else f"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{appid}/header.jpg"
 
         hrs_m = re.search(r'([\d\.,]+)\s*hrs?\s*on\s*record', chunk)
         hrs_total = hrs_m.group(1) if hrs_m else "0"
@@ -227,7 +237,7 @@ async def fetch_steam_profile_data(steam_url: str, proxy_url: str | None = None)
             "appid": appid,
             "name": name,
             "capsule": capsule,
-            "header": f"https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/{appid}/header.jpg",
+            "header": f"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{appid}/header.jpg",
             "hours_total": hrs_total,
             "hours_2w": hrs_2w,
             "ach_unlocked": ach_unlocked,
@@ -265,7 +275,7 @@ async def fetch_steam_friends_data(steam_url: str, proxy_url: str | None = None)
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"}
 
     try:
-        async with httpx.AsyncClient(proxy=proxy, timeout=8.0, follow_redirects=True, headers=headers) as client:
+        async with _make_client(proxy=proxy, timeout=8.0, follow_redirects=True, headers=headers) as client:
             resp = await client.get(friends_url)
             if resp.status_code == 200:
                 html = resp.text
@@ -461,6 +471,7 @@ async def generate_steam_friends(
     res.update({
         "header_title": "STEAM 好友动态",
         "status_summary": f"在线: {online_count} 人 · 游戏中: {ingame_count} 人",
+        "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/header.jpg",
         "f1_dot": display_friends[0]["dot"],
         "f1_name": display_friends[0]["name"],
         "f1_status": display_friends[0]["status_label"],

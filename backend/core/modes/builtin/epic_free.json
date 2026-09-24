@@ -39,29 +39,30 @@
         "height": 4
       },
       {
-        "type": "card",
-        "border": "solid",
-        "radius": 8,
-        "padding": 8,
+        "type": "two_column",
         "margin_x": 10,
-        "margin_bottom": 6,
-        "children": [
+        "gap": 10,
+        "left_ratio": 0.60,
+        "right_ratio": 0.40,
+        "left_align_y": "top",
+        "right_align_y": "top",
+        "left_blocks": [
           {
             "type": "flex_row",
-            "justify": "space-between",
-            "align_items": "center",
-            "margin_bottom": 6,
+            "justify": "start",
+            "gap": 6,
+            "margin_bottom": 4,
             "items": [
               {
-                "type": "text",
-                "field": "header_title",
-                "font": "noto_serif_bold",
-                "font_size": 13
+                "type": "badge",
+                "text": "EPIC 喜加一",
+                "variant": "filled",
+                "radius": 4
               },
               {
                 "type": "badge",
                 "field": "status_label",
-                "variant": "filled",
+                "variant": "outline",
                 "radius": 4
               }
             ]
@@ -70,15 +71,16 @@
             "type": "text",
             "field": "game_title",
             "font": "noto_serif_bold",
-            "font_size": 17,
-            "max_lines": 1,
-            "margin_bottom": 6
+            "font_size": 15,
+            "max_lines": 2,
+            "line_height": 20,
+            "margin_bottom": 4
           },
           {
             "type": "flex_row",
-            "justify": "left",
-            "gap": 8,
-            "margin_bottom": 6,
+            "justify": "start",
+            "gap": 6,
+            "margin_bottom": 4,
             "items": [
               {
                 "type": "badge",
@@ -91,12 +93,6 @@
                 "field": "original_price",
                 "variant": "outline",
                 "radius": 4
-              },
-              {
-                "type": "badge",
-                "field": "deadline_label",
-                "variant": "outline",
-                "radius": 4
               }
             ]
           },
@@ -104,10 +100,45 @@
             "type": "text",
             "field": "description",
             "font": "noto_serif_light",
-            "font_size": 12,
-            "max_lines": 3,
-            "line_height": 18,
+            "font_size": 11,
+            "max_lines": 4,
+            "line_height": 16,
             "margin_bottom": 4
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "items": [
+              {
+                "type": "text",
+                "text": "官方限免活动",
+                "font_size": 10,
+                "color": "gray"
+              },
+              {
+                "type": "text",
+                "field": "deadline_label",
+                "font_size": 10,
+                "color": "black"
+              }
+            ]
+          }
+        ],
+        "right_blocks": [
+          {
+            "type": "image",
+            "field": "cover_url",
+            "width": 138,
+            "height": 178,
+            "fit": "cover",
+            "photo_enhance": true,
+            "margin_bottom": 4
+          },
+          {
+            "type": "centered_text",
+            "text": "Epic Games Store",
+            "font": "noto_serif_light",
+            "font_size": 10
           }
         ]
       }
