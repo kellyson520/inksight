@@ -124,3 +124,27 @@ async def test_gaming_mode_pipeline_rendering_en_and_small_screen(mode_id: str):
     assert img is not None
     assert img.size == (296, 128)
     assert content is not None
+
+
+@pytest.mark.asyncio
+async def test_gaming_mode_pipeline_rendering_tri_color_and_quad_color():
+    """验证游戏媒体模式在 3 色与 4 色彩色墨水屏下的调色板与像素格式兼容性。"""
+    device_config = {
+        "mac": "AA:BB:CC:DD:EE:FF",
+        "city": "上海",
+    }
+    for c in (3, 4):
+        img, content = await generate_and_render(
+            persona="XIAOHEIHE_DISCOUNT",
+            config=device_config,
+            date_ctx={"time_str": "16:30", "date_str": "09/24", "weekday": 2, "day": 24},
+            weather={"weather_str": "晴", "weather_code": 0},
+            battery_pct=95.0,
+            screen_w=400,
+            screen_h=300,
+            colors=c,
+        )
+        assert img is not None
+        assert img.size == (400, 300)
+        assert img.mode == "P"
+        assert content is not None
