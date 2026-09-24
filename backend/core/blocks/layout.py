@@ -280,10 +280,10 @@ def render_flex_row(ctx: RenderContext, block: dict) -> None:
     if justify == "space-between" and k > 1:
         computed_gap = max(0, (avail_w - total_items_w) // (k - 1))
         start_x = ctx.x_offset + margin_x
-    elif justify == "left":
+    elif justify in ("left", "start"):
         computed_gap = gap
         start_x = ctx.x_offset + margin_x
-    elif justify == "right":
+    elif justify in ("right", "end"):
         computed_gap = gap
         total_w = total_items_w + (k - 1) * gap
         start_x = ctx.x_offset + ctx.available_width - margin_x - total_w
