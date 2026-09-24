@@ -165,7 +165,8 @@ async def fetch_game_discounts(proxy_url: str | None = None) -> list[dict[str, A
                     final_yuan = final_cents / 100.0
                     cut_yuan = orig_yuan - final_yuan
 
-                    header_img = it.get("header_image") or f"https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/{it.get('id')}/header.jpg"
+                    raw_header = it.get("header_image") or f"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{it.get('id')}/header.jpg"
+                    header_img = str(raw_header).replace("shared.cloudflare.steamstatic.com", "shared.akamai.steamstatic.com")
 
                     specials_list.append({
                         "game_name": name,
