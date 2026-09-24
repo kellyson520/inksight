@@ -189,6 +189,20 @@ Get current logged-in user info.
 #### `POST /api/auth/logout`
 Logout.
 
+#### `GET /api/user/profile`
+Get the current user's profile, including account role, free quota, linked Steam profile URL, and masked LLM configurations.
+
+#### `PUT /api/user/profile/steam`
+Bind or update the user's Steam community profile URL.
+```json
+{
+  "steam_profile_url": "https://steamcommunity.com/profiles/76561198978201763/"
+}
+```
+
+#### `GET /api/modes/catalog`
+Retrieve the unified mode catalog with bilingual localized titles and tooltips for config and preview UIs.
+
 #### `GET /api/user/devices`
 Get the list of devices bound to the current user.
 

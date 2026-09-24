@@ -249,6 +249,24 @@ InkSight 后端负责设备渲染、预览、配置存储、设备状态、统�
 
 退出登录。
 
+#### `GET /api/user/profile`
+
+获取用户完整个人信息，包含用户角色、免费调用配额、绑定的 Steam 主页链接以及脱敏后的 LLM 自定义配置。
+
+#### `PUT /api/user/profile/steam`
+
+绑定或更新用户的 Steam 个人主页链接。
+
+```json
+{
+  "steam_profile_url": "https://steamcommunity.com/profiles/76561198978201763/"
+}
+```
+
+#### `GET /api/modes/catalog`
+
+获取经过权威分类、中英双语国际化文案处理的统一模式目录列表，供配置页、预览页与选择器调用。
+
 #### `GET /api/user/devices`
 
 获取当前用户已绑定设备列表。
