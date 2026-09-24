@@ -15,6 +15,8 @@ const categoryOptions = [
   { value: "效率", zh: "效率", en: "Productivity" },
   { value: "学习", zh: "学习", en: "Learning" },
   { value: "生活", zh: "生活", en: "Life" },
+  { value: "游戏", zh: "游戏", en: "Gaming" },
+  { value: "影音", zh: "影音", en: "Media" },
   { value: "趣味", zh: "趣味", en: "Fun" },
   { value: "极客", zh: "极客", en: "Geek" },
 ];
