@@ -13,6 +13,8 @@ import { SmzdmConfig } from "./configs/smzdm-config";
 import { ServerStatusConfig } from "./configs/server-status-config";
 import { CpaQuotaConfig } from "./configs/cpa-quota-config";
 import { MihomoSubConfig } from "./configs/mihomo-sub-config";
+import { SteamConfig } from "./configs/steam-config";
+import { GcoresPodcastConfig, MiyousheNewsConfig } from "./configs/gaming-media-configs";
 import {
   MemoConfig,
   RssConfig,
@@ -50,7 +52,10 @@ interface ModeConfigModalProps {
       | "douban_movie"
       | "smzdm"
       | "mihomo_sub"
-       | "recommendation";
+      | "steam"
+      | "gcores_podcast"
+      | "miyoushe_news"
+      | "recommendation";
     modeId: string;
   };
   locale: string;
@@ -144,6 +149,12 @@ export function ModeConfigModal({
         return locale === "zh" ? "什么值得买好价设置" : "SMZDM Deals Settings";
       case "mihomo_sub":
         return locale === "zh" ? "Mihomo (Clash.Meta) 容器与订阅配置" : "Mihomo Container & Subscription Settings";
+      case "steam":
+        return locale === "zh" ? "Steam 个人主页与账号设置" : "Steam Profile & Account Settings";
+      case "gcores_podcast":
+        return locale === "zh" ? "机核网播客栏目设置" : "Gcores Podcast Settings";
+      case "miyoushe_news":
+        return locale === "zh" ? "米游社关注游戏设置" : "HoYoLAB Game Settings";
       default:
         return locale === "zh" ? "模式参数设置" : "Mode Settings";
     }
@@ -363,6 +374,33 @@ export function ModeConfigModal({
               onClose={onClose}
               onSubmit={async (override) => {
                 await onSubmit("CPA_QUOTA", override);
+              }}
+            />
+          ) : modal.type === "steam" ? (
+            <SteamConfig
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (override) => {
+                await onSubmit(modal.modeId, override);
+              }}
+            />
+          ) : modal.type === "gcores_podcast" ? (
+            <GcoresPodcastConfig
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (override) => {
+                await onSubmit("GCORES_PODCAST", override);
+              }}
+            />
+          ) : modal.type === "miyoushe_news" ? (
+            <MiyousheNewsConfig
+              locale={locale}
+              previewLoading={previewLoading}
+              onClose={onClose}
+              onSubmit={async (override) => {
+                await onSubmit("MIYOUSHE_NEWS", override);
               }}
             />
           ) : (

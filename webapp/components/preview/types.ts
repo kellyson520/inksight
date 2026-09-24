@@ -35,6 +35,15 @@ import {
   Server,
   Key,
   Compass,
+  Tag,
+  Award,
+  Clock,
+  Shuffle,
+  Users,
+  Bell,
+  Gamepad2,
+  FileText,
+  Book,
 } from "lucide-react";
 
 export type ModeCatalogItem = {
@@ -109,6 +118,9 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   MARKET: "news",
   THISDAY: "news",
   BIAS: "news",
+  GCORES_NEWS: "news",
+  MIYOUSHE_NEWS: "news",
+  GAMERSKY_NEWS: "news",
 
   // 影音多媒体 (Media & Entertainment)
   BILIBILI: "media", // B站热门 (视频大卡图文展示)
@@ -121,6 +133,16 @@ export const MODE_PRIMARY_CATEGORY: Record<string, "life" | "productivity" | "ne
   IWARA_VIDEO: "media",
   PORN_VIDEO: "media",
   GAME_GIVEAWAY: "media",
+  XIAOHEIHE_DISCOUNT: "media",
+  EPIC_FREE: "media",
+  STEAM_ACHIEVEMENTS: "media",
+  STEAM_RECENT: "media",
+  STEAM_RANDOM: "media",
+  STEAM_FRIENDS: "media",
+  GCORES_PODCAST: "media",
+  GCORES_ARTICLES: "media",
+  CHUAPP_ARTICLES: "media",
+  YYSTV_ARTICLES: "media",
 
   // 灵感创作 (Studio & Creative)
   WORD_OF_THE_DAY: "studio",
@@ -357,4 +379,17 @@ export const MODE_ICONS: Record<string, LucideIcon> = {
   PIXIV_DAILY: Palette,
   GAME_GIVEAWAY: Gift,
   DRINK_WATER: Droplets,
+  XIAOHEIHE_DISCOUNT: Tag,
+  EPIC_FREE: Gift,
+  STEAM_ACHIEVEMENTS: Award,
+  STEAM_RECENT: Clock,
+  STEAM_RANDOM: Shuffle,
+  STEAM_FRIENDS: Users,
+  GCORES_PODCAST: Headphones,
+  GCORES_NEWS: Newspaper,
+  GCORES_ARTICLES: BookOpen,
+  MIYOUSHE_NEWS: Bell,
+  GAMERSKY_NEWS: Gamepad2,
+  CHUAPP_ARTICLES: FileText,
+  YYSTV_ARTICLES: Book,
 };
