@@ -148,3 +148,32 @@ async def test_gaming_mode_pipeline_rendering_tri_color_and_quad_color():
         assert img.size == (400, 300)
         assert img.mode == "P"
         assert content is not None
+
+
+@pytest.mark.asyncio
+async def test_gaming_mode_overrides_channel_and_game_selection():
+    """验证 GCORES_PODCAST 和 MIYOUSHE_NEWS 响应 mode_overrides 设定的频道与游戏。"""
+    device_config = {
+        "mac": "AA:BB:CC:DD:EE:FF",
+        "mode_overrides": {
+            "GCORES_PODCAST": {"program": "LIFE"},
+            "MIYOUSHE_NEWS": {"game": "STAR_RAIL"},
+        }
+    }
+    img1, c1 = await generate_and_render(
+        persona="GCORES_PODCAST",
+        config=device_config,
+        date_ctx={"time_str": "16:30", "date_str": "09/24"},
+        weather={"weather_str": "晴", "weather_code": 0},
+        battery_pct=95.0,
+    )
+    assert "Gadio Life" in c1.get("program_tag", "")
+
+    img2, c2 = await generate_and_render(
+        persona="MIYOUSHE_NEWS",
+        config=device_config,
+        date_ctx={"time_str": "16:30", "date_str": "09/24"},
+        weather={"weather_str": "晴", "weather_code": 0},
+        battery_pct=95.0,
+    )
+    assert c2.get("game_badge") == "崩坏：星穹铁道"

@@ -69,9 +69,30 @@ async def generate_gcores_podcast(
 ) -> dict[str, Any]:
     global _MEDIA_CACHE
     now = time.time()
-    cache_key = "gcores_radios"
 
     config = kwargs.get("config") or {}
+    mode_overrides = config.get("mode_overrides") or {}
+    mode_settings = config.get("mode_settings") or {}
+    override = mode_overrides.get("GCORES_PODCAST") or {}
+    settings = mode_settings.get("GCORES_PODCAST") or {}
+
+    program = "ALL"
+    if isinstance(override, dict) and override.get("program"):
+        program = str(override["program"]).upper()
+    elif isinstance(settings, dict) and settings.get("program"):
+        program = str(settings["program"]).upper()
+    elif content_cfg.get("program"):
+        program = str(content_cfg["program"]).upper()
+
+    program_map = {
+        "ALL": ("", "Gadio Pro · 深度对谈"),
+        "PRO": ("categories/84/", "Gadio Spec · 深度对谈"),
+        "LIFE": ("categories/13/", "Gadio Life · 生活与日常"),
+        "MUSIC": ("categories/94/", "Gadio Music · 音乐专栏"),
+    }
+    path_prefix, program_tag = program_map.get(program, ("", "Gadio Pro · 深度对谈"))
+    cache_key = f"gcores_radios_{program}"
+
     proxy = resolve_proxy_url(config.get("global_proxy_url"), auto_detect=True)
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
@@ -82,7 +103,7 @@ async def generate_gcores_podcast(
             cached_data = items
 
     if not cached_data:
-        url = "https://www.gcores.com/gapi/v1/radios?sort=-published-at&page[limit]=10"
+        url = f"https://www.gcores.com/gapi/v1/{path_prefix}radios?sort=-published-at&page[limit]=10"
         try:
             async with _make_client(proxy=proxy, timeout=8.0, headers=headers) as client:
                 resp = await client.get(url)
@@ -121,7 +142,7 @@ async def generate_gcores_podcast(
         res.update({
             "header_tag": "机核网 · 最新电台",
             "title": title or fallback.get("title", "机核电台节目"),
-            "program_tag": "Gadio Pro · 深度对谈",
+            "program_tag": program_tag,
             "summary": summary[:110] or fallback.get("summary", "最新一期机核播客节目上线。"),
             "published_at": published_at or "近期上线",
             "cover_url": cover,
@@ -264,8 +285,18 @@ async def generate_miyoushe_news(
     now = time.time()
 
     config = kwargs.get("config") or {}
-    mode_settings = config.get("mode_settings", {}).get("MIYOUSHE_NEWS", {})
-    game_choice = str(mode_settings.get("game") or content_cfg.get("game") or "GENSHIN").upper()
+    mode_overrides = config.get("mode_overrides") or {}
+    mode_settings = config.get("mode_settings") or {}
+    override = mode_overrides.get("MIYOUSHE_NEWS") or {}
+    settings = mode_settings.get("MIYOUSHE_NEWS") or {}
+
+    game_choice = "GENSHIN"
+    if isinstance(override, dict) and override.get("game"):
+        game_choice = str(override["game"]).upper()
+    elif isinstance(settings, dict) and settings.get("game"):
+        game_choice = str(settings["game"]).upper()
+    elif content_cfg.get("game"):
+        game_choice = str(content_cfg["game"]).upper()
 
     # forum_id 映射：原神=28, 星穹铁道=53, 绝区零=58, 崩坏3=6, 综合大别野=34
     forum_map = {
