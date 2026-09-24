@@ -1,34 +1,28 @@
 {
-  "mode_id": "XIAOHEIHE_DISCOUNT",
-  "display_name": "小黑盒 游戏折扣",
-  "icon": "tag",
+  "mode_id": "STEAM_RANDOM",
+  "display_name": "Steam What to Play",
+  "icon": "shuffle",
   "cacheable": true,
-  "description": "小黑盒游戏折扣信息，随机展示一款正在优惠的游戏。",
+  "description": "Randomly picks a game from your public Steam library to help you decide what to play today.",
   "settings_schema": [
     {
-      "key": "endpoint",
-      "label": "自定义折扣数据接口（可选）",
+      "key": "steam_url",
+      "label": "Steam Profile URL (Optional, defaults to account settings)",
       "type": "text",
-      "placeholder": "https://example.com/discounts.json"
+      "placeholder": "https://steamcommunity.com/profiles/76561198978201763/"
     }
   ],
   "content": {
     "type": "computed",
-    "provider": "xiaoheihe_discount",
+    "provider": "steam_random",
     "fallback": {
-      "header_title": "小黑盒 · 热门折扣",
-      "game_name": "双人成行 (It Takes Two)",
-      "discount_badge": "-70%",
-      "current_price": "¥59.40",
-      "original_price": "¥198.00",
-      "cut_price": "立省 ¥138.60",
-      "historical_status": "平史低",
-      "rating_label": "好评如潮 (95%)",
-      "deadline_label": "特惠进行中",
-      "tag_list": "合作 · 动作 · 冒险",
-      "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/header_schinese.jpg",
-      "description": "年度最佳合作游戏，突破常理的奇幻冒险之旅，两名玩家必须齐心协力方能化险为夷。",
-      "footer_label": "XIAOHEIHE · 游戏好价每日选"
+      "persona_name": "O_0",
+      "picked_game": "Sid Meier's Civilization VI",
+      "playtime_badge": "62.0 Hours Played",
+      "ach_badge": "12% Achievements",
+      "recommend_reason": "Just one more turn! Dive into world conquest and strategic mastery.",
+      "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/289070/header.jpg",
+      "footer_label": "STEAM TODAY · RANDOM PICK"
     }
   },
   "layout": {
@@ -59,13 +53,13 @@
             "items": [
               {
                 "type": "badge",
-                "text": "小黑盒特惠",
+                "text": "🎲 RANDOM PICK",
                 "variant": "filled",
                 "radius": 4
               },
               {
                 "type": "badge",
-                "field": "discount_badge",
+                "field": "persona_name",
                 "variant": "outline",
                 "radius": 4
               }
@@ -73,11 +67,11 @@
           },
           {
             "type": "text",
-            "field": "game_name",
+            "field": "picked_game",
             "font": "noto_serif_bold",
-            "font_size": 15,
+            "font_size": 16,
             "max_lines": 2,
-            "line_height": 20,
+            "line_height": 21,
             "margin_bottom": 4
           },
           {
@@ -88,13 +82,13 @@
             "items": [
               {
                 "type": "badge",
-                "field": "current_price",
+                "field": "playtime_badge",
                 "variant": "filled",
                 "radius": 4
               },
               {
                 "type": "badge",
-                "field": "original_price",
+                "field": "ach_badge",
                 "variant": "outline",
                 "radius": 4
               }
@@ -102,30 +96,12 @@
           },
           {
             "type": "text",
-            "field": "description",
+            "field": "recommend_reason",
             "font": "noto_serif_light",
             "font_size": 11,
-            "max_lines": 4,
-            "line_height": 16,
+            "max_lines": 5,
+            "line_height": 17,
             "margin_bottom": 4
-          },
-          {
-            "type": "flex_row",
-            "justify": "space-between",
-            "items": [
-              {
-                "type": "text",
-                "field": "rating_label",
-                "font_size": 10,
-                "color": "gray"
-              },
-              {
-                "type": "text",
-                "field": "deadline_label",
-                "font_size": 10,
-                "color": "black"
-              }
-            ]
           }
         ],
         "right_blocks": [
@@ -140,15 +116,15 @@
           },
           {
             "type": "centered_text",
-            "field": "cut_price",
-            "font": "noto_serif_bold",
+            "text": "Steam Library Pick",
+            "font": "noto_serif_light",
             "font_size": 10
           }
         ]
       }
     ],
     "footer": {
-      "label": "小黑盒游戏折扣",
+      "label": "Steam What to Play",
       "attribution_template": "{footer_label}"
     }
   },
@@ -168,43 +144,22 @@
           "items": [
             {
               "type": "text",
-              "field": "game_name",
+              "field": "picked_game",
               "font": "noto_serif_bold",
               "font_size": 12,
               "max_lines": 1
             },
             {
               "type": "badge",
-              "field": "discount_badge",
+              "field": "playtime_badge",
               "variant": "filled",
-              "radius": 3
-            }
-          ]
-        },
-        {
-          "type": "flex_row",
-          "justify": "start",
-          "gap": 6,
-          "margin_x": 6,
-          "margin_bottom": 2,
-          "items": [
-            {
-              "type": "badge",
-              "field": "current_price",
-              "variant": "filled",
-              "radius": 3
-            },
-            {
-              "type": "badge",
-              "field": "original_price",
-              "variant": "outline",
               "radius": 3
             }
           ]
         },
         {
           "type": "text",
-          "field": "description",
+          "field": "recommend_reason",
           "font": "noto_serif_light",
           "font_size": 9,
           "max_lines": 2,

@@ -1,21 +1,21 @@
 {
-  "mode_id": "YYSTV_ARTICLES",
-  "display_name": "游研社 最新文章",
-  "icon": "book",
+  "mode_id": "GAMERSKY_NEWS",
+  "display_name": "GamerSky News",
+  "icon": "gamepad-2",
   "cacheable": true,
-  "description": "阅读游研社最新的游戏故事、文化文章与玩家见闻。",
+  "description": "Latest PC and console gaming news, upcoming releases, and hardware updates.",
   "settings_schema": [],
   "content": {
     "type": "computed",
-    "provider": "yystv_articles",
+    "provider": "gamersky_news",
     "fallback": {
-      "header_tag": "游研社 · 游戏社评与文化",
-      "title": "联动偶像女团，成了《守望先锋》十年里最神的操作？",
-      "author": "游研社特约作者",
-      "summary": "回溯经典游戏与流行文化交错的历程，探究玩家情感共鸣与社群记忆的深层联结。",
-      "published_at": "今日发布",
-      "cover_url": "https://alioss.yystv.cn/doc/14428/843a3a430a02ac5efa28e39b5b61864d.appmsg_mw680water",
-      "footer_label": "YYSTV · 游研社游戏故事与见闻"
+      "header_tag": "GAMERSKY · GAMING NEWS",
+      "title": "The Witcher 3 Next-Gen Comparison Footage Released by CDPR",
+      "source_tag": "GAMERSKY Console News",
+      "summary": "Next-gen lighting, enhanced textures, and ray-tracing upgrades showcase full visual evolution for both new and returning players.",
+      "published_at": "Today",
+      "cover_url": "https://imgs.gamersky.com/upimg/new_preview/2026/09/24/origin_b_202609241802146453.jpg",
+      "footer_label": "GAMERSKY · PC & CONSOLE UPDATES"
     }
   },
   "layout": {
@@ -46,13 +46,13 @@
             "items": [
               {
                 "type": "badge",
-                "text": "游研专栏",
+                "text": "PC & CONSOLE",
                 "variant": "filled",
                 "radius": 4
               },
               {
                 "type": "badge",
-                "field": "author",
+                "field": "source_tag",
                 "variant": "outline",
                 "radius": 4
               }
@@ -82,7 +82,7 @@
             "items": [
               {
                 "type": "text",
-                "text": "游研社 YYSTV",
+                "text": "GamerSky Community",
                 "font_size": 10,
                 "color": "gray"
               },
@@ -107,7 +107,7 @@
           },
           {
             "type": "centered_text",
-            "text": "游研社文章配图",
+            "text": "News Thumbnail",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -115,7 +115,7 @@
       }
     ],
     "footer": {
-      "label": "游研社最新文章",
+      "label": "GamerSky News",
       "attribution_template": "{footer_label}"
     }
   },
@@ -152,7 +152,7 @@
           "items": [
             {
               "type": "badge",
-              "field": "author",
+              "text": "GAMERSKY",
               "variant": "outline",
               "radius": 3
             },

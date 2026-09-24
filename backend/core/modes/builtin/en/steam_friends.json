@@ -1,36 +1,45 @@
 {
-  "mode_id": "STEAM_RECENT",
-  "display_name": "Steam最近在玩",
-  "icon": "clock",
+  "mode_id": "STEAM_FRIENDS",
+  "display_name": "Steam Friends Status",
+  "icon": "users",
   "cacheable": true,
-  "description": "显示最近玩过的游戏，以及近两周和累计游玩时间。",
+  "description": "Show friend online and in-game statuses to see what everyone is playing.",
   "settings_schema": [
     {
       "key": "steam_url",
-      "label": "Steam 个人主页链接（可选，默认读取个人资料配置）",
+      "label": "Steam Profile URL (Optional, defaults to account settings)",
       "type": "text",
       "placeholder": "https://steamcommunity.com/profiles/76561198978201763/"
     }
   ],
   "content": {
     "type": "computed",
-    "provider": "steam_recent",
+    "provider": "steam_friends",
     "fallback": {
-      "persona_name": "O_0",
-      "level": "11",
-      "game1_name": "Sid Meier's Civilization VI",
-      "game1_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/289070/capsule_184x69.jpg",
-      "game1_hours_total": "累计 62.0h",
-      "game1_hours_2w": "近两周 12.5h",
-      "game2_name": "It Takes Two (双人成行)",
-      "game2_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/capsule_184x69.jpg",
-      "game2_hours_total": "累计 22.0h",
-      "game2_hours_2w": "近两周 3.0h",
-      "game3_name": "Palworld (幻兽帕鲁)",
-      "game3_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1623730/capsule_184x69.jpg",
-      "game3_hours_total": "累计 0.4h",
-      "game3_hours_2w": "近两周 0.4h",
-      "footer_label": "STEAM RECENT · 近期游玩记录"
+      "header_title": "STEAM FRIENDS",
+      "status_summary": "Online: 2 · In-Game: 1",
+      "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/header.jpg",
+      "f1_dot": "●",
+      "f1_name": "Hank Garcia",
+      "f1_status": "In-Game",
+      "f1_game": "Counter-Strike 2",
+      "f2_dot": "●",
+      "f2_name": "James Allen",
+      "f2_status": "Online",
+      "f2_game": "Online",
+      "f3_dot": "○",
+      "f3_name": "kelly",
+      "f3_status": "Offline",
+      "f3_game": "Last online 7h ago",
+      "f4_dot": "○",
+      "f4_name": "Momo.368",
+      "f4_status": "Offline",
+      "f4_game": "Last online 1d ago",
+      "f5_dot": "○",
+      "f5_name": "YANG",
+      "f5_status": "Offline",
+      "f5_game": "Last online 2d ago",
+      "footer_label": "STEAM FRIENDS · ONLINE RADAR"
     }
   },
   "layout": {
@@ -61,13 +70,13 @@
             "items": [
               {
                 "type": "text",
-                "field": "persona_name",
+                "field": "header_title",
                 "font": "noto_serif_bold",
                 "font_size": 13
               },
               {
                 "type": "badge",
-                "text": "近期游玩",
+                "field": "status_summary",
                 "variant": "filled",
                 "radius": 4
               }
@@ -77,29 +86,22 @@
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
-            "margin_bottom": 1,
+            "margin_bottom": 2,
             "items": [
               {
                 "type": "text",
-                "field": "game1_name",
+                "text": "{f1_dot} {f1_name}",
                 "font": "noto_serif_bold",
-                "font_size": 13,
+                "font_size": 12,
                 "max_lines": 1
               },
               {
                 "type": "badge",
-                "field": "game1_hours_2w",
+                "field": "f1_game",
                 "variant": "outline",
                 "radius": 3
               }
             ]
-          },
-          {
-            "type": "text",
-            "field": "game1_hours_total",
-            "font_size": 10,
-            "color": "gray",
-            "margin_bottom": 4
           },
           {
             "type": "separator",
@@ -114,29 +116,22 @@
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
-            "margin_bottom": 1,
+            "margin_bottom": 2,
             "items": [
               {
                 "type": "text",
-                "field": "game2_name",
+                "text": "{f2_dot} {f2_name}",
                 "font": "noto_serif_bold",
-                "font_size": 13,
+                "font_size": 12,
                 "max_lines": 1
               },
               {
                 "type": "badge",
-                "field": "game2_hours_2w",
+                "field": "f2_game",
                 "variant": "outline",
                 "radius": 3
               }
             ]
-          },
-          {
-            "type": "text",
-            "field": "game2_hours_total",
-            "font_size": 10,
-            "color": "gray",
-            "margin_bottom": 4
           },
           {
             "type": "separator",
@@ -151,34 +146,57 @@
             "type": "flex_row",
             "justify": "space-between",
             "align_items": "center",
-            "margin_bottom": 1,
+            "margin_bottom": 2,
             "items": [
               {
                 "type": "text",
-                "field": "game3_name",
+                "text": "{f3_dot} {f3_name}",
                 "font": "noto_serif_bold",
-                "font_size": 13,
+                "font_size": 12,
                 "max_lines": 1
               },
               {
                 "type": "badge",
-                "field": "game3_hours_2w",
+                "field": "f3_game",
                 "variant": "outline",
                 "radius": 3
               }
             ]
           },
           {
-            "type": "text",
-            "field": "game3_hours_total",
-            "font_size": 10,
-            "color": "gray"
+            "type": "separator",
+            "line_width": 1,
+            "margin_x": 0
+          },
+          {
+            "type": "spacer",
+            "height": 3
+          },
+          {
+            "type": "flex_row",
+            "justify": "space-between",
+            "align_items": "center",
+            "items": [
+              {
+                "type": "text",
+                "text": "{f4_dot} {f4_name}",
+                "font": "noto_serif_bold",
+                "font_size": 12,
+                "max_lines": 1
+              },
+              {
+                "type": "badge",
+                "field": "f4_game",
+                "variant": "outline",
+                "radius": 3
+              }
+            ]
           }
         ],
         "right_blocks": [
           {
             "type": "image",
-            "field": "game1_cover",
+            "field": "cover_url",
             "width": 138,
             "height": 178,
             "fit": "cover",
@@ -187,7 +205,7 @@
           },
           {
             "type": "centered_text",
-            "text": "近期主要投入",
+            "text": "Friends Radar",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -195,7 +213,7 @@
       }
     ],
     "footer": {
-      "label": "Steam最近在玩",
+      "label": "Steam Friends Status",
       "attribution_template": "{footer_label}"
     }
   },
@@ -215,14 +233,14 @@
           "items": [
             {
               "type": "text",
-              "field": "game1_name",
+              "text": "{f1_dot} {f1_name}",
               "font": "noto_serif_bold",
               "font_size": 11,
               "max_lines": 1
             },
             {
               "type": "badge",
-              "field": "game1_hours_2w",
+              "field": "f1_game",
               "variant": "outline",
               "radius": 3
             }
@@ -235,14 +253,14 @@
           "items": [
             {
               "type": "text",
-              "field": "game2_name",
+              "text": "{f2_dot} {f2_name}",
               "font": "noto_serif_bold",
               "font_size": 11,
               "max_lines": 1
             },
             {
               "type": "badge",
-              "field": "game2_hours_2w",
+              "field": "f2_game",
               "variant": "outline",
               "radius": 3
             }

@@ -156,6 +156,25 @@ async def start_scheduler() -> None:
         coalesce=True,
     )
 
+    # 每日定时用户多渠道推送守护任务 (Scheduled Daily User Push)
+    async def _scheduled_user_push_job():
+        try:
+            from .push_service import push_dispatcher
+            await push_dispatcher.dispatch_scheduled_user_pushes()
+        except Exception:
+            logger.exception("[Scheduler] Scheduled user push failed")
+
+    scheduler.add_job(
+        _scheduled_user_push_job,
+        "interval",
+        seconds=60,
+        id="scheduled_user_push",
+        name="Scheduled User Push",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=30,
+    )
+
     scheduler.start()
     logger.info("[Scheduler] Started with %d jobs", len(scheduler.get_jobs()))
 

@@ -1,21 +1,21 @@
 {
   "mode_id": "YYSTV_ARTICLES",
-  "display_name": "游研社 最新文章",
+  "display_name": "YYSTV Articles",
   "icon": "book",
   "cacheable": true,
-  "description": "阅读游研社最新的游戏故事、文化文章与玩家见闻。",
+  "description": "Gaming essays, industry critiques, and memorable community folklore from YYSTV.",
   "settings_schema": [],
   "content": {
     "type": "computed",
     "provider": "yystv_articles",
     "fallback": {
-      "header_tag": "游研社 · 游戏社评与文化",
-      "title": "联动偶像女团，成了《守望先锋》十年里最神的操作？",
-      "author": "游研社特约作者",
-      "summary": "回溯经典游戏与流行文化交错的历程，探究玩家情感共鸣与社群记忆的深层联结。",
-      "published_at": "今日发布",
+      "header_tag": "YYSTV · GAMING ESSAYS",
+      "title": "Idol Group Crossover: Overwatch's Most Memorable Collaboration in a Decade?",
+      "author": "YYSTV Writer",
+      "summary": "Tracing the intersection of classic games and pop culture, exploring the deeper emotional resonance and shared community memories.",
+      "published_at": "Today",
       "cover_url": "https://alioss.yystv.cn/doc/14428/843a3a430a02ac5efa28e39b5b61864d.appmsg_mw680water",
-      "footer_label": "YYSTV · 游研社游戏故事与见闻"
+      "footer_label": "YYSTV · CULTURE & MEMORIES"
     }
   },
   "layout": {
@@ -46,7 +46,7 @@
             "items": [
               {
                 "type": "badge",
-                "text": "游研专栏",
+                "text": "YYSTV",
                 "variant": "filled",
                 "radius": 4
               },
@@ -82,7 +82,7 @@
             "items": [
               {
                 "type": "text",
-                "text": "游研社 YYSTV",
+                "text": "Game Research Club",
                 "font_size": 10,
                 "color": "gray"
               },
@@ -107,7 +107,7 @@
           },
           {
             "type": "centered_text",
-            "text": "游研社文章配图",
+            "text": "Feature Artwork",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -115,7 +115,7 @@
       }
     ],
     "footer": {
-      "label": "游研社最新文章",
+      "label": "YYSTV Articles",
       "attribution_template": "{footer_label}"
     }
   },

@@ -14,7 +14,7 @@ from datetime import datetime
 from core.content import get_configured_llm_providers
 from core.mode_registry import get_registry
 from core.json_content import generate_json_mode_content
-from core.preload_store import get_preload_count, add_preload_item
+from core.preload_store import get_preload_count, get_fresh_preload_count, add_preload_item
 
 logger = logging.getLogger(__name__)
 
@@ -33,14 +33,14 @@ HARVEST_TARGET_MODES = [
     "THISDAY",
 ]
 
-DEFAULT_TARGET_POOL_SIZE = 15
+DEFAULT_TARGET_POOL_SIZE = 50
 
 
 class PreloadHarvester:
     """自成长预存池收割与补给器。"""
 
     def __init__(self, target_pool_size: int = DEFAULT_TARGET_POOL_SIZE):
-        self.target_pool_size = max(3, target_pool_size)
+        self.target_pool_size = max(10, target_pool_size)
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._lock = asyncio.Lock()
@@ -58,11 +58,13 @@ class PreloadHarvester:
             if not json_mode:
                 continue
             cnt = await get_preload_count(mode_id)
+            fresh_cnt = await get_fresh_preload_count(mode_id)
             total_cached += cnt
             modes_status[mode_id] = {
                 "count": cnt,
+                "fresh_count": fresh_cnt,
                 "target": self.target_pool_size,
-                "needs_harvest": cnt < self.target_pool_size,
+                "needs_harvest": cnt < self.target_pool_size or fresh_cnt < 10,
             }
 
         configured_llms = get_configured_llm_providers()
@@ -134,10 +136,10 @@ class PreloadHarvester:
                 return {"status": "skipped_no_llm", "total_added": 0}
 
             for mode_id, info in status["modes_status"].items():
-                deficit = info["target"] - info["count"]
-                if deficit > 0:
+                if info.get("needs_harvest"):
+                    deficit = max(1, info["target"] - info["count"])
                     to_gen = min(deficit, max_per_mode)
-                    logger.info(f"[Harvester] Harvesting {to_gen} items for {mode_id} (current={info['count']})...")
+                    logger.info(f"[Harvester] Harvesting {to_gen} items for {mode_id} (current={info['count']}, fresh={info.get('fresh_count')})...")
                     res = await self.harvest_mode(mode_id, count=to_gen)
                     results[mode_id] = res["generated_count"]
                     total_added += res["generated_count"]

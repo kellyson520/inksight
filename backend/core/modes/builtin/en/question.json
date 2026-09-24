@@ -67,6 +67,51 @@
         "question": "What current obstacle might actually be an unexpected doorway?",
         "context_note": "Reframing challenges reveals hidden paths",
         "category": "Work"
+      },
+      {
+        "question": "What three words summarize your core aspirations right now?",
+        "context_note": "Clarity of vision makes daily choices simple",
+        "category": "Self"
+      },
+      {
+        "question": "What small daily habit has quietly reshaped your trajectory?",
+        "context_note": "Tiny variables amplified by time become destiny",
+        "category": "Growth"
+      },
+      {
+        "question": "If failure had zero consequences, what would you try tomorrow?",
+        "context_note": "Unloading fear uncovers genuine curiosity",
+        "category": "Creativity"
+      },
+      {
+        "question": "When did you last experience a moment of pure serenity?",
+        "context_note": "Tranquility signals internal order restored",
+        "category": "Life"
+      },
+      {
+        "question": "What are you working on that yields the highest long-term leverage?",
+        "context_note": "Distinguish between busywork and compounding assets",
+        "category": "Work"
+      },
+      {
+        "question": "If time slowed down by half, whom would you spend it with?",
+        "context_note": "Attention is our most irreplaceable resource",
+        "category": "Relationships"
+      },
+      {
+        "question": "How do you protect your focus in a relentless sea of noise?",
+        "context_note": "Guarding attention is guarding mental sovereignty",
+        "category": "Mind"
+      },
+      {
+        "question": "What is something you recently refused that gave you peace?",
+        "context_note": "A clear 'no' is an act of deep self-respect",
+        "category": "Self"
+      },
+      {
+        "question": "What single trait do you consider the hallmark of true maturity?",
+        "context_note": "Embracing complete ownership of choices and feelings",
+        "category": "Life"
       }
     ]
   },

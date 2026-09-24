@@ -1,21 +1,34 @@
 {
-  "mode_id": "YYSTV_ARTICLES",
-  "display_name": "游研社 最新文章",
-  "icon": "book",
+  "mode_id": "GCORES_PODCAST",
+  "display_name": "Gcores Podcast",
+  "icon": "headphones",
   "cacheable": true,
-  "description": "阅读游研社最新的游戏故事、文化文章与玩家见闻。",
-  "settings_schema": [],
+  "description": "Featured podcasts from Gcores Radio, spanning gaming culture, deep discussions, and music.",
+  "settings_schema": [
+    {
+      "key": "program",
+      "label": "Program Category",
+      "type": "select",
+      "default": "ALL",
+      "options": [
+        { "value": "ALL", "label": "All Episodes (Latest)" },
+        { "value": "PRO", "label": "Gadio Pro (Core Culture & Games)" },
+        { "value": "LIFE", "label": "Gadio Life (Casual Stories & Chat)" },
+        { "value": "MUSIC", "label": "Gadio Music (Soundtracks & Tracks)" }
+      ]
+    }
+  ],
   "content": {
     "type": "computed",
-    "provider": "yystv_articles",
+    "provider": "gcores_podcast",
     "fallback": {
-      "header_tag": "游研社 · 游戏社评与文化",
-      "title": "联动偶像女团，成了《守望先锋》十年里最神的操作？",
-      "author": "游研社特约作者",
-      "summary": "回溯经典游戏与流行文化交错的历程，探究玩家情感共鸣与社群记忆的深层联结。",
-      "published_at": "今日发布",
-      "cover_url": "https://alioss.yystv.cn/doc/14428/843a3a430a02ac5efa28e39b5b61864d.appmsg_mw680water",
-      "footer_label": "YYSTV · 游研社游戏故事与见闻"
+      "header_tag": "GCORES · PODCAST",
+      "title": "Gadio Pro: Shanghai Espionage Chronicles Part IV",
+      "program_tag": "Gadio Pro · Deep Dive",
+      "summary": "How intelligence and logistics officers navigated the dangerous underworld of Old Shanghai, funding secret operations and rescuing comrades.",
+      "published_at": "Sep 23, 21:00",
+      "cover_url": "https://image.gcores.com/bfb3ba42d6f73b33295dad5130939a73-1600-900.jpg",
+      "footer_label": "GCORES RADIO · SHARE THE PASSION"
     }
   },
   "layout": {
@@ -46,13 +59,13 @@
             "items": [
               {
                 "type": "badge",
-                "text": "游研专栏",
+                "text": "RADIO",
                 "variant": "filled",
                 "radius": 4
               },
               {
                 "type": "badge",
-                "field": "author",
+                "field": "program_tag",
                 "variant": "outline",
                 "radius": 4
               }
@@ -82,7 +95,7 @@
             "items": [
               {
                 "type": "text",
-                "text": "游研社 YYSTV",
+                "text": "Gcores Gadio",
                 "font_size": 10,
                 "color": "gray"
               },
@@ -107,7 +120,7 @@
           },
           {
             "type": "centered_text",
-            "text": "游研社文章配图",
+            "text": "Podcast Episode Cover",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -115,7 +128,7 @@
       }
     ],
     "footer": {
-      "label": "游研社最新文章",
+      "label": "Gcores Podcast",
       "attribution_template": "{footer_label}"
     }
   },
@@ -128,13 +141,25 @@
           "height": 2
         },
         {
-          "type": "text",
-          "field": "title",
-          "font": "noto_serif_bold",
-          "font_size": 12,
-          "max_lines": 2,
+          "type": "flex_row",
+          "justify": "space-between",
           "margin_x": 6,
-          "margin_bottom": 2
+          "margin_bottom": 2,
+          "items": [
+            {
+              "type": "text",
+              "field": "title",
+              "font": "noto_serif_bold",
+              "font_size": 12,
+              "max_lines": 1
+            },
+            {
+              "type": "badge",
+              "field": "program_tag",
+              "variant": "filled",
+              "radius": 3
+            }
+          ]
         },
         {
           "type": "text",
@@ -146,22 +171,10 @@
           "margin_bottom": 2
         },
         {
-          "type": "flex_row",
-          "justify": "space-between",
-          "margin_x": 6,
-          "items": [
-            {
-              "type": "badge",
-              "field": "author",
-              "variant": "outline",
-              "radius": 3
-            },
-            {
-              "type": "text",
-              "field": "published_at",
-              "font_size": 9
-            }
-          ]
+          "type": "text",
+          "field": "published_at",
+          "font_size": 9,
+          "margin_x": 6
         }
       ]
     }

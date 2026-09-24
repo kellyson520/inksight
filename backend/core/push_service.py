@@ -194,5 +194,121 @@ class PushDispatcher:
     def get_recent_logs(self) -> List[Dict[str, Any]]:
         return list(self._history)
 
+    async def dispatch_scheduled_user_pushes(self, test_user_now: Optional[datetime] = None) -> dict[str, int]:
+        """按用户设定的时间和首选模式，执行 LLM 每日推送（不重复、多模型故障转移不降级）。"""
+        import json
+        import zoneinfo
+        from datetime import datetime
+        from core.db import get_main_db
+        from core.mode_registry import get_registry
+        from core.json_content import generate_json_mode_content
+
+        db = await get_main_db()
+        cursor = await db.execute("""
+            SELECT p.user_id, p.push_token, p.platform, p.push_time, p.timezone,
+                   u.push_modes, u.locale
+            FROM push_tokens p
+            JOIN user_preferences u ON p.user_id = u.user_id
+            WHERE u.push_enabled = 1
+        """)
+        rows = await cursor.fetchall()
+        if not rows:
+            return {"total": 0, "dispatched": 0}
+
+        registry = get_registry()
+        dispatched_count = 0
+        now_utc = datetime.now(zoneinfo.ZoneInfo("UTC"))
+
+        if not hasattr(self, "_sent_pushes_today"):
+            self._sent_pushes_today = set()
+
+        for user_id, push_token, platform, push_time, user_tz, push_modes_raw, locale in rows:
+            try:
+                tz = zoneinfo.ZoneInfo(user_tz or "Asia/Shanghai")
+            except Exception:
+                tz = zoneinfo.ZoneInfo("Asia/Shanghai")
+
+            user_now = test_user_now or now_utc.astimezone(tz)
+            user_current_time = user_now.strftime("%H:%M")
+            user_target_time = (push_time or "08:00")[:5]
+
+            # 仅在时间对齐时推送
+            if test_user_now is None and user_current_time != user_target_time:
+                continue
+
+            today_date_str = user_now.strftime("%Y-%m-%d")
+            dedup_key = f"{user_id}_{today_date_str}"
+            if dedup_key in self._sent_pushes_today:
+                continue
+
+            modes = []
+            if push_modes_raw:
+                try:
+                    parsed = json.loads(push_modes_raw)
+                    if isinstance(parsed, list):
+                        modes = [str(m).strip().upper() for m in parsed if m]
+                except Exception:
+                    pass
+            if not modes:
+                modes = ["DAILY", "QUESTION"]
+
+            push_title = "InkSight · 每日晨报灵感" if locale != "en" else "InkSight · Daily Inspiration"
+            push_body = ""
+
+            for mode_id in modes:
+                json_mode = registry.get_json_mode(mode_id, language=locale)
+                if not json_mode:
+                    continue
+                try:
+                    # mac 绑定用户唯一标识，使用真实历史做防重复判定
+                    content = await generate_json_mode_content(
+                        json_mode.definition,
+                        mac=f"USER_{user_id}",
+                        language=locale or "zh",
+                        use_preload=False,
+                    )
+                    if content:
+                        if mode_id == "DAILY":
+                            q = content.get("quote", "")
+                            a = content.get("author", "")
+                            push_body += f"“{q}” —— {a}\n\n"
+                        elif mode_id == "QUESTION":
+                            qu = content.get("question", "")
+                            push_body += f"今日一问：{qu}\n\n"
+                        elif mode_id == "WORD_OF_THE_DAY":
+                            w = content.get("word", "")
+                            m = content.get("meaning", "")
+                            push_body += f"今日词汇：{w} · {m}\n\n"
+                        elif mode_id == "STOIC":
+                            q = content.get("quote", "")
+                            push_body += f"斯多葛：{q}\n\n"
+                        else:
+                            txt = content.get("title") or content.get("text") or ""
+                            if txt:
+                                push_body += f"{txt}\n\n"
+                except Exception as exc:
+                    logger.warning("[PUSH] Failed generating push content for %s: %s", mode_id, exc)
+
+            push_body = push_body.strip()
+            if not push_body:
+                continue
+
+            sent = False
+            plat = (platform or "bark").lower()
+            if plat == "bark":
+                sent = await self.push_to_bark(push_token, push_title, push_body)
+            elif plat == "wechat":
+                sent = await self.push_to_wechat_webhook(push_token, push_title, push_body)
+            elif plat == "serverchan":
+                sent = await self.push_to_serverchan(push_token, push_title, push_body)
+            else:
+                sent = await self.push_to_bark(push_token, push_title, push_body)
+
+            if sent:
+                self._sent_pushes_today.add(dedup_key)
+                dispatched_count += 1
+
+        return {"total": len(rows), "dispatched": dispatched_count}
+
 
 push_dispatcher = PushDispatcher()

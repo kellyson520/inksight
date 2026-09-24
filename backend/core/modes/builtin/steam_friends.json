@@ -216,5 +216,57 @@
       "label": "Steam好友状态",
       "attribution_template": "{footer_label}"
     }
+  },
+  "layout_overrides": {
+    "296x128": {
+      "body_align": "top",
+      "body": [
+        {
+          "type": "spacer",
+          "height": 2
+        },
+        {
+          "type": "flex_row",
+          "justify": "space-between",
+          "margin_x": 6,
+          "margin_bottom": 2,
+          "items": [
+            {
+              "type": "text",
+              "text": "{f1_dot} {f1_name}",
+              "font": "noto_serif_bold",
+              "font_size": 11,
+              "max_lines": 1
+            },
+            {
+              "type": "badge",
+              "field": "f1_game",
+              "variant": "outline",
+              "radius": 3
+            }
+          ]
+        },
+        {
+          "type": "flex_row",
+          "justify": "space-between",
+          "margin_x": 6,
+          "items": [
+            {
+              "type": "text",
+              "text": "{f2_dot} {f2_name}",
+              "font": "noto_serif_bold",
+              "font_size": 11,
+              "max_lines": 1
+            },
+            {
+              "type": "badge",
+              "field": "f2_game",
+              "variant": "outline",
+              "radius": 3
+            }
+          ]
+        }
+      ]
+    }
   }
 }

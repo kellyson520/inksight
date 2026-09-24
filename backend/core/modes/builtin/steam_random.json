@@ -127,5 +127,45 @@
       "label": "Steam今天玩什么",
       "attribution_template": "{footer_label}"
     }
+  },
+  "layout_overrides": {
+    "296x128": {
+      "body_align": "top",
+      "body": [
+        {
+          "type": "spacer",
+          "height": 2
+        },
+        {
+          "type": "flex_row",
+          "justify": "space-between",
+          "margin_x": 6,
+          "margin_bottom": 2,
+          "items": [
+            {
+              "type": "text",
+              "field": "picked_game",
+              "font": "noto_serif_bold",
+              "font_size": 12,
+              "max_lines": 1
+            },
+            {
+              "type": "badge",
+              "field": "playtime_badge",
+              "variant": "filled",
+              "radius": 3
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "field": "recommend_reason",
+          "font": "noto_serif_light",
+          "font_size": 9,
+          "max_lines": 2,
+          "margin_x": 6
+        }
+      ]
+    }
   }
 }

@@ -1,13 +1,13 @@
 {
   "mode_id": "STEAM_RECENT",
-  "display_name": "Steam最近在玩",
+  "display_name": "Steam Recent Games",
   "icon": "clock",
   "cacheable": true,
-  "description": "显示最近玩过的游戏，以及近两周和累计游玩时间。",
+  "description": "Recently played games on Steam, with 2-week and total playtime stats.",
   "settings_schema": [
     {
       "key": "steam_url",
-      "label": "Steam 个人主页链接（可选，默认读取个人资料配置）",
+      "label": "Steam Profile URL (Optional, defaults to account settings)",
       "type": "text",
       "placeholder": "https://steamcommunity.com/profiles/76561198978201763/"
     }
@@ -20,17 +20,17 @@
       "level": "11",
       "game1_name": "Sid Meier's Civilization VI",
       "game1_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/289070/capsule_184x69.jpg",
-      "game1_hours_total": "累计 62.0h",
-      "game1_hours_2w": "近两周 12.5h",
-      "game2_name": "It Takes Two (双人成行)",
+      "game1_hours_total": "Total 62.0h",
+      "game1_hours_2w": "2 Weeks 12.5h",
+      "game2_name": "It Takes Two",
       "game2_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/capsule_184x69.jpg",
-      "game2_hours_total": "累计 22.0h",
-      "game2_hours_2w": "近两周 3.0h",
-      "game3_name": "Palworld (幻兽帕鲁)",
+      "game2_hours_total": "Total 22.0h",
+      "game2_hours_2w": "2 Weeks 3.0h",
+      "game3_name": "Palworld",
       "game3_cover": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1623730/capsule_184x69.jpg",
-      "game3_hours_total": "累计 0.4h",
-      "game3_hours_2w": "近两周 0.4h",
-      "footer_label": "STEAM RECENT · 近期游玩记录"
+      "game3_hours_total": "Total 0.4h",
+      "game3_hours_2w": "2 Weeks 0.4h",
+      "footer_label": "STEAM RECENT · PLAYTIME LOG"
     }
   },
   "layout": {
@@ -67,7 +67,7 @@
               },
               {
                 "type": "badge",
-                "text": "近期游玩",
+                "text": "RECENTLY PLAYED",
                 "variant": "filled",
                 "radius": 4
               }
@@ -187,7 +187,7 @@
           },
           {
             "type": "centered_text",
-            "text": "近期主要投入",
+            "text": "Most Played Recently",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -195,7 +195,7 @@
       }
     ],
     "footer": {
-      "label": "Steam最近在玩",
+      "label": "Steam Recent Games",
       "attribution_template": "{footer_label}"
     }
   },

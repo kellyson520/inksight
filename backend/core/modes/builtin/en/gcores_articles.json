@@ -1,21 +1,21 @@
 {
-  "mode_id": "YYSTV_ARTICLES",
-  "display_name": "游研社 最新文章",
-  "icon": "book",
+  "mode_id": "GCORES_ARTICLES",
+  "display_name": "Gcores Articles",
+  "icon": "book-open",
   "cacheable": true,
-  "description": "阅读游研社最新的游戏故事、文化文章与玩家见闻。",
+  "description": "In-depth gaming culture, design evolution, and lifestyle essays from Gcores authors.",
   "settings_schema": [],
   "content": {
     "type": "computed",
-    "provider": "yystv_articles",
+    "provider": "gcores_articles",
     "fallback": {
-      "header_tag": "游研社 · 游戏社评与文化",
-      "title": "联动偶像女团，成了《守望先锋》十年里最神的操作？",
-      "author": "游研社特约作者",
-      "summary": "回溯经典游戏与流行文化交错的历程，探究玩家情感共鸣与社群记忆的深层联结。",
-      "published_at": "今日发布",
-      "cover_url": "https://alioss.yystv.cn/doc/14428/843a3a430a02ac5efa28e39b5b61864d.appmsg_mw680water",
-      "footer_label": "YYSTV · 游研社游戏故事与见闻"
+      "header_tag": "GCORES · ESSAY",
+      "title": "Looking Back at the Golden Era: Immersive Sim Design and Its Future",
+      "author": "Special Columnist",
+      "summary": "From Thief and System Shock to Dishonored: how level design constructs unmatched immersion and player freedom in fictional realms.",
+      "published_at": "Today",
+      "cover_url": "https://image.gcores.com/b873bd4612e30607865d1b86be9b9c14-1920-1080.jpg",
+      "footer_label": "GCORES ESSAY · DEEP CULTURE"
     }
   },
   "layout": {
@@ -46,7 +46,7 @@
             "items": [
               {
                 "type": "badge",
-                "text": "游研专栏",
+                "text": "ESSAY",
                 "variant": "filled",
                 "radius": 4
               },
@@ -82,7 +82,7 @@
             "items": [
               {
                 "type": "text",
-                "text": "游研社 YYSTV",
+                "text": "Gcores Feature",
                 "font_size": 10,
                 "color": "gray"
               },
@@ -107,7 +107,7 @@
           },
           {
             "type": "centered_text",
-            "text": "游研社文章配图",
+            "text": "Column Artwork",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -115,7 +115,7 @@
       }
     ],
     "footer": {
-      "label": "游研社最新文章",
+      "label": "Gcores Articles",
       "attribution_template": "{footer_label}"
     }
   },

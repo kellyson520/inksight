@@ -1,21 +1,30 @@
 {
-  "mode_id": "YYSTV_ARTICLES",
-  "display_name": "游研社 最新文章",
-  "icon": "book",
+  "mode_id": "EPIC_FREE",
+  "display_name": "Epic Free Games",
+  "icon": "gift",
   "cacheable": true,
-  "description": "阅读游研社最新的游戏故事、文化文章与玩家见闻。",
-  "settings_schema": [],
+  "description": "Epic Games Store weekly giveaways and upcoming free titles.",
+  "settings_schema": [
+    {
+      "key": "endpoint",
+      "label": "Custom Giveaway Endpoint (Optional)",
+      "type": "text",
+      "placeholder": "https://example.com/epic.json"
+    }
+  ],
   "content": {
     "type": "computed",
-    "provider": "yystv_articles",
+    "provider": "epic_free",
     "fallback": {
-      "header_tag": "游研社 · 游戏社评与文化",
-      "title": "联动偶像女团，成了《守望先锋》十年里最神的操作？",
-      "author": "游研社特约作者",
-      "summary": "回溯经典游戏与流行文化交错的历程，探究玩家情感共鸣与社群记忆的深层联结。",
-      "published_at": "今日发布",
-      "cover_url": "https://alioss.yystv.cn/doc/14428/843a3a430a02ac5efa28e39b5b61864d.appmsg_mw680water",
-      "footer_label": "YYSTV · 游研社游戏故事与见闻"
+      "header_title": "EPIC GAMES · FREE GAME",
+      "game_title": "Ghostrunner II",
+      "status_label": "Free This Week",
+      "original_price": "Was $39.99",
+      "deadline_label": "Ends Sep 26, 23:00",
+      "cover_url": "https://dummyimage.com/640x360/1a1a24/ffffff.png&text=GHOSTRUNNER+II",
+      "description": "First-person cyberpunk slasher set one year after the events of Ghostrunner. Blood will run.",
+      "claim_url": "https://store.epicgames.com/",
+      "footer_label": "EPIC FREE GAMES · LIMITED TIME"
     }
   },
   "layout": {
@@ -46,13 +55,13 @@
             "items": [
               {
                 "type": "badge",
-                "text": "游研专栏",
+                "text": "EPIC FREE",
                 "variant": "filled",
                 "radius": 4
               },
               {
                 "type": "badge",
-                "field": "author",
+                "field": "status_label",
                 "variant": "outline",
                 "radius": 4
               }
@@ -60,7 +69,7 @@
           },
           {
             "type": "text",
-            "field": "title",
+            "field": "game_title",
             "font": "noto_serif_bold",
             "font_size": 15,
             "max_lines": 2,
@@ -68,11 +77,31 @@
             "margin_bottom": 4
           },
           {
+            "type": "flex_row",
+            "justify": "start",
+            "gap": 6,
+            "margin_bottom": 4,
+            "items": [
+              {
+                "type": "badge",
+                "text": "FREE",
+                "variant": "filled",
+                "radius": 4
+              },
+              {
+                "type": "badge",
+                "field": "original_price",
+                "variant": "outline",
+                "radius": 4
+              }
+            ]
+          },
+          {
             "type": "text",
-            "field": "summary",
+            "field": "description",
             "font": "noto_serif_light",
             "font_size": 11,
-            "max_lines": 5,
+            "max_lines": 4,
             "line_height": 16,
             "margin_bottom": 4
           },
@@ -82,13 +111,13 @@
             "items": [
               {
                 "type": "text",
-                "text": "游研社 YYSTV",
+                "text": "Epic Giveaway",
                 "font_size": 10,
                 "color": "gray"
               },
               {
                 "type": "text",
-                "field": "published_at",
+                "field": "deadline_label",
                 "font_size": 10,
                 "color": "black"
               }
@@ -107,7 +136,7 @@
           },
           {
             "type": "centered_text",
-            "text": "游研社文章配图",
+            "text": "Epic Games Store",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -115,7 +144,7 @@
       }
     ],
     "footer": {
-      "label": "游研社最新文章",
+      "label": "Epic Free Games",
       "attribution_template": "{footer_label}"
     }
   },
@@ -128,17 +157,29 @@
           "height": 2
         },
         {
-          "type": "text",
-          "field": "title",
-          "font": "noto_serif_bold",
-          "font_size": 12,
-          "max_lines": 2,
+          "type": "flex_row",
+          "justify": "space-between",
           "margin_x": 6,
-          "margin_bottom": 2
+          "margin_bottom": 2,
+          "items": [
+            {
+              "type": "text",
+              "field": "game_title",
+              "font": "noto_serif_bold",
+              "font_size": 12,
+              "max_lines": 1
+            },
+            {
+              "type": "badge",
+              "field": "status_label",
+              "variant": "filled",
+              "radius": 3
+            }
+          ]
         },
         {
           "type": "text",
-          "field": "summary",
+          "field": "description",
           "font": "noto_serif_light",
           "font_size": 9,
           "max_lines": 2,
@@ -152,13 +193,13 @@
           "items": [
             {
               "type": "badge",
-              "field": "author",
+              "field": "original_price",
               "variant": "outline",
               "radius": 3
             },
             {
               "type": "text",
-              "field": "published_at",
+              "field": "deadline_label",
               "font_size": 9
             }
           ]

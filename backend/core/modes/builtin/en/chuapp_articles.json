@@ -1,21 +1,21 @@
 {
-  "mode_id": "YYSTV_ARTICLES",
-  "display_name": "游研社 最新文章",
-  "icon": "book",
+  "mode_id": "CHUAPP_ARTICLES",
+  "display_name": "ChuApp Articles",
+  "icon": "file-text",
   "cacheable": true,
-  "description": "阅读游研社最新的游戏故事、文化文章与玩家见闻。",
+  "description": "Heartfelt stories and in-depth humanistic journalism on games and players from ChuApp.",
   "settings_schema": [],
   "content": {
     "type": "computed",
-    "provider": "yystv_articles",
+    "provider": "chuapp_articles",
     "fallback": {
-      "header_tag": "游研社 · 游戏社评与文化",
-      "title": "联动偶像女团，成了《守望先锋》十年里最神的操作？",
-      "author": "游研社特约作者",
-      "summary": "回溯经典游戏与流行文化交错的历程，探究玩家情感共鸣与社群记忆的深层联结。",
-      "published_at": "今日发布",
-      "cover_url": "https://alioss.yystv.cn/doc/14428/843a3a430a02ac5efa28e39b5b61864d.appmsg_mw680water",
-      "footer_label": "YYSTV · 游研社游戏故事与见闻"
+      "header_tag": "CHUAPP · HUMAN STORIES",
+      "title": "EA Sports FC 27: Open Worlds, Digital Collections, and Letting Go",
+      "author": "ChuApp Contributing Writer",
+      "summary": "Documenting games and the people behind them. Uncovering genuine passion, persistence, and memories on and off the digital pitch.",
+      "published_at": "Today",
+      "cover_url": "http://img.chuapp.com/wp-content/Picture/2026-09-23/6ab3948658aaa.jpg?imageView2/2/w/700",
+      "footer_label": "CHUAPP · GAMING & HUMANITY"
     }
   },
   "layout": {
@@ -46,7 +46,7 @@
             "items": [
               {
                 "type": "badge",
-                "text": "游研专栏",
+                "text": "CHUAPP",
                 "variant": "filled",
                 "radius": 4
               },
@@ -82,7 +82,7 @@
             "items": [
               {
                 "type": "text",
-                "text": "游研社 YYSTV",
+                "text": "ChuApp Stories",
                 "font_size": 10,
                 "color": "gray"
               },
@@ -107,7 +107,7 @@
           },
           {
             "type": "centered_text",
-            "text": "游研社文章配图",
+            "text": "Article Photo",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -115,7 +115,7 @@
       }
     ],
     "footer": {
-      "label": "游研社最新文章",
+      "label": "ChuApp Articles",
       "attribution_template": "{footer_label}"
     }
   },

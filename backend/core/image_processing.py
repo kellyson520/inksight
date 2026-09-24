@@ -213,7 +213,7 @@ def quantize_image_for_eink(
     rgb_flattened = _flatten_alpha_to_white(rgb)
     prepared = enhance_photo_for_eink(rgb_flattened) if photo_enhance else rgb_flattened
 
-    if hybrid:
+    if hybrid or (photo_enhance and colors == 2):
         return hybrid_dither_for_eink(prepared, colors=colors)
 
     if colors < 3:

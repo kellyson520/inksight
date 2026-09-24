@@ -93,3 +93,34 @@ async def test_gaming_mode_pipeline_rendering(mode_id: str):
     assert img is not None
     assert img.size == (400, 300)
     assert content is not None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode_id", ALL_GAMING_MODES)
+async def test_gaming_mode_pipeline_rendering_en_and_small_screen(mode_id: str):
+    """验证游戏媒体模式在英文环境和 296x128 小屏墨水屏下的排版与渲染。"""
+    device_config = {
+        "mac": "AA:BB:CC:DD:EE:FF",
+        "language": "en",
+        "mode_language": "en",
+        "mode_overrides": {
+            "STEAM_ACHIEVEMENTS": {"steam_url": "https://steamcommunity.com/profiles/76561198978201763/"},
+            "STEAM_RECENT": {"steam_url": "https://steamcommunity.com/profiles/76561198978201763/"},
+            "STEAM_RANDOM": {"steam_url": "https://steamcommunity.com/profiles/76561198978201763/"},
+            "STEAM_FRIENDS": {"steam_url": "https://steamcommunity.com/profiles/76561198978201763/"},
+        }
+    }
+
+    img, content = await generate_and_render(
+        persona=mode_id,
+        config=device_config,
+        date_ctx={"time_str": "16:30", "date_str": "Sep 24", "weekday": 2, "day": 24},
+        weather={"weather_str": "Clear", "weather_code": 0},
+        battery_pct=95.0,
+        screen_w=296,
+        screen_h=128,
+        colors=2,
+    )
+    assert img is not None
+    assert img.size == (296, 128)
+    assert content is not None

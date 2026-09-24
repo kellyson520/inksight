@@ -128,7 +128,60 @@ async def get_next_preload_item(
     if not rows:
         return None
 
-    # 2. 获取设备当前游标
+    # 2. 获取设备近期渲染历史，避免循环或重载时重复展示相近内容
+    recent_seen_keys: list[str] = []
+    if clean_mac and clean_mac != "DEFAULT":
+        try:
+            h_cursor = await db.execute(
+                "SELECT content FROM content_history WHERE mac = ? AND mode_id = ? ORDER BY id DESC LIMIT 30",
+                (clean_mac, mode_id),
+            )
+            h_rows = await h_cursor.fetchall()
+            for hr in h_rows:
+                if hr[0]:
+                    try:
+                        h_data = json.loads(hr[0])
+                        val = (
+                            h_data.get("question")
+                            or h_data.get("quote")
+                            or h_data.get("title")
+                            or h_data.get("word")
+                            or h_data.get("event_title")
+                            or ""
+                        )
+                        if val and val not in recent_seen_keys:
+                            recent_seen_keys.append(val)
+                    except Exception:
+                        pass
+        except Exception as _h_exc:
+            logger.debug("[Preload] Could not load content history for dedup: %s", _h_exc)
+
+    # 3. 过滤出近期未展示过的优质候选
+    parsed_rows = []
+    for r in rows:
+        try:
+            p_c = json.loads(r[1])
+            parsed_rows.append((r, p_c))
+        except Exception:
+            continue
+
+    if not parsed_rows:
+        return None
+
+    unseen_candidates = []
+    for r_tuple, p_c in parsed_rows:
+        val = (
+            p_c.get("question")
+            or p_c.get("quote")
+            or p_c.get("title")
+            or p_c.get("word")
+            or p_c.get("event_title")
+            or ""
+        )
+        if not val or val not in recent_seen_keys:
+            unseen_candidates.append(r_tuple)
+
+    # 4. 获取设备当前游标
     query_date_key = target_date if target_date else "ALL"
     c_cursor = await db.execute(
         "SELECT cursor_idx FROM device_preload_state WHERE mac = ? AND mode_id = ? AND target_date = ?",
@@ -137,10 +190,34 @@ async def get_next_preload_item(
     row = await c_cursor.fetchone()
     current_idx = row[0] if row else 0
 
-    chosen_row = rows[current_idx % len(rows)]
+    if unseen_candidates:
+        chosen_row = unseen_candidates[current_idx % len(unseen_candidates)]
+    else:
+        # 全部候选近期均已展示过，挑出在历史记录中距今最久远（最靠后或不在历史中）的条目
+        best_row = rows[0]
+        farthest_pos = -1
+        for r in rows:
+            try:
+                p_c = json.loads(r[1])
+                val = (
+                    p_c.get("question")
+                    or p_c.get("quote")
+                    or p_c.get("title")
+                    or p_c.get("word")
+                    or p_c.get("event_title")
+                    or ""
+                )
+                pos = recent_seen_keys.index(val) if val in recent_seen_keys else 999
+                if pos > farthest_pos:
+                    farthest_pos = pos
+                    best_row = r
+            except Exception:
+                pass
+        chosen_row = best_row
+
     next_idx = current_idx + 1
 
-    # 3. 更新游标和使用计数
+    # 5. 更新游标和使用计数
     await db.execute(
         """
         INSERT INTO device_preload_state (mac, mode_id, target_date, cursor_idx, updated_at)
@@ -176,6 +253,23 @@ async def get_preload_count(mode_id: str, target_date: str = "") -> int:
     else:
         cursor = await db.execute(
             "SELECT COUNT(*) FROM content_preload_pool WHERE mode_id = ?",
+            (mode_id.upper(),),
+        )
+    row = await cursor.fetchone()
+    return row[0] if row else 0
+
+
+async def get_fresh_preload_count(mode_id: str, target_date: str = "") -> int:
+    """查询指定模式未被任何设备使用过的新鲜预存条数 (used_count == 0)。"""
+    db = await get_main_db()
+    if target_date:
+        cursor = await db.execute(
+            "SELECT COUNT(*) FROM content_preload_pool WHERE mode_id = ? AND target_date = ? AND used_count = 0",
+            (mode_id.upper(), target_date),
+        )
+    else:
+        cursor = await db.execute(
+            "SELECT COUNT(*) FROM content_preload_pool WHERE mode_id = ? AND used_count = 0",
             (mode_id.upper(),),
         )
     row = await cursor.fetchone()

@@ -65,33 +65,64 @@ def _parse_reset_days_text(text: str, now_dt: datetime.datetime | None = None) -
 
     now = now_dt or datetime.datetime.now()
 
-    # 1. 精确匹配 "还有 5 天重置", "剩余 5 天重置", "距离重置还有 3 天"
-    m_before = re.search(r"(?:还有|剩余|距离[^\d]{0,10})[^\d]{0,10}(\d+)\s*天[^\d]{0,6}重置", text, re.IGNORECASE)
-    if m_before:
-        return int(m_before.group(1))
+    # 1. 优先匹配明确包含'天/day'的重置倒计时（最精确，如 '剩余5天重置', '距离下次重置剩余：29 天', '重置倒计时: 5天', 'reset in 5 days'）
+    m_countdown = re.search(r'(?:距离(?:下次)?重置)?[^\d\n\r]{0,8}(?:还有|剩余|剩|倒计时)\s*[:：]?\s*(\d+)\s*(?:天|day|days)', text, re.IGNORECASE)
+    if not m_countdown:
+        m_countdown = re.search(r'(?:重置|reset)[^\d\n\r]{0,10}(?:还有|剩余|倒计时|in|剩)\s*[:：]?\s*(\d+)\s*(?:天|day|days)', text, re.IGNORECASE)
+    if not m_countdown:
+        m_countdown = re.search(r'(\d+)\s*(?:天|day|days)\s*(?:后)?(?:重置|reset)', text, re.IGNORECASE)
+    if m_countdown:
+        return int(m_countdown.group(1))
 
-    # 2. "重置还有 5 天", "reset in 5 days", "重置剩余 5 天", "重置倒计时: 5天", "重置: 5天"
-    m_after = re.search(r"(?:重置|reset)[^\d]{0,15}(?:还有|剩余|倒计时|in|:|\s)[^\d]{0,6}(\d+)\s*(?:天|day|days)?", text, re.IGNORECASE)
-    if m_after:
-        return int(m_after.group(1))
+    # 2. 显式绝对日期格式（单行内，避免把'套餐到期：2029-09-08'等误判为重置）：如 '下次重置：2026-10-01', '2026-10-01重置', '重置时间: 10-01', '10月1日重置'
+    m_full_date = re.search(r'(?:重置|reset)[^\d\n\r]{0,10}(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})', text, re.IGNORECASE)
+    if not m_full_date:
+        m_full_date = re.search(r'(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})[^\d\n\r]{0,10}(?:重置|reset)', text, re.IGNORECASE)
+    if m_full_date:
+        y, m, d = int(m_full_date.group(1)), int(m_full_date.group(2)), int(m_full_date.group(3))
+        try:
+            target = datetime.date(y, m, d)
+            return max(0, (target - now.date()).days)
+        except ValueError:
+            pass
 
-    # 3. "reset in 5 days"
-    m_en = re.search(r"reset\s+in\s+(\d+)\s*day", text, re.IGNORECASE)
-    if m_en:
-        return int(m_en.group(1))
+    # 月日日期：如 '重置时间: 10-01', '重置日期 10月1日', '10-01重置'
+    m_month_day = re.search(r'(?:重置|reset)[^\d\n\r]{0,10}(\d{1,2})[-/.月](\d{1,2})日?', text, re.IGNORECASE)
+    if not m_month_day:
+        m_month_day = re.search(r'(\d{1,2})[-/.月](\d{1,2})日?[^\d\n\r]{0,10}(?:重置|reset)', text, re.IGNORECASE)
+    if m_month_day:
+        m, d = int(m_month_day.group(1)), int(m_month_day.group(2))
+        if 1 <= m <= 12 and 1 <= d <= 31:
+            try:
+                y = now.year
+                target = datetime.date(y, m, d)
+                if target < now.date() and m < now.month:
+                    target = datetime.date(y + 1, m, d)
+                return max(0, (target - now.date()).days)
+            except ValueError:
+                pass
 
-    # 4. 显式月重置日模式：如 "每月 15 日重置", "每月15号重置", "15号重置", "15日重置", "每月 15 号", "Reset on 15th"
-    m_monthly = re.search(r"(?:每月\s*(\d{1,2})\s*(?:日|号)\s*重置|每月\s*(\d{1,2})\s*(?:日|号)|(\d{1,2})\s*(?:日|号)\s*重置|reset\s*(?:on|every)?\s*(\d{1,2})(?:st|nd|rd|th)?)", text, re.IGNORECASE)
-    if m_monthly:
-        matched_str = next(g for g in m_monthly.groups() if g is not None)
-        target_day = int(matched_str)
+    # 3. 每月固定重置日模式：如 '每月15号', '重置日: 15', '重置日：每月15日', '15号重置', 'Reset on 15th'
+    # 3.1 '每月X号/日'
+    m_monthly_day = re.search(r'每月\s*(\d{1,2})\s*(?:日|号)?', text)
+    # 3.2 '重置日/重置日期: X[号/日]'
+    if not m_monthly_day:
+        m_monthly_day = re.search(r'(?:重置日|重置日期|reset\s*day)[^\d\n\r]{0,6}(\d{1,2})\s*(?:日|号)?', text, re.IGNORECASE)
+    # 3.3 'X日/号重置'
+    if not m_monthly_day:
+        m_monthly_day = re.search(r'(\d{1,2})\s*(?:日|号)\s*(?:自动)?(?:重置|清零|刷新)', text)
+    # 3.4 'Reset on 15th'
+    if not m_monthly_day:
+        m_monthly_day = re.search(r'reset\s*(?:on|every)?\s*(\d{1,2})(?:st|nd|rd|th)?', text, re.IGNORECASE)
+
+    if m_monthly_day:
+        target_day = int(m_monthly_day.group(1))
         if 1 <= target_day <= 31:
             curr_y = now.year
             curr_m = now.month
             _, max_curr = calendar.monthrange(curr_y, curr_m)
             cand_curr_day = min(target_day, max_curr)
             cand_curr = datetime.date(curr_y, curr_m, cand_curr_day)
-
             if cand_curr > now.date():
                 return (cand_curr - now.date()).days
             elif cand_curr == now.date():
@@ -104,10 +135,10 @@ def _parse_reset_days_text(text: str, now_dt: datetime.datetime | None = None) -
                 cand_next = datetime.date(next_y, next_m, cand_next_day)
                 return (cand_next - now.date()).days
 
-    # 5. 常规 "X天重置"
-    m_general = re.search(r"(\d+)\s*天\s*重置", text)
-    if m_general:
-        return int(m_general.group(1))
+    # 4. '重置: 5天' (严格带天)
+    m_simple_days = re.search(r'(?:重置|reset)\s*[:：]?\s*(\d+)\s*(?:天|day|days)', text, re.IGNORECASE)
+    if m_simple_days:
+        return int(m_simple_days.group(1))
 
     return None
 

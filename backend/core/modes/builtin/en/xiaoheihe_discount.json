@@ -1,13 +1,13 @@
 {
   "mode_id": "XIAOHEIHE_DISCOUNT",
-  "display_name": "小黑盒 游戏折扣",
+  "display_name": "Game Deals",
   "icon": "tag",
   "cacheable": true,
-  "description": "小黑盒游戏折扣信息，随机展示一款正在优惠的游戏。",
+  "description": "Featured video game discounts, historic low price alerts, and random sale picks.",
   "settings_schema": [
     {
       "key": "endpoint",
-      "label": "自定义折扣数据接口（可选）",
+      "label": "Custom Discounts API (Optional)",
       "type": "text",
       "placeholder": "https://example.com/discounts.json"
     }
@@ -16,19 +16,19 @@
     "type": "computed",
     "provider": "xiaoheihe_discount",
     "fallback": {
-      "header_title": "小黑盒 · 热门折扣",
-      "game_name": "双人成行 (It Takes Two)",
+      "header_title": "FEATURED · GAME SALE",
+      "game_name": "It Takes Two",
       "discount_badge": "-70%",
-      "current_price": "¥59.40",
-      "original_price": "¥198.00",
-      "cut_price": "立省 ¥138.60",
-      "historical_status": "平史低",
-      "rating_label": "好评如潮 (95%)",
-      "deadline_label": "特惠进行中",
-      "tag_list": "合作 · 动作 · 冒险",
-      "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/header_schinese.jpg",
-      "description": "年度最佳合作游戏，突破常理的奇幻冒险之旅，两名玩家必须齐心协力方能化险为夷。",
-      "footer_label": "XIAOHEIHE · 游戏好价每日选"
+      "current_price": "$11.99",
+      "original_price": "$39.99",
+      "cut_price": "Save $28.00",
+      "historical_status": "Historic Low",
+      "rating_label": "Overwhelmingly Positive",
+      "deadline_label": "Special Promotion",
+      "tag_list": "Co-op · Adventure · Action",
+      "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1426210/header.jpg",
+      "description": "Embark on the craziest journey of your life in It Takes Two, a genre-bending platform adventure created purely for co-op.",
+      "footer_label": "GAME DEALS · DAILY SELECTION"
     }
   },
   "layout": {
@@ -59,7 +59,7 @@
             "items": [
               {
                 "type": "badge",
-                "text": "小黑盒特惠",
+                "text": "HOT DEAL",
                 "variant": "filled",
                 "radius": 4
               },
@@ -148,7 +148,7 @@
       }
     ],
     "footer": {
-      "label": "小黑盒游戏折扣",
+      "label": "Game Deals",
       "attribution_template": "{footer_label}"
     }
   },

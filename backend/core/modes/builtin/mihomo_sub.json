@@ -361,10 +361,25 @@
                     "margin_bottom": 4
                   },
                   {
-                    "type": "badge",
-                    "template": "{days_left_badge}",
-                    "align": "left",
-                    "margin_x": 0
+                    "type": "flex_row",
+                    "justify": "start",
+                    "gap": 5,
+                    "margin_x": 0,
+                    "items": [
+                      {
+                        "type": "badge",
+                        "template": "{days_left_badge}",
+                        "align": "left",
+                        "margin_x": 0
+                      },
+                      {
+                        "type": "badge",
+                        "template": "{reset_badge}",
+                        "variant": "outline",
+                        "align": "left",
+                        "margin_x": 0
+                      }
+                    ]
                   }
                 ],
                 "right": [

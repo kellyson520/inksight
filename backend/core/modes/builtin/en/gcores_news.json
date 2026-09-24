@@ -1,21 +1,21 @@
 {
-  "mode_id": "YYSTV_ARTICLES",
-  "display_name": "游研社 最新文章",
-  "icon": "book",
+  "mode_id": "GCORES_NEWS",
+  "display_name": "Gcores News",
+  "icon": "newspaper",
   "cacheable": true,
-  "description": "阅读游研社最新的游戏故事、文化文章与玩家见闻。",
+  "description": "Daily news, gaming updates, films, and tech pop culture from Gcores.",
   "settings_schema": [],
   "content": {
     "type": "computed",
-    "provider": "yystv_articles",
+    "provider": "gcores_news",
     "fallback": {
-      "header_tag": "游研社 · 游戏社评与文化",
-      "title": "联动偶像女团，成了《守望先锋》十年里最神的操作？",
-      "author": "游研社特约作者",
-      "summary": "回溯经典游戏与流行文化交错的历程，探究玩家情感共鸣与社群记忆的深层联结。",
-      "published_at": "今日发布",
-      "cover_url": "https://alioss.yystv.cn/doc/14428/843a3a430a02ac5efa28e39b5b61864d.appmsg_mw680water",
-      "footer_label": "YYSTV · 游研社游戏故事与见闻"
+      "header_tag": "GCORES · DAILY NEWS",
+      "title": "Charming 3D puzzle platformer 'Wander in the Wonder Woods' officially launched today",
+      "category_badge": "Global News",
+      "summary": "Crafted with passion by an indie team, the fantasy adventure is out on major platforms with stunning aesthetics and clever box-garden mechanics.",
+      "published_at": "Today",
+      "cover_url": "https://image.gcores.com/fb3ad8d73ad3751143c67758abbf1584-1536-1024.jpg",
+      "footer_label": "GCORES NEWS · GAMES & TECH RADAR"
     }
   },
   "layout": {
@@ -46,13 +46,13 @@
             "items": [
               {
                 "type": "badge",
-                "text": "游研专栏",
+                "text": "NEWS",
                 "variant": "filled",
                 "radius": 4
               },
               {
                 "type": "badge",
-                "field": "author",
+                "field": "category_badge",
                 "variant": "outline",
                 "radius": 4
               }
@@ -82,7 +82,7 @@
             "items": [
               {
                 "type": "text",
-                "text": "游研社 YYSTV",
+                "text": "Gcores Media",
                 "font_size": 10,
                 "color": "gray"
               },
@@ -107,7 +107,7 @@
           },
           {
             "type": "centered_text",
-            "text": "游研社文章配图",
+            "text": "News Header Photo",
             "font": "noto_serif_light",
             "font_size": 10
           }
@@ -115,7 +115,7 @@
       }
     ],
     "footer": {
-      "label": "游研社最新文章",
+      "label": "Gcores News",
       "attribution_template": "{footer_label}"
     }
   },
@@ -152,7 +152,7 @@
           "items": [
             {
               "type": "badge",
-              "field": "author",
+              "field": "category_badge",
               "variant": "outline",
               "radius": 3
             },

@@ -79,3 +79,37 @@ def test_mihomo_monthly_reset_calculation_edge_cases():
     # 6. 从订阅元数据 reset_day 整数提取
     assert _resolve_reset_days({"reset_day": 20}, [], now_dt=dt_today) == 0
     assert _resolve_reset_days({"reset_day": 25}, [], now_dt=dt_today) == 5
+
+    # 7. 复杂节点名中的每月重置日与绝对日期解析验证（解决"月重置不准确"问题）
+    dt_sep24 = datetime.datetime(2026, 9, 24, 12, 0)
+    assert _parse_reset_days_text("重置日: 15号", now_dt=dt_sep24) == 21
+    assert _parse_reset_days_text("重置日: 15", now_dt=dt_sep24) == 21
+    assert _parse_reset_days_text("重置日期: 15", now_dt=dt_sep24) == 21
+    assert _parse_reset_days_text("流量每月15日自动重置", now_dt=dt_sep24) == 21
+    assert _parse_reset_days_text("流量重置日: 每月5号", now_dt=dt_sep24) == 11
+    assert _parse_reset_days_text("下次重置 2026-10-01", now_dt=dt_sep24) == 7
+    assert _parse_reset_days_text("下次重置：2026-10-01", now_dt=dt_sep24) == 7
+    assert _parse_reset_days_text("2026-10-01重置", now_dt=dt_sep24) == 7
+    assert _parse_reset_days_text("重置时间: 10-01", now_dt=dt_sep24) == 7
+    assert _parse_reset_days_text("reset in 5 days", now_dt=dt_sep24) == 5
+    assert _parse_reset_days_text("Reset on 15th", now_dt=dt_sep24) == 21
+
+
+@pytest.mark.asyncio
+async def test_question_preload_history_deduplication():
+    """验证 QUESTION 模式基于 content_history 的动态防重复能力。"""
+    from core.preload_store import get_next_preload_item
+    from core.stats_store import save_render_content
+    test_mac_q = "AA:BB:CC:99:88:77"
+
+    # 模拟设备刚渲染过第 1 个问题并存入历史
+    item1 = await get_next_preload_item("QUESTION", mac=test_mac_q)
+    assert item1 is not None
+    q1 = item1["question"]
+    await save_render_content(test_mac_q, "QUESTION", {"question": q1})
+
+    # 紧接着再次获取，必须绝对不同于刚存入历史的 q1
+    item2 = await get_next_preload_item("QUESTION", mac=test_mac_q)
+    assert item2 is not None
+    q2 = item2["question"]
+    assert q1 != q2, f"Consecutive preload fetch must not repeat recently seen question: {q1}"

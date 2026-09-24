@@ -100,3 +100,48 @@ async def test_push_dispatcher_broadcast_stats_and_logging():
     logs = push_dispatcher.get_recent_logs()
     assert len(logs) >= 2
     assert any("暴雨橙色预警" in log["summary"] for log in logs)
+
+
+@pytest.mark.asyncio
+async def test_dispatch_scheduled_user_pushes_dedup_and_resilience(monkeypatch):
+    """测试每日定时推送：时间触发、多平台分发、内容不重复与当日防重机制。"""
+    import time
+    from unittest.mock import AsyncMock, patch
+    from core.config_store import save_user_preferences, register_push_token, create_user
+
+    ts = int(time.time() * 1000)
+    uid = await create_user(f"push_user_{ts}", "password123", email=f"push_user_{ts}@example.com")
+    assert uid is not None
+
+    # 保存推送偏好
+    await save_user_preferences(uid, {
+        "push_enabled": True,
+        "push_time": "08:00",
+        "push_modes": ["DAILY", "QUESTION"],
+    })
+
+    # 注册 Bark 推送凭据
+    await register_push_token(uid, "test_bark_device_key", "bark", "Asia/Shanghai", push_time="08:00")
+
+    # Mock 外部 HTTP 推送
+    with patch.object(push_dispatcher, "push_to_bark", new_callable=AsyncMock, return_value=True) as mock_bark:
+        import datetime, zoneinfo
+        test_now = datetime.datetime(2026, 9, 24, 8, 0, tzinfo=zoneinfo.ZoneInfo("Asia/Shanghai"))
+
+        # 1. 触发定时推送
+        res = await push_dispatcher.dispatch_scheduled_user_pushes(test_user_now=test_now)
+        assert res["total"] >= 1
+        assert res["dispatched"] >= 1
+        assert mock_bark.called
+
+        # 验证推送正文
+        call_args = mock_bark.call_args[0]
+        title, body = call_args[1], call_args[2]
+        assert "InkSight" in title
+        assert len(body) > 10
+
+        # 2. 同一天再次触发，当日防重拦截
+        mock_bark.reset_mock()
+        res_repeat = await push_dispatcher.dispatch_scheduled_user_pushes(test_user_now=test_now)
+        assert res_repeat["dispatched"] == 0
+        assert not mock_bark.called

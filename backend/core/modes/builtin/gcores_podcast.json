@@ -131,5 +131,52 @@
       "label": "机核播客",
       "attribution_template": "{footer_label}"
     }
+  },
+  "layout_overrides": {
+    "296x128": {
+      "body_align": "top",
+      "body": [
+        {
+          "type": "spacer",
+          "height": 2
+        },
+        {
+          "type": "flex_row",
+          "justify": "space-between",
+          "margin_x": 6,
+          "margin_bottom": 2,
+          "items": [
+            {
+              "type": "text",
+              "field": "title",
+              "font": "noto_serif_bold",
+              "font_size": 12,
+              "max_lines": 1
+            },
+            {
+              "type": "badge",
+              "field": "program_tag",
+              "variant": "filled",
+              "radius": 3
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "field": "summary",
+          "font": "noto_serif_light",
+          "font_size": 9,
+          "max_lines": 2,
+          "margin_x": 6,
+          "margin_bottom": 2
+        },
+        {
+          "type": "text",
+          "field": "published_at",
+          "font_size": 9,
+          "margin_x": 6
+        }
+      ]
+    }
   }
 }
