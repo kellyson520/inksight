@@ -13,6 +13,7 @@ type AuthResponse = {
   username: string;
 };
 
+/** 登录支持使用 用户名、绑定邮箱 或 手机号 作为登录标识。 */
 export async function login(username: string, password: string) {
   return apiRequest<AuthResponse>('/auth/login', {
     method: 'POST',

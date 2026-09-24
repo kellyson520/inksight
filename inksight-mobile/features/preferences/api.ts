@@ -8,6 +8,8 @@ export type UserPreferences = {
   widget_mode: string;
   locale: string;
   timezone: string;
+  global_proxy_url?: string;
+  steam_profile_url?: string;
 };
 
 export async function getPreferences(token: string) {
