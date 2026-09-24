@@ -24,6 +24,8 @@ def test_xkcd_fallback_comic():
 
 @pytest.mark.asyncio
 async def test_get_daily_xkcd_with_network_fallback():
+    from core.xkcd_service import _XKCD_CACHE
+    _XKCD_CACHE.clear()
     with patch("core.xkcd_service.outbound_http.get_json", side_effect=Exception("Network error")):
         comic = await get_daily_xkcd()
         assert comic["source_status"] == "fallback"

@@ -289,6 +289,85 @@ BUILTIN_CATALOG: list[CatalogItem] = [
     CatalogItem(mode_id="WECHAT_HOT", category="more", zh=CatalogText(name="微信热榜", tip="微信公众号与腾讯实时精选热点事件"), en=CatalogText(name="WeChat Top News", tip="Real-time trending articles and social buzz from WeChat")),
     CatalogItem(mode_id="GITHUB_TRENDING", category="more", zh=CatalogText(name="GitHub 趋势", tip="GitHub 实时热门开源项目与高星趋势"), en=CatalogText(name="GitHub Trending", tip="Trending repositories and developer momentum on GitHub")),
     CatalogItem(mode_id="TIEBA", category="more", zh=CatalogText(name="贴吧热议", tip="百度贴吧兴趣圈子热议与流行网络热梗"), en=CatalogText(name="Tieba Hot Topics", tip="Baidu Tieba community trending discussions and forum buzz")),
+    # ── Gaming & Media Culture ────────────────────────────────
+    CatalogItem(
+        mode_id="XIAOHEIHE_DISCOUNT",
+        category="more",
+        zh=CatalogText(name="小黑盒游戏折扣", tip="小黑盒游戏折扣信息，随机展示一款正在优惠的游戏"),
+        en=CatalogText(name="Game Deals", tip="Featured video game discounts, historic low price alerts, and sales"),
+    ),
+    CatalogItem(
+        mode_id="EPIC_FREE",
+        category="more",
+        zh=CatalogText(name="Epic喜加一", tip="查看Epic喜加一活动，快速了解当前或下一期的免费游戏"),
+        en=CatalogText(name="Epic Free Games", tip="Epic Games Store weekly giveaways and upcoming free titles"),
+    ),
+    CatalogItem(
+        mode_id="STEAM_ACHIEVEMENTS",
+        category="more",
+        zh=CatalogText(name="Steam我的成就", tip="显示你最近游玩的游戏和已解锁的成就"),
+        en=CatalogText(name="Steam Achievements", tip="Recent games and unlocked achievements on Steam"),
+    ),
+    CatalogItem(
+        mode_id="GCORES_PODCAST",
+        category="more",
+        zh=CatalogText(name="机核播客", tip="选择机核播客栏目，收听最新一期节目"),
+        en=CatalogText(name="Gcores Podcast", tip="Featured podcasts from Gcores Radio, games, and culture"),
+    ),
+    CatalogItem(
+        mode_id="MIYOUSHE_NEWS",
+        category="more",
+        zh=CatalogText(name="米游社公告", tip="选择你关注的游戏，查看米游社最新公告、活动与资讯"),
+        en=CatalogText(name="HoYoLAB News", tip="Official notices and events from Genshin, Star Rail, ZZZ, and Honkai"),
+    ),
+    CatalogItem(
+        mode_id="STEAM_RECENT",
+        category="more",
+        zh=CatalogText(name="Steam最近在玩", tip="显示最近玩过的游戏，以及近两周和累计游玩时间"),
+        en=CatalogText(name="Steam Recent Games", tip="Recently played games on Steam with 2-week and total playtime stats"),
+    ),
+    CatalogItem(
+        mode_id="STEAM_RANDOM",
+        category="more",
+        zh=CatalogText(name="Steam今天玩什么", tip="从你的公开游戏库随机抽一款，帮你决定今天玩什么"),
+        en=CatalogText(name="Steam What to Play", tip="Randomly picks a game from your Steam library to help you decide"),
+    ),
+    CatalogItem(
+        mode_id="STEAM_FRIENDS",
+        category="more",
+        zh=CatalogText(name="Steam好友状态", tip="显示好友的在线和游戏状态，看看是不是有人偷偷玩"),
+        en=CatalogText(name="Steam Friends Status", tip="Show friend online and in-game statuses"),
+    ),
+    CatalogItem(
+        mode_id="GCORES_NEWS",
+        category="more",
+        zh=CatalogText(name="机核资讯", tip="阅读机核关于游戏、影视、科技与流行文化的最新资讯"),
+        en=CatalogText(name="Gcores News", tip="Daily news, gaming updates, films, and tech pop culture from Gcores"),
+    ),
+    CatalogItem(
+        mode_id="GCORES_ARTICLES",
+        category="more",
+        zh=CatalogText(name="机核文章", tip="阅读机核作者与社区创作者关于游戏、文化、科技与生活方式的深度文章"),
+        en=CatalogText(name="Gcores Articles", tip="In-depth gaming culture, design evolution, and lifestyle essays"),
+    ),
+    CatalogItem(
+        mode_id="GAMERSKY_NEWS",
+        category="more",
+        zh=CatalogText(name="游民星空单机资讯", tip="浏览游民星空最新单机游戏资讯，了解新作与游戏动态"),
+        en=CatalogText(name="GamerSky News", tip="Latest PC and console gaming news, releases, and hardware updates"),
+    ),
+    CatalogItem(
+        mode_id="CHUAPP_ARTICLES",
+        category="more",
+        zh=CatalogText(name="触乐最新文章", tip="阅读触乐最新文章，了解游戏与玩家背后的故事"),
+        en=CatalogText(name="ChuApp Articles", tip="Heartfelt stories and in-depth humanistic journalism on games and players"),
+    ),
+    CatalogItem(
+        mode_id="YYSTV_ARTICLES",
+        category="more",
+        zh=CatalogText(name="游研社最新文章", tip="阅读游研社最新的游戏故事、文化文章与玩家见闻"),
+        en=CatalogText(name="YYSTV Articles", tip="Gaming essays, industry critiques, and memorable community folklore"),
+    ),
 ]
 
 
