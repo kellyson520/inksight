@@ -21,9 +21,11 @@ from core.config_store import (
     get_user_by_username,
     get_user_devices,
     get_user_llm_config,
+    get_user_preferences,
     reject_access_request,
     revoke_device_member,
     save_user_llm_config,
+    save_user_preferences,
     share_device_with_user,
     unbind_device,
 )
