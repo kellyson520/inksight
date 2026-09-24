@@ -141,8 +141,7 @@ async def generate_and_render(
         screen_h=screen_h,
     )
 
-    eff_cfg = get_effective_mode_config(config, persona)
-    _eff_lang = eff_cfg.get("mode_language", "") or DEFAULT_LANGUAGE
+    _eff_lang = cfg.get("mode_language", "") or DEFAULT_LANGUAGE
     date_str = _format_date_str(date_ctx, _eff_lang)
 
     img = await _render_for_persona(
